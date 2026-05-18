@@ -3,11 +3,11 @@ package ar.edu.utn.frba.ddsi.donaciones.models.entities;
 import ar.edu.utn.frba.ddsi.common.Email;
 import ar.edu.utn.frba.ddsi.common.Telefono;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.util.ArrayList;
 import java.util.List;
 
-@Getter @Setter @NoArgsConstructor
+@Getter @Setter
 public class EntidadBeneficiaria {
   private String razonSocial;
   private String direccion;
@@ -15,11 +15,19 @@ public class EntidadBeneficiaria {
   private List<Email> correoRepresentantes;
   private List<Necesidad> necesidades;
 
+  public EntidadBeneficiaria(String razonSocial, String direccion, Telefono telefono, List<Email> correoRepresentantes) {
+    this.razonSocial = razonSocial;
+    this.direccion = direccion;
+    this.telefono = telefono;
+    this.correoRepresentantes = correoRepresentantes;
+    this.necesidades = new ArrayList<>();
+  }
+
   public void registrarNecesidad(Necesidad necesidad) {
-    // TODO: Implementar
+    this.necesidades.add(necesidad);
   }
 
   public void confirmarEntrega(Donacion donacion) {
-    // TODO: Implementar
+    donacion.confirmarEntrega();
   }
 }

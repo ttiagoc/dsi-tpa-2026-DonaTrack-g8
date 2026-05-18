@@ -1,15 +1,19 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.entities;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.util.ArrayList;
 import java.util.List;
 
-@Getter @Setter @NoArgsConstructor
+@Getter @Setter
 public class Donante {
   private List<RegistroDonacion> donaciones;
 
+  public Donante() {
+    this.donaciones = new ArrayList<>();
+  }
+
   public void agregarDonacion(RegistroDonacion donacion) {
-    // TODO: Implementar
+    this.donaciones.add(donacion);
   }
 }

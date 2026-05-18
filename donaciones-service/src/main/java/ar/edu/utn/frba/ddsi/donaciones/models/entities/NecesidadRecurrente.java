@@ -10,7 +10,7 @@ public class NecesidadRecurrente implements TipoNecesidad {
   private String periodo;
 
   @Override
-  public Boolean estaSatisfecha(List<Donacion> donaciones) {
+  public Boolean estaSatisfecha(List<Donacion> donaciones, double cantidad) {
     // TODO: Implementar
     return false;
   }

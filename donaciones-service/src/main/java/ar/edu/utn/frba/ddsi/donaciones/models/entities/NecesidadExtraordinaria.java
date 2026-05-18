@@ -8,7 +8,8 @@ import java.util.List;
 @Getter @Setter @NoArgsConstructor
 public class NecesidadExtraordinaria implements TipoNecesidad {
   @Override
-  public Boolean estaSatisfecha(List<Donacion> donaciones) {
+  public Boolean estaSatisfecha(List<Donacion> donaciones, double cantidad) {
+    // return donaciones.cantidadBienesRecibidos() >= cantidad;
     // TODO: Implementar
     return false;
   }
