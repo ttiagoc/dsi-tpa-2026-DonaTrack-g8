@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.Map;
 @Getter @Setter @NoArgsConstructor
 public class RegistroDonacion {
   private String descripcion;
-  private LocalDate fecha;
+  private LocalDateTime fecha;
   private List<Bien> bienes;
   private List<Donacion> donacionesSegmentadas = new ArrayList<>();
 

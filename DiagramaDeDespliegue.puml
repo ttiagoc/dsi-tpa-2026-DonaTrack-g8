@@ -1,0 +1,89 @@
+@startuml DiagramaDespliegueDonaTrack
+' Forzar orientación y líneas ortogonales limpias
+left to right direction
+skinparam linetype ortho
+skinparam nodesep 50
+skinparam ranksep 80
+
+' Colores base
+skinparam node {
+  BackgroundColor #E3F2FD
+  BorderColor #1976D2
+}
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #1976D2
+}
+skinparam rectangle {
+  BorderColor #666666
+}
+
+' --- 1. CAPA CLIENTE ---
+node "Computadora Personal" <<Device>> {
+    component "Navegador Web" as Nav
+}
+
+' --- 2. CAPA FRONTEND Y AUTH ---
+rectangle "Autenticación" {
+    node "Servidor de Autenticación" {
+        component "Servicio Autenticación" as Auth
+    }
+}
+
+rectangle "FrontEnd y Orquestación" {
+    node "Servidor Frontend" {
+        component "App Frontend" as Front
+    }
+}
+
+' --- 3. CAPA DOMINIO ---
+rectangle "Dominio" {
+    node "Servidor Gestión de Donaciones" {
+        component "Servicio de Gestión de Donantes,\nDonaciones y Entidades" as S1
+    }
+    node "Servidor Logística" {
+        component "Servicio de Logística y\nGestión de Camiones y Entregas" as S2
+    }
+    node "Servidor de Notificaciones" {
+        component "Servicio de Notificaciones" as S3
+    }
+}
+
+' --- 4. CAPA PERSISTENCIA Y EXTERNOS ---
+rectangle "Persistencia" {
+    node "Servidor de Base de Datos" {
+        component "Motor de Base de Datos" as DB
+    }
+}
+
+node "Sistemas Externos" <<External System>> {
+    component "APIs de Mensajería" as Ext
+}
+
+' --- TRUCOS DE LAYOUT (Flechas invisibles para forzar el orden de la grilla) ---
+Auth -[hidden]down- Front
+S1 -[hidden]down- S2
+S2 -[hidden]down- S3
+DB -[hidden]down- Ext
+
+' --- CONEXIONES REALES ---
+
+' Flujo Cliente -> Frontend
+Nav -right-> Front : HTTPS
+
+' Flujo Frontend -> Servicios
+Front -up-> Auth : HTTP - API REST
+Front -right-> S1 : HTTP - API REST
+Front -right-> S2 : HTTP - API REST
+Front -right-> S3 : HTTP - API REST
+
+' Flujo Servicios -> Persistencia
+Auth -right-> DB : TCP/IP
+S1 -right-> DB : TCP/IP
+S2 -right-> DB : TCP/IP
+S3 -right-> DB : TCP/IP
+
+' Salida a Notificaciones Externas (Alineado abajo de la base de datos)
+S3 -right-> Ext : HTTPS
+
+@enduml

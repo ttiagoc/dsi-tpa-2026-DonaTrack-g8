@@ -11,8 +11,4 @@ public class Categoria {
   private Boolean pideEstado;
   private Boolean esPerecedero;
   private List<Subcategoria> subCategorias;
-
-  public Boolean pideEstado() {
-    return this.pideEstado;
-  }
 }

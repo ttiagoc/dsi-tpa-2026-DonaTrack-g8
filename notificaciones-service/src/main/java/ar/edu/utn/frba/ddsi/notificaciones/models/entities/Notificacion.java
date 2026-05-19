@@ -4,11 +4,11 @@ import ar.edu.utn.frba.ddsi.common.MedioContacto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Getter @Setter @NoArgsConstructor
 public class Notificacion {
-  private Date fecha;
+  private LocalDateTime fecha;
   private String mensaje;
   private MedioContacto contacto;
   private Boolean completada;

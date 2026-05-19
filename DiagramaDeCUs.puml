@@ -1,0 +1,45 @@
+@startuml
+left to right direction
+
+' Actores Principales
+actor "Administrador" as Admin
+actor "Donante" as Donante
+actor "Entidad Beneficiaria" as Entidad
+
+' Actores Secundarios
+actor "Servicio Externo de Notificación" as ServicioNotif
+
+' Sistema
+rectangle "Sistema DonaTrack - Casos de Uso" {
+    usecase "Ingresar Donacion" as UC_IngresarDonacion
+    usecase "Importar Donantes" as UC_ImportarDonantes
+    usecase "Registrar Vencimiento de Donación" as UC_RegVencimiento
+    usecase "Registrar Donante" as UC_RegDonante
+    usecase "Registrar Entidad Beneficiaria" as UC_RegEntidad
+    usecase "Registrar Necesidades" as UC_RegNecesidades
+    usecase "Exponer Notificación" as UC_ExponerNotif
+}
+
+' Relaciones Administrador
+Admin --> UC_IngresarDonacion
+Admin --> UC_ImportarDonantes
+Admin --> UC_RegVencimiento
+Admin --> UC_RegDonante
+Admin --> UC_RegEntidad
+
+' Relaciones Donante
+Donante --> UC_RegDonante
+
+' Relaciones Entidad Beneficiaria
+Entidad --> UC_RegEntidad
+Entidad --> UC_RegNecesidades
+
+' Relaciones de Includes
+UC_ImportarDonantes ..> UC_ExponerNotif : <<includes>>
+UC_RegDonante ..> UC_ExponerNotif : <<includes>>
+UC_RegEntidad ..> UC_ExponerNotif : <<includes>>
+
+' Relación con Actor Secundario
+UC_ExponerNotif --> ServicioNotif
+
+@enduml
