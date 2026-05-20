@@ -10,6 +10,6 @@ public class WhatsApp implements MedioContacto {
 
   @Override
   public void notificar(String mensaje) {
-    // TODO: Implementar
+    System.out.println("[WhatsApp Business API] Enviando mensaje a " + this.valor + ": " + mensaje);
   }
 }

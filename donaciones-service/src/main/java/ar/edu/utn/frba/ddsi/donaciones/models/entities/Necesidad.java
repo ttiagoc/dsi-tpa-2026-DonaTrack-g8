@@ -12,7 +12,6 @@ public class Necesidad {
   private String descripcion;
   private Double cantidad;
   private List<Donacion> donacionesAsignadas;
-  private Boolean satisfecha;
 
   public Necesidad(Subcategoria subcategoria, TipoNecesidad tipoNecesidad, String descripcion, Double cantidad) {
     this.subcategoria = subcategoria;
@@ -20,7 +19,13 @@ public class Necesidad {
     this.descripcion = descripcion;
     this.cantidad = cantidad;
     this.donacionesAsignadas = new ArrayList<>();
-    this.satisfecha = false;
+  }
+
+  public Boolean getSatisfecha() {
+    if (this.tipoNecesidad == null) {
+      return false;
+    }
+    return this.tipoNecesidad.estaSatisfecha(this.donacionesAsignadas, this.cantidad);
   }
 
   public void recibirDonacion(Donacion donacion) {

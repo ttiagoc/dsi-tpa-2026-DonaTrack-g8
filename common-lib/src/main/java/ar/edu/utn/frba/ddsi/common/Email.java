@@ -10,6 +10,6 @@ public class Email implements MedioContacto {
 
   @Override
   public void notificar(String mensaje) {
-    // TODO: Implementar
+    System.out.println("[SMTP Server] Enviando correo electrónico a <" + this.valor + ">: " + mensaje);
   }
 }
