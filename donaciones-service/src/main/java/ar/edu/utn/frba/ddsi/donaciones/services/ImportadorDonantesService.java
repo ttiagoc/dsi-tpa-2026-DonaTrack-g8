@@ -65,28 +65,26 @@ public class ImportadorDonantesService {
     }
 
     String tipoPersona = campos[0].trim();
-    String tipoDoc = campos[1].trim();
     String documento = campos[2].trim();
     String nombreORazonSocial = campos[3].trim();
     String emailVal = campos[4].trim();
     String telefonoVal = campos.length > 5 ? campos[5].trim() : "";
 
     if (tipoPersona.equalsIgnoreCase("HUMANA")) {
-      procesarHumana(tipoDoc, documento, nombreORazonSocial, emailVal, telefonoVal);
+      procesarHumana(documento, nombreORazonSocial, emailVal, telefonoVal);
     } else if (tipoPersona.equalsIgnoreCase("JURIDICA")) {
-      procesarJuridica(tipoDoc, documento, nombreORazonSocial, emailVal, telefonoVal);
+      procesarJuridica(documento, nombreORazonSocial, emailVal, telefonoVal);
     }
   }
 
-  private void procesarHumana(String tipoDoc, String documento, String nombreCompleto, String emailVal, String telefonoVal) {
+  private void procesarHumana(String dni, String nombreCompleto, String emailVal, String telefonoVal) {
     Optional<PersonaHumana> existenteOpt = donanteRepository.buscarHumanaPorEmail(emailVal);
 
     if (existenteOpt.isPresent()) {
       // Actualizar información existente
       PersonaHumana humana = existenteOpt.get();
       actualizarNombreHumana(humana, nombreCompleto);
-      humana.setTipoDocumento(tipoDoc);
-      humana.setNroDocumento(documento);
+      humana.setDni(dni);
       actualizarContactos(humana.getContactos(), emailVal, telefonoVal);
       donanteRepository.guardarHumana(humana);
     } else {
@@ -95,8 +93,7 @@ public class ImportadorDonantesService {
       PersonaHumana humana = new PersonaHumana();
       humana.setDonante(donante);
       actualizarNombreHumana(humana, nombreCompleto);
-      humana.setTipoDocumento(tipoDoc);
-      humana.setNroDocumento(documento);
+      humana.setDni(dni);
 
       List<MedioContacto> contactos = new ArrayList<>();
       Email email = new Email();
@@ -121,14 +118,14 @@ public class ImportadorDonantesService {
     }
   }
 
-  private void procesarJuridica(String tipoDoc, String documento, String razonSocial, String emailVal, String telefonoVal) {
+  private void procesarJuridica(String documento, String razonSocial, String emailVal, String telefonoVal) {
     Optional<PersonaJuridica> existenteOpt = donanteRepository.buscarJuridicaPorEmail(emailVal);
 
     if (existenteOpt.isPresent()) {
       // Actualizar información existente
       PersonaJuridica juridica = existenteOpt.get();
       juridica.setRazonSocial(razonSocial);
-      juridica.setNroDocumento(documento);
+      juridica.setCuit(documento);
       actualizarContactos(juridica.getContactos(), emailVal, telefonoVal);
       donanteRepository.guardarJuridica(juridica);
     } else {
@@ -137,7 +134,7 @@ public class ImportadorDonantesService {
       PersonaJuridica juridica = new PersonaJuridica();
       juridica.setDonante(donante);
       juridica.setRazonSocial(razonSocial);
-      juridica.setNroDocumento(documento);
+      juridica.setCuit(documento);
       juridica.setTipo(TipoOrganizacion.EMPRESA); // Valor por defecto
       juridica.setRepresentantes(new ArrayList<>());
 
@@ -183,9 +180,7 @@ public class ImportadorDonantesService {
         .filter(c -> c instanceof Email)
         .map(c -> (Email) c)
         .findFirst();
-    if (emailOpt.isPresent()) {
-      emailOpt.get().setValor(emailVal);
-    }
+    emailOpt.ifPresent(email -> email.setValor(emailVal));
 
     // Buscar y actualizar o agregar Telefono
     Optional<Telefono> telOpt = contactos.stream()

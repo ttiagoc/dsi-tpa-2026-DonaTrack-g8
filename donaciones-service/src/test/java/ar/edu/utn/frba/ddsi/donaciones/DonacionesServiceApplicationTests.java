@@ -1,7 +1,6 @@
 package ar.edu.utn.frba.ddsi.donaciones;
 
 import ar.edu.utn.frba.ddsi.common.Email;
-import ar.edu.utn.frba.ddsi.common.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.Telefono;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.*;
 import ar.edu.utn.frba.ddsi.donaciones.repositories.DonanteRepository;
@@ -16,7 +15,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,7 +63,7 @@ public class DonacionesServiceApplicationTests {
         PersonaHumana humana = humanas.getFirst();
         Assertions.assertEquals("Ana", humana.getNombre());
         Assertions.assertEquals("Gomez Perez", humana.getApellido());
-        Assertions.assertEquals("87654321", humana.getNroDocumento());
+        Assertions.assertEquals("87654321", humana.getDni());
         
         // Verificar contactos de la humana
         Assertions.assertEquals(2, humana.getContactos().size());
@@ -84,7 +82,7 @@ public class DonacionesServiceApplicationTests {
         Assertions.assertEquals(1, juridicas.size());
         PersonaJuridica juridica = juridicas.getFirst();
         Assertions.assertEquals("Arcos Plateados S.A.", juridica.getRazonSocial());
-        Assertions.assertEquals("30-12345678-9", juridica.getNroDocumento());
+        Assertions.assertEquals("30-12345678-9", juridica.getCuit());
         Assertions.assertEquals(TipoOrganizacion.EMPRESA, juridica.getTipo());
 
         // Borrar el archivo temporal
