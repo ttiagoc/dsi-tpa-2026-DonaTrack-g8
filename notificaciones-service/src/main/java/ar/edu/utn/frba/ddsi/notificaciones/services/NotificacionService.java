@@ -23,7 +23,7 @@ public class NotificacionService {
     notificacion.setFecha(LocalDateTime.now());
     notificacion.setCompletada(false);
 
-    // Ejecuta la simulación llamando al método notificar de la clase concreta (Email, WhatsApp, Telefono)
+    // Ejecuta la simulación llamando al metodo notificar de la clase concreta (Email, WhatsApp, Telefono)
     contacto.notificar(mensaje);
 
     // Marca como completada

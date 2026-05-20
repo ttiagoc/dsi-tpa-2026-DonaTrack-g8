@@ -12,7 +12,7 @@ public class PersonaJuridica {
   private String razonSocial;
   private String rubro;
   private TipoOrganizacion tipo;
-  private String nroDocumento;
+  private String cuit;
   private List<Representante> representantes;
   private List<MedioContacto> contactos;
   private MedioContacto contactoPredeterminado;

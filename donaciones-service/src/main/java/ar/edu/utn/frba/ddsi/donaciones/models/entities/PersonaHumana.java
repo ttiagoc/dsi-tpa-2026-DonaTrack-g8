@@ -13,8 +13,7 @@ public class PersonaHumana {
   private String nombre;
   private String apellido;
   private LocalDate fechaNacimiento;
-  private String tipoDocumento;
-  private String nroDocumento;
+  private String dni;
   private String genero;
   private String direccion;
   private List<MedioContacto> contactos;

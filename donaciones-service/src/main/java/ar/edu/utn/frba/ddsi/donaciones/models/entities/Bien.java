@@ -12,18 +12,18 @@ public class Bien {
   private Double cantidad;
   private String unidadMedida;
   private Subcategoria subcategoria;
-  private Boolean esUsado;
+  private EstadoBien estadoBien;
   private LocalDate fechaVencimiento;
 
   public String generarKey() {
     String key = this.subcategoria.getNombre();
 
     if (this.subcategoria.esPerecedero() && this.fechaVencimiento != null) {
-      key += "-" + this.fechaVencimiento.toString();
+      key += "-" + this.fechaVencimiento;
     }
 
-    if (this.subcategoria.pideEstado() && this.esUsado != null) {
-      key += "-" + this.esUsado.toString();
+    if (this.subcategoria.pideEstado() && this.estadoBien != null) {
+      key += "-" + this.estadoBien;
     }
 
     return key;

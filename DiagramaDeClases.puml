@@ -19,8 +19,7 @@ class PersonaHumana {
   nombre: String
   apellido: String
   fechaNacimiento: LocalDate
-  tipoDocumento: String
-  nroDocumento: String
+  cuit : String
   genero: String
   direccion: String
   contactos: List<MedioContacto>
@@ -32,7 +31,7 @@ class PersonaJuridica {
   razonSocial: String
   rubro: String
   tipo: TipoOrganizacion
-  nroDocumento: String
+  dni : String
   representantes: List<Representante>
   contactos: List<MedioContacto>
   contactoPredeterminado: MedioContacto
@@ -80,7 +79,7 @@ class RegistroDonacion {
 
 class Donacion {
   subcategoria : Subcategoria
-  esUsado : Boolean
+  estadoBienes : EstadoBien
   fechaVencimiento : LocalDate
   bienes : List<Bien>
   fecha : LocalDateTime
@@ -122,8 +121,13 @@ class Bien {
   cantidad : Double
   unidadMedida : String
   subcategoria : Subcategoria
-  esUsado : Boolean
+  estado : EstaBien
   fechaVencimiento : LocalDate
+}
+
+enum EstadoBien {
+  NUEVO
+  USADO
 }
 
 class EntidadBeneficiaria {
@@ -212,5 +216,8 @@ Necesidad --> TipoNecesidad
 NecesidadExtraordinaria .left.|> TipoNecesidad
 NecesidadRecurrente .right.|> TipoNecesidad
 NecesidadRecurrente --> Periodo
+
+Bien --> EstadoBien
+Donacion --> EstadoBien
 
 @enduml

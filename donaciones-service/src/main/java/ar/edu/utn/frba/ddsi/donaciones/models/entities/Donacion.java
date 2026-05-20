@@ -11,7 +11,7 @@ import java.util.List;
 @Getter @Setter
 public class Donacion {
   private Subcategoria subcategoria;
-  private Boolean esUsado;
+  private EstadoBien estadoBienes;
   private LocalDate fechaVencimiento;
   private List<Bien> bienes;
   private LocalDateTime fecha;
@@ -20,7 +20,7 @@ public class Donacion {
   // Un constructor personalizado para inicializarse a partir de un Bien base y una fecha
   public Donacion(Bien bienBase, LocalDateTime fecha) {
     this.subcategoria = bienBase.getSubcategoria();
-    this.esUsado = bienBase.getEsUsado();
+    this.estadoBienes = bienBase.getEstadoBien();
     this.fechaVencimiento = bienBase.getFechaVencimiento();
     this.bienes = new ArrayList<>();
     this.historialEstados = new ArrayList<>();
