@@ -60,7 +60,7 @@ class Email {
   notificar(mensaje : String)
 }
 
-class SMS {
+class Telefono {
   valor : string
   notificar(mensaje : String)
 }
@@ -129,7 +129,7 @@ class Bien {
 class EntidadBeneficiaria {
   razonSocial : String
   direccion : String
-  telefono : SMS
+  telefono : Telefono
   correoRepresentantes : List<Email>
   necesidades : List<Necesidad>
   registrarNecesidad(necesidad : Necesidad)
@@ -178,7 +178,7 @@ class Notificacion {
 ImportadorDonantes -down-> Donante
 
 MedioContacto <|.. Email
-MedioContacto <|.. SMS
+MedioContacto <|.. Telefono
 MedioContacto <|.. WhatsApp
 Notificacion --> MedioContacto
 
@@ -190,7 +190,7 @@ PersonaJuridica -right-> TipoOrganizacion
 PersonaHumana -down-> MedioContacto
 PersonaJuridica -down-> MedioContacto
 Representante --> Email
-EntidadBeneficiaria -up-> SMS
+EntidadBeneficiaria -up-> Telefono
 EntidadBeneficiaria -up-> Email
 EntidadBeneficiaria .down.> Donacion
 
