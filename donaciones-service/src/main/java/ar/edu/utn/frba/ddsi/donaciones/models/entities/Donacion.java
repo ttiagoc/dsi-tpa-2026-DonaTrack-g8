@@ -68,7 +68,7 @@ public class Donacion {
     LocalDateTime fechaActual = LocalDateTime.now();
 
     return switch (periodo) {
-      case DIARIO -> this.fecha.isEqual(fechaActual);
+      case DIARIO -> this.fecha.toLocalDate().isEqual(fechaActual.toLocalDate());
 
       case SEMANAL -> {
         // Compara que estén en la misma semana del mismo año
