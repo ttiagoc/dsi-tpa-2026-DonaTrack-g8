@@ -142,7 +142,6 @@ class Necesidad {
   descripcion : String
   cantidad : Double
   donacionesAsignadas : List<Donacion>
-  satisfecha : Boolean
   recibirDonacion(donacion : Donacion) : void
 }
 
