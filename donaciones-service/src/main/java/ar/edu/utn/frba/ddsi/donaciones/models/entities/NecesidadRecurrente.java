@@ -13,14 +13,10 @@ public class NecesidadRecurrente implements TipoNecesidad {
   public Boolean estaSatisfecha(List<Donacion> donaciones, Double cantidadRequerida) {
     if (donaciones == null || donaciones.isEmpty()) return false;
 
-    Double totalEnElPeriodo = 0.0;
-
-    for (Donacion donacion : donaciones) {
-      // Evaluamos si la donacion esta dentro del periodo actual
-      if (donacion.estaDentroDelPeriodoActual(this.periodo)) {
-        totalEnElPeriodo += donacion.cantidadBienesRecibidos();
-      }
-    }
+    Double totalEnElPeriodo = donaciones.stream()
+        .filter(donacion -> donacion.estaDentroDelPeriodoActual(this.periodo))
+        .mapToDouble(Donacion::cantidadBienesRecibidos)
+        .sum();
 
     // Retorna true si llegamos o pasamos la meta en este periodo
     return totalEnElPeriodo >= cantidadRequerida;

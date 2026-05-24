@@ -6,9 +6,8 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @Getter @Setter @NoArgsConstructor
 public class RegistroDonacion {
@@ -22,24 +21,19 @@ public class RegistroDonacion {
       return;
     }
 
-    Map<String, Donacion> maps = new HashMap<>();
-
-    for (Bien bien : this.bienes) {
-      // Le pedimos al Bien que nos dé su key
-      String key = bien.generarKey();
-
-      if (!maps.containsKey(key)) {
-        // Creamos la Donacion pasándole la responsabilidad de inicializarse sola
-        maps.put(key, new Donacion(bien, this.fecha));
-      } else {
-        // Le decimos a la Donacion que agregue el bien
-        maps.get(key).agregarBien(bien);
-      }
-    }
+    List<Donacion> nuevasDonaciones = this.bienes.stream()
+        .collect(Collectors.groupingBy(Bien::generarKey))
+        .values().stream()
+        .map(bienesAgrupados -> {
+            Donacion donacion = new Donacion(bienesAgrupados.get(0), this.fecha);
+            bienesAgrupados.stream().skip(1).forEach(donacion::agregarBien);
+            return donacion;
+        })
+        .collect(Collectors.toList());
 
     if (this.donacionesSegmentadas == null) {
       this.donacionesSegmentadas = new ArrayList<>();
     }
-    this.donacionesSegmentadas.addAll(maps.values());
+    this.donacionesSegmentadas.addAll(nuevasDonaciones);
   }
 }
