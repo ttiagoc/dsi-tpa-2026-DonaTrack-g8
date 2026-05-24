@@ -112,7 +112,7 @@ class Categoria {
 
 class Subcategoria {
   nombre: String
-  categoria : Categoria
+  pertenece_a : Categoria
 }
 
 class Bien {
