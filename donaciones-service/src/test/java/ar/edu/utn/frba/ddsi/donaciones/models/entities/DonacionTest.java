@@ -1,0 +1,244 @@
+package ar.edu.utn.frba.ddsi.donaciones.models.entities;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * Tests para el Requerimiento: "Ciclo de vida de una Donación"
+ *
+ * Una Donación tiene un historial de estados. Cada cambio de estado se registra
+ * con fecha y justificación. El estado actual es siempre el último del historial.
+ * Posibles estados: EN_DEPOSITO, ASIGNACION_REALIZADA, LISTA_PARA_ENTREGAR,
+ *                   EN_TRASLADO, ENTREGADA, ENTREGA_FALLIDA, VENCIDA.
+ */
+@DisplayName("Ciclo de vida de una Donación")
+class DonacionTest {
+
+    private Subcategoria subcategoria;
+    private Bien bienBase;
+
+    @BeforeEach
+    void setUp() {
+        Categoria categoria = new Categoria();
+        categoria.setNombre("Alimentos");
+        categoria.setEsPerecedero(true);
+        categoria.setPideEstado(false);
+
+        subcategoria = new Subcategoria();
+        subcategoria.setNombre("Fideos");
+        subcategoria.setCategoria(categoria);
+
+        bienBase = new Bien();
+        bienBase.setSubcategoria(subcategoria);
+        bienBase.setCantidad(10.0);
+        bienBase.setFechaVencimiento(LocalDate.of(2026, 12, 1));
+    }
+
+    @Nested
+    @DisplayName("Creación e inicialización")
+    class Creacion {
+
+        @Test
+        @DisplayName("Una donación nueva tiene estado EN_DEPOSITO")
+        void donacionNuevaEnDeposito() {
+            Donacion donacion = new Donacion(bienBase, LocalDateTime.now());
+            assertEquals(TipoEstadoDonacion.EN_DEPOSITO, donacion.estadoActual());
+        }
+
+        @Test
+        @DisplayName("Se hereda la subcategoría del bien base")
+        void heredaSubcategoria() {
+            Donacion donacion = new Donacion(bienBase, LocalDateTime.now());
+            assertEquals(subcategoria, donacion.getSubcategoria());
+        }
+
+        @Test
+        @DisplayName("Se hereda la fecha de vencimiento del bien base")
+        void heredaFechaVencimiento() {
+            Donacion donacion = new Donacion(bienBase, LocalDateTime.now());
+            assertEquals(LocalDate.of(2026, 12, 1), donacion.getFechaVencimiento());
+        }
+
+        @Test
+        @DisplayName("Se hereda el estado del bien base")
+        void heredaEstadoBien() {
+            bienBase.setEstadoBien(EstadoBien.USADO);
+            Donacion donacion = new Donacion(bienBase, LocalDateTime.now());
+            assertEquals(EstadoBien.USADO, donacion.getEstadoBienes());
+        }
+
+        @Test
+        @DisplayName("El bien base se agrega automáticamente a la lista de bienes")
+        void bienBaseSeAgrega() {
+            Donacion donacion = new Donacion(bienBase, LocalDateTime.now());
+            assertEquals(1, donacion.getBienes().size());
+            assertSame(bienBase, donacion.getBienes().getFirst());
+        }
+
+        @Test
+        @DisplayName("El historial arranca con exactamente un estado")
+        void historialTieneUnEstado() {
+            Donacion donacion = new Donacion(bienBase, LocalDateTime.now());
+            assertEquals(1, donacion.getHistorialEstados().size());
+        }
+    }
+
+    @Nested
+    @DisplayName("Agregar bienes")
+    class AgregarBienes {
+
+        @Test
+        @DisplayName("Se pueden agregar bienes a la donación")
+        void agregarBienSumaBienes() {
+            Donacion donacion = new Donacion(bienBase, LocalDateTime.now());
+
+            Bien otroBien = new Bien();
+            otroBien.setSubcategoria(subcategoria);
+            otroBien.setCantidad(5.0);
+
+            donacion.agregarBien(otroBien);
+
+            assertEquals(2, donacion.getBienes().size());
+            assertEquals(15.0, donacion.cantidadBienesRecibidos());
+        }
+    }
+
+    @Nested
+    @DisplayName("Cantidad de bienes recibidos")
+    class CantidadBienes {
+
+        @Test
+        @DisplayName("Calcula correctamente la suma de cantidades de todos los bienes")
+        void sumaCorrectamente() {
+            Donacion donacion = new Donacion(bienBase, LocalDateTime.now()); // 10.0
+
+            Bien bien2 = new Bien();
+            bien2.setSubcategoria(subcategoria);
+            bien2.setCantidad(5.0);
+            donacion.agregarBien(bien2);
+
+            Bien bien3 = new Bien();
+            bien3.setSubcategoria(subcategoria);
+            bien3.setCantidad(3.5);
+            donacion.agregarBien(bien3);
+
+            assertEquals(18.5, donacion.cantidadBienesRecibidos());
+        }
+
+        @Test
+        @DisplayName("Un bien con cantidad null se trata como 0")
+        void bienConCantidadNullEsCero() {
+            Bien bienSinCantidad = new Bien();
+            bienSinCantidad.setSubcategoria(subcategoria);
+            bienSinCantidad.setCantidad(null);
+
+            Donacion donacion = new Donacion(bienSinCantidad, LocalDateTime.now());
+            assertEquals(0.0, donacion.cantidadBienesRecibidos());
+        }
+    }
+
+    @Nested
+    @DisplayName("Confirmar entrega")
+    class ConfirmarEntrega {
+
+        @Test
+        @DisplayName("Confirmar entrega cambia el estado a ENTREGADA")
+        void confirmarEntregaCambiaEstado() {
+            Donacion donacion = new Donacion(bienBase, LocalDateTime.now());
+            donacion.confirmarEntrega();
+            assertEquals(TipoEstadoDonacion.ENTREGADA, donacion.estadoActual());
+        }
+
+        @Test
+        @DisplayName("Confirmar entrega agrega un segundo estado al historial")
+        void confirmarEntregaAgregaAlHistorial() {
+            Donacion donacion = new Donacion(bienBase, LocalDateTime.now());
+            donacion.confirmarEntrega();
+            assertEquals(2, donacion.getHistorialEstados().size());
+        }
+
+        @Test
+        @DisplayName("El primer estado del historial sigue siendo EN_DEPOSITO")
+        void primerEstadoSigueEnDeposito() {
+            Donacion donacion = new Donacion(bienBase, LocalDateTime.now());
+            donacion.confirmarEntrega();
+            assertEquals(TipoEstadoDonacion.EN_DEPOSITO,
+                donacion.getHistorialEstados().getFirst().getEstado());
+        }
+    }
+
+    @Nested
+    @DisplayName("Período actual (filtro temporal para necesidades recurrentes)")
+    class PeriodoActual {
+
+        @Test
+        @DisplayName("Donación de hoy está dentro del período DIARIO")
+        void donacionHoyEstaDentroDePeriodoDiario() {
+            Donacion donacion = new Donacion(bienBase, LocalDateTime.now());
+            assertTrue(donacion.estaDentroDelPeriodoActual(Periodo.DIARIO));
+        }
+
+        @Test
+        @DisplayName("Donación de ayer NO está dentro del período DIARIO")
+        void donacionAyerNoEstaDentroDePeriodoDiario() {
+            Donacion donacion = new Donacion(bienBase, LocalDateTime.now().minusDays(1));
+            assertFalse(donacion.estaDentroDelPeriodoActual(Periodo.DIARIO));
+        }
+
+        @Test
+        @DisplayName("Donación de esta semana está dentro del período SEMANAL")
+        void donacionEstaSemanaEstaDentroDePeriodoSemanal() {
+            Donacion donacion = new Donacion(bienBase, LocalDateTime.now());
+            assertTrue(donacion.estaDentroDelPeriodoActual(Periodo.SEMANAL));
+        }
+
+        @Test
+        @DisplayName("Donación de hace 2 semanas NO está dentro del período SEMANAL")
+        void donacionHaceDosSemanas() {
+            Donacion donacion = new Donacion(bienBase, LocalDateTime.now().minusWeeks(2));
+            assertFalse(donacion.estaDentroDelPeriodoActual(Periodo.SEMANAL));
+        }
+
+        @Test
+        @DisplayName("Donación de este mes está dentro del período MENSUAL")
+        void donacionEsteMesEstaDentroDePeriodoMensual() {
+            Donacion donacion = new Donacion(bienBase, LocalDateTime.now());
+            assertTrue(donacion.estaDentroDelPeriodoActual(Periodo.MENSUAL));
+        }
+
+        @Test
+        @DisplayName("Donación del mes pasado NO está dentro del período MENSUAL")
+        void donacionMesPasado() {
+            Donacion donacion = new Donacion(bienBase, LocalDateTime.now().minusMonths(1));
+            assertFalse(donacion.estaDentroDelPeriodoActual(Periodo.MENSUAL));
+        }
+
+        @Test
+        @DisplayName("Donación de este año está dentro del período ANUAL")
+        void donacionEsteAnioEstaDentro() {
+            Donacion donacion = new Donacion(bienBase, LocalDateTime.now());
+            assertTrue(donacion.estaDentroDelPeriodoActual(Periodo.ANUAL));
+        }
+
+        @Test
+        @DisplayName("Donación del año pasado NO está dentro del período ANUAL")
+        void donacionAnioPasado() {
+            Donacion donacion = new Donacion(bienBase, LocalDateTime.now().minusYears(1));
+            assertFalse(donacion.estaDentroDelPeriodoActual(Periodo.ANUAL));
+        }
+
+        @Test
+        @DisplayName("Con período null retorna false")
+        void periodoNullRetornaFalse() {
+            Donacion donacion = new Donacion(bienBase, LocalDateTime.now());
+            assertFalse(donacion.estaDentroDelPeriodoActual(null));
+        }
+    }
+}
