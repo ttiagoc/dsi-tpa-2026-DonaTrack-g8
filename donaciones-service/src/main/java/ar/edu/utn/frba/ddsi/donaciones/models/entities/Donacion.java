@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.IsoFields;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,26 +62,6 @@ public class Donacion {
   }
 
   public Boolean estaDentroDelPeriodoActual(Periodo periodo) {
-    if (periodo == null) return false;
-
-    LocalDateTime fechaActual = LocalDateTime.now();
-
-    return switch (periodo) {
-      case DIARIO -> this.fecha.toLocalDate().isEqual(fechaActual.toLocalDate());
-
-      case SEMANAL -> {
-        // Compara que estén en la misma semana del mismo año
-        int semanaDonacion = this.fecha.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
-        int semanaAhora = fechaActual.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
-        int anioDonacion = this.fecha.get(IsoFields.WEEK_BASED_YEAR);
-        int anioAhora = fechaActual.get(IsoFields.WEEK_BASED_YEAR);
-        yield (semanaDonacion == semanaAhora) && (anioDonacion == anioAhora);
-      }
-
-      case MENSUAL -> (this.fecha.getMonth() == fechaActual.getMonth()) &&
-          (this.fecha.getYear() == fechaActual.getYear());
-
-      case ANUAL -> this.fecha.getYear() == fechaActual.getYear();
-    };
+    return periodo != null && periodo.incluye(this.fecha);
   }
 }

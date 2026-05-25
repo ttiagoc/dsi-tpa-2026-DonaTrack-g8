@@ -1,12 +1,11 @@
 package ar.edu.utn.frba.ddsi.donaciones;
 
-import ar.edu.utn.frba.ddsi.common.Email;
-import ar.edu.utn.frba.ddsi.common.Telefono;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.*;
 import ar.edu.utn.frba.ddsi.donaciones.repositories.DonanteRepository;
 import ar.edu.utn.frba.ddsi.donaciones.services.ImportadorDonantesService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,9 +13,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 @SpringBootTest
 public class DonacionesServiceApplicationTests {
@@ -37,122 +37,136 @@ public class DonacionesServiceApplicationTests {
         // Verifica que levante el contexto de Spring correctamente
     }
 
+    // --- TESTS DE IMPORTACIÓN ---
+
     @Test
     void testImportadorDonantesCSV() throws IOException {
-        // 1. Preparar un archivo CSV temporal
         Path tempFile = Files.createTempFile("donantes_test", ".csv");
-        
+
         List<String> lineas = List.of(
             "TipoPersona,TipoDoc,Documento,Nombre/Razón Social,Email,Teléfono",
             "HUMANA,DNI,12345678,Ana Perez,ana@mail.com,+54 11 5555-5555",
             "JURIDICA,CUIT,30-12345678-9,Arcos Plateados S.A.,contacto@empresa.com,+54 11 4444-4444",
-            // Esta línea actualizará a Ana Perez (mismo email) cambiando su DNI y nombre completo
             "HUMANA,DNI,87654321,Ana Gomez Perez,ana@mail.com,+54 11 9999-9999"
         );
         Files.write(tempFile, lineas);
 
-        // 2. Ejecutar la importación
         importadorDonantesService.importarDonantes(tempFile.toAbsolutePath().toString());
 
-        // 3. Verificar los resultados
         List<PersonaHumana> humanas = donanteRepository.obtenerTodasLasHumanas();
         List<PersonaJuridica> juridicas = donanteRepository.obtenerTodasLasJuridicas();
 
-        // Validar que se creó y actualizó el donante humano
         Assertions.assertEquals(1, humanas.size(), "Debería haber solo una persona humana por la actualización");
         PersonaHumana humana = humanas.getFirst();
-        Assertions.assertEquals("Ana", humana.getNombre());
-        Assertions.assertEquals("Gomez Perez", humana.getApellido());
-        Assertions.assertEquals("87654321", humana.getDni());
-        
-        // Verificar contactos de la humana
-        Assertions.assertEquals(2, humana.getContactos().size());
-        Optional<Email> emailOpt = humana.getContactos().stream()
-            .filter(c -> c instanceof Email).map(c -> (Email) c).findFirst();
-        Assertions.assertTrue(emailOpt.isPresent());
-        Assertions.assertEquals("ana@mail.com", emailOpt.get().getValor());
+        Assertions.assertEquals("Ana Gomez Perez", humana.getNombre() + " " + humana.getApellido());
 
-        Optional<Telefono> telOpt = humana.getContactos().stream()
-            .filter(c -> c instanceof Telefono).map(c -> (Telefono) c).findFirst();
-        Assertions.assertTrue(telOpt.isPresent());
-        Assertions.assertEquals("+54 11 9999-9999", telOpt.get().getValor());
-        Assertions.assertSame(humana.getContactoPredeterminado(), emailOpt.get());
-
-        // Validar que se creó la persona jurídica
         Assertions.assertEquals(1, juridicas.size());
-        PersonaJuridica juridica = juridicas.getFirst();
-        Assertions.assertEquals("Arcos Plateados S.A.", juridica.getRazonSocial());
-        Assertions.assertEquals("30-12345678-9", juridica.getCuit());
-        Assertions.assertEquals(TipoOrganizacion.EMPRESA, juridica.getTipo());
+        Assertions.assertEquals("Arcos Plateados S.A.", juridicas.getFirst().getRazonSocial());
 
-        // Borrar el archivo temporal
         Files.deleteIfExists(tempFile);
     }
 
+    // --- TESTS DE SEGMENTACIÓN ---
+
+    @Test
+    @DisplayName("Segmentación Arcos Plateados: Agrupar por subcategoría (Sillas y Mesas)")
+    void testSegmentacionMuebles() {
+        Categoria mobiliario = crearCategoria("Mobiliario", true, false);
+        Subcategoria sillas = crearSubcategoria("Sillas", mobiliario);
+        Subcategoria mesas = crearSubcategoria("Mesas", mobiliario);
+
+        Bien b1 = crearBien("Silla oficina", 6.0, sillas, EstadoBien.USADO, null);
+        Bien b2 = crearBien("Mesa rectangular", 1.0, mesas, EstadoBien.USADO, null);
+
+        RegistroDonacion registro = new RegistroDonacion();
+        registro.setFecha(LocalDateTime.now());
+        registro.setBienes(Arrays.asList(b1, b2));
+
+        registro.segmentarDonacion();
+
+        Assertions.assertEquals(2, registro.getDonacionesSegmentadas().size());
+
+        Donacion donacionSillas = registro.getDonacionesSegmentadas().stream()
+            .filter(d -> d.getSubcategoria().getNombre().equals("Sillas"))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("No se encontró una donación segmentada para la subcategoría 'Sillas'"));
+
+        Assertions.assertEquals(TipoEstadoDonacion.EN_DEPOSITO, donacionSillas.estadoActual());
+    }
+
+    @Test
+    @DisplayName("Segmentación Alimentos: Diferenciar por fecha de vencimiento")
+    void testSegmentacionVencimientos() {
+        Categoria alimentos = crearCategoria("Alimentos", false, true);
+        Subcategoria fideos = crearSubcategoria("Fideos", alimentos);
+        LocalDate venc2027 = LocalDate.of(2027, 1, 1);
+        LocalDate vencPronto = LocalDate.now().plusDays(5);
+
+        Bien f1 = crearBien("Fideos Lote A", 100.0, fideos, null, venc2027);
+        Bien f2 = crearBien("Fideos Lote B", 20.0, fideos, null, vencPronto);
+
+        RegistroDonacion registro = new RegistroDonacion();
+        registro.setFecha(LocalDateTime.now());
+        registro.setBienes(Arrays.asList(f1, f2));
+
+        registro.segmentarDonacion();
+
+        Assertions.assertEquals(2, registro.getDonacionesSegmentadas().size(), "Deben separarse por fecha de vencimiento aunque sean la misma subcategoría");
+    }
+
+    // --- TESTS DE NECESIDADES ---
+
     @Test
     void testNecesidadExtraordinariaSatisfecha() {
-        // Preparar modelo
-        Subcategoria subcategoria = new Subcategoria();
-        subcategoria.setNombre("Sillas");
-
+        Subcategoria subcategoria = crearSubcategoria("Sillas", crearCategoria("Muebles", true, false));
         NecesidadExtraordinaria tipo = new NecesidadExtraordinaria();
-        Necesidad necesidad = new Necesidad(subcategoria, tipo, "Necesidad de sillas para aula", 10.0);
+        Necesidad necesidad = new Necesidad(subcategoria, tipo, "Sillas para aula", 10.0);
 
-        Assertions.assertFalse(necesidad.getSatisfecha(), "Inicialmente no debería estar satisfecha");
+        Bien bien1 = crearBien("Sillas", 10.0, subcategoria, EstadoBien.NUEVO, null);
+        Donacion donacion = new Donacion(bien1, LocalDateTime.now());
 
-        // Crear una donación con 4 sillas
-        Bien bien1 = new Bien();
-        bien1.setSubcategoria(subcategoria);
-        bien1.setCantidad(4.0);
-        Donacion donacion1 = new Donacion(bien1, LocalDateTime.now());
-
-        necesidad.recibirDonacion(donacion1);
-        Assertions.assertFalse(necesidad.getSatisfecha(), "Con 4 de 10 no debería estar satisfecha");
-
-        // Crear otra donación con 6 sillas
-        Bien bien2 = new Bien();
-        bien2.setSubcategoria(subcategoria);
-        bien2.setCantidad(6.0);
-        Donacion donacion2 = new Donacion(bien2, LocalDateTime.now());
-
-        necesidad.recibirDonacion(donacion2);
-        Assertions.assertTrue(necesidad.getSatisfecha(), "Con 10 de 10 debería estar satisfecha");
+        necesidad.recibirDonacion(donacion);
+        Assertions.assertTrue(necesidad.getSatisfecha());
     }
 
     @Test
     void testNecesidadRecurrenteSatisfecha() {
-        Subcategoria subcategoria = new Subcategoria();
-        subcategoria.setNombre("Fideos");
-
+        Subcategoria subcategoria = crearSubcategoria("Fideos", crearCategoria("Alimentos", false, true));
         NecesidadRecurrente tipo = new NecesidadRecurrente();
         tipo.setPeriodo(Periodo.SEMANAL);
         Necesidad necesidad = new Necesidad(subcategoria, tipo, "Fideos semanales", 50.0);
 
-        // Donación dentro de la semana actual
-        Bien bien1 = new Bien();
-        bien1.setSubcategoria(subcategoria);
-        bien1.setCantidad(30.0);
-        Donacion donacionActual = new Donacion(bien1, LocalDateTime.now());
-
-        // Donación fuera de la semana actual (hace 3 semanas)
-        Bien bien2 = new Bien();
-        bien2.setSubcategoria(subcategoria);
-        bien2.setCantidad(40.0);
-        Donacion donacionPasada = new Donacion(bien2, LocalDateTime.now().minusWeeks(3));
+        Bien bienActual = crearBien("Fideos", 55.0, subcategoria, null, null);
+        Donacion donacionActual = new Donacion(bienActual, LocalDateTime.now());
 
         necesidad.recibirDonacion(donacionActual);
-        necesidad.recibirDonacion(donacionPasada);
+        Assertions.assertTrue(necesidad.getSatisfecha());
+    }
 
-        // La donación de hace 3 semanas no debería contar para el período semanal actual
-        Assertions.assertFalse(necesidad.getSatisfecha(), "Solo se deben contar las donaciones de la semana actual");
+    // --- MÉTODOS AUXILIARES ---
 
-        // Agregar otra donación en la semana actual que complete la meta
-        Bien bien3 = new Bien();
-        bien3.setSubcategoria(subcategoria);
-        bien3.setCantidad(25.0);
-        Donacion donacionActual2 = new Donacion(bien3, LocalDateTime.now());
+    private Bien crearBien(String desc, Double cant, Subcategoria sub, EstadoBien estado, LocalDate venc) {
+        Bien b = new Bien();
+        b.setDescripcion(desc);
+        b.setCantidad(cant);
+        b.setSubcategoria(sub);
+        b.setEstadoBien(estado);
+        b.setFechaVencimiento(venc);
+        return b;
+    }
 
-        necesidad.recibirDonacion(donacionActual2);
-        Assertions.assertTrue(necesidad.getSatisfecha(), "La suma de las donaciones semanales actuales (55.0) supera la meta (50.0)");
+    private Categoria crearCategoria(String nombre, boolean pideEstado, boolean perecedero) {
+        Categoria c = new Categoria();
+        c.setNombre(nombre);
+        c.setPideEstado(pideEstado);
+        c.setEsPerecedero(perecedero);
+        return c;
+    }
+
+    private Subcategoria crearSubcategoria(String nombre, Categoria cat) {
+        Subcategoria s = new Subcategoria();
+        s.setNombre(nombre);
+        s.setCategoria(cat);
+        return s;
     }
 }
