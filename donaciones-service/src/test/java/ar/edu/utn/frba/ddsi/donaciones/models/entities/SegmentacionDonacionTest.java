@@ -14,7 +14,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests para el Requerimiento: "Registrar donación de bienes"
- *
  * Los bienes de una donación deben segmentarse automáticamente en Donaciones
  * agrupadas por subcategoría, estado del bien y fecha de vencimiento (si aplica).
  * Cada Donacion resultante arranca en estado EN_DEPOSITO.
@@ -22,8 +21,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Segmentación automática de donaciones (RegistroDonacion)")
 class SegmentacionDonacionTest {
 
-    private Categoria categoriaAlimentos;
-    private Categoria categoriaMuebles;
     private Subcategoria subcategoriaFideos;
     private Subcategoria subcategoriaLeche;
     private Subcategoria subcategoriaSillas;
@@ -34,13 +31,13 @@ class SegmentacionDonacionTest {
         fechaDonacion = LocalDateTime.of(2026, 5, 20, 10, 0);
 
         // Alimentos: perecedero=true, pideEstado=false
-        categoriaAlimentos = new Categoria();
+        Categoria categoriaAlimentos = new Categoria();
         categoriaAlimentos.setNombre("Alimentos");
         categoriaAlimentos.setEsPerecedero(true);
         categoriaAlimentos.setPideEstado(false);
 
         // Muebles: perecedero=false, pideEstado=true
-        categoriaMuebles = new Categoria();
+        Categoria categoriaMuebles = new Categoria();
         categoriaMuebles.setNombre("Muebles");
         categoriaMuebles.setEsPerecedero(false);
         categoriaMuebles.setPideEstado(true);

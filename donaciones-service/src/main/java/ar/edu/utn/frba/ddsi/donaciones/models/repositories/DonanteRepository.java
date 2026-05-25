@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.donaciones.repositories;
+package ar.edu.utn.frba.ddsi.donaciones.models.repositories;
 
 import ar.edu.utn.frba.ddsi.common.Email;
 import ar.edu.utn.frba.ddsi.common.MedioContacto;

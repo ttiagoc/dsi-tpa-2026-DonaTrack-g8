@@ -7,7 +7,7 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.PersonaHumana;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.PersonaJuridica;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.TipoOrganizacion;
-import ar.edu.utn.frba.ddsi.donaciones.repositories.DonanteRepository;
+import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

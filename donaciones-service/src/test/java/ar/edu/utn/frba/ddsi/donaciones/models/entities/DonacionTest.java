@@ -12,7 +12,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests para el Requerimiento: "Ciclo de vida de una Donación"
- *
  * Una Donación tiene un historial de estados. Cada cambio de estado se registra
  * con fecha y justificación. El estado actual es siempre el último del historial.
  * Posibles estados: EN_DEPOSITO, ASIGNACION_REALIZADA, LISTA_PARA_ENTREGAR,

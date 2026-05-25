@@ -2,7 +2,7 @@ package ar.edu.utn.frba.ddsi.donaciones.services;
 
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.PersonaHumana;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.PersonaJuridica;
-import ar.edu.utn.frba.ddsi.donaciones.repositories.DonanteRepository;
+import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

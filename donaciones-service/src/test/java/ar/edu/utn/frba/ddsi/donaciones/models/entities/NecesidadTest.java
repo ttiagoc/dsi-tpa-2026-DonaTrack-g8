@@ -14,7 +14,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests para el Requerimiento: "Necesidades de entidades beneficiarias"
- *
  * Las entidades beneficiarias registran necesidades (extraordinarias o recurrentes).
  * Una necesidad se satisface cuando la suma de las cantidades de las donaciones
  * asignadas cumple con la cantidad requerida.
@@ -53,12 +52,11 @@ class NecesidadTest {
     @DisplayName("Necesidad Extraordinaria")
     class NecesidadExtraordinariaTests {
 
-        private NecesidadExtraordinaria tipo;
-        private Necesidad necesidad;
+      private Necesidad necesidad;
 
         @BeforeEach
         void setUp() {
-            tipo = new NecesidadExtraordinaria();
+            NecesidadExtraordinaria tipo = new NecesidadExtraordinaria();
             necesidad = new Necesidad(subcategoria, tipo, "Necesito 100 paquetes de fideos para el comedor", 100.0);
         }
 

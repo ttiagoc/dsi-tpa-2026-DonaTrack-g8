@@ -11,7 +11,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests para el Requerimiento: "Categorización de bienes"
- *
  * Los bienes pertenecen a una Subcategoría que a su vez pertenece a una Categoría.
  * Las categorías definen si los bienes "piden estado" (NUEVO/USADO) y si son "perecederos"
  * (con fecha de vencimiento). La key generada por un Bien se usa para la segmentación.
