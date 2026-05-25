@@ -25,11 +25,11 @@ public class RegistroDonacion {
         .collect(Collectors.groupingBy(Bien::generarKey))
         .values().stream()
         .map(bienesAgrupados -> {
-            Donacion donacion = new Donacion(bienesAgrupados.get(0), this.fecha);
+            Donacion donacion = new Donacion(bienesAgrupados.getFirst(), this.fecha);
             bienesAgrupados.stream().skip(1).forEach(donacion::agregarBien);
             return donacion;
         })
-        .collect(Collectors.toList());
+        .toList();
 
     if (this.donacionesSegmentadas == null) {
       this.donacionesSegmentadas = new ArrayList<>();

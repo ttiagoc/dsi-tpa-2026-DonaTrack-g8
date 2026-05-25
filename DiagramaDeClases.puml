@@ -19,7 +19,7 @@ class PersonaHumana {
   nombre: String
   apellido: String
   fechaNacimiento: LocalDate
-  cuit : String
+  dni : String
   genero: String
   direccion: String
   contactos: List<MedioContacto>
@@ -31,7 +31,7 @@ class PersonaJuridica {
   razonSocial: String
   rubro: String
   tipo: TipoOrganizacion
-  dni : String
+  cuit : String
   representantes: List<Representante>
   contactos: List<MedioContacto>
   contactoPredeterminado: MedioContacto
