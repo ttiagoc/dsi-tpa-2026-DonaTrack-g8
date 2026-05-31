@@ -1,0 +1,224 @@
+@startuml DonaTrack
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 80
+hide empty members
+
+class ImportadorDonantes {
+  importarDonantes(archivo : string) : void
+}
+
+abstract class Donante {
+  donaciones : List<RegistroDonacion>
+  contactos: List<MedioContacto>
+  contactoPredeterminado: MedioContacto
+  agregarDonacion(donacion: RegistroDonacion) : void
+}
+
+class PersonaHumana {
+  nombre: String
+  apellido: String
+  fechaNacimiento: LocalDate
+  dni : String
+  genero: String
+  direccion: String
+}
+
+class PersonaJuridica {
+  razonSocial: String
+  rubro: String
+  tipo: TipoOrganizacion
+  cuit : String
+  representantes: List<Representante>
+}
+
+class Representante {
+  nombre: String
+  apellido: String
+  correo : Email
+}
+
+enum TipoOrganizacion {
+  Gubernamental
+  ONG
+  Empresa
+  Institucion
+}
+
+interface MedioContacto {
+  notificar(mensaje : String)
+}
+
+class Email {
+  valor : string
+  notificar(mensaje : String)
+}
+
+class Telefono {
+  valor : string
+  notificar(mensaje : String)
+}
+
+class WhatsApp {
+  valor : string
+  notificar(mensaje : String)
+}
+
+class RegistroDonacion {
+  descripcion : String
+  fecha : LocalDateTime
+  bienes : List<Bien>
+  donacionesSegmentadas : List<Donacion>
+  segmentarDonacion() : void
+}
+
+class Donacion {
+  donante : Donante
+  entidadBeneficiariaAsignada : EntidadBeneficiaria
+  subcategoria : Subcategoria
+  estadoBienes : EstadoBien
+  fechaVencimiento : LocalDate
+  bienes : List<Bien>
+  fecha : LocalDateTime
+  historialEstados : List<CambioEstado>
+  estadoActual() : TipoEstadoDonacion
+}
+
+class CambioEstado {
+  fecha : LocalDateTime
+  estado : TipoEstadoDonacion
+  justificacion : String
+}
+
+enum TipoEstadoDonacion {
+  EN_DEPOSITO
+  ASIGNACION_REALIZADA
+  LISTA_PARA_ENTREGAR
+  EN_TRASLADO
+  ENTREGADA
+  ENTREGA_FALLIDA
+  VENCIDA
+}
+
+class Categoria {
+  nombre: String
+  pideEstado: Boolean
+  esPerecedero: Boolean
+  subCategorias: List<Subcategoria>
+}
+
+class Subcategoria {
+  nombre: String
+  pertenece_a : Categoria
+}
+
+class Bien {
+  descripcion : String
+  foto : String
+  cantidad : Double
+  unidadMedida : String
+  subcategoria : Subcategoria
+  estado : EstaBien
+  fechaVencimiento : LocalDate
+}
+
+enum EstadoBien {
+  NUEVO
+  USADO
+}
+
+class EntidadBeneficiaria {
+  razonSocial : String
+  direccion : String
+  telefono : Telefono
+  correoRepresentantes : List<Email>
+  necesidades : List<Necesidad>
+  registrarNecesidad(necesidad : Necesidad)
+  confirmarEntrega(donacion : Donacion)
+}
+
+class Necesidad {
+  subcategoria : Subcategoria
+  tipoNecesidad : TipoNecesidad
+  descripcion : String
+  cantidad : Double
+  donacionesAsignadas : List<Donacion>
+  recibirDonacion(donacion : Donacion) : void
+}
+
+interface TipoNecesidad {
+  {abstract} estaSatisfecha(donaciones : List<Donacion>, cantidadRequerida : Double) : Boolean
+}
+
+class NecesidadExtraordinaria {
+  estaSatisfecha(donaciones : List<Donacion>, cantidadRequerida : Double) : Boolean
+}
+
+class NecesidadRecurrente {
+  periodo : Periodo
+  estaSatisfecha(donaciones : List<Donacion>, cantidadRequerida : Double) : Boolean
+}
+
+enum Periodo {
+  DIARIO
+  SEMANAL
+  MENSUAL
+  ANUAL
+}
+
+class Notificacion {
+  fecha : LocalDateTime
+  mensaje : String
+  contacto : MedioContacto
+  completada : Boolean
+}
+
+ImportadorDonantes "1" -down-> "*" Donante
+
+PersonaHumana -up-|> Donante
+PersonaJuridica -up-|> Donante
+PersonaJuridica "1" -right-> "*" Representante
+PersonaJuridica "1" -right-> "1" TipoOrganizacion
+
+Donante "1" -right-> "*" MedioContacto
+Donante "1" -right-> "1" MedioContacto
+
+MedioContacto <|.. Email
+MedioContacto <|.. Telefono
+MedioContacto <|.. WhatsApp
+Notificacion "*" -up-> "1" MedioContacto
+
+Representante "1" -up-> "1" Email
+EntidadBeneficiaria "1" -up-> "1" Telefono
+EntidadBeneficiaria "1" -up-> "*" Email
+EntidadBeneficiaria "1" ..> "*" Donacion
+
+Donante "1" -down-> "*" RegistroDonacion
+RegistroDonacion "1" -down-> "*" Donacion
+RegistroDonacion "1" -down-> "*" Bien
+Donacion "*" -up-> "1" Donante
+Donacion "*" -left-> "1" EntidadBeneficiaria
+
+Donacion "*" -down-> "1" Subcategoria
+Donacion "1" -down-> "*" Bien
+Categoria "1" -down-> "*" Subcategoria
+Subcategoria "*" -up-> "1" Categoria
+
+Donacion "1" -right-> "*" CambioEstado
+CambioEstado "*" -right-> "1" TipoEstadoDonacion
+
+EntidadBeneficiaria "1" -down-> "*" Necesidad
+Necesidad "*" -down-> "1" Subcategoria
+Necesidad "*" -right-> "*" Donacion
+
+Necesidad "1" -down-> "1" TipoNecesidad
+NecesidadExtraordinaria .up.|> TipoNecesidad
+NecesidadRecurrente .up.|> TipoNecesidad
+NecesidadRecurrente "1" -right-> "1" Periodo
+
+Bien "*" -down-> "1" EstadoBien
+Donacion "*" -down-> "1" EstadoBien
+Bien "*" -down-> "1" Subcategoria
+
+@enduml
