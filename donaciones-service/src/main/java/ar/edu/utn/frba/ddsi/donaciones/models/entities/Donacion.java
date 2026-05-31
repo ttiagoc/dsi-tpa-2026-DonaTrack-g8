@@ -7,8 +7,11 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter @Setter
+@Getter
+@Setter
 public class Donacion {
+  private Donante donante;
+  private EntidadBeneficiaria entidadBeneficiariaAsignada;
   private Subcategoria subcategoria;
   private EstadoBien estadoBienes;
   private LocalDate fechaVencimiento;
@@ -16,7 +19,6 @@ public class Donacion {
   private LocalDateTime fecha;
   private List<CambioEstado> historialEstados;
 
-  // Un constructor personalizado para inicializarse a partir de un Bien base y una fecha
   public Donacion(Bien bienBase, LocalDateTime fecha) {
     this.subcategoria = bienBase.getSubcategoria();
     this.estadoBienes = bienBase.getEstadoBien();
@@ -29,12 +31,10 @@ public class Donacion {
     this.registrarEstadoInicial(fecha);
   }
 
-  // Encapsula la lista: no devolvemos la lista para que la modifiquen desde afuera
   public void agregarBien(Bien bien) {
     this.bienes.add(bien);
   }
 
-  // Encapsula la lógica de su propio estado inicial
   private void registrarEstadoInicial(LocalDateTime fecha) {
     this.registrarEstado(fecha, TipoEstadoDonacion.EN_DEPOSITO, "Ingreso al depósito por segmentación automática");
   }
@@ -54,7 +54,8 @@ public class Donacion {
   }
 
   public Double cantidadBienesRecibidos() {
-    if (this.bienes == null) return 0.0;
+    if (this.bienes == null)
+      return 0.0;
 
     return this.bienes.stream()
         .mapToDouble(bien -> bien.getCantidad() != null ? bien.getCantidad() : 0)

@@ -1,19 +1,15 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.entities;
 
-import ar.edu.utn.frba.ddsi.common.MedioContacto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.util.List;
 
 @Getter @Setter @NoArgsConstructor
-public class PersonaJuridica {
-  private Donante donante;
+public class PersonaJuridica extends Donante {
   private String razonSocial;
   private String rubro;
   private TipoOrganizacion tipo;
   private String cuit;
   private List<Representante> representantes;
-  private List<MedioContacto> contactos;
-  private MedioContacto contactoPredeterminado;
 }

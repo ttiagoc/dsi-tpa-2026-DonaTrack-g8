@@ -3,7 +3,6 @@ package ar.edu.utn.frba.ddsi.donaciones.services;
 import ar.edu.utn.frba.ddsi.common.Email;
 import ar.edu.utn.frba.ddsi.common.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.Telefono;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.PersonaHumana;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.PersonaJuridica;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.TipoOrganizacion;
@@ -89,9 +88,7 @@ public class ImportadorDonantesService {
       donanteRepository.guardarHumana(humana);
     } else {
       // Crear nuevo registro
-      Donante donante = new Donante();
       PersonaHumana humana = new PersonaHumana();
-      humana.setDonante(donante);
       actualizarNombreHumana(humana, nombreCompleto);
       humana.setDni(dni);
 
@@ -113,8 +110,7 @@ public class ImportadorDonantesService {
 
       // Notificación de bienvenida simulada
       humana.getContactoPredeterminado().notificar(
-          "Bienvenido/a a DonaTrack, " + nombreCompleto + "! Tu usuario ha sido creado con éxito."
-      );
+          "Bienvenido/a a DonaTrack, " + nombreCompleto + "! Tu usuario ha sido creado con éxito.");
     }
   }
 
@@ -130,9 +126,7 @@ public class ImportadorDonantesService {
       donanteRepository.guardarJuridica(juridica);
     } else {
       // Crear nuevo registro
-      Donante donante = new Donante();
       PersonaJuridica juridica = new PersonaJuridica();
-      juridica.setDonante(donante);
       juridica.setRazonSocial(razonSocial);
       juridica.setCuit(documento);
       juridica.setTipo(TipoOrganizacion.EMPRESA); // Valor por defecto
@@ -156,8 +150,7 @@ public class ImportadorDonantesService {
 
       // Notificación de bienvenida simulada
       juridica.getContactoPredeterminado().notificar(
-          "Bienvenido/a a DonaTrack, " + razonSocial + "! El usuario de su organización ha sido creado con éxito."
-      );
+          "Bienvenido/a a DonaTrack, " + razonSocial + "! El usuario de su organización ha sido creado con éxito.");
     }
   }
 
@@ -173,7 +166,8 @@ public class ImportadorDonantesService {
   }
 
   private void actualizarContactos(List<MedioContacto> contactos, String emailVal, String telefonoVal) {
-    if (contactos == null) return;
+    if (contactos == null)
+      return;
 
     // Buscar y actualizar Email
     Optional<Email> emailOpt = contactos.stream()

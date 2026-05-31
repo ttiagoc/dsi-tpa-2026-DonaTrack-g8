@@ -1,10 +1,14 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.entities;
 
+import ar.edu.utn.frba.ddsi.common.Email;
+import ar.edu.utn.frba.ddsi.common.MedioContacto;
+import ar.edu.utn.frba.ddsi.common.Telefono;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -45,34 +49,45 @@ class DonanteTest {
     }
 
     @Nested
-    @DisplayName("Clase Donante")
+    @DisplayName("Clase Donante (Persona Humana / Persona Jurídica)")
     class DonanteCoreTests {
 
         @Test
         @DisplayName("Un donante nuevo tiene lista de donaciones vacía")
         void donanteNuevoTieneListaVacia() {
-            Donante donante = new Donante();
+            Donante donante = new PersonaHumana();
             assertNotNull(donante.getDonaciones());
             assertTrue(donante.getDonaciones().isEmpty());
         }
 
         @Test
-        @DisplayName("Agregar donación incrementa la lista")
+        @DisplayName("Agregar donación incrementa la lista y asigna al donante en las segmentadas")
         void agregarDonacion() {
-            Donante donante = new Donante();
+            Donante donante = new PersonaHumana();
 
             RegistroDonacion registro = new RegistroDonacion();
             registro.setDescripcion("Primera donación");
             registro.setFecha(LocalDateTime.now());
-
+            
+            Bien fideos = new Bien();
+            fideos.setSubcategoria(subcategoriaFideos);
+            fideos.setCantidad(30.0);
+            fideos.setFechaVencimiento(java.time.LocalDate.of(2026, 12, 1));
+            registro.setBienes(List.of(fideos));
+            
+            registro.segmentarDonacion();
             donante.agregarDonacion(registro);
+            
             assertEquals(1, donante.getDonaciones().size());
+            // Verificar asignación bidireccional
+            assertNotNull(registro.getDonacionesSegmentadas().getFirst().getDonante());
+            assertEquals(donante, registro.getDonacionesSegmentadas().getFirst().getDonante());
         }
 
         @Test
         @DisplayName("Se pueden agregar múltiples donaciones")
         void agregarMultiplesDonaciones() {
-            Donante donante = new Donante();
+            Donante donante = new PersonaHumana();
 
             for (int i = 0; i < 5; i++) {
                 RegistroDonacion registro = new RegistroDonacion();
@@ -82,6 +97,52 @@ class DonanteTest {
             }
 
             assertEquals(5, donante.getDonaciones().size());
+        }
+        
+        @Test
+        @DisplayName("Una PersonaHumana puede tener contactos y un contacto predeterminado")
+        void contactosYPredeterminado() {
+            PersonaHumana humana = new PersonaHumana();
+            humana.setNombre("Ana");
+            humana.setApellido("Pérez");
+            
+            Email email = new Email();
+            email.setValor("ana@mail.com");
+            
+            Telefono telefono = new Telefono();
+            telefono.setValor("+54 11 5555-5555");
+            
+            humana.getContactos().add(email);
+            humana.getContactos().add(telefono);
+            humana.setContactoPredeterminado(email);
+            
+            assertEquals(2, humana.getContactos().size());
+            assertEquals("ana@mail.com", ((Email) humana.getContactoPredeterminado()).getValor());
+        }
+
+        @Test
+        @DisplayName("Una PersonaJuridica puede tener contactos, predeterminado y representantes")
+        void contactosYRepresentantesJuridica() {
+            PersonaJuridica juridica = new PersonaJuridica();
+            juridica.setRazonSocial("Empresa Solidaria S.A.");
+            
+            Email email = new Email();
+            email.setValor("contacto@empresa.com");
+            
+            juridica.getContactos().add(email);
+            juridica.setContactoPredeterminado(email);
+            
+            Representante rep = new Representante();
+            rep.setNombre("Juan");
+            rep.setApellido("Perez");
+            rep.setCorreo(email);
+            
+            juridica.setRepresentantes(java.util.List.of(rep));
+            
+            assertEquals(1, juridica.getContactos().size());
+            assertEquals("contacto@empresa.com", ((Email) juridica.getContactoPredeterminado()).getValor());
+            assertEquals(1, juridica.getRepresentantes().size());
+            assertEquals("Juan", juridica.getRepresentantes().getFirst().getNombre());
         }
     }
 
@@ -93,7 +154,8 @@ class DonanteTest {
         @DisplayName("Flujo end-to-end: un donante dona bienes, se segmentan, y satisfacen una necesidad")
         void flujoEndToEnd() {
             // 1. Crear donante
-            Donante donante = new Donante();
+            Donante donante = new PersonaJuridica();
+            ((PersonaJuridica) donante).setRazonSocial("Arcos Plateados S.A.");
 
             // 2. Crear bienes para la donación
             Bien fideos1 = new Bien();
@@ -151,7 +213,7 @@ class DonanteTest {
         @Test
         @DisplayName("Un donante puede tener múltiples registros de donación, cada uno segmentado independientemente")
         void multiplesRegistrosSegmentadosIndependientemente() {
-            Donante donante = new Donante();
+            Donante donante = new PersonaHumana();
 
             // Primera donación: 3 fideos
             Bien fideos = new Bien();
