@@ -9,6 +9,7 @@ import java.util.List;
 
 @Getter @Setter
 public class EntidadBeneficiaria {
+  private Long id;
   private String razonSocial;
   private String direccion;
   private Telefono telefono;

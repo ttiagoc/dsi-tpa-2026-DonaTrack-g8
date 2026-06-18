@@ -8,6 +8,7 @@ import java.util.List;
 
 @Getter @Setter
 public abstract class Donante {
+  private Long id;
   private List<RegistroDonacion> donaciones;
   private List<MedioContacto> contactos;
   private MedioContacto contactoPredeterminado;

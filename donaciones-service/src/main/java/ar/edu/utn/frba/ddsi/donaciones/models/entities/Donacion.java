@@ -10,6 +10,7 @@ import java.util.List;
 @Getter
 @Setter
 public class Donacion {
+  private Long id;
   private Donante donante;
   private EntidadBeneficiaria entidadBeneficiariaAsignada;
   private Subcategoria subcategoria;

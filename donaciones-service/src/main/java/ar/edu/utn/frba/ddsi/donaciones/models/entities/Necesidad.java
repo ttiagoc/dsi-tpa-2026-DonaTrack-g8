@@ -7,6 +7,7 @@ import java.util.List;
 
 @Getter @Setter
 public class Necesidad {
+  private Long id;
   private Subcategoria subcategoria;
   private TipoNecesidad tipoNecesidad;
   private String descripcion;
