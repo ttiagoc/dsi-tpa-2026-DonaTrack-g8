@@ -5,285 +5,291 @@ skinparam nodesep 60
 skinparam ranksep 80
 hide empty members
 
-class ImportadorDonantes {
-  importarDonantes(archivo : string) : void
+package "Common Lib" {
+  interface MedioContacto {
+    notificar(mensaje : String)
+  }
+
+  class Email {
+    valor : string
+    notificar(mensaje : String)
+  }
+
+  class Telefono {
+    valor : string
+    notificar(mensaje : String)
+  }
+
+  class WhatsApp {
+    valor : string
+    notificar(mensaje : String)
+  }
+
+  class Notificacion {
+    fecha : LocalDateTime
+    mensaje : String
+    contacto : MedioContacto
+    completada : Boolean
+  }
 }
 
-abstract class Donante {
-  donaciones : List<RegistroDonacion>
-  contactos: List<MedioContacto>
-  contactoPredeterminado: MedioContacto
-  agregarDonacion(donacion: RegistroDonacion) : void
+package "Microservicio Donaciones" {
+  class ImportadorDonantes {
+    importarDonantes(archivo : string) : void
+  }
+
+  abstract class Donante {
+    donaciones : List<RegistroDonacion>
+    contactos: List<MedioContacto>
+    contactoPredeterminado: MedioContacto
+    agregarDonacion(donacion: RegistroDonacion) : void
+  }
+
+  class PersonaHumana {
+    nombre: String
+    apellido: String
+    fechaNacimiento: LocalDate
+    dni : String
+    genero: String
+    direccion: String
+  }
+
+  class PersonaJuridica {
+    razonSocial: String
+    rubro: String
+    tipo: TipoOrganizacion
+    cuit : String
+    representantes: List<Representante>
+  }
+
+  class Representante {
+    nombre: String
+    apellido: String
+    correo : Email
+  }
+
+  enum TipoOrganizacion {
+    Gubernamental
+    ONG
+    Empresa
+    Institucion
+  }
+
+  class RegistroDonacion {
+    descripcion : String
+    fecha : LocalDateTime
+    bienes : List<Bien>
+    donacionesSegmentadas : List<Donacion>
+    segmentarDonacion() : void
+  }
+
+  class Donacion {
+    donante : Donante
+    entidadBeneficiariaAsignada : EntidadBeneficiaria
+    subcategoria : Subcategoria
+    estadoBienes : EstadoBien
+    fechaVencimiento : LocalDate
+    bienes : List<Bien>
+    fecha : LocalDateTime
+    historialEstados : List<CambioEstado>
+    estadoActual() : TipoEstadoDonacion
+  }
+
+  class CambioEstado {
+    fecha : LocalDateTime
+    estado : TipoEstadoDonacion
+    justificacion : String
+  }
+
+  enum TipoEstadoDonacion {
+    EN_DEPOSITO
+    ASIGNACION_REALIZADA
+    LISTA_PARA_ENTREGAR
+    EN_TRASLADO
+    ENTREGADA
+    ENTREGA_FALLIDA
+    VENCIDA
+  }
+
+  class Categoria {
+    nombre: String
+    pideEstado: Boolean
+    esPerecedero: Boolean
+    subCategorias: List<Subcategoria>
+  }
+
+  class Subcategoria {
+    nombre: String
+    pertenece_a : Categoria
+  }
+
+  class Bien {
+    descripcion : String
+    foto : String
+    cantidad : Double
+    unidadMedida : String
+    subcategoria : Subcategoria
+    estado : EstaBien
+    fechaVencimiento : LocalDate
+  }
+
+  enum EstadoBien {
+    NUEVO
+    USADO
+  }
+
+  class EntidadBeneficiaria {
+    razonSocial : String
+    direccion : String
+    telefono : Telefono
+    correoRepresentantes : List<Email>
+    necesidades : List<Necesidad>
+    registrarNecesidad(necesidad : Necesidad)
+    confirmarEntrega(donacion : Donacion)
+  }
+
+  class Necesidad {
+    subcategoria : Subcategoria
+    tipoNecesidad : TipoNecesidad
+    descripcion : String
+    cantidad : Double
+    donacionesAsignadas : List<Donacion>
+    recibirDonacion(donacion : Donacion) : void
+  }
+
+  interface TipoNecesidad {
+    {abstract} estaSatisfecha(donaciones : List<Donacion>, cantidadRequerida : Double) : Boolean
+  }
+
+  class NecesidadExtraordinaria {
+    estaSatisfecha(donaciones : List<Donacion>, cantidadRequerida : Double) : Boolean
+  }
+
+  class NecesidadRecurrente {
+    periodo : Periodo
+    estaSatisfecha(donaciones : List<Donacion>, cantidadRequerida : Double) : Boolean
+  }
+
+  enum Periodo {
+    DIARIO
+    SEMANAL
+    MENSUAL
+    ANUAL
+  }
+
+  class EventManager {
+    listeners: Map<TipoEvento, Listener>
+    emitir(evento: Evento)
+  }
+
+  interface Listener {
+    ejecutar(evento: Evento)
+  }
+
+  class NotificacionesAdapter {
+    ejecutar(evento: Evento)
+    armarMensaje(evento: Evento) : String
+  }
+
+  class Evento {
+    tipo: TipoEvento
+    datos: Map<String, Object>
+  }
+
+  enum TipoEvento {
+    AUSENCIA_PLATAFORMA
+    DONACION_ASIGNADA
+    INICIO_RUTA
+    ENTREGA_EXITOSA
+    ENTREGA_FALLIDA
+  }
+
+  interface AlgoritmoAsignacion {
+    generarRanking(donacion: Donacion, entidadesCandidatas: List<EntidadBeneficiaria>): List<EntidadBeneficiaria>
+  }
+
+  class CompatibilidadSemantica {
+    generarRanking(donacion: Donacion, entidadesCandidatas: List<EntidadBeneficiaria>): List<EntidadBeneficiaria>
+  }
+
+  class PrioridadSubAtendidos {
+    generarRanking(donacion: Donacion, entidadesCandidatas: List<EntidadBeneficiaria>): List<EntidadBeneficiaria>
+  }
+
+  class MotorDeMatchmaking {
+    algoritmos: List<AlgoritmoAsignacion>
+    ejecutarMatchmaking(donacion: Donacion, entidadesCandidatas: List<EntidadBeneficiaria>): ResultadoMatchmaking
+  }
+
+  class ResultadoMatchmaking {
+    donacion: Donacion
+    entidadesSugeridas: List<EntidadBeneficiaria>
+  }
 }
 
-class PersonaHumana {
-  nombre: String
-  apellido: String
-  fechaNacimiento: LocalDate
-  dni : String
-  genero: String
-  direccion: String
-}
+package "Microservicio Logistica" {
+  class Camion {
+    patente: String
+    capacidadVolumen: Double
+    altura: Double
+    capacidadCarga: Double
+    chofer: Chofer
+  }
 
-class PersonaJuridica {
-  razonSocial: String
-  rubro: String
-  tipo: TipoOrganizacion
-  cuit : String
-  representantes: List<Representante>
-}
+  class Chofer {
+    nombre: String
+    apellido: String
+  }
 
-class Representante {
-  nombre: String
-  apellido: String
-  correo : Email
-}
+  class Ruta {
+    fecha: LocalDate
+    estado: EstadoRuta
+    camion: Camion
+    chofer: Chofer
+    paradas: List<Parada>
+    ultimaUbicacion: Ubicacion
+    actualizarUbicacion(nuevaUbicacion: Ubicacion)
+    iniciar()
+    finalizar()
+  }
 
-enum TipoOrganizacion {
-  Gubernamental
-  ONG
-  Empresa
-  Institucion
-}
+  class Ubicacion {
+    latitud: Double
+    longitud: Double
+    timestamp: LocalDateTime
+  }
 
-interface MedioContacto {
-  notificar(mensaje : String)
-}
+  enum EstadoRuta {
+    PLANIFICADA
+    EN_TRASLADO
+    FINALIZADA
+  }
 
-class Email {
-  valor : string
-  notificar(mensaje : String)
-}
+  class Parada {
+    orden: Integer
+    destino: String
+    entidad: EntidadBeneficiaria 
+    entregas: List<Donacion> 
+  }
 
-class Telefono {
-  valor : string
-  notificar(mensaje : String)
-}
+  class GestorPlanificacionRutas {
+    adapter: AdapterPlanificadorExterno
+    planificarEntregasDelDiaSiguiente(donacionesDisponibles: List<Donacion>, camiones: List<Camion>)
+    - fraccionarEnLotesDeCien(donaciones: List<Donacion>): List<List<Donacion>>
+  }
 
-class WhatsApp {
-  valor : string
-  notificar(mensaje : String)
-}
+  interface AdapterPlanificadorExterno {
+    solicitarPlanificacionAsync(lote: List<Donacion>, camiones: List<Camion>)
+  }
 
-class RegistroDonacion {
-  descripcion : String
-  fecha : LocalDateTime
-  bienes : List<Bien>
-  donacionesSegmentadas : List<Donacion>
-  segmentarDonacion() : void
-}
+  class ReceptorPlanificacionRutas {
+    recibirPlanificacion(resultado: ResultadoPlanificacionDTO)
+  }
 
-class Donacion {
-  donante : Donante
-  entidadBeneficiariaAsignada : EntidadBeneficiaria
-  subcategoria : Subcategoria
-  estadoBienes : EstadoBien
-  fechaVencimiento : LocalDate
-  bienes : List<Bien>
-  fecha : LocalDateTime
-  historialEstados : List<CambioEstado>
-  estadoActual() : TipoEstadoDonacion
-}
-
-class CambioEstado {
-  fecha : LocalDateTime
-  estado : TipoEstadoDonacion
-  justificacion : String
-}
-
-enum TipoEstadoDonacion {
-  EN_DEPOSITO
-  ASIGNACION_REALIZADA
-  LISTA_PARA_ENTREGAR
-  EN_TRASLADO
-  ENTREGADA
-  ENTREGA_FALLIDA
-  VENCIDA
-}
-
-class Categoria {
-  nombre: String
-  pideEstado: Boolean
-  esPerecedero: Boolean
-  subCategorias: List<Subcategoria>
-}
-
-class Subcategoria {
-  nombre: String
-  pertenece_a : Categoria
-}
-
-class Bien {
-  descripcion : String
-  foto : String
-  cantidad : Double
-  unidadMedida : String
-  subcategoria : Subcategoria
-  estado : EstaBien
-  fechaVencimiento : LocalDate
-}
-
-enum EstadoBien {
-  NUEVO
-  USADO
-}
-
-class EntidadBeneficiaria {
-  razonSocial : String
-  direccion : String
-  telefono : Telefono
-  correoRepresentantes : List<Email>
-  necesidades : List<Necesidad>
-  registrarNecesidad(necesidad : Necesidad)
-  confirmarEntrega(donacion : Donacion)
-}
-
-class Necesidad {
-  subcategoria : Subcategoria
-  tipoNecesidad : TipoNecesidad
-  descripcion : String
-  cantidad : Double
-  donacionesAsignadas : List<Donacion>
-  recibirDonacion(donacion : Donacion) : void
-}
-
-interface TipoNecesidad {
-  {abstract} estaSatisfecha(donaciones : List<Donacion>, cantidadRequerida : Double) : Boolean
-}
-
-class NecesidadExtraordinaria {
-  estaSatisfecha(donaciones : List<Donacion>, cantidadRequerida : Double) : Boolean
-}
-
-class NecesidadRecurrente {
-  periodo : Periodo
-  estaSatisfecha(donaciones : List<Donacion>, cantidadRequerida : Double) : Boolean
-}
-
-enum Periodo {
-  DIARIO
-  SEMANAL
-  MENSUAL
-  ANUAL
-}
-
-class Notificacion {
-  fecha : LocalDateTime
-  mensaje : String
-  contacto : MedioContacto
-  completada : Boolean
-}
-
-class EventManager {
-  listeners: Map<TipoEvento, Listener>
-  emitir(evento: Evento)
-}
-
-interface Listener {
-  ejecutar(evento: Evento)
-}
-
-class GestorNotificaciones {
-  ejecutar(evento: Evento)
-  armarMensaje(evento: Evento) : String
-}
-
-class Evento {
-  tipo: TipoEvento
-  datos: Map<String, Object>
-}
-
-enum TipoEvento {
-  AUSENCIA_PLATAFORMA
-  DONACION_ASIGNADA
-  INICIO_RUTA
-  ENTREGA_EXITOSA
-  ENTREGA_FALLIDA
-}
-
-interface AlgoritmoAsignacion {
-  generarRanking(donacion: Donacion, entidadesCandidatas: List<EntidadBeneficiaria>): List<EntidadBeneficiaria>
-}
-
-class CompatibilidadSemantica {
-  generarRanking(donacion: Donacion, entidadesCandidatas: List<EntidadBeneficiaria>): List<EntidadBeneficiaria>
-}
-
-class PrioridadSubAtendidos {
-  generarRanking(donacion: Donacion, entidadesCandidatas: List<EntidadBeneficiaria>): List<EntidadBeneficiaria>
-}
-
-class MotorDeMatchmaking {
-  algoritmos: List<AlgoritmoAsignacion>
-  ejecutarMatchmaking(donacion: Donacion, entidadesCandidatas: List<EntidadBeneficiaria>): ResultadoMatchmaking
-}
-
-class ResultadoMatchmaking {
-  donacion: Donacion
-  entidadesSugeridas: List<EntidadBeneficiaria>
-}
-
-class Camion {
-  patente: String
-  capacidadVolumen: Double
-  altura: Double
-  capacidadCarga: Double
-  chofer: Chofer
-}
-
-class Chofer {
-  nombre: String
-  apellido: String
-}
-
-class Ruta {
-  fecha: LocalDate
-  estado: EstadoRuta
-  camion: Camion
-  chofer: Chofer
-  paradas: List<Parada>
-  ultimaUbicacion: Ubicacion
-  actualizarUbicacion(nuevaUbicacion: Ubicacion)
-  iniciar()
-  finalizar()
-}
-
-class Ubicacion {
-  latitud: Double
-  longitud: Double
-  timestamp: LocalDateTime
-}
-
-enum EstadoRuta {
-  PLANIFICADA
-  EN_TRASLADO
-  FINALIZADA
-}
-
-class Parada {
-  orden: Integer
-  destino: String
-  entidad: EntidadBeneficiaria 
-  entregas: List<Donacion> 
-}
-
-class GestorPlanificacionRutas {
-  adapter: AdapterPlanificadorExterno
-  planificarEntregasDelDiaSiguiente(donacionesDisponibles: List<Donacion>, camiones: List<Camion>)
-  - fraccionarEnLotesDeCien(donaciones: List<Donacion>): List<List<Donacion>>
-}
-
-interface AdapterPlanificadorExterno {
-  solicitarPlanificacionAsync(lote: List<Donacion>, camiones: List<Camion>)
-}
-
-class ReceptorPlanificacionRutas {
-  recibirPlanificacion(resultado: ResultadoPlanificacionDTO)
-}
-
-class ResultadoPlanificacionDTO {
-  rutasAsignadas: List<Ruta>
-  donacionesSinAsignar: List<Donacion>
+  class ResultadoPlanificacionDTO {
+    rutasAsignadas: List<Ruta>
+    donacionesSinAsignar: List<Donacion>
+  }
 }
 
 ImportadorDonantes "1" -down-> "*" Donante
@@ -344,11 +350,11 @@ MotorDeMatchmaking ..> ResultadoMatchmaking
 ResultadoMatchmaking "1" -down-> "1" Donacion
 ResultadoMatchmaking "1" -down-> "*" EntidadBeneficiaria
 
-GestorNotificaciones .up.|> Listener
+NotificacionesAdapter .up.|> Listener
 EventManager "1" -down-> "*" Listener
 EventManager ..> Evento
 Evento "1" -right-> "1" TipoEvento
-GestorNotificaciones ..> Evento
+NotificacionesAdapter ..> Evento
 
 Donacion ..> EventManager
 

@@ -12,7 +12,7 @@
   <modules>
     <module>common-lib</module>
     <module>donaciones-service</module>
-    <module>notificaciones-service</module>
+    <module>logistica-service</module>
   </modules>
 
   <properties>
