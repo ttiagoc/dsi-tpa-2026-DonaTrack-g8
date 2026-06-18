@@ -379,4 +379,11 @@ GestorPlanificacionRutas "1" -down-> "1" AdapterPlanificadorExterno
 ReceptorPlanificacionRutas ..> ResultadoPlanificacionDTO
 ReceptorPlanificacionRutas ..> Ruta
 
+Parada "1" -right-> "1" EntidadBeneficiariaDTO
+Parada "1" -down-> "*" DonacionDTO
+ResultadoPlanificacionDTO "1" -down-> "*" Ruta
+ResultadoPlanificacionDTO "1" -down-> "*" DonacionDTO
+GestorPlanificacionRutas ..> DonacionDTO
+AdapterPlanificadorExterno ..> DonacionDTO
+
 @enduml
