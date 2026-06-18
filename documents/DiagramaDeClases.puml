@@ -5,8 +5,35 @@ skinparam nodesep 60
 skinparam ranksep 80
 hide empty members
 
-package "Microservicio Donaciones y Notificaciones" {
+package "Common Lib" {
+  interface MedioContacto {
+    notificar(mensaje : String)
+  }
 
+  class Email {
+    valor : string
+    notificar(mensaje : String)
+  }
+
+  class Telefono {
+    valor : string
+    notificar(mensaje : String)
+  }
+
+  class WhatsApp {
+    valor : string
+    notificar(mensaje : String)
+  }
+
+  class Notificacion {
+    fecha : LocalDateTime
+    mensaje : String
+    contacto : MedioContacto
+    completada : Boolean
+  }
+}
+
+package "Microservicio Donaciones" {
   class ImportadorDonantes {
     importarDonantes(archivo : string) : void
   }
@@ -46,25 +73,6 @@ package "Microservicio Donaciones y Notificaciones" {
     ONG
     Empresa
     Institucion
-  }
-
-  interface MedioContacto {
-    notificar(mensaje : String)
-  }
-
-  class Email {
-    valor : string
-    notificar(mensaje : String)
-  }
-
-  class Telefono {
-    valor : string
-    notificar(mensaje : String)
-  }
-
-  class WhatsApp {
-    valor : string
-    notificar(mensaje : String)
   }
 
   class RegistroDonacion {
@@ -169,13 +177,6 @@ package "Microservicio Donaciones y Notificaciones" {
     ANUAL
   }
 
-  class Notificacion {
-    fecha : LocalDateTime
-    mensaje : String
-    contacto : MedioContacto
-    completada : Boolean
-  }
-
   class EventManager {
     listeners: Map<TipoEvento, Listener>
     emitir(evento: Evento)
@@ -185,7 +186,7 @@ package "Microservicio Donaciones y Notificaciones" {
     ejecutar(evento: Evento)
   }
 
-  class GestorNotificaciones {
+  class NotificacionesAdapter {
     ejecutar(evento: Evento)
     armarMensaje(evento: Evento) : String
   }
@@ -226,7 +227,16 @@ package "Microservicio Donaciones y Notificaciones" {
   }
 }
 
-package "Microservicio Logística" {
+package "Microservicio Logistica" {
+  class DonacionDTO {
+    id: Long
+    estado: String
+  }
+  
+  class EntidadBeneficiariaDTO {
+    id: Long
+    direccion: String
+  }
 
   class Camion {
     patente: String
@@ -268,18 +278,18 @@ package "Microservicio Logística" {
   class Parada {
     orden: Integer
     destino: String
-    entidad: Long 
-    entregas: List<Long> 
+    entidad: EntidadBeneficiariaDTO 
+    entregas: List<DonacionDTO> 
   }
 
   class GestorPlanificacionRutas {
     adapter: AdapterPlanificadorExterno
-    planificarEntregasDelDiaSiguiente(donacionesDisponibles: List<Long>, camiones: List<Camion>)
-    - fraccionarEnLotesDeCien(donaciones: List<Long>): List<List<Long>>
+    planificarEntregasDelDiaSiguiente(donacionesDisponibles: List<DonacionDTO>, camiones: List<Camion>)
+    - fraccionarEnLotesDeCien(donaciones: List<DonacionDTO>): List<List<DonacionDTO>>
   }
 
   interface AdapterPlanificadorExterno {
-    solicitarPlanificacionAsync(lote: List<Long>, camiones: List<Camion>)
+    solicitarPlanificacionAsync(lote: List<DonacionDTO>, camiones: List<Camion>)
   }
 
   class ReceptorPlanificacionRutas {
@@ -288,11 +298,9 @@ package "Microservicio Logística" {
 
   class ResultadoPlanificacionDTO {
     rutasAsignadas: List<Ruta>
-    donacionesSinAsignar: List<Long>
+    donacionesSinAsignar: List<DonacionDTO>
   }
 }
-
-' --- RELACIONES ---
 
 ImportadorDonantes "1" -down-> "*" Donante
 
@@ -352,11 +360,11 @@ MotorDeMatchmaking ..> ResultadoMatchmaking
 ResultadoMatchmaking "1" -down-> "1" Donacion
 ResultadoMatchmaking "1" -down-> "*" EntidadBeneficiaria
 
-GestorNotificaciones .up.|> Listener
+NotificacionesAdapter .up.|> Listener
 EventManager "1" -down-> "*" Listener
 EventManager ..> Evento
 Evento "1" -right-> "1" TipoEvento
-GestorNotificaciones ..> Evento
+NotificacionesAdapter ..> Evento
 
 Donacion ..> EventManager
 
@@ -370,5 +378,12 @@ Ruta "1" -right-> "1" EstadoRuta
 GestorPlanificacionRutas "1" -down-> "1" AdapterPlanificadorExterno
 ReceptorPlanificacionRutas ..> ResultadoPlanificacionDTO
 ReceptorPlanificacionRutas ..> Ruta
+
+Parada "1" -right-> "1" EntidadBeneficiariaDTO
+Parada "1" -down-> "*" DonacionDTO
+ResultadoPlanificacionDTO "1" -down-> "*" Ruta
+ResultadoPlanificacionDTO "1" -down-> "*" DonacionDTO
+GestorPlanificacionRutas ..> DonacionDTO
+AdapterPlanificadorExterno ..> DonacionDTO
 
 @enduml
