@@ -228,6 +228,16 @@ package "Microservicio Donaciones" {
 }
 
 package "Microservicio Logistica" {
+  class DonacionDTO {
+    id: Long
+    estado: String
+  }
+  
+  class EntidadBeneficiariaDTO {
+    id: Long
+    direccion: String
+  }
+
   class Camion {
     patente: String
     capacidadVolumen: Double
@@ -268,18 +278,18 @@ package "Microservicio Logistica" {
   class Parada {
     orden: Integer
     destino: String
-    entidad: EntidadBeneficiaria 
-    entregas: List<Donacion> 
+    entidad: EntidadBeneficiariaDTO 
+    entregas: List<DonacionDTO> 
   }
 
   class GestorPlanificacionRutas {
     adapter: AdapterPlanificadorExterno
-    planificarEntregasDelDiaSiguiente(donacionesDisponibles: List<Donacion>, camiones: List<Camion>)
-    - fraccionarEnLotesDeCien(donaciones: List<Donacion>): List<List<Donacion>>
+    planificarEntregasDelDiaSiguiente(donacionesDisponibles: List<DonacionDTO>, camiones: List<Camion>)
+    - fraccionarEnLotesDeCien(donaciones: List<DonacionDTO>): List<List<DonacionDTO>>
   }
 
   interface AdapterPlanificadorExterno {
-    solicitarPlanificacionAsync(lote: List<Donacion>, camiones: List<Camion>)
+    solicitarPlanificacionAsync(lote: List<DonacionDTO>, camiones: List<Camion>)
   }
 
   class ReceptorPlanificacionRutas {
@@ -288,7 +298,7 @@ package "Microservicio Logistica" {
 
   class ResultadoPlanificacionDTO {
     rutasAsignadas: List<Ruta>
-    donacionesSinAsignar: List<Donacion>
+    donacionesSinAsignar: List<DonacionDTO>
   }
 }
 
