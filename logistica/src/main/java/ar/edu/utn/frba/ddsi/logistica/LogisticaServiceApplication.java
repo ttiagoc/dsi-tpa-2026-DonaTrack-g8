@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.donaciones;
+package ar.edu.utn.frba.ddsi.logistica;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
