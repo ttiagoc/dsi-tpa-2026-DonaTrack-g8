@@ -1,74 +1,86 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.repositories;
 
-import ar.edu.utn.frba.ddsi.common.Email;
-import ar.edu.utn.frba.ddsi.common.MedioContacto;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.PersonaHumana;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.PersonaJuridica;
-import org.springframework.stereotype.Repository;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.stereotype.Repository;
+
+import ar.edu.utn.frba.ddsi.common.models.entities.Email;
+import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
+
 @Repository
 public class DonanteRepository {
-  private final List<PersonaHumana> personasHumanas = new ArrayList<>();
-  private final List<PersonaJuridica> personasJuridicas = new ArrayList<>();
+  private List<Donante> donantes = new ArrayList<>();
+  private Long proximoId = 1L;
 
-  public void guardarHumana(PersonaHumana persona) {
-    // Si ya existe en la lista (por documento o por email anterior), la reemplazamos
-    buscarHumanaPorEmail(obtenerEmailDePersona(persona.getContactos()))
-        .ifPresent(personasHumanas::remove);
-    personasHumanas.add(persona);
+  /**
+   * Guarda o actualiza un donante (Humana o Jurídica) en memoria.
+   */
+  public Donante save(Donante donante) {
+    if (donante.getId() == null) {
+      donante.setId(proximoId++);
+      donantes.add(donante);
+    } else {
+      findById(donante.getId()).ifPresent(donantes::remove);
+      donantes.add(donante);
+    }
+    return donante;
   }
 
-  public void guardarJuridica(PersonaJuridica persona) {
-    buscarJuridicaPorEmail(obtenerEmailDePersona(persona.getContactos()))
-        .ifPresent(personasJuridicas::remove);
-    personasJuridicas.add(persona);
-  }
-
-  public Optional<PersonaHumana> buscarHumanaPorEmail(String email) {
-    if (email == null) return Optional.empty();
-    return personasHumanas.stream()
-        .filter(p -> tieneEmail(p.getContactos(), email))
+  /**
+   * Busca un donante por su ID único (Esencial para GET /api/donantes/{id}).
+   */
+  public Optional<Donante> findById(Long id) {
+    if (id == null)
+      return Optional.empty();
+    return donantes.stream()
+        .filter(d -> id.equals(d.getId()))
         .findFirst();
   }
 
-  public Optional<PersonaJuridica> buscarJuridicaPorEmail(String email) {
-    if (email == null) return Optional.empty();
-    return personasJuridicas.stream()
-        .filter(p -> tieneEmail(p.getContactos(), email))
+  /**
+   * Devuelve todos los donantes registrados (Para GET /api/donantes).
+   */
+  public List<Donante> findAll() {
+    return new ArrayList<>(donantes);
+  }
+
+  /**
+   * Elimina un donante por su ID (Para DELETE /api/donantes/{id}).
+   */
+  public boolean deleteById(Long id) {
+    Optional<Donante> donante = findById(id);
+    if (donante.isPresent()) {
+      donantes.remove(donante.get());
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Mantenemos la búsqueda por email útil para validaciones o el importador.
+   */
+  public Optional<Donante> buscarPorEmail(String email) {
+    if (email == null)
+      return Optional.empty();
+    return donantes.stream()
+        .filter(d -> tieneEmail(d.getContactos(), email))
         .findFirst();
-  }
-
-  public List<PersonaHumana> obtenerTodasLasHumanas() {
-    return new ArrayList<>(personasHumanas);
-  }
-
-  public List<PersonaJuridica> obtenerTodasLasJuridicas() {
-    return new ArrayList<>(personasJuridicas);
   }
 
   public void limpiar() {
-    personasHumanas.clear();
-    personasJuridicas.clear();
+    donantes.clear();
+    proximoId = 1L;
   }
 
   private boolean tieneEmail(List<MedioContacto> contactos, String emailBuscado) {
-    if (contactos == null) return false;
+    if (contactos == null)
+      return false;
     return contactos.stream()
         .filter(c -> c instanceof Email)
         .map(c -> ((Email) c).getValor())
         .anyMatch(val -> val != null && val.equalsIgnoreCase(emailBuscado.trim()));
-  }
-
-  private String obtenerEmailDePersona(List<MedioContacto> contactos) {
-    if (contactos == null) return null;
-    return contactos.stream()
-        .filter(c -> c instanceof Email)
-        .map(c -> ((Email) c).getValor())
-        .findFirst()
-        .orElse(null);
   }
 }

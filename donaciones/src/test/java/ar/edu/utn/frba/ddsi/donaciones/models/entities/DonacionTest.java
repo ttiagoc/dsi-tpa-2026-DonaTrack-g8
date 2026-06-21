@@ -5,6 +5,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Bien;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.EstadoBien;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.TipoEstadoDonacion;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.Periodo;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -13,9 +21,10 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests para el Requerimiento: "Ciclo de vida de una Donación"
  * Una Donación tiene un historial de estados. Cada cambio de estado se registra
- * con fecha y justificación. El estado actual es siempre el último del historial.
+ * con fecha y justificación. El estado actual es siempre el último del
+ * historial.
  * Posibles estados: EN_DEPOSITO, ASIGNACION_REALIZADA, LISTA_PARA_ENTREGAR,
- *                   EN_TRASLADO, ENTREGADA, ENTREGA_FALLIDA, VENCIDA.
+ * EN_TRASLADO, ENTREGADA, ENTREGA_FALLIDA, VENCIDA.
  */
 @DisplayName("Ciclo de vida de una Donación")
 class DonacionTest {
@@ -36,7 +45,7 @@ class DonacionTest {
 
         bienBase = new Bien();
         bienBase.setSubcategoria(subcategoria);
-        bienBase.setCantidad(10.0);
+        bienBase.setCantidad(10L);
         bienBase.setFechaVencimiento(LocalDate.of(2026, 12, 1));
     }
 
@@ -100,7 +109,7 @@ class DonacionTest {
 
             Bien otroBien = new Bien();
             otroBien.setSubcategoria(subcategoria);
-            otroBien.setCantidad(5.0);
+            otroBien.setCantidad(5L);
 
             donacion.agregarBien(otroBien);
 
@@ -120,15 +129,15 @@ class DonacionTest {
 
             Bien bien2 = new Bien();
             bien2.setSubcategoria(subcategoria);
-            bien2.setCantidad(5.0);
+            bien2.setCantidad(5L);
             donacion.agregarBien(bien2);
 
             Bien bien3 = new Bien();
             bien3.setSubcategoria(subcategoria);
-            bien3.setCantidad(3.5);
+            bien3.setCantidad(3L);
             donacion.agregarBien(bien3);
 
-            assertEquals(18.5, donacion.cantidadBienesRecibidos());
+            assertEquals(18L, donacion.cantidadBienesRecibidos());
         }
 
         @Test
@@ -139,7 +148,7 @@ class DonacionTest {
             bienSinCantidad.setCantidad(null);
 
             Donacion donacion = new Donacion(bienSinCantidad, LocalDateTime.now());
-            assertEquals(0.0, donacion.cantidadBienesRecibidos());
+            assertEquals(0L, donacion.cantidadBienesRecibidos());
         }
     }
 
@@ -169,7 +178,7 @@ class DonacionTest {
             Donacion donacion = new Donacion(bienBase, LocalDateTime.now());
             donacion.confirmarEntrega();
             assertEquals(TipoEstadoDonacion.EN_DEPOSITO,
-                donacion.getHistorialEstados().getFirst().getEstado());
+                    donacion.getHistorialEstados().getFirst().getEstado());
         }
     }
 

@@ -1,15 +1,5 @@
 package ar.edu.utn.frba.ddsi.donaciones.services;
 
-import ar.edu.utn.frba.ddsi.common.Email;
-import ar.edu.utn.frba.ddsi.common.MedioContacto;
-import ar.edu.utn.frba.ddsi.common.Telefono;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.PersonaHumana;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.PersonaJuridica;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.TipoOrganizacion;
-import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -17,10 +7,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import ar.edu.utn.frba.ddsi.common.models.entities.Email;
+import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
+import ar.edu.utn.frba.ddsi.common.models.entities.Telefono;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaJuridica;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.TipoOrganizacion;
+import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
+
 @Service
 public class ImportadorDonantesService {
 
-  private final DonanteRepository donanteRepository;
+  private DonanteRepository donanteRepository;
 
   @Autowired
   public ImportadorDonantesService(DonanteRepository donanteRepository) {
@@ -29,7 +30,7 @@ public class ImportadorDonantesService {
 
   public void importarDonantes(String pathArchivo) {
     if (pathArchivo == null || pathArchivo.isEmpty()) {
-      throw new IllegalArgumentException("La ruta del archivo no puede estar vacía");
+      throw new IllegalArgumentException("La ruta del archivo no puede estar vacÃ­a");
     }
 
     try (BufferedReader br = new BufferedReader(new FileReader(pathArchivo))) {
@@ -37,7 +38,7 @@ public class ImportadorDonantesService {
       boolean esCabecera = true;
 
       while ((linea = br.readLine()) != null) {
-        // Ignorar líneas vacías
+        // Ignorar lÃ­neas vacÃ­as
         if (linea.trim().isEmpty()) {
           continue;
         }
@@ -59,7 +60,7 @@ public class ImportadorDonantesService {
     // Soportar separador por comas (o punto y coma si fuera necesario)
     String[] campos = linea.split(",");
     if (campos.length < 5) {
-      // Línea inválida o incompleta
+      // LÃ­nea invÃ¡lida o incompleta
       return;
     }
 
@@ -77,15 +78,16 @@ public class ImportadorDonantesService {
   }
 
   private void procesarHumana(String dni, String nombreCompleto, String emailVal, String telefonoVal) {
-    Optional<PersonaHumana> existenteOpt = donanteRepository.buscarHumanaPorEmail(emailVal);
+    Optional<PersonaHumana> existenteOpt = donanteRepository.buscarPorEmail(emailVal)
+        .map(d -> (PersonaHumana) d);
 
     if (existenteOpt.isPresent()) {
-      // Actualizar información existente
+      // Actualizar informaciÃ³n existente
       PersonaHumana humana = existenteOpt.get();
       actualizarNombreHumana(humana, nombreCompleto);
       humana.setDni(dni);
       actualizarContactos(humana.getContactos(), emailVal, telefonoVal);
-      donanteRepository.guardarHumana(humana);
+      donanteRepository.save(humana);
     } else {
       // Crear nuevo registro
       PersonaHumana humana = new PersonaHumana();
@@ -106,24 +108,25 @@ public class ImportadorDonantesService {
       humana.setContactos(contactos);
       humana.setContactoPredeterminado(email);
 
-      donanteRepository.guardarHumana(humana);
+      donanteRepository.save(humana);
 
-      // Notificación de bienvenida simulada
+      // NotificaciÃ³n de bienvenida simulada
       humana.getContactoPredeterminado().notificar(
-          "Bienvenido/a a DonaTrack, " + nombreCompleto + "! Tu usuario ha sido creado con éxito.");
+          "Bienvenido/a a DonaTrack, " + nombreCompleto + "! Tu usuario ha sido creado con Ã©xito.");
     }
   }
 
   private void procesarJuridica(String documento, String razonSocial, String emailVal, String telefonoVal) {
-    Optional<PersonaJuridica> existenteOpt = donanteRepository.buscarJuridicaPorEmail(emailVal);
+    Optional<PersonaJuridica> existenteOpt = donanteRepository.buscarPorEmail(emailVal)
+        .map(d -> (PersonaJuridica) d);
 
     if (existenteOpt.isPresent()) {
-      // Actualizar información existente
+      // Actualizar informaciÃ³n existente
       PersonaJuridica juridica = existenteOpt.get();
       juridica.setRazonSocial(razonSocial);
       juridica.setCuit(documento);
       actualizarContactos(juridica.getContactos(), emailVal, telefonoVal);
-      donanteRepository.guardarJuridica(juridica);
+      donanteRepository.save(juridica);
     } else {
       // Crear nuevo registro
       PersonaJuridica juridica = new PersonaJuridica();
@@ -146,11 +149,11 @@ public class ImportadorDonantesService {
       juridica.setContactos(contactos);
       juridica.setContactoPredeterminado(email);
 
-      donanteRepository.guardarJuridica(juridica);
+      donanteRepository.save(juridica);
 
-      // Notificación de bienvenida simulada
+      // NotificaciÃ³n de bienvenida simulada
       juridica.getContactoPredeterminado().notificar(
-          "Bienvenido/a a DonaTrack, " + razonSocial + "! El usuario de su organización ha sido creado con éxito.");
+          "Bienvenido/a a DonaTrack, " + razonSocial + "! El usuario de su organizaciÃ³n ha sido creado con Ã©xito.");
     }
   }
 

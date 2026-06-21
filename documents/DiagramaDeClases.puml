@@ -39,6 +39,7 @@ package "Microservicio Donaciones" {
   }
 
   abstract class Donante {
+    id : Long
     donaciones : List<RegistroDonacion>
     contactos: List<MedioContacto>
     contactoPredeterminado: MedioContacto
@@ -84,6 +85,7 @@ package "Microservicio Donaciones" {
   }
 
   class Donacion {
+    id : Long
     donante : Donante
     entidadBeneficiariaAsignada : EntidadBeneficiaria
     subcategoria : Subcategoria
@@ -126,7 +128,7 @@ package "Microservicio Donaciones" {
   class Bien {
     descripcion : String
     foto : String
-    cantidad : Double
+    cantidad : Long
     unidadMedida : String
     subcategoria : Subcategoria
     estado : EstaBien
@@ -139,6 +141,7 @@ package "Microservicio Donaciones" {
   }
 
   class EntidadBeneficiaria {
+    id : Long
     razonSocial : String
     direccion : String
     telefono : Telefono
@@ -152,22 +155,22 @@ package "Microservicio Donaciones" {
     subcategoria : Subcategoria
     tipoNecesidad : TipoNecesidad
     descripcion : String
-    cantidad : Double
+    cantidad : Long
     donacionesAsignadas : List<Donacion>
-    recibirDonacion(donacion : Donacion) : void
+    asignarDonacion(donacion : Donacion) : void
   }
 
   interface TipoNecesidad {
-    {abstract} estaSatisfecha(donaciones : List<Donacion>, cantidadRequerida : Double) : Boolean
+    {abstract} estaSatisfecha(donaciones : List<Donacion>, cantidadRequerida : Long) : Boolean
   }
 
   class NecesidadExtraordinaria {
-    estaSatisfecha(donaciones : List<Donacion>, cantidadRequerida : Double) : Boolean
+    estaSatisfecha(donaciones : List<Donacion>, cantidadRequerida : Long) : Boolean
   }
 
   class NecesidadRecurrente {
     periodo : Periodo
-    estaSatisfecha(donaciones : List<Donacion>, cantidadRequerida : Double) : Boolean
+    estaSatisfecha(donaciones : List<Donacion>, cantidadRequerida : Long) : Boolean
   }
 
   enum Periodo {
@@ -222,8 +225,17 @@ package "Microservicio Donaciones" {
   }
 
   class ResultadoMatchmaking {
+    id: Long
     donacion: Donacion
     entidadesSugeridas: List<EntidadBeneficiaria>
+    fechaEjecucion: LocalDateTime
+    estado: EstadoPropuesta
+  }
+
+  enum EstadoPropuesta {
+    PENDIENTE
+    ACEPTADO
+    RECHAZADO
   }
 }
 
@@ -239,6 +251,7 @@ package "Microservicio Logistica" {
   }
 
   class Camion {
+    id: Long
     patente: String
     capacidadVolumen: Double
     altura: Double
@@ -252,6 +265,7 @@ package "Microservicio Logistica" {
   }
 
   class Ruta {
+    id: Long
     fecha: LocalDate
     estado: EstadoRuta
     camion: Camion
@@ -359,6 +373,7 @@ MotorDeMatchmaking ..> ResultadoMatchmaking
 
 ResultadoMatchmaking "1" -down-> "1" Donacion
 ResultadoMatchmaking "1" -down-> "*" EntidadBeneficiaria
+ResultadoMatchmaking "1" --> "1" EstadoPropuesta
 
 NotificacionesAdapter .up.|> Listener
 EventManager "1" -down-> "*" Listener

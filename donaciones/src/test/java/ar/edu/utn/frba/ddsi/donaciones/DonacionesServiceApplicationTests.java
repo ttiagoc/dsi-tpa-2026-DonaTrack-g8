@@ -8,7 +8,7 @@ class DonacionesServiceApplicationTests {
 
     @Test
     void contextLoads() {
-        // Test de humo: simplemente verifica que la app inicie sin errores
+
     }
 
 }

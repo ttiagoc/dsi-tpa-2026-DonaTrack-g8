@@ -5,15 +5,23 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Bien;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.EstadoBien;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
+
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests para el Requerimiento: "Categorización de bienes"
- * Los bienes pertenecen a una Subcategoría que a su vez pertenece a una Categoría.
- * Las categorías definen si los bienes "piden estado" (NUEVO/USADO) y si son "perecederos"
- * (con fecha de vencimiento). La key generada por un Bien se usa para la segmentación.
+ * Los bienes pertenecen a una Subcategoría que a su vez pertenece a una
+ * Categoría.
+ * Las categorías definen si los bienes "piden estado" (NUEVO/USADO) y si son
+ * "perecederos"
+ * (con fecha de vencimiento). La key generada por un Bien se usa para la
+ * segmentación.
  */
 @DisplayName("Categorización de Bienes y generación de keys")
 class BienTest {
