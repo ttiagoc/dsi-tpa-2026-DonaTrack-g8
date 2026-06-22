@@ -1,6 +1,8 @@
-package ar.edu.utn.frba.ddsi.logistica.models.entities;
+package ar.edu.utn.frba.ddsi.logistica.dto;
 
 import java.util.List;
+
+import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
 import lombok.Data;
 
 @Data

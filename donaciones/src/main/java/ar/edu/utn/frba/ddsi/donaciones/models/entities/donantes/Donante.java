@@ -1,14 +1,13 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes;
 
-import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.RegistroDonacion;
-import lombok.Getter;
-import lombok.Setter;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
-@Setter
+import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.RegistroDonacion;
+import lombok.Data;
+
+@Data
 public abstract class Donante {
   private Long id;
   private List<RegistroDonacion> donaciones;

@@ -5,13 +5,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import ar.edu.utn.frba.ddsi.common.models.enums.EstadoBien;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Bien;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.EstadoBien;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.RegistroDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.TipoEstadoDonacion;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

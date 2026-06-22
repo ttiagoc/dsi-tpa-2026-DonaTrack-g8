@@ -11,8 +11,6 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBenefici
 public class CompatibilidadSemantica implements AlgoritmoAsignacion {
     @Override
     public List<EntidadBeneficiaria> generarRanking(Donacion donacion, List<EntidadBeneficiaria> entidadesCandidatas) {
-        // Filtra y ordena las entidades que tienen necesidades de la misma subcategoría
-        // que la donación
         return entidadesCandidatas.stream()
                 .filter(e -> e.getNecesidades().stream()
                         .anyMatch(n -> n.getSubcategoria().equals(donacion.getSubcategoria())))

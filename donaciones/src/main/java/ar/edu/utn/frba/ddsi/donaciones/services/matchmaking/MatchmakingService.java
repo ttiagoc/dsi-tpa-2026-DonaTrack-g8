@@ -5,10 +5,10 @@ import java.util.List;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import ar.edu.utn.frba.ddsi.common.models.enums.EstadoPropuesta;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.EstadoPropuesta;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.ResultadoMatchmaking;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
@@ -30,9 +30,6 @@ public class MatchmakingService {
         this.procesarMatchmakingGlobal();
     }
 
-    /**
-     * Orquesta el flujo completo de emparejamiento para las donaciones pendientes.
-     */
     public void procesarMatchmakingGlobal() {
         List<Donacion> donacionesEnDeposito = donacionRepository.buscarPorEstado(TipoEstadoDonacion.EN_DEPOSITO);
 
@@ -50,10 +47,6 @@ public class MatchmakingService {
         }
     }
 
-    /**
-     * El administrador acepta la propuesta y elige una entidad destino de la lista
-     * de sugeridas.
-     */
     public void aceptarPropuesta(Long propuestaId, Long entidadId) {
         ResultadoMatchmaking propuesta = resultadoRepository.findById(propuestaId)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró la propuesta con ID: " + propuestaId));
@@ -82,9 +75,6 @@ public class MatchmakingService {
                 "Propuesta " + propuestaId + " ACEPTADA. Donación asignada a la entidad: " + entidadElegida.getId());
     }
 
-    /**
-     * El administrador rechaza las sugerencias del motor.
-     */
     public void rechazarPropuesta(Long propuestaId) {
         ResultadoMatchmaking propuesta = resultadoRepository.findById(propuestaId)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró la propuesta con ID: " + propuestaId));

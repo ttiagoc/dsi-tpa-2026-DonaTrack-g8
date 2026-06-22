@@ -1,27 +1,30 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.entities;
 
-import ar.edu.utn.frba.ddsi.common.models.entities.Email;
-import ar.edu.utn.frba.ddsi.common.models.entities.Telefono;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Bien;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.TipoEstadoDonacion;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.Necesidad;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.NecesidadExtraordinaria;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.NecesidadRecurrente;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.Periodo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import ar.edu.utn.frba.ddsi.common.models.entities.Email;
+import ar.edu.utn.frba.ddsi.common.models.entities.Telefono;
+import ar.edu.utn.frba.ddsi.common.models.enums.Periodo;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Bien;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.Necesidad;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.NecesidadExtraordinaria;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.NecesidadRecurrente;
 
 /**
  * Tests para el Requerimiento: "Necesidades de entidades beneficiarias"

@@ -1,6 +1,6 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.repositories;
 
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.EstadoPropuesta;
+import ar.edu.utn.frba.ddsi.common.models.enums.EstadoPropuesta;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.ResultadoMatchmaking;
 import org.springframework.stereotype.Repository;
 
@@ -14,10 +14,6 @@ public class ResultadoMatchmakingRepository {
 
     private Long proximoId = 1L;
 
-    /**
-     * Guarda una nueva propuesta o actualiza su estado (ej: cuando el admin
-     * acepta/rechaza).
-     */
     public ResultadoMatchmaking save(ResultadoMatchmaking propuesta) {
         if (propuesta.getId() == null) {
             propuesta.setId(proximoId++);
@@ -41,10 +37,6 @@ public class ResultadoMatchmakingRepository {
         return new ArrayList<>(propuestas);
     }
 
-    /**
-     * Devuelve las propuestas que el proceso nocturno calculó y el administrador
-     * todavía no confirmó ni rechazó.
-     */
     public List<ResultadoMatchmaking> buscarPendientes() {
         return propuestas.stream()
                 .filter(p -> p.getEstado() == EstadoPropuesta.PENDIENTE)

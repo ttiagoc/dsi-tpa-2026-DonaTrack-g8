@@ -1,31 +1,26 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.entities;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import ar.edu.utn.frba.ddsi.common.models.enums.EstadoBien;
+import ar.edu.utn.frba.ddsi.common.models.enums.Periodo;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Bien;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.EstadoBien;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.TipoEstadoDonacion;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.Periodo;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-/**
- * Tests para el Requerimiento: "Ciclo de vida de una Donación"
- * Una Donación tiene un historial de estados. Cada cambio de estado se registra
- * con fecha y justificación. El estado actual es siempre el último del
- * historial.
- * Posibles estados: EN_DEPOSITO, ASIGNACION_REALIZADA, LISTA_PARA_ENTREGAR,
- * EN_TRASLADO, ENTREGADA, ENTREGA_FALLIDA, VENCIDA.
- */
 @DisplayName("Ciclo de vida de una Donación")
 class DonacionTest {
 

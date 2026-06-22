@@ -1,18 +1,18 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones;
 
-import lombok.Getter;
-import lombok.Setter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import ar.edu.utn.frba.ddsi.common.models.enums.EstadoBien;
+import ar.edu.utn.frba.ddsi.common.models.enums.Periodo;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.Periodo;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class Donacion {
   private Long id;
   private Donante donante;

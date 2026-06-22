@@ -13,9 +13,9 @@ import org.springframework.stereotype.Service;
 import ar.edu.utn.frba.ddsi.common.models.entities.Email;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.entities.Telefono;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoOrganizacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaJuridica;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.TipoOrganizacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
 
 @Service

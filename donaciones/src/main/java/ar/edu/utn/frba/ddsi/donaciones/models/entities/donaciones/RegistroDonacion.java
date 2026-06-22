@@ -1,17 +1,13 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Getter
-@Setter
-@NoArgsConstructor
+import lombok.Data;
+
+@Data
 public class RegistroDonacion {
   private String descripcion;
   private LocalDateTime fecha;

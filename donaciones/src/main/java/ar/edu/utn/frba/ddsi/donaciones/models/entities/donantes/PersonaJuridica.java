@@ -5,6 +5,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.util.List;
 
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoOrganizacion;
+
 @Getter
 @Setter
 @NoArgsConstructor

@@ -1,12 +1,8 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
-@NoArgsConstructor
+@Data
 public class Subcategoria {
   private String nombre;
   private Categoria categoria;

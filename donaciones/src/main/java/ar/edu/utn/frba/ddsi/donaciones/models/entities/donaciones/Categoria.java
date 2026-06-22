@@ -1,13 +1,10 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import java.util.List;
 
-@Getter
-@Setter
-@NoArgsConstructor
+import lombok.Data;
+
+@Data
 public class Categoria {
   private String nombre;
   private Boolean pideEstado;

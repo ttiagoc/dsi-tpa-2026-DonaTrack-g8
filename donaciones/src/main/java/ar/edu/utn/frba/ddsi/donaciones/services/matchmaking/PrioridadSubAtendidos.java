@@ -14,7 +14,6 @@ public class PrioridadSubAtendidos implements AlgoritmoAsignacion {
     @Override
     public List<EntidadBeneficiaria> generarRanking(Donacion donacion, List<EntidadBeneficiaria> entidadesCandidatas) {
         LocalDateTime limiteTrimestre = LocalDateTime.now().minusMonths(3);
-        // Ordena de menor a mayor cantidad de donaciones asignadas
         return entidadesCandidatas.stream()
                 .sorted(Comparator.comparingLong(entidad -> contarDonacionesRecibidas(entidad, limiteTrimestre)))
                 .limit(10)

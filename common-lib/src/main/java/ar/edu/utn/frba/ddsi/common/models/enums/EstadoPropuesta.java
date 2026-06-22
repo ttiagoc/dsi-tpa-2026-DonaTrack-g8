@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones;
+package ar.edu.utn.frba.ddsi.common.models.enums;
 
 public enum EstadoPropuesta {
     PENDIENTE,

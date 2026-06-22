@@ -1,15 +1,26 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.entities;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
 import ar.edu.utn.frba.ddsi.common.models.entities.Email;
-import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.entities.Telefono;
+import ar.edu.utn.frba.ddsi.common.models.enums.EstadoBien;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Bien;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.EstadoBien;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.RegistroDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaJuridica;
@@ -17,24 +28,6 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Representante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.Necesidad;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.NecesidadExtraordinaria;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-/**
- * Tests para el Requerimiento: "Donantes y registro de donaciones"
- *
- * Un Donante puede ser una PersonaHumana o una PersonaJuridica.
- * El Donante acumula un historial de RegistroDonacion.
- * Cada RegistroDonacion contiene bienes y se segmenta automÃ¡ticamente.
- */
 @DisplayName("Donantes y flujo completo de donaciÃ³n")
 class DonanteTest {
 

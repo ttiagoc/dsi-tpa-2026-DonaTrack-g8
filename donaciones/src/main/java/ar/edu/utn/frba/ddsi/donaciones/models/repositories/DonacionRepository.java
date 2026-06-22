@@ -2,8 +2,8 @@ package ar.edu.utn.frba.ddsi.donaciones.models.repositories;
 
 import org.springframework.stereotype.Repository;
 
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.TipoEstadoDonacion;
 
 import java.util.ArrayList;
 import java.util.List;

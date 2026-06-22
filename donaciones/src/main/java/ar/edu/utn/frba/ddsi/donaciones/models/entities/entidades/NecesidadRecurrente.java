@@ -1,15 +1,12 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import java.util.List;
 
+import ar.edu.utn.frba.ddsi.common.models.enums.Periodo;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
+import lombok.Data;
 
-@Getter
-@Setter
-@NoArgsConstructor
+@Data
 public class NecesidadRecurrente implements TipoNecesidad {
   private Periodo periodo;
 

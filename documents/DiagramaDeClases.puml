@@ -31,6 +31,16 @@ package "Common Lib" {
     contacto : MedioContacto
     completada : Boolean
   }
+
+  enum TipoEstadoDonacion {
+    EN_DEPOSITO
+    ASIGNACION_REALIZADA
+    LISTA_PARA_ENTREGAR
+    EN_TRASLADO
+    ENTREGADA
+    ENTREGA_FALLIDA
+    VENCIDA
+  }
 }
 
 package "Microservicio Donaciones" {
@@ -49,7 +59,7 @@ package "Microservicio Donaciones" {
   class PersonaHumana {
     nombre: String
     apellido: String
-    fechaNacimiento: LocalDate
+    fechaNacimiento: LocalDateTime
     dni : String
     genero: String
     direccion: String
@@ -90,7 +100,7 @@ package "Microservicio Donaciones" {
     entidadBeneficiariaAsignada : EntidadBeneficiaria
     subcategoria : Subcategoria
     estadoBienes : EstadoBien
-    fechaVencimiento : LocalDate
+    fechaVencimiento : LocalDateTime
     bienes : List<Bien>
     fecha : LocalDateTime
     historialEstados : List<CambioEstado>
@@ -101,16 +111,6 @@ package "Microservicio Donaciones" {
     fecha : LocalDateTime
     estado : TipoEstadoDonacion
     justificacion : String
-  }
-
-  enum TipoEstadoDonacion {
-    EN_DEPOSITO
-    ASIGNACION_REALIZADA
-    LISTA_PARA_ENTREGAR
-    EN_TRASLADO
-    ENTREGADA
-    ENTREGA_FALLIDA
-    VENCIDA
   }
 
   class Categoria {
@@ -132,7 +132,7 @@ package "Microservicio Donaciones" {
     unidadMedida : String
     subcategoria : Subcategoria
     estado : EstaBien
-    fechaVencimiento : LocalDate
+    fechaVencimiento : LocalDateTime
   }
 
   enum EstadoBien {
@@ -242,7 +242,7 @@ package "Microservicio Donaciones" {
 package "Microservicio Logistica" {
   class DonacionDTO {
     id: Long
-    estado: String
+    estado: TipoEstadoDonacion
   }
   
   class EntidadBeneficiariaDTO {
@@ -266,7 +266,7 @@ package "Microservicio Logistica" {
 
   class Ruta {
     id: Long
-    fecha: LocalDate
+    fecha: LocalDateTime
     estado: EstadoRuta
     camion: Camion
     chofer: Chofer
@@ -400,5 +400,7 @@ ResultadoPlanificacionDTO "1" -down-> "*" Ruta
 ResultadoPlanificacionDTO "1" -down-> "*" DonacionDTO
 GestorPlanificacionRutas ..> DonacionDTO
 AdapterPlanificadorExterno ..> DonacionDTO
+
+DonacionDTO "1" --> "1" TipoEstadoDonacion
 
 @enduml

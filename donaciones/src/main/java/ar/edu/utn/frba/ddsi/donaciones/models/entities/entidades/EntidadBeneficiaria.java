@@ -1,15 +1,14 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades;
 
-import ar.edu.utn.frba.ddsi.common.models.entities.Email;
-import ar.edu.utn.frba.ddsi.common.models.entities.Telefono;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
-import lombok.Getter;
-import lombok.Setter;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
-@Setter
+import ar.edu.utn.frba.ddsi.common.models.entities.Email;
+import ar.edu.utn.frba.ddsi.common.models.entities.Telefono;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
+import lombok.Data;
+
+@Data
 public class EntidadBeneficiaria {
   private Long id;
   private String razonSocial;
