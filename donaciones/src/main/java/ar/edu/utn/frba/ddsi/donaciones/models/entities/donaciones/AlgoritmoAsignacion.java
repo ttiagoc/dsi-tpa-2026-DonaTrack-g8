@@ -1,8 +1,7 @@
-package ar.edu.utn.frba.ddsi.donaciones.services.matchmaking;
+package ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones;
 
 import java.util.List;
 
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
 
 public interface AlgoritmoAsignacion {

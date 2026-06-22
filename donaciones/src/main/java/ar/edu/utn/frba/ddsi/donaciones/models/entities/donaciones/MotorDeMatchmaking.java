@@ -1,16 +1,11 @@
-package ar.edu.utn.frba.ddsi.donaciones.services.matchmaking;
+package ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.stereotype.Service;
-
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.ResultadoMatchmaking;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
 import lombok.AllArgsConstructor;
 
-@Service
 @AllArgsConstructor
 public class MotorDeMatchmaking {
     private List<AlgoritmoAsignacion> algoritmos;

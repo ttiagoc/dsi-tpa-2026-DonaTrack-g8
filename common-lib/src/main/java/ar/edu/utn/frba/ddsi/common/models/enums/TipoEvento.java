@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.donaciones.services.notifiactions;
+package ar.edu.utn.frba.ddsi.common.models.enums;
 
 public enum TipoEvento {
     AUSENCIA_PLATAFORMA,

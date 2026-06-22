@@ -1,15 +1,11 @@
-package ar.edu.utn.frba.ddsi.donaciones.services.matchmaking;
+package ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
-import org.springframework.stereotype.Component;
-
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
 
-@Component
 public class PrioridadSubAtendidos implements AlgoritmoAsignacion {
     @Override
     public List<EntidadBeneficiaria> generarRanking(Donacion donacion, List<EntidadBeneficiaria> entidadesCandidatas) {

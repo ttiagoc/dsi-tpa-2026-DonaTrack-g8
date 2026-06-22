@@ -2,7 +2,7 @@ package ar.edu.utn.frba.ddsi.donaciones.controllers;
 
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.ResultadoMatchmaking;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.ResultadoMatchmakingRepository;
-import ar.edu.utn.frba.ddsi.donaciones.services.matchmaking.MatchmakingService;
+import ar.edu.utn.frba.ddsi.donaciones.services.MatchmakingService;
 import lombok.AllArgsConstructor;
 
 import org.springframework.http.ResponseEntity;

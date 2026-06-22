@@ -1,37 +1,24 @@
-package ar.edu.utn.frba.ddsi.logistica.services;
-
-import ar.edu.utn.frba.ddsi.logistica.dto.DonacionDTO;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
+package ar.edu.utn.frba.ddsi.logistica.models.entities;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Service
+import ar.edu.utn.frba.ddsi.logistica.dto.DonacionDTO;
+
 public class GestorPlanificacionRutas {
 
     private static final int TAMANO_LOTE = 100;
 
-    private final AdapterPlanificadorExterno adapter;
-
-    public GestorPlanificacionRutas(AdapterPlanificadorExterno adapter) {
-        this.adapter = adapter;
-    }
-
-    @Async
-    public void planificarEntregasDelDiaSiguiente(List<DonacionDTO> donacionesDisponibles, List<Camion> camiones) {
+    public List<List<DonacionDTO>> obtenerLotesParaPlanificar(List<DonacionDTO> donacionesDisponibles) {
         System.out.println("LOGÍSTICA: Iniciando planificación del día siguiente...");
 
         if (donacionesDisponibles == null || donacionesDisponibles.isEmpty()) {
-            return;
+            return new ArrayList<>();
         }
 
         List<List<DonacionDTO>> lotes = this.fraccionarEnLotesDeCien(donacionesDisponibles);
 
-        for (List<DonacionDTO> lote : lotes) {
-            adapter.solicitarPlanificacionAsync(lote, camiones);
-        }
+        return lotes;
     }
 
     private List<List<DonacionDTO>> fraccionarEnLotesDeCien(List<DonacionDTO> donaciones) {
