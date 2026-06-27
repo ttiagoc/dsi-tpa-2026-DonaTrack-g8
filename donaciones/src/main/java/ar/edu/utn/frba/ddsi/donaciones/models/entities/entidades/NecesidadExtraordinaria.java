@@ -4,8 +4,10 @@ import java.util.List;
 
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class NecesidadExtraordinaria implements TipoNecesidad {
 
   @Override

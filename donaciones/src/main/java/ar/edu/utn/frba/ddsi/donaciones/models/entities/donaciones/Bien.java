@@ -3,9 +3,13 @@ package ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones;
 import java.time.LocalDate;
 
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoBien;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Bien {
   private String descripcion;
   private String foto;

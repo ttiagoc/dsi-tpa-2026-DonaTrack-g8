@@ -30,7 +30,7 @@ public class ImportadorDonantesService {
 
   public void importarDonantes(String pathArchivo) {
     if (pathArchivo == null || pathArchivo.isEmpty()) {
-      throw new IllegalArgumentException("La ruta del archivo no puede estar vacÃ­a");
+      throw new IllegalArgumentException("La ruta del archivo no puede estar vacía");
     }
 
     try (BufferedReader br = new BufferedReader(new FileReader(pathArchivo))) {
@@ -38,12 +38,10 @@ public class ImportadorDonantesService {
       boolean esCabecera = true;
 
       while ((linea = br.readLine()) != null) {
-        // Ignorar lÃ­neas vacÃ­as
         if (linea.trim().isEmpty()) {
           continue;
         }
 
-        // Ignorar la cabecera del CSV
         if (esCabecera) {
           esCabecera = false;
           continue;
@@ -57,10 +55,8 @@ public class ImportadorDonantesService {
   }
 
   private void procesarLinea(String linea) {
-    // Soportar separador por comas (o punto y coma si fuera necesario)
     String[] campos = linea.split(",");
     if (campos.length < 5) {
-      // LÃ­nea invÃ¡lida o incompleta
       return;
     }
 
@@ -82,26 +78,22 @@ public class ImportadorDonantesService {
         .map(d -> (PersonaHumana) d);
 
     if (existenteOpt.isPresent()) {
-      // Actualizar informaciÃ³n existente
       PersonaHumana humana = existenteOpt.get();
       actualizarNombreHumana(humana, nombreCompleto);
       humana.setDni(dni);
       actualizarContactos(humana.getContactos(), emailVal, telefonoVal);
       donanteRepository.save(humana);
     } else {
-      // Crear nuevo registro
       PersonaHumana humana = new PersonaHumana();
       actualizarNombreHumana(humana, nombreCompleto);
       humana.setDni(dni);
 
       List<MedioContacto> contactos = new ArrayList<>();
-      Email email = new Email();
-      email.setValor(emailVal);
+      Email email = new Email(emailVal);
       contactos.add(email);
 
       if (!telefonoVal.isEmpty()) {
-        Telefono tel = new Telefono();
-        tel.setValor(telefonoVal);
+        Telefono tel = new Telefono(telefonoVal);
         contactos.add(tel);
       }
 
@@ -110,9 +102,8 @@ public class ImportadorDonantesService {
 
       donanteRepository.save(humana);
 
-      // NotificaciÃ³n de bienvenida simulada
       humana.getContactoPredeterminado().notificar(
-          "Bienvenido/a a DonaTrack, " + nombreCompleto + "! Tu usuario ha sido creado con Ã©xito.");
+          "Bienvenido/a a DonaTrack, " + nombreCompleto + "! Tu usuario ha sido creado con Éxito.");
     }
   }
 
@@ -121,28 +112,24 @@ public class ImportadorDonantesService {
         .map(d -> (PersonaJuridica) d);
 
     if (existenteOpt.isPresent()) {
-      // Actualizar informaciÃ³n existente
       PersonaJuridica juridica = existenteOpt.get();
       juridica.setRazonSocial(razonSocial);
       juridica.setCuit(documento);
       actualizarContactos(juridica.getContactos(), emailVal, telefonoVal);
       donanteRepository.save(juridica);
     } else {
-      // Crear nuevo registro
       PersonaJuridica juridica = new PersonaJuridica();
       juridica.setRazonSocial(razonSocial);
       juridica.setCuit(documento);
-      juridica.setTipo(TipoOrganizacion.EMPRESA); // Valor por defecto
+      juridica.setTipo(TipoOrganizacion.EMPRESA);
       juridica.setRepresentantes(new ArrayList<>());
 
       List<MedioContacto> contactos = new ArrayList<>();
-      Email email = new Email();
-      email.setValor(emailVal);
+      Email email = new Email(emailVal);
       contactos.add(email);
 
       if (!telefonoVal.isEmpty()) {
-        Telefono tel = new Telefono();
-        tel.setValor(telefonoVal);
+        Telefono tel = new Telefono(telefonoVal);
         contactos.add(tel);
       }
 
@@ -151,9 +138,8 @@ public class ImportadorDonantesService {
 
       donanteRepository.save(juridica);
 
-      // NotificaciÃ³n de bienvenida simulada
       juridica.getContactoPredeterminado().notificar(
-          "Bienvenido/a a DonaTrack, " + razonSocial + "! El usuario de su organizaciÃ³n ha sido creado con Ã©xito.");
+          "Bienvenido/a a DonaTrack, " + razonSocial + "! El usuario de su organización ha sido creado con Éxito.");
     }
   }
 
@@ -172,14 +158,12 @@ public class ImportadorDonantesService {
     if (contactos == null)
       return;
 
-    // Buscar y actualizar Email
     Optional<Email> emailOpt = contactos.stream()
         .filter(c -> c instanceof Email)
         .map(c -> (Email) c)
         .findFirst();
     emailOpt.ifPresent(email -> email.setValor(emailVal));
 
-    // Buscar y actualizar o agregar Telefono
     Optional<Telefono> telOpt = contactos.stream()
         .filter(c -> c instanceof Telefono)
         .map(c -> (Telefono) c)
@@ -191,8 +175,7 @@ public class ImportadorDonantesService {
         contactos.remove(telOpt.get());
       }
     } else if (!telefonoVal.isEmpty()) {
-      Telefono tel = new Telefono();
-      tel.setValor(telefonoVal);
+      Telefono tel = new Telefono(telefonoVal);
       contactos.add(tel);
     }
   }

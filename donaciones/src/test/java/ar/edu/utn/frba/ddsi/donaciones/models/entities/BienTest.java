@@ -24,14 +24,8 @@ class BienTest {
         @Test
         @DisplayName("Una subcategoría de categoría perecedera es perecedera")
         void subcategoriaEsPerecedera() {
-            Categoria cat = new Categoria();
-            cat.setNombre("Alimentos");
-            cat.setEsPerecedero(true);
-            cat.setPideEstado(false);
-
-            Subcategoria sub = new Subcategoria();
-            sub.setNombre("Fideos");
-            sub.setCategoria(cat);
+            Categoria cat = new Categoria("Alimentos", false, true, null);
+            Subcategoria sub = new Subcategoria("Fideos", cat);
 
             assertTrue(sub.esPerecedero());
             assertFalse(sub.pideEstado());
@@ -40,14 +34,8 @@ class BienTest {
         @Test
         @DisplayName("Una subcategoría de categoría que pide estado, pide estado")
         void subcategoriaPideEstado() {
-            Categoria cat = new Categoria();
-            cat.setNombre("Muebles");
-            cat.setEsPerecedero(false);
-            cat.setPideEstado(true);
-
-            Subcategoria sub = new Subcategoria();
-            sub.setNombre("Sillas");
-            sub.setCategoria(cat);
+            Categoria cat = new Categoria("Muebles", true, false, null);
+            Subcategoria sub = new Subcategoria("Sillas", cat);
 
             assertFalse(sub.esPerecedero());
             assertTrue(sub.pideEstado());
@@ -56,8 +44,7 @@ class BienTest {
         @Test
         @DisplayName("Subcategoría sin categoría asignada retorna false para ambas propiedades")
         void sinCategoriaRetornaFalse() {
-            Subcategoria sub = new Subcategoria();
-            sub.setNombre("Huérfana");
+            Subcategoria sub = new Subcategoria("Huérfana", null);
 
             assertFalse(sub.esPerecedero());
             assertFalse(sub.pideEstado());
@@ -73,31 +60,16 @@ class BienTest {
 
         @BeforeEach
         void setUp() {
-            categoriaAlimentos = new Categoria();
-            categoriaAlimentos.setNombre("Alimentos");
-            categoriaAlimentos.setEsPerecedero(true);
-            categoriaAlimentos.setPideEstado(false);
-
-            categoriaMuebles = new Categoria();
-            categoriaMuebles.setNombre("Muebles");
-            categoriaMuebles.setEsPerecedero(false);
-            categoriaMuebles.setPideEstado(true);
+            categoriaAlimentos = new Categoria("Alimentos", false, true, null);
+            categoriaMuebles = new Categoria("Muebles", true, false, null);
         }
 
         @Test
         @DisplayName("Key base es el nombre de la subcategoría")
         void keyBaseEsNombreSubcategoria() {
-            Categoria catSimple = new Categoria();
-            catSimple.setNombre("Servicios");
-            catSimple.setEsPerecedero(false);
-            catSimple.setPideEstado(false);
-
-            Subcategoria sub = new Subcategoria();
-            sub.setNombre("Clases");
-            sub.setCategoria(catSimple);
-
-            Bien bien = new Bien();
-            bien.setSubcategoria(sub);
+            Categoria catSimple = new Categoria("Servicios", false, false, null);
+            Subcategoria sub = new Subcategoria("Clases", catSimple);
+            Bien bien = new Bien(null, null, null, null, sub, null, null);
 
             assertEquals("Clases", bien.generarKey());
         }
@@ -105,12 +77,9 @@ class BienTest {
         @Test
         @DisplayName("Perecedero incluye fecha de vencimiento en la key")
         void perecederoIncluyeVencimiento() {
-            Subcategoria sub = new Subcategoria();
-            sub.setNombre("Fideos");
-            sub.setCategoria(categoriaAlimentos);
+            Subcategoria sub = new Subcategoria("Fideos", categoriaAlimentos);
 
-            Bien bien = new Bien();
-            bien.setSubcategoria(sub);
+            Bien bien = new Bien(null, null, null, null, sub, null, null);
             bien.setFechaVencimiento(LocalDate.of(2026, 12, 1));
 
             assertEquals("Fideos-2026-12-01", bien.generarKey());
@@ -119,12 +88,8 @@ class BienTest {
         @Test
         @DisplayName("Perecedero sin fecha de vencimiento NO incluye vencimiento")
         void perecederoSinFechaSoloNombre() {
-            Subcategoria sub = new Subcategoria();
-            sub.setNombre("Fideos");
-            sub.setCategoria(categoriaAlimentos);
-
-            Bien bien = new Bien();
-            bien.setSubcategoria(sub);
+            Subcategoria sub = new Subcategoria("Fideos", categoriaAlimentos);
+            Bien bien = new Bien(null, null, null, null, sub, null, null);
             bien.setFechaVencimiento(null);
 
             assertEquals("Fideos", bien.generarKey());
@@ -133,12 +98,8 @@ class BienTest {
         @Test
         @DisplayName("Categoría que pide estado incluye el EstadoBien en la key")
         void pideEstadoIncluyeEstado() {
-            Subcategoria sub = new Subcategoria();
-            sub.setNombre("Sillas");
-            sub.setCategoria(categoriaMuebles);
-
-            Bien bien = new Bien();
-            bien.setSubcategoria(sub);
+            Subcategoria sub = new Subcategoria("Sillas", categoriaMuebles);
+            Bien bien = new Bien(null, null, null, null, sub, EstadoBien.USADO, null);
             bien.setEstadoBien(EstadoBien.USADO);
 
             assertEquals("Sillas-USADO", bien.generarKey());
@@ -147,12 +108,8 @@ class BienTest {
         @Test
         @DisplayName("Categoría que pide estado pero bien sin estado asignado NO incluye estado")
         void pideEstadoPeroSinEstado() {
-            Subcategoria sub = new Subcategoria();
-            sub.setNombre("Sillas");
-            sub.setCategoria(categoriaMuebles);
-
-            Bien bien = new Bien();
-            bien.setSubcategoria(sub);
+            Subcategoria sub = new Subcategoria("Sillas", categoriaMuebles);
+            Bien bien = new Bien(null, null, null, null, sub, null, null);
             bien.setEstadoBien(null);
 
             assertEquals("Sillas", bien.generarKey());
@@ -161,19 +118,11 @@ class BienTest {
         @Test
         @DisplayName("Dos bienes iguales generan la misma key")
         void dosIgualesGeneranMismaKey() {
-            Subcategoria sub = new Subcategoria();
-            sub.setNombre("Fideos");
-            sub.setCategoria(categoriaAlimentos);
-
+            Subcategoria sub = new Subcategoria("Fideos", categoriaAlimentos);
             LocalDate vencimiento = LocalDate.of(2026, 12, 1);
 
-            Bien bien1 = new Bien();
-            bien1.setSubcategoria(sub);
-            bien1.setFechaVencimiento(vencimiento);
-
-            Bien bien2 = new Bien();
-            bien2.setSubcategoria(sub);
-            bien2.setFechaVencimiento(vencimiento);
+            Bien bien1 = new Bien(null, null, null, null, sub, null, vencimiento);
+            Bien bien2 = new Bien(null, null, null, null, sub, null, vencimiento);
 
             assertEquals(bien1.generarKey(), bien2.generarKey());
         }
@@ -181,17 +130,13 @@ class BienTest {
         @Test
         @DisplayName("Dos bienes con distinto vencimiento generan diferente key (perecederos)")
         void distintoVencimientoDistintaKey() {
-            Subcategoria sub = new Subcategoria();
-            sub.setNombre("Leche");
-            sub.setCategoria(categoriaAlimentos);
+            Subcategoria sub = new Subcategoria("Leche", categoriaAlimentos);
 
-            Bien bien1 = new Bien();
-            bien1.setSubcategoria(sub);
-            bien1.setFechaVencimiento(LocalDate.of(2026, 6, 1));
+            LocalDate vencimiento1 = LocalDate.of(2026, 6, 1);
+            Bien bien1 = new Bien(null, null, null, null, sub, null, vencimiento1);
 
-            Bien bien2 = new Bien();
-            bien2.setSubcategoria(sub);
-            bien2.setFechaVencimiento(LocalDate.of(2026, 12, 1));
+            LocalDate vencimiento2 = LocalDate.of(2026, 12, 1);
+            Bien bien2 = new Bien(null, null, null, null, sub, null, vencimiento2);
 
             assertNotEquals(bien1.generarKey(), bien2.generarKey());
         }
@@ -199,17 +144,11 @@ class BienTest {
         @Test
         @DisplayName("Dos bienes con distinto estado generan diferente key (pide estado)")
         void distintoEstadoDistintaKey() {
-            Subcategoria sub = new Subcategoria();
-            sub.setNombre("Sillas");
-            sub.setCategoria(categoriaMuebles);
+            Subcategoria sub = new Subcategoria("Sillas", categoriaMuebles);
 
-            Bien bien1 = new Bien();
-            bien1.setSubcategoria(sub);
-            bien1.setEstadoBien(EstadoBien.NUEVO);
+            Bien bien1 = new Bien(null, null, null, null, sub, EstadoBien.NUEVO, null);
 
-            Bien bien2 = new Bien();
-            bien2.setSubcategoria(sub);
-            bien2.setEstadoBien(EstadoBien.USADO);
+            Bien bien2 = new Bien(null, null, null, null, sub, EstadoBien.USADO, null);
 
             assertNotEquals(bien1.generarKey(), bien2.generarKey());
         }

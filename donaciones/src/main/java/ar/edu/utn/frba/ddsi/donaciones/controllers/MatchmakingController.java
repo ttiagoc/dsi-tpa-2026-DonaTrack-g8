@@ -54,7 +54,7 @@ public class MatchmakingController {
     }
 
     /**
-     * Forzar el proceso de matchmaking por HTTP sin esperar a las 3 AM.
+     * Fuerza el proceso de matchmaking por HTTP sin esperar a las 3 AM.
      */
     @PostMapping("/forzar-ejecucion")
     public ResponseEntity<String> forzarEjecucion() {

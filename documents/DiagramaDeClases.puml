@@ -191,7 +191,6 @@ package "Microservicio Donaciones" {
 
   class NotificacionesAdapter {
     ejecutar(evento: Evento)
-    armarMensaje(evento: Evento) : String
   }
 
   class Evento {
@@ -201,9 +200,12 @@ package "Microservicio Donaciones" {
 
   enum TipoEvento {
     AUSENCIA_PLATAFORMA
-    DONACION_ASIGNADA
-    INICIO_RUTA
-    ENTREGA_EXITOSA
+    DONACION_ASIGNADA_ENTIDAD
+    DONACION_ASIGNADA_DONANTE
+    INICIO_RUTA_DONANTE
+    INICIO_RUTA_ENTIDAD
+    ENTREGA_EXITOSA_ENTIDAD
+    ENTREGA_EXITOSA_DONANTE
     ENTREGA_FALLIDA
   }
 

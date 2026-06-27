@@ -6,9 +6,13 @@ import java.util.List;
 import ar.edu.utn.frba.ddsi.common.models.entities.Email;
 import ar.edu.utn.frba.ddsi.common.models.entities.Telefono;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class EntidadBeneficiaria {
   private Long id;
   private String razonSocial;

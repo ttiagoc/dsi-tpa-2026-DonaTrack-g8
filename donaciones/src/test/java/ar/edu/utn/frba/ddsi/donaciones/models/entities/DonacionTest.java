@@ -29,19 +29,9 @@ class DonacionTest {
 
     @BeforeEach
     void setUp() {
-        Categoria categoria = new Categoria();
-        categoria.setNombre("Alimentos");
-        categoria.setEsPerecedero(true);
-        categoria.setPideEstado(false);
-
-        subcategoria = new Subcategoria();
-        subcategoria.setNombre("Fideos");
-        subcategoria.setCategoria(categoria);
-
-        bienBase = new Bien();
-        bienBase.setSubcategoria(subcategoria);
-        bienBase.setCantidad(10L);
-        bienBase.setFechaVencimiento(LocalDate.of(2026, 12, 1));
+        Categoria categoria = new Categoria("Alimentos", false, true, null);
+        subcategoria = new Subcategoria("Fideos", categoria);
+        bienBase = new Bien(null, null, 10L, null, subcategoria, null, LocalDate.of(2026, 12, 1));
     }
 
     @Nested
@@ -102,9 +92,7 @@ class DonacionTest {
         void agregarBienSumaBienes() {
             Donacion donacion = new Donacion(bienBase, LocalDateTime.now());
 
-            Bien otroBien = new Bien();
-            otroBien.setSubcategoria(subcategoria);
-            otroBien.setCantidad(5L);
+            Bien otroBien = new Bien(null, null, 5L, null, subcategoria, null, null);
 
             donacion.agregarBien(otroBien);
 
@@ -122,14 +110,10 @@ class DonacionTest {
         void sumaCorrectamente() {
             Donacion donacion = new Donacion(bienBase, LocalDateTime.now()); // 10.0
 
-            Bien bien2 = new Bien();
-            bien2.setSubcategoria(subcategoria);
-            bien2.setCantidad(5L);
+            Bien bien2 = new Bien(null, null, 5L, null, subcategoria, null, null);
             donacion.agregarBien(bien2);
 
-            Bien bien3 = new Bien();
-            bien3.setSubcategoria(subcategoria);
-            bien3.setCantidad(3L);
+            Bien bien3 = new Bien(null, null, 3L, null, subcategoria, null, null);
             donacion.agregarBien(bien3);
 
             assertEquals(18L, donacion.cantidadBienesRecibidos());
@@ -138,9 +122,7 @@ class DonacionTest {
         @Test
         @DisplayName("Un bien con cantidad null se trata como 0")
         void bienConCantidadNullEsCero() {
-            Bien bienSinCantidad = new Bien();
-            bienSinCantidad.setSubcategoria(subcategoria);
-            bienSinCantidad.setCantidad(null);
+            Bien bienSinCantidad = new Bien(null, null, null, null, subcategoria, null, null);
 
             Donacion donacion = new Donacion(bienSinCantidad, LocalDateTime.now());
             assertEquals(0L, donacion.cantidadBienesRecibidos());

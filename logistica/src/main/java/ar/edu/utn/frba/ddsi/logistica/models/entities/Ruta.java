@@ -17,11 +17,14 @@ public class Ruta {
     private Ubicacion ultimaUbicacion;
 
     public void actualizarUbicacion(Ubicacion nuevaUbicacion) {
+        this.ultimaUbicacion = nuevaUbicacion;
     }
 
     public void iniciar() {
+        this.estado = EstadoRuta.EN_TRASLADO;
     }
 
     public void finalizar() {
+        this.estado = EstadoRuta.FINALIZADA;
     }
 }

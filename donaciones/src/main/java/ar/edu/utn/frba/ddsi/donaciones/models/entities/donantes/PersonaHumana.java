@@ -1,9 +1,13 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes;
 
+import java.time.LocalDate;
+import java.util.List;
+
+import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.RegistroDonacion;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -15,4 +19,17 @@ public class PersonaHumana extends Donante {
   private String dni;
   private String genero;
   private String direccion;
+
+  public PersonaHumana(Long id, List<RegistroDonacion> donaciones, List<MedioContacto> contactos,
+      MedioContacto contactoPredeterminado, String nombre, String apellido, LocalDate fechaNacimiento, String dni,
+      String genero, String direccion) {
+    super(id, donaciones, contactos, contactoPredeterminado);
+    this.nombre = nombre;
+    this.apellido = apellido;
+    this.fechaNacimiento = fechaNacimiento;
+    this.dni = dni;
+    this.genero = genero;
+    this.direccion = direccion;
+  }
+
 }

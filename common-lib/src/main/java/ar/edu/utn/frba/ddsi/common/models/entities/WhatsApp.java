@@ -1,10 +1,12 @@
 package ar.edu.utn.frba.ddsi.common.models.entities;
 
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter @Setter @NoArgsConstructor
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class WhatsApp implements MedioContacto {
   private String valor;
 
