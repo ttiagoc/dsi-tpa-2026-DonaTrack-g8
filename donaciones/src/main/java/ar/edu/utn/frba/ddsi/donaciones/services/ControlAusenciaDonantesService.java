@@ -13,12 +13,12 @@ import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
 public class ControlAusenciaDonantesService {
 
     private final DonanteRepository donanteRepository;
-    private final NotificacionEventoService notificacionEventoService;
+    private final EventoService eventoService;
 
     public ControlAusenciaDonantesService(DonanteRepository donanteRepository,
-            NotificacionEventoService notificacionEventoService) {
+            EventoService eventoService) {
         this.donanteRepository = donanteRepository;
-        this.notificacionEventoService = notificacionEventoService;
+        this.eventoService = eventoService;
     }
 
     @Scheduled(cron = "0 0 3 * * ?")
@@ -32,8 +32,7 @@ public class ControlAusenciaDonantesService {
             if (donante.getFechaUltimaDonacion().isBefore(limiteInactividad)) {
 
                 System.out.println("Se detectó inactividad prolongada en Donante ID #" + donante.getId());
-                notificacionEventoService.notificarAusenciaDonante(donante);
-
+                eventoService.notificarAusenciaDonante(donante);
             }
         }
         System.out.println("Escaneo de inactividad finalizado.");

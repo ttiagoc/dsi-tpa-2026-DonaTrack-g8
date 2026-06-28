@@ -1,12 +1,14 @@
 package ar.edu.utn.frba.ddsi.donaciones.controllers;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ar.edu.utn.frba.ddsi.donaciones.services.NotificacionEventoService;
+import ar.edu.utn.frba.ddsi.donaciones.dto.EntregaExitosaDTO;
+import ar.edu.utn.frba.ddsi.donaciones.dto.InicioRutaDTO;
+import ar.edu.utn.frba.ddsi.donaciones.services.EventoService;
 import lombok.AllArgsConstructor;
 
 @RestController
@@ -14,32 +16,22 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class NotificacionEventoController {
 
-    private final NotificacionEventoService notificacionEventoService;
+    private final EventoService eventoService;
 
-    @PostMapping("/inicio-ruta-donante/{donacion}")
-    public ResponseEntity<String> notificarInicioRutaDonante(@PathVariable Long donacion) {
+    @PostMapping("/inicio-ruta")
+    public ResponseEntity<String> iniciarRuta(@RequestBody InicioRutaDTO dto) {
         try {
-            notificacionEventoService.notificarInicioRutaDonante(donacion);
+            eventoService.iniciarRuta(dto);
             return ResponseEntity.ok("Notificación de inicio de ruta enviada correctamente.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    @PostMapping("/inicio-ruta-entidad/{entidad}")
-    public ResponseEntity<String> notificarInicioRutaEntidad(@PathVariable Long entidad) {
+    @PostMapping("/confirmacion-entrega-exitosa")
+    public ResponseEntity<String> confirmarEntregaExitosa(@RequestBody EntregaExitosaDTO dto) {
         try {
-            notificacionEventoService.notificarInicioRutaEntidad(entidad);
-            return ResponseEntity.ok("Notificación de inicio de ruta enviada correctamente.");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
-    @PostMapping("/confirmacion-entrega-exitosa/{donacionId}")
-    public ResponseEntity<String> notificarConfirmacionEntregaExitosa(@PathVariable Long donacionId) {
-        try {
-            notificacionEventoService.notificarConfirmacionEntregaExitosa(donacionId);
+            eventoService.confirmarEntregaExitosa(dto);
             return ResponseEntity.ok("Notificación de confirmacion de entrega exitosa enviada correctamente.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

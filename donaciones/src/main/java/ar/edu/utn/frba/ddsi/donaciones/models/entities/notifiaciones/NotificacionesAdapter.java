@@ -1,5 +1,9 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.entities.notifiaciones;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
+
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import lombok.Data;
 
@@ -37,11 +41,25 @@ public class NotificacionesAdapter implements Listener {
                 "Tu entrega ya está en camino. Seguí el recorrido del camión en tiempo real haciendo click en el siguiente mapa interactivo: LINK";
             // TODO: Colocar el link real del mapa.
 
-            case ENTREGA_EXITOSA_DONANTE ->
-                "La entrega fue realizada con exito.";
+            case ENTREGA_EXITOSA_DONANTE -> {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                Map<String, Object> comprobante = (Map<String, Object>) evento.getDatos().get("comprobante");
+                String patente = (String) comprobante.get("patenteCamion");
+                LocalDateTime fechaHora = (LocalDateTime) comprobante.get("fechaHora");
+                yield "Tu donación fue entregada con éxito. Comprobante de entrega: "
+                        + "[Fecha/Hora: " + fechaHora.format(formatter) + " HS] "
+                        + "[Camión Responsable - Patente: " + patente + "].";
+            }
 
-            case ENTREGA_EXITOSA_ENTIDAD ->
-                "La entrega fue realizada con exito.";
+            case ENTREGA_EXITOSA_ENTIDAD -> {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                Map<String, Object> comprobante = (Map<String, Object>) evento.getDatos().get("comprobante");
+                String patente = (String) comprobante.get("patenteCamion");
+                LocalDateTime fechaHora = (LocalDateTime) comprobante.get("fechaHora");
+                yield "Las donaciones han sido entregadas con éxito. Comprobante de entrega: "
+                        + "[Fecha/Hora: " + fechaHora.format(formatter) + " HS] "
+                        + "[Camión Responsable - Patente: " + patente + "].";
+            }
 
             case ENTREGA_FALLIDA ->
                 "No se pudo realizar la entrega.";

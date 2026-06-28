@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ar.edu.utn.frba.ddsi.logistica.services.EntregaDonacionesService;
 
 @RestController
-@RequestMapping("/api/donaciones/eventos")
+@RequestMapping("/api/logistica/entregas")
 public class EntregaDonacionesController {
 
     private final EntregaDonacionesService entregaDonacionesService;
@@ -18,15 +18,16 @@ public class EntregaDonacionesController {
         this.entregaDonacionesService = entregaDonacionesService;
     }
 
-    @PostMapping("/inicio-ruta/{rutaId}")
-    public ResponseEntity<Void> recibirInicioRuta(@PathVariable Long rutaId) {
+    @PostMapping("/iniciar/{rutaId}")
+    public ResponseEntity<Void> iniciarRuta(@PathVariable Long rutaId) {
         entregaDonacionesService.iniciarRuta(rutaId);
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/confirmacion-entrega-exitosa/{donacionId}")
-    public ResponseEntity<Void> recibirConfirmacionEntregaExitosa(@PathVariable Long donacionId) {
-        entregaDonacionesService.confirmarEntregaExitosa(donacionId);
+    @PostMapping("/confirmar/{paradaId}/{rutaId}")
+    public ResponseEntity<Void> recibirConfirmacionEntregaExitosa(@PathVariable Long paradaId,
+            @PathVariable Long rutaId) {
+        entregaDonacionesService.confirmarEntregaExitosa(paradaId, rutaId);
         return ResponseEntity.ok().build();
     }
 }
