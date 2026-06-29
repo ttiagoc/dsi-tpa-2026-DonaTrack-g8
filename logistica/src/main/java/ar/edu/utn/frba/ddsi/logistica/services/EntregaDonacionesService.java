@@ -10,7 +10,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ar.edu.utn.frba.ddsi.logistica.config.RestLogisticaConfig;
-import ar.edu.utn.frba.ddsi.logistica.dto.DonacionDTO;
 import ar.edu.utn.frba.ddsi.logistica.dto.EntregaExitosaDTO;
 import ar.edu.utn.frba.ddsi.logistica.dto.InicioRutaDTO;
 import ar.edu.utn.frba.ddsi.logistica.dto.ParadaDTO;
@@ -45,16 +44,14 @@ public class EntregaDonacionesService {
         List<ParadaDTO> paradas = new ArrayList<>();
         for (Parada parada : ruta.getParadas()) {
             ParadaDTO paradaDTO = new ParadaDTO();
-            paradaDTO.setEntidadId(parada.getEntidad().getId());
-
-            List<Long> donacionIds = parada.getEntregas().stream().map(DonacionDTO::getId).toList();
-            paradaDTO.setDonacionIds(donacionIds);
+            paradaDTO.setEntidadId(parada.getEntidad());
+            paradaDTO.setDonacionIds(parada.getEntregas());
             paradas.add(paradaDTO);
         }
         inicioRutaDTO.setParadas(paradas);
 
         URI url = UriComponentsBuilder.fromUriString(properties.getBaseUrl())
-                .path("/notificacion-evento/inicio-ruta")
+                .path("/evento/inicio-ruta")
                 .build().toUri();
         try {
             restTemplate.postForEntity(url, inicioRutaDTO, String.class);
@@ -72,13 +69,13 @@ public class EntregaDonacionesService {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Parada no encontrada en la ruta especificada."));
 
-        List<Long> idsDonaciones = paradaAfectada.getEntregas().stream().map(DonacionDTO::getId).toList();
+        List<Long> donaciones = paradaAfectada.getEntregas();
 
-        EntregaExitosaDTO entregaExitosaDTO = new EntregaExitosaDTO(paradaAfectada.getEntidad().getId(), idsDonaciones,
+        EntregaExitosaDTO entregaExitosaDTO = new EntregaExitosaDTO(paradaAfectada.getEntidad(), donaciones,
                 ruta.getCamion().getPatente(), LocalDateTime.now());
 
         URI url = UriComponentsBuilder.fromUriString(properties.getBaseUrl())
-                .path("/api/notificacion-evento/entrega-exitosa")
+                .path("/evento/entrega-exitosa")
                 .build().toUri();
         try {
             restTemplate.postForEntity(url, entregaExitosaDTO, String.class);

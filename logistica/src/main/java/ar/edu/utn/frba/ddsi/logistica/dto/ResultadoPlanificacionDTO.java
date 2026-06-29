@@ -8,5 +8,4 @@ import lombok.Data;
 @Data
 public class ResultadoPlanificacionDTO {
     private List<Ruta> rutasAsignadas;
-    private List<DonacionDTO> donacionesSinAsignar;
 }

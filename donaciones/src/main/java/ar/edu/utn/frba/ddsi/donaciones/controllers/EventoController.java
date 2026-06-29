@@ -12,9 +12,9 @@ import ar.edu.utn.frba.ddsi.donaciones.services.EventoService;
 import lombok.AllArgsConstructor;
 
 @RestController
-@RequestMapping("/api/notificacion-evento")
+@RequestMapping("/api/evento")
 @AllArgsConstructor
-public class NotificacionEventoController {
+public class EventoController {
 
     private final EventoService eventoService;
 

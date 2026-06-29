@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoBien;
 import ar.edu.utn.frba.ddsi.common.models.enums.Periodo;
@@ -77,5 +78,24 @@ public class Donacion {
 
   public void cambiarEstado(TipoEstadoDonacion nuevoEstado, String justificacion) {
     this.registrarEstado(LocalDateTime.now(), nuevoEstado, justificacion);
+  }
+
+  public Double calcularPesoTotal() {
+    return this.bienes.stream()
+        .mapToDouble(bien -> bien.calcularPesoTotal())
+        .sum();
+  }
+
+  public Double calcularVolumenTotal() {
+    return this.bienes.stream()
+        .mapToDouble(bien -> bien.calcularVolumenTotal())
+        .sum();
+  }
+
+  public String obtenerDireccion() {
+    if (this.estadoActual() == TipoEstadoDonacion.EN_DEPOSITO) {
+      return null;
+    }
+    return this.entidadBeneficiariaAsignada.getDireccion();
   }
 }

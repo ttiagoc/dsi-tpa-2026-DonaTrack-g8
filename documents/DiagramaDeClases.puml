@@ -242,15 +242,6 @@ package "Microservicio Donaciones" {
 }
 
 package "Microservicio Logistica" {
-  class DonacionDTO {
-    id: Long
-    estado: TipoEstadoDonacion
-  }
-  
-  class EntidadBeneficiariaDTO {
-    id: Long
-    direccion: String
-  }
 
   class Camion {
     id: Long
@@ -294,27 +285,13 @@ package "Microservicio Logistica" {
   class Parada {
     orden: Integer
     destino: String
-    entidad: EntidadBeneficiariaDTO 
-    entregas: List<DonacionDTO> 
+    entidad: Long
+    entregas: List<Long> 
   }
 
   class GestorPlanificacionRutas {
-    adapter: AdapterPlanificadorExterno
-    planificarEntregasDelDiaSiguiente(donacionesDisponibles: List<DonacionDTO>, camiones: List<Camion>)
-    - fraccionarEnLotesDeCien(donaciones: List<DonacionDTO>): List<List<DonacionDTO>>
-  }
-
-  interface AdapterPlanificadorExterno {
-    solicitarPlanificacionAsync(lote: List<DonacionDTO>, camiones: List<Camion>)
-  }
-
-  class ReceptorPlanificacionRutas {
-    recibirPlanificacion(resultado: ResultadoPlanificacionDTO)
-  }
-
-  class ResultadoPlanificacionDTO {
-    rutasAsignadas: List<Ruta>
-    donacionesSinAsignar: List<DonacionDTO>
+    planificarRutas(donacionesAsignadas : List<Long>, camiones : List<Camion>)
+    fraccionarEnLotes(donaciones : List<Long>) : List<List<Long>>
   }
 }
 
@@ -385,24 +362,13 @@ NotificacionesAdapter ..> Evento
 
 Donacion ..> EventManager
 
-Camion "1" -right-> "*" Chofer
-Ruta "1" -down-> "1" Camion
-Ruta "1" -down-> "1" Chofer
-Ruta "1" -down-> "*" Parada
-Ruta "1" -left-> "1" Ubicacion
-Ruta "1" -right-> "1" EstadoRuta
+Camion "1" --> "*" Chofer
+Ruta "1" --> "1" Camion
+Ruta "1" --> "1" Chofer
+Ruta "1" --> "*" Parada
+Ruta "1" --> "1" Ubicacion
+Ruta "1" --> "1" EstadoRuta
 
-GestorPlanificacionRutas "1" -down-> "1" AdapterPlanificadorExterno
-ReceptorPlanificacionRutas ..> ResultadoPlanificacionDTO
-ReceptorPlanificacionRutas ..> Ruta
-
-Parada "1" -right-> "1" EntidadBeneficiariaDTO
-Parada "1" -down-> "*" DonacionDTO
-ResultadoPlanificacionDTO "1" -down-> "*" Ruta
-ResultadoPlanificacionDTO "1" -down-> "*" DonacionDTO
-GestorPlanificacionRutas ..> DonacionDTO
-AdapterPlanificadorExterno ..> DonacionDTO
-
-DonacionDTO "1" --> "1" TipoEstadoDonacion
+GestorPlanificacionRutas ..> Camion
 
 @enduml

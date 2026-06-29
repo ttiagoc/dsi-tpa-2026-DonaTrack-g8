@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ar.edu.utn.frba.ddsi.logistica.services.EntregaDonacionesService;
 
 @RestController
-@RequestMapping("/api/logistica/entregas")
+@RequestMapping("/api/entregas")
 public class EntregaDonacionesController {
 
     private final EntregaDonacionesService entregaDonacionesService;

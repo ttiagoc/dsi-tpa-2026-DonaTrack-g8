@@ -14,7 +14,8 @@ public class Bien {
   private String descripcion;
   private String foto;
   private Long cantidad;
-  private String unidadMedida;
+  private Double pesoKgPorUnidad;
+  private Double volumenM3PorUnidad;
   private Subcategoria subcategoria;
   private EstadoBien estadoBien;
   private LocalDate fechaVencimiento;
@@ -31,5 +32,13 @@ public class Bien {
     }
 
     return key;
+  }
+
+  public Double calcularPesoTotal() {
+    return this.pesoKgPorUnidad * this.cantidad;
+  }
+
+  public Double calcularVolumenTotal() {
+    return this.volumenM3PorUnidad * this.cantidad;
   }
 }

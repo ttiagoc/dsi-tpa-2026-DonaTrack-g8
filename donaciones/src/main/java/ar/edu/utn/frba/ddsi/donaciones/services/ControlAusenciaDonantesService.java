@@ -21,7 +21,7 @@ public class ControlAusenciaDonantesService {
         this.eventoService = eventoService;
     }
 
-    @Scheduled(cron = "0 0 3 * * ?")
+    @Scheduled(cron = "0 0 3 * * *")
     public void verificarInactividadDonantes() {
         System.out.println("Iniciando escaneo diario de inactividad de donantes...");
 
