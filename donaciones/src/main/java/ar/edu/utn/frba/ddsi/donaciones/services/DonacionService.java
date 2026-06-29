@@ -49,4 +49,28 @@ public class DonacionService {
         }
     }
 
+    public List<Donacion> obtenerTodas() {
+        return donacionRepository.findAll();
+    }
+
+    public Donacion obtenerPorId(Long id) {
+        return donacionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontro la donacion"));
+    }
+
+    public Donacion crear(Donacion donacion) {
+        donacionRepository.save(donacion);
+        return donacion;
+    }
+
+    public void eliminar(Long id) {
+        donacionRepository.deleteById(id);
+    }
+
+    public void cambiarEstado(Long id, TipoEstadoDonacion nuevoEstado, String justificacion) {
+        Donacion donacion = donacionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontro la donacion"));
+        donacion.cambiarEstado(nuevoEstado, justificacion);
+        donacionRepository.save(donacion);
+    }
 }
