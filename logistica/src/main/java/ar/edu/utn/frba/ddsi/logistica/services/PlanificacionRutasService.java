@@ -2,13 +2,19 @@ package ar.edu.utn.frba.ddsi.logistica.services;
 
 import java.net.URI;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ar.edu.utn.frba.ddsi.logistica.config.RestLogisticaConfig;
+import ar.edu.utn.frba.ddsi.logistica.dto.CamionDTO;
 import ar.edu.utn.frba.ddsi.logistica.dto.DonacionDTO;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.GestorPlanificacionRutas;
@@ -33,35 +39,56 @@ public class PlanificacionRutasService {
 
     @Scheduled(cron = "0 0 3 * * *")
     public void planificarRutas() {
-        List<DonacionDTO> donacionesAsignadas = getDonacionesAsignadas();
-        List<Camion> camionesDisponibles = camionRepository.findAll();
+        List<DonacionDTO> lote = getLote();
+        List<Camion> camionesDisponibles = camionRepository.findAllDisponibles();
 
-        if (donacionesAsignadas.isEmpty() && camionesDisponibles.isEmpty()) {
+        if (!lote.isEmpty() && !camionesDisponibles.isEmpty()) {
             gestorPlanificacionRutas.solicitarPlanificacion(lote, camionesDisponibles);
         }
     }
 
-    public void ejecutarPlanificacion() {
+    public void ejecutarPlanificacion(List<CamionDTO> camiones) {
+        List<Long> donacionesPlanificadas = camiones.stream()
+                .flatMap(camion -> camion.getDirecciones().stream())
+                .flatMap(direcciones -> direcciones.getDonacionesIds().stream())
+                .collect(Collectors.toList());
 
-        List<DonacionDTO> donacionesAsignadas = getDonacionesAsignadas();
-        List<DonacionDTO> lote = donacionesAsignadas.subList(0, TAMANO_LOTE);
-        List<Camion> camionesDisponibles = camionRepository.findAll();
-
-        if (donacionesAsignadas.isEmpty() && camionesDisponibles.isEmpty()) {
-            gestorPlanificacionRutas.solicitarPlanificacion(lote, camionesDisponibles);
-        }
-    }
-
-    private List<DonacionDTO> getDonacionesAsignadas() {
         URI url = UriComponentsBuilder.fromUriString(properties.getBaseUrl())
-                .path("/donaciones/asignadas")
-                .queryParam("limit", 100)
+                .path("/donaciones/lista-entrega")
+                .build().toUri();
+
+        HttpEntity<List<Long>> requestEntity = new HttpEntity<>(donacionesPlanificadas);
+
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.PUT,
+                    requestEntity,
+                    String.class);
+            System.out.println(response.getBody());
+        } catch (Exception e) {
+            System.err.println("ERROR: Falló el envío de donaciones asignadas a Donaciones: " + e.getMessage());
+        }
+
+        planificarRutas();
+    }
+
+    private List<DonacionDTO> getLote() {
+        URI url = UriComponentsBuilder.fromUriString(properties.getBaseUrl())
+                .path("/donaciones/planificadas")
+                .queryParam("limit", TAMANO_LOTE)
                 .build().toUri();
         try {
-            return restTemplate.getForObject(url, List.class);
+            ResponseEntity<List<DonacionDTO>> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<List<DonacionDTO>>() {
+                    });
+            return response.getBody();
         } catch (Exception e) {
             System.err.println("ERROR: Falló la consulta a Donaciones.");
-            return null;
+            return List.of();
         }
     }
 }

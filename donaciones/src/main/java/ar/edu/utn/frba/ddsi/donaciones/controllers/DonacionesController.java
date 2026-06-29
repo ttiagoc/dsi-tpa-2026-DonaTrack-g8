@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ar.edu.utn.frba.ddsi.donaciones.dto.DonacionDTO;
@@ -23,9 +24,10 @@ public class DonacionesController {
     }
 
     @GetMapping("/asignadas")
-    public ResponseEntity<List<DonacionDTO>> obtenerDonacionesAsignadas() {
+    public ResponseEntity<List<DonacionDTO>> obtenerDonacionesAsignadas(
+            @RequestParam(name = "limit") int limit) {
         try {
-            return ResponseEntity.ok(donacionService.obtenerDonacionesAsignadas());
+            return ResponseEntity.ok(donacionService.obtenerDonacionesAsignadas(limit));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(null);
         }
