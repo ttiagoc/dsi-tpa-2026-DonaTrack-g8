@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoBien;
 import ar.edu.utn.frba.ddsi.common.models.enums.Periodo;
