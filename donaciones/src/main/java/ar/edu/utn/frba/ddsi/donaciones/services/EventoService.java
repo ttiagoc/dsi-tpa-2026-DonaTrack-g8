@@ -114,6 +114,15 @@ public class EventoService {
                 "donacionId", donacionId,
                 "motivo", motivo);
 
+        // 1. Notificar al Donante
+        if (donante != null && donante.getContactoPredeterminado() != null) {
+            Evento eventoDonante = new Evento(TipoEvento.ENTREGA_FALLIDA, Map.of(
+                    "contacto", donante.getContactoPredeterminado(),
+                    "detalles", datosComunes));
+            eventManager.emitir(eventoDonante);
+        }
+
+        // 2. Notificar a la Entidad (Representantes)
         if (entidad != null) {
             for (MedioContacto correo : entidad.getCorreoRepresentantes()) {
                 Evento eventoEntidad = new Evento(TipoEvento.ENTREGA_FALLIDA, Map.of(
@@ -122,5 +131,11 @@ public class EventoService {
                 eventManager.emitir(eventoEntidad);
             }
         }
+
+        // 3. Notificar al Administrador de la plataforma
+        Evento eventoAdmin = new Evento(TipoEvento.ENTREGA_FALLIDA, Map.of(
+                "detalles", datosComunes,
+                "rolDestinatario", "ADMINISTRADOR"));
+        eventManager.emitir(eventoAdmin);
     }
 }
