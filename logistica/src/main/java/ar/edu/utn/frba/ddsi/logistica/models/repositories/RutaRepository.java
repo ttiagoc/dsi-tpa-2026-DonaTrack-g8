@@ -56,4 +56,14 @@ public class RutaRepository {
         rutas.clear();
         proximoId = 1L;
     }
+
+    public List<Ruta> buscarRutasActivasPorCamion(Long idCamion) {
+        return rutas.stream()
+                .filter(r -> estaActiva(r) && r.getCamion().getId().equals(idCamion))
+                .toList();
+    }
+
+    private boolean estaActiva(Ruta ruta) {
+        return !ruta.getEstado().equals(EstadoRuta.FINALIZADA);
+    }
 }

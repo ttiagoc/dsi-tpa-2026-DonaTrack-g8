@@ -20,8 +20,9 @@ public class DonacionService {
         this.donacionRepository = donacionRepository;
     }
 
-    public List<DonacionDTO> obtenerDonacionesAsignadas() {
-        List<Donacion> donaciones = donacionRepository.buscarPorEstado(TipoEstadoDonacion.ASIGNACION_REALIZADA);
+    public List<DonacionDTO> obtenerDonacionesAsignadas(int limit) {
+        List<Donacion> donaciones = donacionRepository.buscarPorEstado(TipoEstadoDonacion.ASIGNACION_REALIZADA)
+                .subList(0, limit);
 
         List<DonacionDTO> donacionesAsignadas = new ArrayList<>();
         for (Donacion donacion : donaciones) {

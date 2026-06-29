@@ -1,14 +1,22 @@
 package ar.edu.utn.frba.ddsi.logistica.models.repositories;
 
-import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
-import org.springframework.stereotype.Repository;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
+import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
 
 @Repository
 public class CamionRepository {
+
+    @Autowired
+    private RutaRepository rutaRepository;
+
     private List<Camion> camiones = new ArrayList<>();
 
     private Long proximoId = 1L;
@@ -42,6 +50,17 @@ public class CamionRepository {
 
     public List<Camion> findAll() {
         return new ArrayList<>(camiones);
+    }
+
+    public List<Camion> findAllDisponibles() {
+        return camiones.stream()
+                .filter(c -> estaDisponible(c))
+                .collect(Collectors.toList());
+    }
+
+    private Boolean estaDisponible(Camion camion) {
+        List<Ruta> rutas = rutaRepository.buscarRutasActivasPorCamion(camion.getId());
+        return rutas.isEmpty();
     }
 
     public boolean deleteById(Long id) {
