@@ -100,10 +100,6 @@ public class EventoService {
         }
     }
 
-    /**
-     * Notifica a todos los interesados sobre una entrega fallida o no recibida y
-     * actualiza el estado de la donación.
-     */
     public void notificarEntregaFallida(Long donacionId, String motivo) {
         Donacion donacion = donacionRepository.findById(donacionId)
                 .orElseThrow(() -> new IllegalArgumentException("Donación no encontrada."));
@@ -118,7 +114,6 @@ public class EventoService {
                 "donacionId", donacionId,
                 "motivo", motivo);
 
-        // 1. Notificar a la Entidad (Representantes)
         if (entidad != null) {
             for (MedioContacto correo : entidad.getCorreoRepresentantes()) {
                 Evento eventoEntidad = new Evento(TipoEvento.ENTREGA_FALLIDA, Map.of(
