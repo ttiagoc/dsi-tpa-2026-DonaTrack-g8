@@ -99,4 +99,33 @@ public class EventoService {
             eventManager.emitir(evento);
         }
     }
+
+    /**
+     * Notifica a todos los interesados sobre una entrega fallida o no recibida y
+     * actualiza el estado de la donación.
+     */
+    public void notificarEntregaFallida(Long donacionId, String motivo) {
+        Donacion donacion = donacionRepository.findById(donacionId)
+                .orElseThrow(() -> new IllegalArgumentException("Donación no encontrada."));
+
+        donacion.cambiarEstado(TipoEstadoDonacion.ENTREGA_FALLIDA, "Entrega fallida reportada. Motivo: " + motivo);
+        donacionRepository.save(donacion);
+
+        EntidadBeneficiaria entidad = donacion.getEntidadBeneficiariaAsignada();
+        Donante donante = donacion.getDonante();
+
+        Map<String, Object> datosComunes = Map.of(
+                "donacionId", donacionId,
+                "motivo", motivo);
+
+        // 1. Notificar a la Entidad (Representantes)
+        if (entidad != null) {
+            for (MedioContacto correo : entidad.getCorreoRepresentantes()) {
+                Evento eventoEntidad = new Evento(TipoEvento.ENTREGA_FALLIDA, Map.of(
+                        "contacto", correo,
+                        "detalles", datosComunes));
+                eventManager.emitir(eventoEntidad);
+            }
+        }
+    }
 }

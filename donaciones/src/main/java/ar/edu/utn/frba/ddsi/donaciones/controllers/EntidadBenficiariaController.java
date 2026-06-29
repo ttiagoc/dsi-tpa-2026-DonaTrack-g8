@@ -11,6 +11,7 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBenefici
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.Necesidad;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
+import ar.edu.utn.frba.ddsi.donaciones.services.EventoService;
 
 @RestController
 @RequestMapping("/api/entidad-beneficiaria")
@@ -18,10 +19,14 @@ public class EntidadBenficiariaController {
 
     private final EntidadBeneficiariaRepository entidadRepository;
     private final DonacionRepository donacionRepository;
+    private final EventoService eventoService;
 
-    public EntidadBenficiariaController(EntidadBeneficiariaRepository entidadRepository, DonacionRepository donacionRepository) {
+    public EntidadBenficiariaController(EntidadBeneficiariaRepository entidadRepository, 
+                                        DonacionRepository donacionRepository,
+                                        EventoService eventoService) {
         this.entidadRepository = entidadRepository;
         this.donacionRepository = donacionRepository;
+        this.eventoService = eventoService;
     }
 
     /**
@@ -156,8 +161,8 @@ public class EntidadBenficiariaController {
                                 return ResponseEntity.badRequest().body("La donación no está asignada a esta entidad.");
                             }
                             
-                            donacion.cambiarEstado(TipoEstadoDonacion.ENTREGA_FALLIDA, "Reportada como no recibida por la entidad. Motivo: " + motivo);
-                            donacionRepository.save(donacion);
+                            // Delegamos en EventoService la lógica de auditoría de cambio de estado y las notificaciones
+                            eventoService.notificarEntregaFallida(donacionId, motivo);
                             return ResponseEntity.ok("Reporte de entrega fallida para donación #" + donacionId + " registrado.");
                         })
                         .orElse(ResponseEntity.notFound().build()))
