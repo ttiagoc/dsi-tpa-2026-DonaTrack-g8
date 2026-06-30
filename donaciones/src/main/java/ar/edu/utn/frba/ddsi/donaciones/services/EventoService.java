@@ -13,8 +13,8 @@ import ar.edu.utn.frba.ddsi.donaciones.dto.ParadaDTO;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.notifiaciones.EventManager;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.notifiaciones.Evento;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.notificaciones.EventManager;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.notificaciones.Evento;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
 

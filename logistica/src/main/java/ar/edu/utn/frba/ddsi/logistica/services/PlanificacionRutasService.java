@@ -75,7 +75,7 @@ public class PlanificacionRutasService {
 
     private List<DonacionDTO> getLote() {
         URI url = UriComponentsBuilder.fromUriString(properties.getBaseUrl())
-                .path("/donaciones/planificadas")
+                .path("/api/donacion/asignadas")
                 .queryParam("limit", TAMANO_LOTE)
                 .build().toUri();
         try {

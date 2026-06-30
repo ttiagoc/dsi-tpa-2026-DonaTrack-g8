@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.donaciones.models.entities.notifiaciones;
+package ar.edu.utn.frba.ddsi.donaciones.models.entities.notificaciones;
 
 import java.util.ArrayList;
 import java.util.EnumMap;

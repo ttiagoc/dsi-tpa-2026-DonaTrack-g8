@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.donaciones.models.entities.notifiaciones;
+package ar.edu.utn.frba.ddsi.donaciones.models.entities.notificaciones;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

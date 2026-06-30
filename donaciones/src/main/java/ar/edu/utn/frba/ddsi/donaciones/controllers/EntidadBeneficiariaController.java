@@ -21,13 +21,13 @@ import ar.edu.utn.frba.ddsi.donaciones.services.EventoService;
 
 @RestController
 @RequestMapping("/api/entidad-beneficiaria")
-public class EntidadBenficiariaController {
+public class EntidadBeneficiariaController {
 
     private final EntidadBeneficiariaRepository entidadRepository;
     private final DonacionRepository donacionRepository;
     private final EventoService eventoService;
 
-    public EntidadBenficiariaController(EntidadBeneficiariaRepository entidadRepository,
+    public EntidadBeneficiariaController(EntidadBeneficiariaRepository entidadRepository,
             DonacionRepository donacionRepository,
             EventoService eventoService) {
         this.entidadRepository = entidadRepository;
@@ -70,7 +70,17 @@ public class EntidadBenficiariaController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/{entidadId}/necesidades")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarEntidadBeneficiaria(@PathVariable Long id) {
+      boolean eliminado = entidadRepository.deleteById(id);
+
+      if (!eliminado) {
+        return ResponseEntity.notFound().build();
+      }
+      return ResponseEntity.noContent().build();
+    }
+
+  @GetMapping("/{entidadId}/necesidades")
     public ResponseEntity<List<Necesidad>> obtenerNecesidades(@PathVariable Long entidadId) {
         return entidadRepository.findById(entidadId)
                 .map(entidad -> ResponseEntity.ok(entidad.getNecesidades()))
@@ -88,6 +98,38 @@ public class EntidadBenficiariaController {
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
+
+  // La lógica busca primero la entidad padre y después filtra la necesidad por subcategoría.
+  @PutMapping("/{idEntidad}/necesidades/{subcategoriaNombre}")
+  public ResponseEntity<Necesidad> actualizarNecesidad(
+      @PathVariable Long idEntidad,
+      @PathVariable String subcategoriaNombre,
+      @RequestBody Necesidad datosNuevos) {
+
+    var entidadOpt = entidadRepository.findById(idEntidad);
+    if (entidadOpt.isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
+
+    EntidadBeneficiaria entidad = entidadOpt.get();
+    var necesidadOpt = entidad.getNecesidades().stream()
+        .filter(n -> n.getSubcategoria() != null
+            && subcategoriaNombre.equalsIgnoreCase(n.getSubcategoria().getNombre()))
+        .findFirst();
+
+    if (necesidadOpt.isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
+
+    Necesidad necesidadVieja = necesidadOpt.get();
+    necesidadVieja.setDescripcion(datosNuevos.getDescripcion());
+    necesidadVieja.setCantidad(datosNuevos.getCantidad());
+    necesidadVieja.setTipoNecesidad(datosNuevos.getTipoNecesidad());
+
+    entidadRepository.save(entidad);
+
+    return ResponseEntity.ok(necesidadVieja);
+  }
 
     @DeleteMapping("/{entidadId}/necesidades/{subcategoriaNombre}")
     public ResponseEntity<Void> eliminarNecesidad(@PathVariable Long entidadId,

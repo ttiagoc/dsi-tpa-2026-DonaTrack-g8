@@ -144,22 +144,22 @@ Este informe detalla las funcionalidades, controladores, servicios y tareas prog
 
 ## Otras Tareas (Errores, Mejoras y Observaciones Detectadas)
 
-### 1. ⚠️ Falta `DELETE` en EntidadBeneficiariaController
+### 1. ⚠️ Falta `DELETE` en EntidadBeneficiariaController    SOLUCIONADA
 * **Problema:** La consigna pide operaciones CRUD completas sobre entidades beneficiarias, pero en [EntidadBenficiariaController](file:///c:/Users/pc/Desktop/UTN/2026/DSI/dsi-tpa-2026-DonaTrack-g8/donaciones/src/main/java/ar/edu/utn/frba/ddsi/donaciones/controllers/EntidadBenficiariaController.java) falta el endpoint `DELETE /api/entidad-beneficiaria/{id}` para eliminar una entidad beneficiaria.
 
-### 2. ⚠️ Falta `PUT` para actualizar Necesidades
+### 2. ⚠️ Falta `PUT` para actualizar Necesidades     SOLUCIONADA
 * **Problema:** La consigna pide CRUD completo sobre necesidades materiales (recurrentes y extraordinarias). Actualmente se pueden listar (`GET`), crear (`POST`) y eliminar (`DELETE`), pero falta `PUT /api/entidad-beneficiaria/{entidadId}/necesidades/{id}` para modificar una necesidad existente.
 
-### 3. ⚠️ Ubicacion no tiene campo `velocidad`
+### 3. ⚠️ Ubicacion no tiene campo `velocidad`     SOLUCIONADA
 * **Problema:** La consigna requiere que el dispositivo GPS envíe velocidad, pero la entidad [Ubicacion](file:///c:/Users/pc/Desktop/UTN/2026/DSI/dsi-tpa-2026-DonaTrack-g8/logistica/src/main/java/ar/edu/utn/frba/ddsi/logistica/models/entities/Ubicacion.java) solo tiene `latitud`, `longitud` y `timestamp`. Falta agregar `private Double velocidad;`.
 
-### 4. ⚠️ Typo en nombre del controlador: `EntidadBenficiariaController`
+### 4. ⚠️ Typo en nombre del controlador: `EntidadBenficiariaController`    SOLUCIONADA
 * **Problema:** El nombre del archivo y de la clase es `EntidadBenficiariaController` (falta una "e": debería ser `EntidadBeneficiariaController`). Esto no afecta la funcionalidad pero afecta la legibilidad del código.
 
-### 5. ⚠️ Typo en nombre del paquete: `notifiaciones`
+### 5. ⚠️ Typo en nombre del paquete: `notifiaciones`   SOLUCIONADA
 * **Problema:** El paquete de notificaciones se llama `notifiaciones` (falta una "c": debería ser `notificaciones`). Afecta a las clases [EventManager](file:///c:/Users/pc/Desktop/UTN/2026/DSI/dsi-tpa-2026-DonaTrack-g8/donaciones/src/main/java/ar/edu/utn/frba/ddsi/donaciones/models/entities/notifiaciones/EventManager.java), [Evento](file:///c:/Users/pc/Desktop/UTN/2026/DSI/dsi-tpa-2026-DonaTrack-g8/donaciones/src/main/java/ar/edu/utn/frba/ddsi/donaciones/models/entities/notifiaciones/Evento.java), [Listener](file:///c:/Users/pc/Desktop/UTN/2026/DSI/dsi-tpa-2026-DonaTrack-g8/donaciones/src/main/java/ar/edu/utn/frba/ddsi/donaciones/models/entities/notifiaciones/Listener.java) y [NotificacionesAdapter](file:///c:/Users/pc/Desktop/UTN/2026/DSI/dsi-tpa-2026-DonaTrack-g8/donaciones/src/main/java/ar/edu/utn/frba/ddsi/donaciones/models/entities/notifiaciones/NotificacionesAdapter.java).
 
-### 6. ⚠️ Ruta de Donaciones para Logística usa path diferente al controller
+### 6. ⚠️ Ruta de Donaciones para Logística usa path diferente al controller      SOLUCIONADA
 * **Problema:** En [PlanificacionRutasService.getLote()](file:///c:/Users/pc/Desktop/UTN/2026/DSI/dsi-tpa-2026-DonaTrack-g8/logistica/src/main/java/ar/edu/utn/frba/ddsi/logistica/services/PlanificacionRutasService.java#L76-L93) se consume la URL `/donaciones/planificadas`, pero el endpoint real en [DonacionController](file:///c:/Users/pc/Desktop/UTN/2026/DSI/dsi-tpa-2026-DonaTrack-g8/donaciones/src/main/java/ar/edu/utn/frba/ddsi/donaciones/controllers/DonacionController.java#L32-L40) es `/api/donacion/asignadas`. La URL del path **no coincide**.
 
 ### 7. ⚠️ El link del mapa interactivo está hardcodeado como "LINK"
