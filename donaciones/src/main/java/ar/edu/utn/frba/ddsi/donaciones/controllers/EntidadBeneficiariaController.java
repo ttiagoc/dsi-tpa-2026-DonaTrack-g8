@@ -115,4 +115,15 @@ public class EntidadBeneficiariaController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @PostMapping("/{entidadId}/entregas/{donacionId}/fotos")
+    public ResponseEntity<Void> subirFotosRecepcion(@PathVariable Long entidadId, @PathVariable Long donacionId,
+            @RequestBody List<String> fotosUrl) {
+        try {
+            entidadBeneficiariaService.subirFotosRecepcion(entidadId, donacionId, fotosUrl);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

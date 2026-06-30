@@ -120,7 +120,7 @@ Este informe detalla las funcionalidades, controladores, servicios y tareas prog
 
 ## Módulo 5: Logística - CRUDs de Soporte
 
-### A. CRUD de Flota de Camiones — ❌ Pendiente
+### A. CRUD de Flota de Camiones — ✅ Implementado
 * **Qué requiere la consigna:** Gestión REST completa de la flota de camiones.
 * **Qué falta actualmente:** Falta el controlador. El [CamionRepository](file:///c:/Users/pc/Desktop/UTN/2026/DSI/dsi-tpa-2026-DonaTrack-g8/logistica/src/main/java/ar/edu/utn/frba/ddsi/logistica/models/repositories/CamionRepository.java) ya está completo con `save`, `findById`, `findByPatente`, `findAll`, `findAllDisponibles` y `deleteById`.
 * **Cómo implementarlo:**
@@ -131,7 +131,7 @@ Este informe detalla las funcionalidades, controladores, servicios y tareas prog
     * `PUT /api/camiones/{id}` — Modificar los atributos del camión (patente, volumen, peso, etc.).
     * `DELETE /api/camiones/{id}` — Eliminar un camión.
 
-### B. CRUD de Rutas y Entregas — ❌ Pendiente
+### B. CRUD de Rutas y Entregas — ✅ Implementado
 * **Qué requiere la consigna:** Operaciones CRUD sobre las rutas y entregas.
 * **Qué falta actualmente:** No existe un controlador CRUD para rutas. El [RutaRepository](file:///c:/Users/pc/Desktop/UTN/2026/DSI/dsi-tpa-2026-DonaTrack-g8/logistica/src/main/java/ar/edu/utn/frba/ddsi/logistica/models/repositories/RutaRepository.java) ya está completo.
 * **Cómo implementarlo:**
@@ -162,13 +162,13 @@ Este informe detalla las funcionalidades, controladores, servicios y tareas prog
 ### 6. ⚠️ Ruta de Donaciones para Logística usa path diferente al controller      SOLUCIONADA
 * **Problema:** En [PlanificacionRutasService.getLote()](file:///c:/Users/pc/Desktop/UTN/2026/DSI/dsi-tpa-2026-DonaTrack-g8/logistica/src/main/java/ar/edu/utn/frba/ddsi/logistica/services/PlanificacionRutasService.java#L76-L93) se consume la URL `/donaciones/planificadas`, pero el endpoint real en [DonacionController](file:///c:/Users/pc/Desktop/UTN/2026/DSI/dsi-tpa-2026-DonaTrack-g8/donaciones/src/main/java/ar/edu/utn/frba/ddsi/donaciones/controllers/DonacionController.java#L32-L40) es `/api/donacion/asignadas`. La URL del path **no coincide**.
 
-### 7. ⚠️ El link del mapa interactivo está hardcodeado como "LINK"
+### 7. ⚠️ El link del mapa interactivo está hardcodeado como "LINK"    SOLUCIONADA
 * **Problema:** En [NotificacionesAdapter](file:///c:/Users/pc/Desktop/UTN/2026/DSI/dsi-tpa-2026-DonaTrack-g8/donaciones/src/main/java/ar/edu/utn/frba/ddsi/donaciones/models/entities/notifiaciones/NotificacionesAdapter.java#L36-L41), los mensajes de `INICIO_RUTA_DONANTE` e `INICIO_RUTA_ENTIDAD` contienen `"...haciendo click en el siguiente mapa interactivo: LINK"`. Falta reemplazar "LINK" por la URL real del dashboard de monitoreo.
 
-### 8. ⚠️ Entrega fallida no replanifica
+### 8. ⚠️ Entrega fallida no replanifica    SOLUCIONADA
 * **Problema:** La consigna dice: *"Si la entrega pudiera ser replanificada, se dejará constancia del estado correspondiente en el sistema y podrá generarse una nueva asignación de ruta para la donación en cuestión."* Actualmente [EventoService.notificarEntregaFallida()](file:///c:/Users/pc/Desktop/UTN/2026/DSI/dsi-tpa-2026-DonaTrack-g8/donaciones/src/main/java/ar/edu/utn/frba/ddsi/donaciones/services/EventoService.java#L103-L140) cambia el estado a `ENTREGA_FALLIDA` y notifica, pero no existe lógica ni endpoint para volver a poner la donación en estado `PENDIENTE` (o equivalente) cuando el administrador determina que puede replanificarse.
 
-### 9. ⚠️ Fotos de donación recibida
+### 9. ⚠️ Fotos de donación recibida    SOLUCIONADA
 * **Problema:** La consigna dice: *"La entidad deberá cargar fotos de la donación recibida en la plataforma."* No existe endpoint para subir/asociar fotos a una entrega confirmada.
 
 ---
@@ -179,8 +179,8 @@ Este informe detalla las funcionalidades, controladores, servicios y tareas prog
 |--------|-----------|--------|
 | Donaciones | CRUD Donaciones + Trazabilidad | ✅ Completado |
 | Donaciones | CRUD Donantes | ✅ Completado |
-| Donaciones | CRUD Entidades Beneficiarias | ⚠️ Falta DELETE de entidad |
-| Donaciones | CRUD Necesidades | ⚠️ Falta PUT de necesidad |
+| Donaciones | CRUD Entidades Beneficiarias | ✅ Completado |
+| Donaciones | CRUD Necesidades | ✅ Completado |
 | Donaciones | Matchmaking (Asignación) | ✅ Completado |
 | Eventos | Scheduler Inactividad Donantes | ✅ Completado |
 | Eventos | Notif. Inicio Ruta + Entrega Exitosa | ✅ Completado |
@@ -190,5 +190,5 @@ Este informe detalla las funcionalidades, controladores, servicios y tareas prog
 | Logística | Trazabilidad de Entregas (chofer) | ✅ Completado |
 | **Logística** | **Receptor de Ubicación GPS** | **❌ Pendiente** |
 | **Logística** | **Dashboard de Monitoreo** | **❌ Pendiente** |
-| **Logística** | **CRUD Camiones** | **❌ Pendiente** |
-| **Logística** | **CRUD Rutas** | **❌ Pendiente** |
+| Logística | CRUD Camiones | ✅ Completado |
+| Logística | CRUD Rutas | ✅ Completado |

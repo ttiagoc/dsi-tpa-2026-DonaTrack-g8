@@ -87,4 +87,13 @@ public class DonacionController {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping("/{id}/replanificar")
+    public ResponseEntity<Donacion> replanificar(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(donacionService.replanificar(id));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }

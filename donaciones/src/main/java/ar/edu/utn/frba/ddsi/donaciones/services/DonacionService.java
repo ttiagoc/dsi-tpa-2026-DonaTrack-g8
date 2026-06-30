@@ -79,4 +79,15 @@ public class DonacionService {
         }
     }
 
+    public Donacion replanificar(Long id) {
+        Donacion donacion = donacionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontro la donacion"));
+        donacion.cambiarEstado(TipoEstadoDonacion.EN_DEPOSITO, "Replanificación de entrega fallida");
+        return donacionRepository.save(donacion);
+    }
+
+    public Donacion guardar(Donacion donacion) {
+        return donacionRepository.save(donacion);
+    }
+
 }

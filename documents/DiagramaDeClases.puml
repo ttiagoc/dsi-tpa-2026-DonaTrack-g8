@@ -119,6 +119,7 @@ package "Microservicio Donaciones" {
     bienes : List<Bien>
     fecha : LocalDateTime
     historialEstados : List<CambioEstado>
+    fotosRecepcion : List<String>
     agregarBien(bien : Bien) : void
     cambiarEstado(nuevoEstado : TipoEstadoDonacion, justificacion : String)
     calcularPesoTotal() : Double

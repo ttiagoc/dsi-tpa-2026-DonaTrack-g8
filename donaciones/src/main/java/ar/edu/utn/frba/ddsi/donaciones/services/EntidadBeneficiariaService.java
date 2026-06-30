@@ -100,4 +100,18 @@ public class EntidadBeneficiariaService {
 
     }
 
+    public void subirFotosRecepcion(Long entidadId, Long donacionId, List<String> fotosUrl) {
+        entidadBeneficiariaRepository.findById(entidadId)
+                .map(entidad -> {
+                    Donacion donacion = donacionService.obtenerPorId(donacionId);
+                    if (donacion.getFotosRecepcion() == null) {
+                        donacion.setFotosRecepcion(new java.util.ArrayList<>());
+                    }
+                    donacion.getFotosRecepcion().addAll(fotosUrl);
+                    donacionService.guardar(donacion);
+                    return entidad;
+                })
+                .orElseThrow(() -> new IllegalArgumentException("No se encontro la entidad beneficiaria"));
+    }
+
 }

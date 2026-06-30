@@ -27,6 +27,7 @@ public class Donacion {
   private List<Bien> bienes;
   private LocalDateTime fecha;
   private List<CambioEstado> historialEstados;
+  private List<String> fotosRecepcion;
 
   public Donacion(Bien bienBase, LocalDateTime fecha) {
     this.subcategoria = bienBase.getSubcategoria();
@@ -35,6 +36,7 @@ public class Donacion {
     this.bienes = new ArrayList<>();
     this.historialEstados = new ArrayList<>();
     this.fecha = fecha;
+    this.fotosRecepcion = new ArrayList<>();
 
     this.agregarBien(bienBase);
     this.registrarEstadoInicial(fecha);

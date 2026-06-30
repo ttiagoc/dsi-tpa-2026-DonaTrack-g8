@@ -18,18 +18,12 @@ public class MatchmakingController {
     private final ResultadoMatchmakingRepository resultadoRepository;
     private final MatchmakingService matchmakingService;
 
-    /**
-     * Trae todas las propuestas calculadas a la madrugada que esperan revisión.
-     */
     @GetMapping("/pendientes")
     public ResponseEntity<List<ResultadoMatchmaking>> obtenerPropuestasPendientes() {
         List<ResultadoMatchmaking> pendientes = resultadoRepository.buscarPendientes();
         return ResponseEntity.ok(pendientes);
     }
 
-    /**
-     * Confirma el destino de la donación.
-     */
     @PostMapping("/propuestas/{id}/aceptar")
     public ResponseEntity<String> aceptarPropuesta(@PathVariable Long id, @RequestParam Long entidadId) {
         try {
@@ -40,9 +34,6 @@ public class MatchmakingController {
         }
     }
 
-    /**
-     * Rechaza las sugerencias actuales.
-     */
     @PostMapping("/propuestas/{id}/rechazar")
     public ResponseEntity<String> rechazarPropuesta(@PathVariable Long id) {
         try {
@@ -53,9 +44,6 @@ public class MatchmakingController {
         }
     }
 
-    /**
-     * Fuerza el proceso de matchmaking por HTTP sin esperar a las 3 AM.
-     */
     @PostMapping("/forzar-ejecucion")
     public ResponseEntity<String> forzarEjecucion() {
         matchmakingService.procesarMatchmakingGlobal();

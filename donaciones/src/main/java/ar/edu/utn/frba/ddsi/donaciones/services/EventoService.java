@@ -20,6 +20,7 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoEntregaExit
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoEntregaExitosaEntidad;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoEntregaFallida;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoInicioRutaDonante;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoInicioRutaEntidad;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
 
@@ -49,7 +50,8 @@ public class EventoService {
                     .orElseThrow(() -> new IllegalArgumentException("Entidad no encontrada."));
 
             for (MedioContacto contacto : entidad.getCorreoRepresentantes()) {
-                Evento evento = new EventoInicioRutaDonante(contacto, "URL_MAPA"); // TODO: Falta el mapa
+                Evento evento = new EventoInicioRutaEntidad(contacto,
+                        "http://localhost:8080/api/logistica/monitoreo/activos");
                 eventManager.emitir(evento);
             }
 
@@ -61,9 +63,8 @@ public class EventoService {
                 donacionRepository.save(donacion);
 
                 Donante donante = donacion.getDonante();
-                Evento evento = new EventoInicioRutaDonante(donante.getContactoPredeterminado(), "URL_MAPA"); // TODO:
-                                                                                                              // Falta
-                                                                                                              // el mapa
+                Evento evento = new EventoInicioRutaDonante(donante.getContactoPredeterminado(),
+                        "http://localhost:8080/api/logistica/monitoreo/activos");
                 eventManager.emitir(evento);
             }
         }
