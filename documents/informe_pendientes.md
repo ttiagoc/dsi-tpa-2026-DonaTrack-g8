@@ -93,19 +93,19 @@ Este informe detalla las funcionalidades, controladores, servicios y tareas prog
 
 ## Módulo 4: Logística - Monitoreo de Camiones en Tiempo Real
 
-### A. Receptor de Ubicación de Camiones — ❌ Pendiente
+### A. Receptor de Ubicación de Camiones — LISTO (REVISAR POR LAS DUDAS)
 * **Qué requiere la consigna:** Recibir y almacenar la geolocalización en tiempo real de los camiones (con la alternativa GPS o App Móvil elegida). Mostrar en un dashboard la posición actual y el avance sobre la ruta.
 * **Qué falta actualmente:** No existe ningún endpoint para recibir la ubicación GPS de los camiones. La entidad [Ubicacion](file:///c:/Users/pc/Desktop/UTN/2026/DSI/dsi-tpa-2026-DonaTrack-g8/logistica/src/main/java/ar/edu/utn/frba/ddsi/logistica/models/entities/Ubicacion.java) ya existe y la [Ruta](file:///c:/Users/pc/Desktop/UTN/2026/DSI/dsi-tpa-2026-DonaTrack-g8/logistica/src/main/java/ar/edu/utn/frba/ddsi/logistica/models/entities/Ruta.java) ya tiene el campo `ultimaUbicacion` con su método `actualizarUbicacion()`, pero no hay controlador ni servicio que lo use.
 * **Cómo implementarlo:**
   1. **Crear endpoint de telemetría** en un nuevo controlador (ej: `MonitoreoController`) en Logística:
-     * `POST /api/logistica/camiones/{patente}/ubicacion`
+     * `POST /api/logistica/camiones/{patente}/ubicacion`                                                                                 LISTO
      * **Request Body:** `{ "latitud": -34.5984, "longitud": -58.4201, "velocidad": 45.0, "timestamp": "2026-06-29T19:40:00Z" }`
   2. **Lógica de negocio (crear `MonitoreoService`):**
      * Busca el camión por patente usando `CamionRepository.findByPatente()`.
-     * Busca la ruta activa del camión usando `RutaRepository.buscarRutasActivasPorCamion()`.
+     * Busca la ruta activa del camión usando `RutaRepository.buscarRutasActivasPorCamion()`.              LISTO
      * Si la ruta está en estado `EN_TRASLADO`, llama a `ruta.actualizarUbicacion(nuevaUbicacion)`.
      * Guarda la ruta actualizada.
-  3. **Nota:** La entidad `Ubicacion` actualmente no tiene el campo `velocidad`. Agregar `private Double velocidad;` al modelo.
+  3. **Nota:** La entidad `Ubicacion` actualmente no tiene el campo `velocidad`. Agregar `private Double velocidad;` al modelo.   LISTO
 
 ### B. Dashboard de Monitoreo — ❌ Pendiente
 * **Qué requiere la consigna:** Endpoint que permita consultar en tiempo real los camiones activos con su posición, velocidad y paradas pendientes.
