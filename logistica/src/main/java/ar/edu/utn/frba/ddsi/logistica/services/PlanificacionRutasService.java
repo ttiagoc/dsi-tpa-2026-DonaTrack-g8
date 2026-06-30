@@ -16,6 +16,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ar.edu.utn.frba.ddsi.logistica.config.RestLogisticaConfig;
 import ar.edu.utn.frba.ddsi.logistica.dto.CamionDTO;
 import ar.edu.utn.frba.ddsi.logistica.dto.DonacionDTO;
+import ar.edu.utn.frba.ddsi.logistica.dto.ResultadoPlanificacionDTO;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.GestorPlanificacionRutas;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
@@ -47,7 +48,15 @@ public class PlanificacionRutasService {
         }
     }
 
-    public void ejecutarPlanificacion(List<CamionDTO> camiones) {
+    public void ejecutarPlanificacion(ResultadoPlanificacionDTO resultadoPlanificacion) {
+        List<CamionDTO> camiones = resultadoPlanificacion.getCamiones();
+        List<Long> sinAsignar = resultadoPlanificacion.getDonacionesSinAsignar();
+
+        if (sinAsignar != null && !sinAsignar.isEmpty()) {
+            System.out.println("El planificador no pudo asignar " + sinAsignar.size() +
+                    " donaciones. Quedan en estado ASIGNACION_REALIZADA para ser re-planificadas en el próximo lote.");
+        }
+
         List<Long> donacionesPlanificadas = camiones.stream()
                 .flatMap(camion -> camion.getDirecciones().stream())
                 .flatMap(direcciones -> direcciones.getDonacionesIds().stream())

@@ -23,7 +23,7 @@ public class PlanificacionRutasController {
     public ResponseEntity<String> ejecutarPlanificacion(
             @RequestBody ResultadoPlanificacionDTO resultadoPlanificacion) {
         try {
-            planificacionRutasService.ejecutarPlanificacion(resultadoPlanificacion.getCamiones());
+            planificacionRutasService.ejecutarPlanificacion(resultadoPlanificacion);
             return ResponseEntity.ok("Rutas planificadas correctamente.");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());

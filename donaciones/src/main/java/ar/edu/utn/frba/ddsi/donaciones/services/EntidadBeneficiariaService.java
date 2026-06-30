@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.Necesidad;
