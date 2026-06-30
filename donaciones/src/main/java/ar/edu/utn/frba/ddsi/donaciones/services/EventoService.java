@@ -49,7 +49,7 @@ public class EventoService {
 
             for (MedioContacto contacto : entidad.getCorreoRepresentantes()) {
                 Evento evento = new EventoInicioRutaEntidad(contacto,
-                        "http://localhost:8080/api/logistica/monitoreo/activos");
+                        "http://localhost:8080/api/logistica/monitoreo/ubicacion/" + dto.getRutaId());
                 eventManager.emitir(evento);
             }
 
@@ -62,7 +62,7 @@ public class EventoService {
 
                 Donante donante = donacion.getDonante();
                 Evento evento = new EventoInicioRutaDonante(donante.getContactoPredeterminado(),
-                        "http://localhost:8080/api/logistica/monitoreo/activos");
+                        "http://localhost:8080/api/logistica/monitoreo/ubicacion/" + dto.getRutaId());
                 eventManager.emitir(evento);
             }
         }

@@ -1,13 +1,15 @@
 package ar.edu.utn.frba.ddsi.logistica.services;
 
+import java.time.LocalDateTime;
+
+import org.springframework.stereotype.Service;
+
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoRuta;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Ubicacion;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
-import org.springframework.stereotype.Service;
-import java.util.List;
 
 @Service
 public class MonitoreoService {
@@ -21,17 +23,30 @@ public class MonitoreoService {
   }
 
   public void actualizarUbicacionCamion(String patente, Ubicacion nuevaUbicacion) {
+    if (nuevaUbicacion.getTimestamp() == null) {
+      nuevaUbicacion.setTimestamp(LocalDateTime.now());
+    }
+
     Camion camion = camionRepository.findByPatente(patente)
         .orElseThrow(() -> new IllegalArgumentException("Camión no encontrado: " + patente));
 
-    List<Ruta> rutasActivas = rutaRepository.buscarRutasActivasPorCamion(camion.getId());
-
-    Ruta ruta = rutasActivas.stream()
-        .filter(r -> r.getEstado() == EstadoRuta.EN_TRASLADO)
-        .findFirst()
-        .orElseThrow(() -> new IllegalStateException("El camión no tiene ninguna ruta en estado EN_TRASLADO."));
+    Ruta ruta = rutaRepository.buscarRutaDelCamion(camion.getId());
+    if (ruta.getEstado() != EstadoRuta.EN_TRASLADO) {
+      throw new IllegalStateException("El camión no tiene ninguna ruta en estado EN_TRASLADO.");
+    }
 
     ruta.actualizarUbicacion(nuevaUbicacion);
     rutaRepository.save(ruta);
+  }
+
+  public Ubicacion obtenerUltimaUbicacionPorRuta(Long rutaId) {
+    Ruta ruta = rutaRepository.findById(rutaId)
+        .orElseThrow(() -> new IllegalArgumentException("Ruta no encontrada: " + rutaId));
+
+    if (ruta.getUltimaUbicacion() == null) {
+      throw new IllegalStateException("No se han registrado ubicaciones para esta ruta.");
+    }
+
+    return ruta.getUltimaUbicacion();
   }
 }

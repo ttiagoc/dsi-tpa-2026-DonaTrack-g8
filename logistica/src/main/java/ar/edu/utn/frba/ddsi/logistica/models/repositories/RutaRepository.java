@@ -66,4 +66,11 @@ public class RutaRepository {
     private boolean estaActiva(Ruta ruta) {
         return !ruta.getEstado().equals(EstadoRuta.FINALIZADA);
     }
+
+    public Ruta buscarRutaDelCamion(Long idCamion) {
+        return rutas.stream()
+                .filter(r -> r.getCamion().getId().equals(idCamion))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("El camión no tiene ninguna ruta."));
+    }
 }

@@ -1,14 +1,18 @@
 package ar.edu.utn.frba.ddsi.logistica.controllers;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Ubicacion;
 import ar.edu.utn.frba.ddsi.logistica.services.MonitoreoService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
 
 @RestController
-@RequestMapping("/api/logistica/camiones")
+@RequestMapping("/api/logistica/monitoreo")
 public class MonitoreoController {
 
   private final MonitoreoService monitoreoService;
@@ -17,18 +21,26 @@ public class MonitoreoController {
     this.monitoreoService = monitoreoService;
   }
 
-  @PostMapping("/{patente}/ubicacion")
-  public ResponseEntity<String> recibirTelemetria(
+  @PostMapping("/ubicacion/{patente}")
+  public ResponseEntity<Void> recibirTelemetria(
       @PathVariable String patente,
       @RequestBody Ubicacion ubicacion) {
     try {
-      if(ubicacion.getTimestamp() == null) {
-        ubicacion.setTimestamp(LocalDateTime.now());
-      }
       monitoreoService.actualizarUbicacionCamion(patente, ubicacion);
-      return ResponseEntity.ok("Ubicación actualizada correctamente.");
+      return ResponseEntity.noContent().build();
     } catch (IllegalArgumentException | IllegalStateException e) {
-      return ResponseEntity.badRequest().body(e.getMessage());
+      return ResponseEntity.notFound().build();
     }
   }
+
+  @GetMapping("/ubicacion/{rutaId}")
+  public ResponseEntity<Ubicacion> obtenerUbicacionActual(@PathVariable Long rutaId) {
+    try {
+      Ubicacion ubicacion = monitoreoService.obtenerUltimaUbicacionPorRuta(rutaId);
+      return ResponseEntity.ok(ubicacion);
+    } catch (IllegalArgumentException | IllegalStateException e) {
+      return ResponseEntity.notFound().build();
+    }
+  }
+
 }
