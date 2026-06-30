@@ -68,10 +68,6 @@ package "Common Lib" {
 }
 
 package "Microservicio Donaciones" {
-  class ImportadorDonantes {
-    importarDonantes(archivo : string) : void
-  }
-
   abstract class Donante {
     id : Long
     donaciones : List<RegistroDonacion>
@@ -415,5 +411,10 @@ MotorDeMatchmaking ..> EntidadBeneficiaria
 MotorDeMatchmaking ..> ResultadoMatchmaking
 
 GestorPlanificacionRutas ..> Camion
+
+EventManager ..> Evento
+EventManager ..> Listener
+
+SegmentadorDeDonacion ..> Donacion
 
 @enduml
