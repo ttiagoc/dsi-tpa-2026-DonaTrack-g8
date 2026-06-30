@@ -6,15 +6,20 @@ import org.springframework.stereotype.Service;
 
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
-import ar.edu.utn.frba.ddsi.common.models.enums.TipoEvento;
 import ar.edu.utn.frba.ddsi.donaciones.dto.EntregaExitosaDTO;
 import ar.edu.utn.frba.ddsi.donaciones.dto.InicioRutaDTO;
 import ar.edu.utn.frba.ddsi.donaciones.dto.ParadaDTO;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.notificaciones.EventManager;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.notificaciones.Evento;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.ComprobanteEntrega;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventManager;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.Evento;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoAusenciaPlataforma;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoEntregaExitosaDonante;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoEntregaExitosaEntidad;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoEntregaFallida;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoInicioRutaDonante;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
 
@@ -33,8 +38,7 @@ public class EventoService {
     }
 
     public void notificarAusenciaDonante(Donante donante) {
-        Map<String, Object> datos = Map.of("contacto", donante.getContactoPredeterminado());
-        Evento eventoAusencia = new Evento(TipoEvento.AUSENCIA_PLATAFORMA, datos);
+        Evento eventoAusencia = new EventoAusenciaPlataforma(donante.getContactoPredeterminado());
         eventManager.emitir(eventoAusencia);
     }
 
@@ -45,8 +49,7 @@ public class EventoService {
                     .orElseThrow(() -> new IllegalArgumentException("Entidad no encontrada."));
 
             for (MedioContacto contacto : entidad.getCorreoRepresentantes()) {
-                Evento evento = new Evento(TipoEvento.INICIO_RUTA_ENTIDAD,
-                        Map.of("contacto", contacto));
+                Evento evento = new EventoInicioRutaDonante(contacto, "URL_MAPA"); // TODO: Falta el mapa
                 eventManager.emitir(evento);
             }
 
@@ -58,8 +61,9 @@ public class EventoService {
                 donacionRepository.save(donacion);
 
                 Donante donante = donacion.getDonante();
-                Evento evento = new Evento(TipoEvento.INICIO_RUTA_DONANTE,
-                        Map.of("contacto", donante.getContactoPredeterminado()));
+                Evento evento = new EventoInicioRutaDonante(donante.getContactoPredeterminado(), "URL_MAPA"); // TODO:
+                                                                                                              // Falta
+                                                                                                              // el mapa
                 eventManager.emitir(evento);
             }
         }
@@ -69,9 +73,7 @@ public class EventoService {
         EntidadBeneficiaria entidad = entidadBeneficiariaRepository.findById(dto.getEntidadId())
                 .orElseThrow(() -> new IllegalArgumentException("Entidad Beneficiaria no encontrada."));
 
-        Map<String, Object> comprobante = Map.of(
-                "patenteCamion", dto.getPatenteCamion(),
-                "fechaHora", dto.getFechaHora());
+        ComprobanteEntrega comprobante = new ComprobanteEntrega(dto.getPatenteCamion(), dto.getFechaHora());
 
         for (Long donacionId : dto.getDonacionIds()) {
             Donacion donacion = donacionRepository.findById(donacionId).orElse(null);
@@ -85,17 +87,15 @@ public class EventoService {
 
                 Donante donante = donacion.getDonante();
                 if (donante != null) {
-                    Evento evDonante = new Evento(TipoEvento.ENTREGA_EXITOSA_DONANTE, Map.of(
-                            "contacto", donante.getContactoPredeterminado(),
-                            "comprobante", comprobante));
+                    Evento evDonante = new EventoEntregaExitosaDonante(
+                            donante.getContactoPredeterminado(), comprobante);
                     eventManager.emitir(evDonante);
                 }
             }
         }
 
         for (MedioContacto correo : entidad.getCorreoRepresentantes()) {
-            Evento evento = new Evento(TipoEvento.ENTREGA_EXITOSA_ENTIDAD,
-                    Map.of("contacto", correo, "comprobante", comprobante));
+            Evento evento = new EventoEntregaExitosaEntidad(correo, comprobante);
             eventManager.emitir(evento);
         }
     }
@@ -114,28 +114,18 @@ public class EventoService {
                 "donacionId", donacionId,
                 "motivo", motivo);
 
-        // 1. Notificar al Donante
         if (donante != null && donante.getContactoPredeterminado() != null) {
-            Evento eventoDonante = new Evento(TipoEvento.ENTREGA_FALLIDA, Map.of(
-                    "contacto", donante.getContactoPredeterminado(),
-                    "detalles", datosComunes));
+            Evento eventoDonante = new EventoEntregaFallida(
+                    donante.getContactoPredeterminado()); // TODO: Faltan los datosComunes
             eventManager.emitir(eventoDonante);
         }
 
-        // 2. Notificar a la Entidad (Representantes)
         if (entidad != null) {
             for (MedioContacto correo : entidad.getCorreoRepresentantes()) {
-                Evento eventoEntidad = new Evento(TipoEvento.ENTREGA_FALLIDA, Map.of(
-                        "contacto", correo,
-                        "detalles", datosComunes));
+                Evento eventoEntidad = new EventoEntregaFallida(
+                        correo); // TODO: Faltan los datosComunes
                 eventManager.emitir(eventoEntidad);
             }
         }
-
-        // 3. Notificar al Administrador de la plataforma
-        Evento eventoAdmin = new Evento(TipoEvento.ENTREGA_FALLIDA, Map.of(
-                "detalles", datosComunes,
-                "rolDestinatario", "ADMINISTRADOR"));
-        eventManager.emitir(eventoAdmin);
     }
 }

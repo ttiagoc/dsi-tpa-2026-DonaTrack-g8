@@ -54,17 +54,6 @@ package "Common Lib" {
     ANUAL
   }
 
-  enum TipoEvento {
-    AUSENCIA_PLATAFORMA
-    DONACION_ASIGNADA_ENTIDAD
-    DONACION_ASIGNADA_DONANTE
-    INICIO_RUTA_DONANTE
-    INICIO_RUTA_ENTIDAD
-    ENTREGA_EXITOSA_ENTIDAD
-    ENTREGA_EXITOSA_DONANTE
-    ENTREGA_FALLIDA
-  }
-
   enum EstadoPropuesta {
     PENDIENTE
     ACEPTADO
@@ -206,8 +195,67 @@ package "Microservicio Donaciones" {
   }
 
   class EventManager {
-    listeners: Map<TipoEvento, Listener>
+    listeners: Map<Evento, List<Listener>>
     emitir(evento: Evento) : void 
+    registrarListener(listener: Listener) : void
+    desregistrarListener(listener: Listener) : void
+  }
+
+  interface Evento {
+    getContacto() : MedioContacto
+    getMensaje() : String
+  }
+
+  class EventoAusenciaPlataforma implements Evento {
+    contacto : MedioContacto
+    getContacto() : MedioContacto
+    getMensaje() : String
+  }
+
+  class EventoDonacionAsignadaDonante implements Evento {
+    contacto : MedioContacto
+    getContacto() : MedioContacto
+    getMensaje() : String
+  }
+
+  class EventoDonacionAsignadaEntidad implements Evento {
+    contacto : MedioContacto
+    getContacto() : MedioContacto
+    getMensaje() : String
+  }
+
+  class EventoInicioRutaDonante implements Evento {
+    contacto : MedioContacto
+    urlMapa : String
+    getContacto() : MedioContacto
+    getMensaje() : String
+  }
+
+  class EventoInicioRutaEntidad implements Evento {
+    contacto : MedioContacto
+    urlMapa : String
+    getContacto() : MedioContacto
+    getMensaje() : String
+  }
+
+  class EventoEntregaExitosaDonante implements Evento {
+    contacto : MedioContacto
+    comprobante : ComprobanteEntrega
+    getContacto() : MedioContacto
+    getMensaje() : String
+  }
+
+  class EventoEntregaExitosaEntidad implements Evento {
+    contacto : MedioContacto
+    comprobante : ComprobanteEntrega
+    getContacto() : MedioContacto
+    getMensaje() : String
+  }
+
+  class EventoEntregaFallida implements Evento {
+    contacto : MedioContacto
+    getContacto() : MedioContacto
+    getMensaje() : String
   }
 
   interface Listener {
@@ -216,11 +264,6 @@ package "Microservicio Donaciones" {
 
   class NotificacionesAdapter implements Listener {
     ejecutar(evento: Evento) : void
-  }
-
-  class Evento {
-    tipo: TipoEvento
-    datos: Map<String, Object>
   }
 
   interface AlgoritmoAsignacion {
@@ -295,11 +338,12 @@ package "Microservicio Logistica" {
     planificarRutas(donacionesAsignadas : List<Long>, camiones : List<Camion>)
     fraccionarEnLotes(donaciones : List<Long>) : List<List<Long>>
   }
-}
 
-' ==========================================
-' CONEXIONES ESTRUCTURALES DEL DIAGRAMA
-' ==========================================
+  class ComprobanteEntrega {
+    patenteCamion: String
+    fechaHora: LocalDateTime
+  }
+}
 
 Notificacion --> MedioContacto
 
@@ -332,7 +376,10 @@ Necesidad --> "*" Donacion
 NecesidadRecurrente --> Periodo
 
 EventManager --> "*" Listener
-Evento --> TipoEvento
+Evento --> MedioContacto
+
+EventoEntregaExitosaDonante --> ComprobanteEntrega
+EventoEntregaExitosaEntidad --> ComprobanteEntrega
 
 MotorDeMatchmaking --> "*" AlgoritmoAsignacion
 ResultadoMatchmaking --> Donacion
@@ -345,10 +392,6 @@ Ruta --> Camion
 Ruta --> Chofer
 Ruta --> "*" Parada
 Ruta --> Ubicacion
-
-' ==========================================
-' DEPENDENCIAS POR PARAMETROS ("CONOCE")
-' ==========================================
 
 EntidadBeneficiaria ..> Donacion
 

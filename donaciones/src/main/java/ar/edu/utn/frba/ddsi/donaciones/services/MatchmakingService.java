@@ -1,7 +1,6 @@
 package ar.edu.utn.frba.ddsi.donaciones.services;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -9,13 +8,14 @@ import org.springframework.stereotype.Service;
 import ar.edu.utn.frba.ddsi.common.models.entities.Email;
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoPropuesta;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
-import ar.edu.utn.frba.ddsi.common.models.enums.TipoEvento;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.MotorDeMatchmaking;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.ResultadoMatchmaking;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.notificaciones.EventManager;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.notificaciones.Evento;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventManager;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.Evento;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoDonacionAsignadaDonante;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoDonacionAsignadaEntidad;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.ResultadoMatchmakingRepository;
@@ -94,19 +94,14 @@ public class MatchmakingService {
     }
 
     private void ejecutarNotificaciones(Donacion donacion, EntidadBeneficiaria entidad) {
-        Map<String, Object> datosDonante = Map.of("contacto", donacion.getDonante().getContactoPredeterminado());
-        Evento eventoAsignacionDonante = new Evento(TipoEvento.DONACION_ASIGNADA_DONANTE, datosDonante);
+        Evento eventoAsignacionDonante = new EventoDonacionAsignadaDonante(
+                donacion.getDonante().getContactoPredeterminado());
         eventManager.emitir(eventoAsignacionDonante);
 
         for (Email contacto : entidad.getCorreoRepresentantes()) {
-            Map<String, Object> datosEntidad = Map.of("contacto", contacto);
-            Evento eventoAsignacionEntidad = new Evento(TipoEvento.DONACION_ASIGNADA_ENTIDAD, datosEntidad);
+            Evento eventoAsignacionEntidad = new EventoDonacionAsignadaEntidad(contacto);
             eventManager.emitir(eventoAsignacionEntidad);
         }
-
-        Map<String, Object> datosEntidad = Map.of("contacto", entidad.getTelefono());
-        Evento eventoAsignacionEntidad = new Evento(TipoEvento.DONACION_ASIGNADA_ENTIDAD, datosEntidad);
-        eventManager.emitir(eventoAsignacionEntidad);
     }
 
 }
