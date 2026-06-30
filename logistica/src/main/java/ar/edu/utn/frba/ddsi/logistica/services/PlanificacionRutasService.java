@@ -65,18 +65,10 @@ public class PlanificacionRutasService {
         URI url = UriComponentsBuilder.fromUriString(properties.getBaseUrl())
                 .path("/donaciones/lista-entrega")
                 .build().toUri();
-
-        HttpEntity<List<Long>> requestEntity = new HttpEntity<>(donacionesPlanificadas);
-
         try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.PUT,
-                    requestEntity,
-                    String.class);
-            System.out.println(response.getBody());
+            restTemplate.postForEntity(url, donacionesPlanificadas, String.class);
         } catch (Exception e) {
-            System.err.println("ERROR: Falló el envío de donaciones asignadas a Donaciones: " + e.getMessage());
+            System.err.println("ERROR: Falló el envío de donaciones asignadas a Donaciones.");
         }
 
         planificarRutas();

@@ -287,6 +287,11 @@ package "Microservicio Donaciones" {
     fechaEjecucion: LocalDateTime
     estado: EstadoPropuesta
   }
+
+  class ComprobanteEntrega {
+    patenteCamion: String
+    fechaHora: LocalDateTime
+  }
 }
 
 package "Microservicio Logistica" {
@@ -336,10 +341,6 @@ package "Microservicio Logistica" {
     fraccionarEnLotes(donaciones : List<Long>) : List<List<Long>>
   }
 
-  class ComprobanteEntrega {
-    patenteCamion: String
-    fechaHora: LocalDateTime
-  }
 }
 
 Notificacion --> MedioContacto

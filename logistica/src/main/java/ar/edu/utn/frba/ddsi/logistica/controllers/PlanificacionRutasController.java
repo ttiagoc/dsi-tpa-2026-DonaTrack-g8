@@ -20,13 +20,13 @@ public class PlanificacionRutasController {
     }
 
     @PostMapping("/confirmacion")
-    public ResponseEntity<String> ejecutarPlanificacion(
+    public ResponseEntity<Void> ejecutarPlanificacion(
             @RequestBody ResultadoPlanificacionDTO resultadoPlanificacion) {
         try {
             planificacionRutasService.ejecutarPlanificacion(resultadoPlanificacion);
-            return ResponseEntity.ok("Rutas planificadas correctamente.");
+            return ResponseEntity.noContent().build();
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().build();
         }
     }
 
