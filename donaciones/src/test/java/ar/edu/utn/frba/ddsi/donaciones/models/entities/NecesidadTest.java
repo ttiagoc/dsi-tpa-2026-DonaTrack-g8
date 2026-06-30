@@ -80,7 +80,7 @@ class NecesidadTest {
         @Test
         @DisplayName("Sin donaciones, la necesidad NO estÃ¡ satisfecha")
         void sinDonacionesNoSatisfecha() {
-            assertFalse(necesidad.getSatisfecha());
+            assertFalse(necesidad.estaSatisfecha());
         }
 
         @Test
@@ -88,7 +88,7 @@ class NecesidadTest {
         void conDonacionesInsuficientes() {
             necesidad.asignarDonacion(crearDonacion(30L, LocalDateTime.now()));
             necesidad.asignarDonacion(crearDonacion(20L, LocalDateTime.now()));
-            assertFalse(necesidad.getSatisfecha(),
+            assertFalse(necesidad.estaSatisfecha(),
                     "50 de 100 no alcanza");
         }
 
@@ -97,7 +97,7 @@ class NecesidadTest {
         void conDonacionesExactas() {
             necesidad.asignarDonacion(crearDonacion(60L, LocalDateTime.now()));
             necesidad.asignarDonacion(crearDonacion(40L, LocalDateTime.now()));
-            assertTrue(necesidad.getSatisfecha(),
+            assertTrue(necesidad.estaSatisfecha(),
                     "60 + 40 = 100, iguala la meta");
         }
 
@@ -106,7 +106,7 @@ class NecesidadTest {
         void conDonacionesExcedentes() {
             necesidad.asignarDonacion(crearDonacion(80L, LocalDateTime.now()));
             necesidad.asignarDonacion(crearDonacion(50L, LocalDateTime.now()));
-            assertTrue(necesidad.getSatisfecha(),
+            assertTrue(necesidad.estaSatisfecha(),
                     "80 + 50 = 130 > 100");
         }
 
@@ -115,7 +115,7 @@ class NecesidadTest {
         void donacionesAntiguasCuentan() {
             necesidad.asignarDonacion(crearDonacion(50L, LocalDateTime.now().minusYears(2)));
             necesidad.asignarDonacion(crearDonacion(50L, LocalDateTime.now().minusMonths(6)));
-            assertTrue(necesidad.getSatisfecha(),
+            assertTrue(necesidad.estaSatisfecha(),
                     "Para extraordinarias no importa la fecha");
         }
 
@@ -123,7 +123,7 @@ class NecesidadTest {
         @DisplayName("Una sola donaciÃ³n grande satisface la necesidad")
         void unaSolaDonacionGrande() {
             necesidad.asignarDonacion(crearDonacion(100L, LocalDateTime.now()));
-            assertTrue(necesidad.getSatisfecha());
+            assertTrue(necesidad.estaSatisfecha());
         }
     }
 
@@ -151,7 +151,7 @@ class NecesidadTest {
             @Test
             @DisplayName("Sin donaciones, NO estÃ¡ satisfecha")
             void sinDonaciones() {
-                assertFalse(necesidad.getSatisfecha());
+                assertFalse(necesidad.estaSatisfecha());
             }
 
             @Test
@@ -159,7 +159,7 @@ class NecesidadTest {
             void donacionesDeEstaSemana() {
                 necesidad.asignarDonacion(crearDonacion(30L, LocalDateTime.now()));
                 necesidad.asignarDonacion(crearDonacion(25L, LocalDateTime.now()));
-                assertTrue(necesidad.getSatisfecha(),
+                assertTrue(necesidad.estaSatisfecha(),
                         "30 + 25 = 55 >= 50");
             }
 
@@ -167,7 +167,7 @@ class NecesidadTest {
             @DisplayName("Donaciones de semanas anteriores NO se cuentan")
             void donacionesDeSemanasPasadas() {
                 necesidad.asignarDonacion(crearDonacion(100L, LocalDateTime.now().minusWeeks(3)));
-                assertFalse(necesidad.getSatisfecha(),
+                assertFalse(necesidad.estaSatisfecha(),
                         "La donaciÃ³n de hace 3 semanas no cuenta para el perÃ­odo semanal");
             }
 
@@ -176,7 +176,7 @@ class NecesidadTest {
             void mezclaActualesYPasadas() {
                 necesidad.asignarDonacion(crearDonacion(40L, LocalDateTime.now().minusWeeks(2)));
                 necesidad.asignarDonacion(crearDonacion(30L, LocalDateTime.now()));
-                assertFalse(necesidad.getSatisfecha(),
+                assertFalse(necesidad.estaSatisfecha(),
                         "Solo las 30 de esta semana cuentan, no alcanza a 50");
             }
         }
@@ -198,14 +198,14 @@ class NecesidadTest {
             @DisplayName("DonaciÃ³n de hoy cuenta")
             void donacionDeHoy() {
                 necesidad.asignarDonacion(crearDonacion(10L, LocalDateTime.now()));
-                assertTrue(necesidad.getSatisfecha());
+                assertTrue(necesidad.estaSatisfecha());
             }
 
             @Test
             @DisplayName("DonaciÃ³n de ayer NO cuenta")
             void donacionDeAyer() {
                 necesidad.asignarDonacion(crearDonacion(100L, LocalDateTime.now().minusDays(1)));
-                assertFalse(necesidad.getSatisfecha());
+                assertFalse(necesidad.estaSatisfecha());
             }
         }
 
@@ -227,14 +227,14 @@ class NecesidadTest {
             void donacionesDeEsteMes() {
                 necesidad.asignarDonacion(crearDonacion(150L, LocalDateTime.now()));
                 necesidad.asignarDonacion(crearDonacion(60L, LocalDateTime.now()));
-                assertTrue(necesidad.getSatisfecha());
+                assertTrue(necesidad.estaSatisfecha());
             }
 
             @Test
             @DisplayName("Donaciones del mes pasado NO cuentan")
             void donacionesDelMesPasado() {
                 necesidad.asignarDonacion(crearDonacion(200L, LocalDateTime.now().minusMonths(1)));
-                assertFalse(necesidad.getSatisfecha());
+                assertFalse(necesidad.estaSatisfecha());
             }
         }
 
@@ -256,14 +256,14 @@ class NecesidadTest {
             void donacionesDeEsteAnio() {
                 necesidad.asignarDonacion(crearDonacion(600L, LocalDateTime.now()));
                 necesidad.asignarDonacion(crearDonacion(500L, LocalDateTime.now()));
-                assertTrue(necesidad.getSatisfecha());
+                assertTrue(necesidad.estaSatisfecha());
             }
 
             @Test
             @DisplayName("Donaciones del aÃ±o pasado NO cuentan")
             void donacionesDelAnioPasado() {
                 necesidad.asignarDonacion(crearDonacion(2000L, LocalDateTime.now().minusYears(1)));
-                assertFalse(necesidad.getSatisfecha());
+                assertFalse(necesidad.estaSatisfecha());
             }
         }
     }
@@ -280,7 +280,7 @@ class NecesidadTest {
         @DisplayName("Necesidad sin TipoNecesidad asignado no estÃ¡ satisfecha")
         void sinTipoNecesidad() {
             Necesidad necesidad = new Necesidad(subcategoria, null, "Sin tipo", 10L);
-            assertFalse(necesidad.getSatisfecha());
+            assertFalse(necesidad.estaSatisfecha());
         }
 
         @Test

@@ -21,9 +21,6 @@ public abstract class Donante {
   private MedioContacto contactoPredeterminado;
 
   public void agregarDonacion(RegistroDonacion donacion) {
-    if (donacion.getDonacionesSegmentadas() != null) {
-      donacion.getDonacionesSegmentadas().forEach(d -> d.setDonante(this));
-    }
     this.donaciones.add(donacion);
   }
 

@@ -24,7 +24,6 @@ public class NecesidadRecurrente implements TipoNecesidad {
         .mapToDouble(Donacion::cantidadBienesRecibidos)
         .sum();
 
-    // Retorna true si llegamos o pasamos la meta en este periodo
     return totalEnElPeriodo >= cantidadRequerida;
   }
 }

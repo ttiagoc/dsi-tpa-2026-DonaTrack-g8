@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import ar.edu.utn.frba.ddsi.common.models.entities.Email;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.entities.Telefono;
-import ar.edu.utn.frba.ddsi.common.models.enums.TipoOrganizacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaJuridica;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
@@ -121,7 +120,7 @@ public class ImportadorDonantesService {
       PersonaJuridica juridica = new PersonaJuridica();
       juridica.setRazonSocial(razonSocial);
       juridica.setCuit(documento);
-      juridica.setTipo(TipoOrganizacion.EMPRESA);
+      juridica.setTipo("empresa");
       juridica.setRepresentantes(new ArrayList<>());
 
       List<MedioContacto> contactos = new ArrayList<>();

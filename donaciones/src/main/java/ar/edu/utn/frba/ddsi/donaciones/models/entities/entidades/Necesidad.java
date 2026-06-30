@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Necesidad {
+  private Long id;
   private Subcategoria subcategoria;
   private TipoNecesidad tipoNecesidad;
   private String descripcion;
@@ -27,7 +28,7 @@ public class Necesidad {
     this.donacionesAsignadas = new ArrayList<>();
   }
 
-  public Boolean getSatisfecha() {
+  public Boolean estaSatisfecha() {
     if (this.tipoNecesidad == null) {
       return false;
     }

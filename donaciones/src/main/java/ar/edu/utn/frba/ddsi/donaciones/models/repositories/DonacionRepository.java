@@ -26,6 +26,16 @@ public class DonacionRepository {
         return donacion;
     }
 
+    public List<Donacion> saveAll(List<Donacion> donaciones) {
+        donaciones.forEach(d -> {
+            if (d.getId() == null) {
+                d.setId(proximoId++);
+            }
+            donaciones.add(d);
+        });
+        return donaciones;
+    }
+
     public Optional<Donacion> findById(Long id) {
         if (id == null)
             return Optional.empty();

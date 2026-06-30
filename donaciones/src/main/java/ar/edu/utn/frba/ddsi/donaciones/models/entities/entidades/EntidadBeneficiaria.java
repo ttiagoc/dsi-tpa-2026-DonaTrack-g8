@@ -37,4 +37,8 @@ public class EntidadBeneficiaria {
   public void confirmarEntrega(Donacion donacion) {
     donacion.confirmarEntrega();
   }
+
+  public void eliminarNecesidad(Long necesidadId) {
+    this.necesidades.removeIf(n -> n.getId().equals(necesidadId));
+  }
 }

@@ -184,7 +184,7 @@ class DonanteTest {
             assertEquals(TipoEstadoDonacion.EN_DEPOSITO, donacionFideos.estadoActual());
 
             necesidadFideos.asignarDonacion(donacionFideos);
-            assertTrue(necesidadFideos.getSatisfecha(),
+            assertTrue(necesidadFideos.estaSatisfecha(),
                     "50 fideos satisfacen la necesidad de 50");
         }
 

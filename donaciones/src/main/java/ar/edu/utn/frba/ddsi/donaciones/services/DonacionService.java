@@ -9,15 +9,45 @@ import org.springframework.stereotype.Service;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.dto.DonacionDTO;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.RegistroDonacion;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.SegmentadorDeDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 
 @Service
 public class DonacionService {
 
     private final DonacionRepository donacionRepository;
+    private final SegmentadorDeDonacion segmentadorDeDonacion;
 
-    public DonacionService(DonacionRepository donacionRepository) {
+    public DonacionService(DonacionRepository donacionRepository, SegmentadorDeDonacion segmentadorDeDonacion) {
         this.donacionRepository = donacionRepository;
+        this.segmentadorDeDonacion = segmentadorDeDonacion;
+    }
+
+    public List<Donacion> obtenerTodas() {
+        return donacionRepository.findAll();
+    }
+
+    public Donacion obtenerPorId(Long id) {
+        return donacionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontro la donacion"));
+    }
+
+    public List<Donacion> crear(RegistroDonacion donacion) {
+        List<Donacion> donacionesCreadas = segmentadorDeDonacion.segmentarDonacion(donacion);
+        donacionesCreadas.forEach(d -> d.setId(null));
+        return donacionRepository.saveAll(donacionesCreadas);
+    }
+
+    public boolean eliminar(Long id) {
+        return donacionRepository.deleteById(id);
+    }
+
+    public void cambiarEstado(Long id, TipoEstadoDonacion nuevoEstado, String justificacion) {
+        Donacion donacion = donacionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontro la donacion"));
+        donacion.cambiarEstado(nuevoEstado, justificacion);
+        donacionRepository.save(donacion);
     }
 
     public List<DonacionDTO> obtenerDonacionesAsignadas(int limit) {
@@ -49,28 +79,4 @@ public class DonacionService {
         }
     }
 
-    public List<Donacion> obtenerTodas() {
-        return donacionRepository.findAll();
-    }
-
-    public Donacion obtenerPorId(Long id) {
-        return donacionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No se encontro la donacion"));
-    }
-
-    public Donacion crear(Donacion donacion) {
-        donacionRepository.save(donacion);
-        return donacion;
-    }
-
-    public void eliminar(Long id) {
-        donacionRepository.deleteById(id);
-    }
-
-    public void cambiarEstado(Long id, TipoEstadoDonacion nuevoEstado, String justificacion) {
-        Donacion donacion = donacionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No se encontro la donacion"));
-        donacion.cambiarEstado(nuevoEstado, justificacion);
-        donacionRepository.save(donacion);
-    }
 }
