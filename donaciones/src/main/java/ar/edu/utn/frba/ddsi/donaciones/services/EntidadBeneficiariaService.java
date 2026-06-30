@@ -15,11 +15,13 @@ public class EntidadBeneficiariaService {
 
     private final EntidadBeneficiariaRepository entidadBeneficiariaRepository;
     private final DonacionService donacionService;
+    private final EventoService eventoService;
 
     public EntidadBeneficiariaService(EntidadBeneficiariaRepository entidadBeneficiariaRepository,
-            DonacionService donacionService) {
+            DonacionService donacionService, EventoService eventoService) {
         this.entidadBeneficiariaRepository = entidadBeneficiariaRepository;
         this.donacionService = donacionService;
+        this.eventoService = eventoService;
     }
 
     public List<EntidadBeneficiaria> obtenerTodas() {
@@ -92,8 +94,7 @@ public class EntidadBeneficiariaService {
     public void reportarNoRecibida(Long entidadId, Long donacionId, String motivo) {
         entidadBeneficiariaRepository.findById(entidadId)
                 .map(entidad -> {
-                    donacionService.cambiarEstado(donacionId, TipoEstadoDonacion.ENTREGA_FALLIDA, motivo);
-                    entidadBeneficiariaRepository.save(entidad);
+                    eventoService.notificarEntregaFallida(donacionId, motivo);
                     return entidad;
                 })
                 .orElseThrow(() -> new IllegalArgumentException("No se encontro la entidad beneficiaria"));

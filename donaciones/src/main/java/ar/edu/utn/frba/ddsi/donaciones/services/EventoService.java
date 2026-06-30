@@ -111,20 +111,16 @@ public class EventoService {
         EntidadBeneficiaria entidad = donacion.getEntidadBeneficiariaAsignada();
         Donante donante = donacion.getDonante();
 
-        Map<String, Object> datosComunes = Map.of(
-                "donacionId", donacionId,
-                "motivo", motivo);
-
         if (donante != null && donante.getContactoPredeterminado() != null) {
             Evento eventoDonante = new EventoEntregaFallida(
-                    donante.getContactoPredeterminado()); // TODO: Faltan los datosComunes
+                    donante.getContactoPredeterminado(), donacionId, motivo);
             eventManager.emitir(eventoDonante);
         }
 
         if (entidad != null) {
             for (MedioContacto correo : entidad.getCorreoRepresentantes()) {
                 Evento eventoEntidad = new EventoEntregaFallida(
-                        correo); // TODO: Faltan los datosComunes
+                        correo, donacionId, motivo);
                 eventManager.emitir(eventoEntidad);
             }
         }
