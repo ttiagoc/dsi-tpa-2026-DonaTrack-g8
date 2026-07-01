@@ -1,8 +1,13 @@
 package ar.edu.utn.frba.ddsi.logistica.services;
 
+import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.CamionActivoInfo;
+import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.ObtenerCamionesActivosResponse;
+import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.ParadaPendienteInfo;
 import java.time.LocalDateTime;
 
+import java.util.List;
 import org.springframework.stereotype.Service;
+
 
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoRuta;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.ObtenerUbicacionResponse;
@@ -58,5 +63,29 @@ public class MonitoreoService {
         ubicacion.getTimestamp(),
         ubicacion.getVelocidad()
     );
+  }
+
+  public ObtenerCamionesActivosResponse obtenerCamionesActivos() {
+    List<Ruta> rutasActivas = rutaRepository.buscarRutasActivas();
+
+    List<CamionActivoInfo> activos = rutasActivas.stream().map(ruta -> {
+      Camion camion = ruta.getCamion();
+      Ubicacion ubi = ruta.getUltimaUbicacion();
+
+      List<ParadaPendienteInfo> pendientes = ruta.getParadas().stream()
+          .map(p -> new ParadaPendienteInfo(p.getOrden(), p.getDestino()))
+          .toList();
+
+      return new CamionActivoInfo(
+          camion.getId(),
+          camion.getPatente(),
+          (ubi != null) ? ubi.getLatitud() : null,
+          (ubi != null) ? ubi.getLongitud() : null,
+          (ubi != null) ? ubi.getVelocidad() : null,
+          pendientes
+      );
+    }).toList();
+
+    return new ObtenerCamionesActivosResponse(activos);
   }
 }

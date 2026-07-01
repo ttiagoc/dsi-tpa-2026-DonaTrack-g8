@@ -107,7 +107,7 @@ Este informe detalla las funcionalidades, controladores, servicios y tareas prog
      * Guarda la ruta actualizada.
   3. **Nota:** La entidad `Ubicacion` actualmente no tiene el campo `velocidad`. Agregar `private Double velocidad;` al modelo.   LISTO
 
-### B. Dashboard de Monitoreo — ❌ Pendiente
+### B. Dashboard de Monitoreo — IMPLEMETNADO (REVISAR POR LAS DUDAS)
 * **Qué requiere la consigna:** Endpoint que permita consultar en tiempo real los camiones activos con su posición, velocidad y paradas pendientes.
 * **Qué falta actualmente:** No existe endpoint de monitoreo.
 * **Cómo implementarlo:**
