@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import ar.edu.utn.frba.ddsi.logistica.dto.ruta.ObtenerRutaResponse;
+import ar.edu.utn.frba.ddsi.logistica.dto.ruta.ObtenerTodasRutasResponse;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
 
@@ -18,19 +20,29 @@ public class RutaService {
         this.rutaRepository = rutaRepository;
     }
 
-    public List<Ruta> obtenerTodas(LocalDate fecha) {
+    public ObtenerTodasRutasResponse obtenerTodas(LocalDate fecha) {
         List<Ruta> rutas = rutaRepository.findAll();
         if (fecha != null) {
             rutas = rutas.stream()
                     .filter(r -> fecha.equals(r.getFecha()))
                     .collect(Collectors.toList());
         }
-        return rutas;
+        List<ObtenerRutaResponse> responses = rutas.stream()
+                .map(r -> new ObtenerRutaResponse(
+                        r.getId(), r.getFecha(), r.getEstado(),
+                        r.getCamion() != null ? r.getCamion().getPatente() : null
+                ))
+                .collect(Collectors.toList());
+        return new ObtenerTodasRutasResponse(responses);
     }
 
-    public Ruta obtenerPorId(Long id) {
-        return rutaRepository.findById(id)
+    public ObtenerRutaResponse obtenerPorId(Long id) {
+        Ruta r = rutaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontro la ruta con id: " + id));
+        return new ObtenerRutaResponse(
+                r.getId(), r.getFecha(), r.getEstado(),
+                r.getCamion() != null ? r.getCamion().getPatente() : null
+        );
     }
 
     public boolean eliminar(Long id) {

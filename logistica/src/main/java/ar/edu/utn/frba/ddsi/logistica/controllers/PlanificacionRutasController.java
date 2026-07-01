@@ -6,11 +6,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ar.edu.utn.frba.ddsi.logistica.dto.ResultadoPlanificacionDTO;
+import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.services.PlanificacionRutasService;
 
 @RestController
-@RequestMapping("/api/planificacion")
+@RequestMapping("/api/logistica/planificacion")
 public class PlanificacionRutasController {
 
     private final PlanificacionRutasService planificacionRutasService;
@@ -21,9 +21,9 @@ public class PlanificacionRutasController {
 
     @PostMapping("/confirmacion")
     public ResponseEntity<Void> ejecutarPlanificacion(
-            @RequestBody ResultadoPlanificacionDTO resultadoPlanificacion) {
+            @RequestBody EjecutarPlanificacionRequest request) {
         try {
-            planificacionRutasService.ejecutarPlanificacion(resultadoPlanificacion);
+            planificacionRutasService.ejecutarPlanificacion(request);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();

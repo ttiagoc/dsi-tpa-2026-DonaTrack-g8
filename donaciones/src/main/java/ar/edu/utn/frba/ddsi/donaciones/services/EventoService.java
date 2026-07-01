@@ -4,9 +4,9 @@ import org.springframework.stereotype.Service;
 
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
-import ar.edu.utn.frba.ddsi.donaciones.dto.EntregaExitosaDTO;
-import ar.edu.utn.frba.ddsi.donaciones.dto.InicioRutaDTO;
-import ar.edu.utn.frba.ddsi.donaciones.dto.ParadaDTO;
+import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ConfirmacionEntregaExitosaRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.evento.InicioRutaRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ParadaInfo;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
@@ -41,19 +41,19 @@ public class EventoService {
         eventManager.emitir(eventoAusencia);
     }
 
-    public void iniciarRuta(InicioRutaDTO dto) {
-        for (ParadaDTO parada : dto.getParadas()) {
+    public void iniciarRuta(InicioRutaRequest request) {
+        for (ParadaInfo parada : request.paradas()) {
 
-            EntidadBeneficiaria entidad = entidadBeneficiariaRepository.findById(parada.getEntidadId())
+            EntidadBeneficiaria entidad = entidadBeneficiariaRepository.findById(parada.entidadId())
                     .orElseThrow(() -> new IllegalArgumentException("Entidad no encontrada."));
 
             for (MedioContacto contacto : entidad.getCorreoRepresentantes()) {
                 Evento evento = new EventoInicioRutaEntidad(contacto,
-                        "http://localhost:8080/api/logistica/monitoreo/ubicacion/" + dto.getRutaId());
+                        "http://localhost:8080/api/logistica/monitoreo/ubicacion/" + request.rutaId());
                 eventManager.emitir(evento);
             }
 
-            for (Long donacionId : parada.getDonacionIds()) {
+            for (Long donacionId : parada.donacionIds()) {
                 Donacion donacion = donacionRepository.findById(donacionId)
                         .orElseThrow(() -> new IllegalArgumentException("Donación no encontrada."));
 
@@ -62,19 +62,19 @@ public class EventoService {
 
                 Donante donante = donacion.getDonante();
                 Evento evento = new EventoInicioRutaDonante(donante.getContactoPredeterminado(),
-                        "http://localhost:8080/api/logistica/monitoreo/ubicacion/" + dto.getRutaId());
+                        "http://localhost:8080/api/logistica/monitoreo/ubicacion/" + request.rutaId());
                 eventManager.emitir(evento);
             }
         }
     }
 
-    public void confirmarEntregaExitosa(EntregaExitosaDTO dto) {
-        EntidadBeneficiaria entidad = entidadBeneficiariaRepository.findById(dto.getEntidadId())
+    public void confirmarEntregaExitosa(ConfirmacionEntregaExitosaRequest request) {
+        EntidadBeneficiaria entidad = entidadBeneficiariaRepository.findById(request.entidadId())
                 .orElseThrow(() -> new IllegalArgumentException("Entidad Beneficiaria no encontrada."));
 
-        ComprobanteEntrega comprobante = new ComprobanteEntrega(dto.getPatenteCamion(), dto.getFechaHora());
+        ComprobanteEntrega comprobante = new ComprobanteEntrega(request.patenteCamion(), request.fechaHora());
 
-        for (Long donacionId : dto.getDonacionIds()) {
+        for (Long donacionId : request.donacionIds()) {
             Donacion donacion = donacionRepository.findById(donacionId).orElse(null);
 
             if (donacion != null) {

@@ -1,7 +1,5 @@
 package ar.edu.utn.frba.ddsi.logistica.controllers;
 
-import java.util.List;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,11 +10,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
+import ar.edu.utn.frba.ddsi.logistica.dto.camion.ActualizarCamionRequest;
+import ar.edu.utn.frba.ddsi.logistica.dto.camion.ActualizarCamionResponse;
+import ar.edu.utn.frba.ddsi.logistica.dto.camion.CrearCamionRequest;
+import ar.edu.utn.frba.ddsi.logistica.dto.camion.CrearCamionResponse;
+import ar.edu.utn.frba.ddsi.logistica.dto.camion.ObtenerCamionResponse;
+import ar.edu.utn.frba.ddsi.logistica.dto.camion.ObtenerTodosCamionesResponse;
 import ar.edu.utn.frba.ddsi.logistica.services.CamionService;
 
 @RestController
-@RequestMapping("/api/camiones")
+@RequestMapping("/api/logistica/camiones")
 public class CamionController {
 
     private final CamionService camionService;
@@ -26,12 +29,12 @@ public class CamionController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Camion>> obtenerTodos() {
+    public ResponseEntity<ObtenerTodosCamionesResponse> obtenerTodos() {
         return ResponseEntity.ok(camionService.obtenerTodos());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Camion> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<ObtenerCamionResponse> obtenerPorId(@PathVariable Long id) {
         try {
             return ResponseEntity.ok(camionService.obtenerPorId(id));
         } catch (IllegalArgumentException e) {
@@ -40,14 +43,14 @@ public class CamionController {
     }
 
     @PostMapping
-    public ResponseEntity<Camion> crear(@RequestBody Camion camion) {
-        return ResponseEntity.ok(camionService.crear(camion));
+    public ResponseEntity<CrearCamionResponse> crear(@RequestBody CrearCamionRequest request) {
+        return ResponseEntity.ok(camionService.crear(request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Camion> actualizar(@PathVariable Long id, @RequestBody Camion camion) {
+    public ResponseEntity<ActualizarCamionResponse> actualizar(@PathVariable Long id, @RequestBody ActualizarCamionRequest request) {
         try {
-            return ResponseEntity.ok(camionService.actualizar(id, camion));
+            return ResponseEntity.ok(camionService.actualizar(id, request));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }

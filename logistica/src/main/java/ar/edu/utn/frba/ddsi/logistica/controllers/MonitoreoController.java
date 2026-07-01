@@ -8,7 +8,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ar.edu.utn.frba.ddsi.logistica.models.entities.Ubicacion;
+import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.ObtenerUbicacionResponse;
+import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.RecibirTelemetriaRequest;
 import ar.edu.utn.frba.ddsi.logistica.services.MonitoreoService;
 
 @RestController
@@ -24,9 +25,9 @@ public class MonitoreoController {
   @PostMapping("/ubicacion/{patente}")
   public ResponseEntity<Void> recibirTelemetria(
       @PathVariable String patente,
-      @RequestBody Ubicacion ubicacion) {
+      @RequestBody RecibirTelemetriaRequest request) {
     try {
-      monitoreoService.actualizarUbicacionCamion(patente, ubicacion);
+      monitoreoService.actualizarUbicacionCamion(patente, request);
       return ResponseEntity.noContent().build();
     } catch (IllegalArgumentException | IllegalStateException e) {
       return ResponseEntity.notFound().build();
@@ -34,10 +35,10 @@ public class MonitoreoController {
   }
 
   @GetMapping("/ubicacion/{rutaId}")
-  public ResponseEntity<Ubicacion> obtenerUbicacionActual(@PathVariable Long rutaId) {
+  public ResponseEntity<ObtenerUbicacionResponse> obtenerUbicacionActual(@PathVariable Long rutaId) {
     try {
-      Ubicacion ubicacion = monitoreoService.obtenerUltimaUbicacionPorRuta(rutaId);
-      return ResponseEntity.ok(ubicacion);
+      ObtenerUbicacionResponse response = monitoreoService.obtenerUltimaUbicacionPorRuta(rutaId);
+      return ResponseEntity.ok(response);
     } catch (IllegalArgumentException | IllegalStateException e) {
       return ResponseEntity.notFound().build();
     }

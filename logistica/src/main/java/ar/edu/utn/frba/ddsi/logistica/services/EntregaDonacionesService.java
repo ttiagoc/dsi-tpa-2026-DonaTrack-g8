@@ -10,9 +10,9 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ar.edu.utn.frba.ddsi.logistica.config.RestLogisticaConfig;
-import ar.edu.utn.frba.ddsi.logistica.dto.EntregaExitosaDTO;
-import ar.edu.utn.frba.ddsi.logistica.dto.InicioRutaDTO;
-import ar.edu.utn.frba.ddsi.logistica.dto.ParadaDTO;
+import ar.edu.utn.frba.ddsi.logistica.dto.entregadonaciones.ConfirmacionEntregaExitosaRequest;
+import ar.edu.utn.frba.ddsi.logistica.dto.entregadonaciones.InicioRutaRequest;
+import ar.edu.utn.frba.ddsi.logistica.dto.entregadonaciones.ParadaInfo;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Parada;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
@@ -33,28 +33,23 @@ public class EntregaDonacionesService {
 
     public void iniciarRuta(Long rutaId) {
 
-        Ruta ruta = rutaRepository.findById(rutaId).get();
+        Ruta ruta = rutaRepository.findById(rutaId).orElseThrow(() -> new IllegalArgumentException("Ruta no encontrada."));
 
         ruta.iniciar();
         rutaRepository.save(ruta);
 
-        InicioRutaDTO inicioRutaDTO = new InicioRutaDTO();
-        inicioRutaDTO.setRutaId(ruta.getId());
-
-        List<ParadaDTO> paradas = new ArrayList<>();
+        List<ParadaInfo> paradas = new ArrayList<>();
         for (Parada parada : ruta.getParadas()) {
-            ParadaDTO paradaDTO = new ParadaDTO();
-            paradaDTO.setEntidadId(parada.getEntidad());
-            paradaDTO.setDonacionIds(parada.getEntregas());
-            paradas.add(paradaDTO);
+            paradas.add(new ParadaInfo(parada.getEntidad(), parada.getEntregas()));
         }
-        inicioRutaDTO.setParadas(paradas);
+        
+        InicioRutaRequest inicioRutaRequest = new InicioRutaRequest(ruta.getId(), paradas);
 
         URI url = UriComponentsBuilder.fromUriString(properties.getBaseUrl())
-                .path("/evento/inicio-ruta")
+                .path("/donaciones/evento/inicio-ruta")
                 .build().toUri();
         try {
-            restTemplate.postForEntity(url, inicioRutaDTO, String.class);
+            restTemplate.postForEntity(url, inicioRutaRequest, String.class);
         } catch (Exception e) {
             System.err.println("ERROR: Falló la notificación masiva de inicio de ruta.");
         }
@@ -71,16 +66,16 @@ public class EntregaDonacionesService {
 
         List<Long> donaciones = paradaAfectada.getEntregas();
 
-        EntregaExitosaDTO entregaExitosaDTO = new EntregaExitosaDTO(paradaAfectada.getEntidad(), donaciones,
+        ConfirmacionEntregaExitosaRequest request = new ConfirmacionEntregaExitosaRequest(
+                paradaAfectada.getEntidad(), donaciones,
                 ruta.getCamion().getPatente(), LocalDateTime.now());
 
         URI url = UriComponentsBuilder.fromUriString(properties.getBaseUrl())
-                .path("/evento/entrega-exitosa")
+                .path("/donaciones/evento/confirmacion-entrega-exitosa")
                 .build().toUri();
         try {
-            restTemplate.postForEntity(url, entregaExitosaDTO, String.class);
-            System.out
-                    .println("Reporte de entrega exitosa enviado a Donaciones para Parada ID #" + paradaId);
+            restTemplate.postForEntity(url, request, String.class);
+            System.out.println("Reporte de entrega exitosa enviado a Donaciones para Parada ID #" + paradaId);
         } catch (Exception e) {
             System.err.println("ERROR: No se pudo transmitir la confirmación de entrega por red.");
         }

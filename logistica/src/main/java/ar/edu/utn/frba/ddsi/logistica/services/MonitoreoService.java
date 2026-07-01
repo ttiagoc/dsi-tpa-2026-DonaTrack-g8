@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoRuta;
+import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.ObtenerUbicacionResponse;
+import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.RecibirTelemetriaRequest;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Ubicacion;
@@ -22,10 +24,12 @@ public class MonitoreoService {
     this.rutaRepository = rutaRepository;
   }
 
-  public void actualizarUbicacionCamion(String patente, Ubicacion nuevaUbicacion) {
-    if (nuevaUbicacion.getTimestamp() == null) {
-      nuevaUbicacion.setTimestamp(LocalDateTime.now());
-    }
+  public void actualizarUbicacionCamion(String patente, RecibirTelemetriaRequest request) {
+    Ubicacion nuevaUbicacion = new Ubicacion();
+    nuevaUbicacion.setLatitud(request.latitud());
+    nuevaUbicacion.setLongitud(request.longitud());
+    nuevaUbicacion.setVelocidad(request.velocidad());
+    nuevaUbicacion.setTimestamp(request.timestamp() != null ? request.timestamp() : LocalDateTime.now());
 
     Camion camion = camionRepository.findByPatente(patente)
         .orElseThrow(() -> new IllegalArgumentException("Camión no encontrado: " + patente));
@@ -39,7 +43,7 @@ public class MonitoreoService {
     rutaRepository.save(ruta);
   }
 
-  public Ubicacion obtenerUltimaUbicacionPorRuta(Long rutaId) {
+  public ObtenerUbicacionResponse obtenerUltimaUbicacionPorRuta(Long rutaId) {
     Ruta ruta = rutaRepository.findById(rutaId)
         .orElseThrow(() -> new IllegalArgumentException("Ruta no encontrada: " + rutaId));
 
@@ -47,6 +51,12 @@ public class MonitoreoService {
       throw new IllegalStateException("No se han registrado ubicaciones para esta ruta.");
     }
 
-    return ruta.getUltimaUbicacion();
+    Ubicacion ubicacion = ruta.getUltimaUbicacion();
+    return new ObtenerUbicacionResponse(
+        ubicacion.getLatitud(),
+        ubicacion.getLongitud(),
+        ubicacion.getTimestamp(),
+        ubicacion.getVelocidad()
+    );
   }
 }

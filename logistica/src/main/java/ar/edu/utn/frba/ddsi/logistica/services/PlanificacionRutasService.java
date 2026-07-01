@@ -13,9 +13,9 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ar.edu.utn.frba.ddsi.logistica.config.RestLogisticaConfig;
-import ar.edu.utn.frba.ddsi.logistica.dto.CamionDTO;
 import ar.edu.utn.frba.ddsi.logistica.dto.DonacionDTO;
-import ar.edu.utn.frba.ddsi.logistica.dto.ResultadoPlanificacionDTO;
+import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.CamionPlanificacionInfo;
+import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.GestorPlanificacionRutas;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
@@ -47,9 +47,9 @@ public class PlanificacionRutasService {
         }
     }
 
-    public void ejecutarPlanificacion(ResultadoPlanificacionDTO resultadoPlanificacion) {
-        List<CamionDTO> camiones = resultadoPlanificacion.getCamiones();
-        List<Long> sinAsignar = resultadoPlanificacion.getDonacionesSinAsignar();
+    public void ejecutarPlanificacion(EjecutarPlanificacionRequest request) {
+        List<CamionPlanificacionInfo> camiones = request.camiones();
+        List<Long> sinAsignar = request.donacionesSinAsignar();
 
         if (sinAsignar != null && !sinAsignar.isEmpty()) {
             System.out.println("El planificador no pudo asignar " + sinAsignar.size() +
@@ -57,8 +57,8 @@ public class PlanificacionRutasService {
         }
 
         List<Long> donacionesPlanificadas = camiones.stream()
-                .flatMap(camion -> camion.getDirecciones().stream())
-                .flatMap(direcciones -> direcciones.getDonacionesIds().stream())
+                .flatMap(camion -> camion.direcciones().stream())
+                .flatMap(direcciones -> direcciones.donacionesIds().stream())
                 .collect(Collectors.toList());
 
         URI url = UriComponentsBuilder.fromUriString(properties.getBaseUrl())

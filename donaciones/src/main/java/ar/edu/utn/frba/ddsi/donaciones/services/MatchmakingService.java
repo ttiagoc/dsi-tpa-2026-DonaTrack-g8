@@ -19,6 +19,8 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoDonacionAsi
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.ResultadoMatchmakingRepository;
+import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.ObtenerPropuestasPendientesResponse;
+import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.PropuestaMatchmakingInfo;
 import lombok.AllArgsConstructor;
 
 @Service
@@ -35,6 +37,19 @@ public class MatchmakingService {
     public void ejecutarProcesoNocturno() {
         System.out.println("Iniciando procesamiento automático de Matchmaking nocturno...");
         this.procesarMatchmakingGlobal();
+    }
+
+    public ObtenerPropuestasPendientesResponse obtenerPropuestasPendientes() {
+        List<ResultadoMatchmaking> pendientes = resultadoRepository.buscarPendientes();
+        List<PropuestaMatchmakingInfo> infos = pendientes.stream()
+                .map(p -> new PropuestaMatchmakingInfo(
+                        p.getId(),
+                        p.getDonacion().getId(),
+                        p.getEntidadesSugeridas().stream().map(EntidadBeneficiaria::getId).toList(),
+                        p.getFechaEjecucion(),
+                        p.getEstado().name()))
+                .toList();
+        return new ObtenerPropuestasPendientesResponse(infos);
     }
 
     public void procesarMatchmakingGlobal() {
