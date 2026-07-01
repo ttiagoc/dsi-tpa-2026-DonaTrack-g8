@@ -1,8 +1,8 @@
 package ar.edu.utn.frba.ddsi.logistica.services;
 
-import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.CamionActivoInfo;
+import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.CamionActivoResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.ObtenerCamionesActivosResponse;
-import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.ParadaPendienteInfo;
+import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.ParadaPendienteResponse;
 import java.time.LocalDateTime;
 
 import java.util.List;
@@ -68,15 +68,15 @@ public class MonitoreoService {
   public ObtenerCamionesActivosResponse obtenerCamionesActivos() {
     List<Ruta> rutasActivas = rutaRepository.buscarRutasActivas();
 
-    List<CamionActivoInfo> activos = rutasActivas.stream().map(ruta -> {
+    List<CamionActivoResponse> activos = rutasActivas.stream().map(ruta -> {
       Camion camion = ruta.getCamion();
       Ubicacion ubi = ruta.getUltimaUbicacion();
 
-      List<ParadaPendienteInfo> pendientes = ruta.getParadas().stream()
-          .map(p -> new ParadaPendienteInfo(p.getOrden(), p.getDestino()))
+      List<ParadaPendienteResponse> pendientes = ruta.getParadas().stream()
+          .map(p -> new ParadaPendienteResponse(p.getOrden(), p.getDestino()))
           .toList();
 
-      return new CamionActivoInfo(
+      return new CamionActivoResponse(
           camion.getId(),
           camion.getPatente(),
           (ubi != null) ? ubi.getLatitud() : null,
