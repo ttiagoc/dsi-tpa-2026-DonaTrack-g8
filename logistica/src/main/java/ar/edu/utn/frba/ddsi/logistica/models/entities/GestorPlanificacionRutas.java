@@ -3,11 +3,13 @@ package ar.edu.utn.frba.ddsi.logistica.models.entities;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+
 import org.springframework.web.client.RestTemplate;
-import ar.edu.utn.frba.ddsi.logistica.dto.CamionDTO;
-import ar.edu.utn.frba.ddsi.logistica.dto.DireccionDTO;
+
 import ar.edu.utn.frba.ddsi.logistica.dto.DonacionDTO;
-import ar.edu.utn.frba.ddsi.logistica.dto.ResultadoPlanificacionDTO;
+import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.CamionPlanificacionInfo;
+import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.DireccionInfo;
+import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
 
 public class GestorPlanificacionRutas {
 
@@ -24,17 +26,7 @@ public class GestorPlanificacionRutas {
             try {
                 Thread.sleep(3000);
 
-                ResultadoPlanificacionDTO mockResponse = new ResultadoPlanificacionDTO();
-                List<CamionDTO> camionesProcesados = new ArrayList<>();
                 List<Long> donacionesSobrantes = new ArrayList<>();
-
-                Camion camionReal = camiones.get(0);
-                CamionDTO camionDTO = new CamionDTO();
-                camionDTO.setId(camionReal.getId());
-
-                DireccionDTO paradaMock = new DireccionDTO();
-                paradaMock.setDireccion("Medrano 951, CABA");
-
                 List<Long> donacionesAceptadas = new ArrayList<>();
 
                 for (int i = 0; i < donaciones.size(); i++) {
@@ -45,12 +37,17 @@ public class GestorPlanificacionRutas {
                     }
                 }
 
-                paradaMock.setDonacionesIds(donacionesAceptadas);
-                camionDTO.setDirecciones(List.of(paradaMock));
-                camionesProcesados.add(camionDTO);
+                DireccionInfo direccionInfo = new DireccionInfo("Medrano 951, CABA", donacionesAceptadas);
 
-                mockResponse.setCamiones(camionesProcesados);
-                mockResponse.setDonacionesSinAsignar(donacionesSobrantes);
+                Camion camion = camiones.get(0);
+                CamionPlanificacionInfo camionPlanif = new CamionPlanificacionInfo(camion.getId(),
+                        List.of(direccionInfo));
+
+                List<CamionPlanificacionInfo> camionesProcesados = new ArrayList<>();
+                camionesProcesados.add(camionPlanif);
+
+                EjecutarPlanificacionRequest mockResponse = new EjecutarPlanificacionRequest(camionesProcesados,
+                        donacionesSobrantes);
 
                 String urlCallback = "http://localhost:8081/api/planificacion/confirmacion";
                 System.out.println("Cálculo terminado. Golpeando la URL de callback...");
