@@ -13,42 +13,32 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import ar.edu.utn.frba.ddsi.donaciones.dto.DonacionDTO;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.CambioEstado;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.RegistroDonacion;
-import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.*;
 import ar.edu.utn.frba.ddsi.donaciones.services.DonacionService;
 
 @RestController
-@RequestMapping("/api/donacion")
+@RequestMapping("/api/donaciones/donacion")
 public class DonacionController {
 
     private final DonacionService donacionService;
-    private final DonacionRepository donacionRepository;
 
-    public DonacionController(DonacionService donacionService, DonacionRepository donacionRepository) {
+    public DonacionController(DonacionService donacionService) {
         this.donacionService = donacionService;
-        this.donacionRepository = donacionRepository;
     }
 
     @GetMapping
-    public ResponseEntity<List<Donacion>> obtenerTodas() {
+    public ResponseEntity<List<ObtenerTodasDonacionesResponse>> obtenerTodas() {
         return ResponseEntity.ok(donacionService.obtenerTodas());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Donacion> obtenerPorId(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(donacionService.obtenerPorId(id));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<ObtenerDonacionResponse> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(donacionService.obtenerPorId(id));
     }
 
     @PostMapping
-    public ResponseEntity<List<Donacion>> crear(@RequestBody RegistroDonacion registroDonacion) {
-        return ResponseEntity.ok(donacionService.crear(registroDonacion));
+    public ResponseEntity<CrearDonacionResponse> crear(@RequestBody CrearDonacionRequest request) {
+        return ResponseEntity.ok(donacionService.crear(request));
     }
 
     @DeleteMapping("/{id}")
@@ -61,39 +51,26 @@ public class DonacionController {
     }
 
     @PutMapping("/estado/{id}")
-    public ResponseEntity<Donacion> cambiarEstado(@PathVariable Long id,
-            @RequestBody CambioEstado cambioEstado) {
-        try {
-            donacionService.cambiarEstado(id, cambioEstado.getEstado(), cambioEstado.getJustificacion());
-            return ResponseEntity.ok(donacionRepository.findById(id).orElse(null));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<CambiarEstadoDonacionResponse> cambiarEstado(@PathVariable Long id,
+            @RequestBody CambiarEstadoDonacionRequest request) {
+        return ResponseEntity.ok(donacionService.cambiarEstado(id, request));
     }
 
     @GetMapping("/asignadas")
-    public ResponseEntity<List<DonacionDTO>> obtenerDonacionesAsignadas(
+    public ResponseEntity<ObtenerDonacionesAsignadasResponse> obtenerDonacionesAsignadas(
             @RequestParam(name = "limit") int limit) {
-        try {
-            return ResponseEntity.ok(donacionService.obtenerDonacionesAsignadas(limit));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(donacionService.obtenerDonacionesAsignadas(limit));
     }
 
     @PostMapping("/lista-entrega")
-    public ResponseEntity<Void> donacionesEntregaLista(@RequestBody List<DonacionDTO> donaciones) {
-        donacionService.donacionesEntregaLista(donaciones);
+    public ResponseEntity<Void> donacionesEntregaLista(@RequestBody DonacionesListaEntregaRequest request) {
+        donacionService.donacionesEntregaLista(request);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}/replanificar")
-    public ResponseEntity<Donacion> replanificar(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(donacionService.replanificar(id));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<ReplanificarDonacionResponse> replanificar(@PathVariable Long id) {
+        return ResponseEntity.ok(donacionService.replanificar(id));
     }
 
 }

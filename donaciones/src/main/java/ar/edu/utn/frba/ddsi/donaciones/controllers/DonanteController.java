@@ -5,13 +5,11 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaJuridica;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donante.*;
 import ar.edu.utn.frba.ddsi.donaciones.services.DonanteService;
 
 @RestController
-@RequestMapping("/api/donantes")
+@RequestMapping("/donaciones/donantes")
 public class DonanteController {
 
     private final DonanteService donanteService;
@@ -21,53 +19,41 @@ public class DonanteController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Donante>> obtenerTodos() {
+    public ResponseEntity<List<ObtenerTodosDonanteResponse>> obtenerTodos() {
         return ResponseEntity.ok(donanteService.obtenerTodos());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Donante> obtenerPorId(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(donanteService.obtenerPorId(id));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<ObtenerDonanteResponse> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(donanteService.obtenerPorId(id));
     }
 
     @PostMapping("/persona-humana")
-    public ResponseEntity<PersonaHumana> crearPersonaHumana(@RequestBody PersonaHumana persona) {
-        return ResponseEntity.ok(donanteService.crearPersonaHumana(persona));
+    public ResponseEntity<CrearPersonaHumanaResponse> crearPersonaHumana(@RequestBody CrearPersonaHumanaRequest request) {
+        return ResponseEntity.ok(donanteService.crearPersonaHumana(request));
     }
 
     @PostMapping("/persona-juridica")
-    public ResponseEntity<PersonaJuridica> crearPersonaJuridica(@RequestBody PersonaJuridica persona) {
-        return ResponseEntity.ok(donanteService.crearPersonaJuridica(persona));
+    public ResponseEntity<CrearPersonaJuridicaResponse> crearPersonaJuridica(@RequestBody CrearPersonaJuridicaRequest request) {
+        return ResponseEntity.ok(donanteService.crearPersonaJuridica(request));
     }
 
     @PutMapping("/persona-humana/{id}")
-    public ResponseEntity<PersonaHumana> actualizarPersonaHumana(@PathVariable Long id,
-            @RequestBody PersonaHumana datosActualizados) {
-        try {
-            return ResponseEntity.ok(donanteService.actualizarPersonaHumana(id, datosActualizados));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<ActualizarPersonaHumanaResponse> actualizarPersonaHumana(@PathVariable Long id,
+            @RequestBody ActualizarPersonaHumanaRequest request) {
+        return ResponseEntity.ok(donanteService.actualizarPersonaHumana(id, request));
     }
 
     @PutMapping("/persona-juridica/{id}")
-    public ResponseEntity<PersonaJuridica> actualizarPersonaJuridica(@PathVariable Long id,
-            @RequestBody PersonaJuridica datosActualizados) {
-        try {
-            return ResponseEntity.ok(donanteService.actualizarPersonaJuridica(id, datosActualizados));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<ActualizarPersonaJuridicaResponse> actualizarPersonaJuridica(@PathVariable Long id,
+            @RequestBody ActualizarPersonaJuridicaRequest request) {
+        return ResponseEntity.ok(donanteService.actualizarPersonaJuridica(id, request));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         if (donanteService.eliminar(id)) {
-            return ResponseEntity.ok().build();
+            return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
     }

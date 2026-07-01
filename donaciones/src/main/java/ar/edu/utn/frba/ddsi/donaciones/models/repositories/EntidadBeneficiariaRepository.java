@@ -50,4 +50,8 @@ public class EntidadBeneficiariaRepository {
         entidades.clear();
         proximoId = 1L;
     }
+
+    public boolean existsById(Long id) {
+        return findById(id).isPresent();
+    }
 }

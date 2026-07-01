@@ -83,4 +83,8 @@ public class DonanteRepository {
         .map(c -> ((Email) c).getValor())
         .anyMatch(val -> val != null && val.equalsIgnoreCase(emailBuscado.trim()));
   }
+
+  public boolean existsById(Long id) {
+    return findById(id).isPresent();
+  }
 }
