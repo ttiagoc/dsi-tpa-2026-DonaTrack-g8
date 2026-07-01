@@ -136,7 +136,6 @@ package "Microservicio Donaciones" {
     nombre: String
     pideEstado: Boolean
     esPerecedero: Boolean
-    subCategorias: List<Subcategoria>
   }
 
   class Subcategoria {
@@ -363,7 +362,6 @@ Donacion --> "*" CambioEstado
 Donacion --> "*" Bien
 CambioEstado --> TipoEstadoDonacion
 
-Categoria --> "*" Subcategoria
 Subcategoria --> Categoria
 Bien --> Subcategoria
 Bien --> EstadoBien

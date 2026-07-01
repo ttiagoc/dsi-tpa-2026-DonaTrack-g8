@@ -13,7 +13,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.*;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionAsignadaResponse;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionResponse;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EstadoDonacionRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EstadoDonacionResponse;
 import ar.edu.utn.frba.ddsi.donaciones.services.DonacionService;
 
 @RestController
@@ -27,17 +31,17 @@ public class DonacionController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ObtenerTodasDonacionesResponse>> obtenerTodas() {
+    public ResponseEntity<List<DonacionResponse>> obtenerTodas() {
         return ResponseEntity.ok(donacionService.obtenerTodas());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ObtenerDonacionResponse> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<DonacionResponse> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(donacionService.obtenerPorId(id));
     }
 
     @PostMapping
-    public ResponseEntity<CrearDonacionResponse> crear(@RequestBody CrearDonacionRequest request) {
+    public ResponseEntity<List<DonacionResponse>> crear(@RequestBody DonacionRequest request) {
         return ResponseEntity.ok(donacionService.crear(request));
     }
 
@@ -51,26 +55,27 @@ public class DonacionController {
     }
 
     @PutMapping("/estado/{id}")
-    public ResponseEntity<CambiarEstadoDonacionResponse> cambiarEstado(@PathVariable Long id,
-            @RequestBody CambiarEstadoDonacionRequest request) {
+    public ResponseEntity<EstadoDonacionResponse> cambiarEstado(@PathVariable Long id,
+            @RequestBody EstadoDonacionRequest request) {
         return ResponseEntity.ok(donacionService.cambiarEstado(id, request));
     }
 
     @GetMapping("/asignadas")
-    public ResponseEntity<ObtenerDonacionesAsignadasResponse> obtenerDonacionesAsignadas(
+    public ResponseEntity<List<DonacionAsignadaResponse>> obtenerDonacionesAsignadas(
             @RequestParam(name = "limit") int limit) {
         return ResponseEntity.ok(donacionService.obtenerDonacionesAsignadas(limit));
     }
 
     @PostMapping("/lista-entrega")
-    public ResponseEntity<Void> donacionesEntregaLista(@RequestBody DonacionesListaEntregaRequest request) {
-        donacionService.donacionesEntregaLista(request);
+    public ResponseEntity<Void> donacionesEntregaLista(@RequestBody List<Long> donacionesIds) {
+        donacionService.donacionesEntregaLista(donacionesIds);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}/replanificar")
-    public ResponseEntity<ReplanificarDonacionResponse> replanificar(@PathVariable Long id) {
-        return ResponseEntity.ok(donacionService.replanificar(id));
+    public ResponseEntity<Void> replanificar(@PathVariable Long id) {
+        donacionService.replanificar(id);
+        return ResponseEntity.noContent().build();
     }
 
 }
