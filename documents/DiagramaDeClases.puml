@@ -292,6 +292,10 @@ package "Microservicio Donaciones" {
     patenteCamion: String
     fechaHora: LocalDateTime
   }
+
+  class ImportarCsv {
+    importar(pathArchivo: String): List<Donante>
+  }
 }
 
 package "Microservicio Logistica" {
@@ -418,5 +422,7 @@ EventManager ..> Evento
 EventManager ..> Listener
 
 SegmentadorDeDonacion ..> Donacion
+
+ImportarCsv ..> Donante
 
 @enduml

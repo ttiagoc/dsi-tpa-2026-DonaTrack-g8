@@ -1,9 +1,5 @@
 package ar.edu.utn.frba.ddsi.donaciones.services;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +9,8 @@ import org.springframework.stereotype.Service;
 import ar.edu.utn.frba.ddsi.common.models.entities.Email;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.entities.Telefono;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.ImportarCsv;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaJuridica;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
@@ -21,136 +19,89 @@ import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
 public class ImportadorDonantesService {
 
   private DonanteRepository donanteRepository;
+  private ImportarCsv importarCsv;
 
   @Autowired
   public ImportadorDonantesService(DonanteRepository donanteRepository) {
     this.donanteRepository = donanteRepository;
+    this.importarCsv = new ImportarCsv();
   }
 
   public void importarDonantes(String pathArchivo) {
-    if (pathArchivo == null || pathArchivo.isEmpty()) {
-      throw new IllegalArgumentException("La ruta del archivo no puede estar vacía");
-    }
-
-    try (BufferedReader br = new BufferedReader(new FileReader(pathArchivo))) {
-      String linea;
-      boolean esCabecera = true;
-
-      while ((linea = br.readLine()) != null) {
-        if (linea.trim().isEmpty()) {
-          continue;
-        }
-
-        if (esCabecera) {
-          esCabecera = false;
-          continue;
-        }
-
-        procesarLinea(linea);
+    List<Donante> donantes = importarCsv.importar(pathArchivo);
+    for (Donante donante : donantes) {
+      if (donante instanceof PersonaHumana) {
+        procesarHumana((PersonaHumana) donante);
+      } else if (donante instanceof PersonaJuridica) {
+        procesarJuridica((PersonaJuridica) donante);
       }
-    } catch (IOException e) {
-      throw new RuntimeException("Error al leer el archivo CSV: " + e.getMessage(), e);
     }
   }
 
-  private void procesarLinea(String linea) {
-    String[] campos = linea.split(",");
-    if (campos.length < 5) {
+  private void procesarHumana(PersonaHumana humanaNueva) {
+    String emailVal = obtenerEmailVal(humanaNueva.getContactos());
+    if (emailVal == null)
       return;
-    }
 
-    String tipoPersona = campos[0].trim();
-    String documento = campos[2].trim();
-    String nombreORazonSocial = campos[3].trim();
-    String emailVal = campos[4].trim();
-    String telefonoVal = campos.length > 5 ? campos[5].trim() : "";
-
-    if (tipoPersona.equalsIgnoreCase("HUMANA")) {
-      procesarHumana(documento, nombreORazonSocial, emailVal, telefonoVal);
-    } else if (tipoPersona.equalsIgnoreCase("JURIDICA")) {
-      procesarJuridica(documento, nombreORazonSocial, emailVal, telefonoVal);
-    }
-  }
-
-  private void procesarHumana(String dni, String nombreCompleto, String emailVal, String telefonoVal) {
     Optional<PersonaHumana> existenteOpt = donanteRepository.buscarPorEmail(emailVal)
         .map(d -> (PersonaHumana) d);
 
     if (existenteOpt.isPresent()) {
       PersonaHumana humana = existenteOpt.get();
-      actualizarNombreHumana(humana, nombreCompleto);
-      humana.setDni(dni);
-      actualizarContactos(humana.getContactos(), emailVal, telefonoVal);
+      humana.setNombre(humanaNueva.getNombre());
+      humana.setApellido(humanaNueva.getApellido());
+      humana.setDni(humanaNueva.getDni());
+      actualizarContactos(humana.getContactos(), emailVal, obtenerTelefonoVal(humanaNueva.getContactos()));
       donanteRepository.save(humana);
     } else {
-      PersonaHumana humana = new PersonaHumana();
-      actualizarNombreHumana(humana, nombreCompleto);
-      humana.setDni(dni);
-
-      List<MedioContacto> contactos = new ArrayList<>();
-      Email email = new Email(emailVal);
-      contactos.add(email);
-
-      if (!telefonoVal.isEmpty()) {
-        Telefono tel = new Telefono(telefonoVal);
-        contactos.add(tel);
-      }
-
-      humana.setContactos(contactos);
-      humana.setContactoPredeterminado(email);
-
-      donanteRepository.save(humana);
-
-      humana.getContactoPredeterminado().notificar(
-          "Bienvenido/a a DonaTrack, " + nombreCompleto + "! Tu usuario ha sido creado con Éxito.");
+      donanteRepository.save(humanaNueva);
+      String nombreAMostrar = humanaNueva.getNombre()
+          + (humanaNueva.getApellido().isEmpty() ? "" : " " + humanaNueva.getApellido());
+      humanaNueva.getContactoPredeterminado().notificar(
+          "Bienvenido/a a DonaTrack, " + nombreAMostrar.trim() + "! Tu usuario ha sido creado con Éxito.");
     }
   }
 
-  private void procesarJuridica(String documento, String razonSocial, String emailVal, String telefonoVal) {
+  private void procesarJuridica(PersonaJuridica juridicaNueva) {
+    String emailVal = obtenerEmailVal(juridicaNueva.getContactos());
+    if (emailVal == null)
+      return;
+
     Optional<PersonaJuridica> existenteOpt = donanteRepository.buscarPorEmail(emailVal)
         .map(d -> (PersonaJuridica) d);
 
     if (existenteOpt.isPresent()) {
       PersonaJuridica juridica = existenteOpt.get();
-      juridica.setRazonSocial(razonSocial);
-      juridica.setCuit(documento);
-      actualizarContactos(juridica.getContactos(), emailVal, telefonoVal);
+      juridica.setRazonSocial(juridicaNueva.getRazonSocial());
+      juridica.setCuit(juridicaNueva.getCuit());
+      actualizarContactos(juridica.getContactos(), emailVal, obtenerTelefonoVal(juridicaNueva.getContactos()));
       donanteRepository.save(juridica);
     } else {
-      PersonaJuridica juridica = new PersonaJuridica();
-      juridica.setRazonSocial(razonSocial);
-      juridica.setCuit(documento);
-      juridica.setTipo("empresa");
-      juridica.setRepresentantes(new ArrayList<>());
-
-      List<MedioContacto> contactos = new ArrayList<>();
-      Email email = new Email(emailVal);
-      contactos.add(email);
-
-      if (!telefonoVal.isEmpty()) {
-        Telefono tel = new Telefono(telefonoVal);
-        contactos.add(tel);
-      }
-
-      juridica.setContactos(contactos);
-      juridica.setContactoPredeterminado(email);
-
-      donanteRepository.save(juridica);
-
-      juridica.getContactoPredeterminado().notificar(
-          "Bienvenido/a a DonaTrack, " + razonSocial + "! El usuario de su organización ha sido creado con Éxito.");
+      donanteRepository.save(juridicaNueva);
+      juridicaNueva.getContactoPredeterminado().notificar(
+          "Bienvenido/a a DonaTrack, " + juridicaNueva.getRazonSocial()
+              + "! El usuario de su organización ha sido creado con Éxito.");
     }
   }
 
-  private void actualizarNombreHumana(PersonaHumana humana, String nombreCompleto) {
-    int primerEspacio = nombreCompleto.indexOf(' ');
-    if (primerEspacio > 0) {
-      humana.setNombre(nombreCompleto.substring(0, primerEspacio).trim());
-      humana.setApellido(nombreCompleto.substring(primerEspacio).trim());
-    } else {
-      humana.setNombre(nombreCompleto.trim());
-      humana.setApellido("");
-    }
+  private String obtenerEmailVal(List<MedioContacto> contactos) {
+    if (contactos == null)
+      return null;
+    return contactos.stream()
+        .filter(c -> c instanceof Email)
+        .map(c -> ((Email) c).getValor())
+        .findFirst()
+        .orElse(null);
+  }
+
+  private String obtenerTelefonoVal(List<MedioContacto> contactos) {
+    if (contactos == null)
+      return "";
+    return contactos.stream()
+        .filter(c -> c instanceof Telefono)
+        .map(c -> ((Telefono) c).getValor())
+        .findFirst()
+        .orElse("");
   }
 
   private void actualizarContactos(List<MedioContacto> contactos, String emailVal, String telefonoVal) {
