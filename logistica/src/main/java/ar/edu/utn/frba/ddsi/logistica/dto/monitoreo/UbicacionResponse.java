@@ -2,7 +2,7 @@ package ar.edu.utn.frba.ddsi.logistica.dto.monitoreo;
 
 import java.time.LocalDateTime;
 
-public record RecibirTelemetriaRequest(
+public record UbicacionResponse(
     Double latitud,
     Double longitud,
     LocalDateTime timestamp,

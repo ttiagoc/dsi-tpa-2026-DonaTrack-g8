@@ -2,7 +2,7 @@ package ar.edu.utn.frba.ddsi.logistica.dto.planificacion;
 
 import java.util.List;
 
-public record CamionPlanificacionInfo(
+public record CamionPlanificacionResponse(
     Long id,
-    List<DireccionInfo> direcciones
+    List<DireccionResponse> direcciones
 ) {}

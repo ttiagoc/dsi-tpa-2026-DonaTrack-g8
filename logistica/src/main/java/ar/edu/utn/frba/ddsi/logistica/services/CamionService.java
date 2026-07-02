@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import ar.edu.utn.frba.ddsi.logistica.dto.camion.CamionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.camion.CamionResponse;
-import ar.edu.utn.frba.ddsi.logistica.dto.camion.ChoferInfo;
+import ar.edu.utn.frba.ddsi.logistica.dto.camion.ChoferResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.camion.ChoferRequest;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Chofer;
@@ -70,7 +70,7 @@ public class CamionService {
     }
 
     private CamionResponse toCamionResponse(Camion camion) {
-        ChoferInfo choferInfo = camion.getChofer() != null
+        ChoferResponse choferResponse = camion.getChofer() != null
             ? toChoferInfo(camion.getChofer())
             : null;
 
@@ -80,7 +80,7 @@ public class CamionService {
             camion.getCapacidadVolumen(),
             camion.getAltura(),
             camion.getCapacidadCarga(),
-            choferInfo);
+            choferResponse);
     }
 
     private Chofer toChofer(ChoferRequest request) {
@@ -91,8 +91,8 @@ public class CamionService {
         return chofer;
     }
 
-    private ChoferInfo toChoferInfo(Chofer chofer) {
-        return new ChoferInfo(
+    private ChoferResponse toChoferInfo(Chofer chofer) {
+        return new ChoferResponse(
             chofer.getNombre(),
             chofer.getApellido()
         );

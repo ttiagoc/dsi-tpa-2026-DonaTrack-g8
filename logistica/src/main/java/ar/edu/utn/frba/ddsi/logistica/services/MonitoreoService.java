@@ -1,18 +1,18 @@
 package ar.edu.utn.frba.ddsi.logistica.services;
 
-import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.CamionActivoResponse;
-import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.ObtenerCamionesActivosResponse;
-import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.ParadaPendienteResponse;
 import java.time.LocalDateTime;
-
 import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 
-
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoRuta;
-import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.ObtenerUbicacionResponse;
-import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.RecibirTelemetriaRequest;
+import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.CamionActivoResponse;
+import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.ParadaPendienteResponse;
+import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionRequest;
+import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionResponse;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.Parada;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Ubicacion;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
@@ -29,13 +29,7 @@ public class MonitoreoService {
     this.rutaRepository = rutaRepository;
   }
 
-  public void actualizarUbicacionCamion(String patente, RecibirTelemetriaRequest request) {
-    Ubicacion nuevaUbicacion = new Ubicacion();
-    nuevaUbicacion.setLatitud(request.latitud());
-    nuevaUbicacion.setLongitud(request.longitud());
-    nuevaUbicacion.setVelocidad(request.velocidad());
-    nuevaUbicacion.setTimestamp(request.timestamp() != null ? request.timestamp() : LocalDateTime.now());
-
+  public void actualizarUbicacionCamion(String patente, UbicacionRequest request) {
     Camion camion = camionRepository.findByPatente(patente)
         .orElseThrow(() -> new IllegalArgumentException("Camión no encontrado: " + patente));
 
@@ -44,11 +38,11 @@ public class MonitoreoService {
       throw new IllegalStateException("El camión no tiene ninguna ruta en estado EN_TRASLADO.");
     }
 
-    ruta.actualizarUbicacion(nuevaUbicacion);
+    ruta.actualizarUbicacion(toUbicacion(request));
     rutaRepository.save(ruta);
   }
 
-  public ObtenerUbicacionResponse obtenerUltimaUbicacionPorRuta(Long rutaId) {
+  public UbicacionResponse obtenerUltimaUbicacionPorRuta(Long rutaId) {
     Ruta ruta = rutaRepository.findById(rutaId)
         .orElseThrow(() -> new IllegalArgumentException("Ruta no encontrada: " + rutaId));
 
@@ -56,8 +50,28 @@ public class MonitoreoService {
       throw new IllegalStateException("No se han registrado ubicaciones para esta ruta.");
     }
 
-    Ubicacion ubicacion = ruta.getUltimaUbicacion();
-    return new ObtenerUbicacionResponse(
+    return this.toUbicacionResponse(ruta.getUltimaUbicacion());
+  }
+
+  public List<CamionActivoResponse> obtenerCamionesActivos() {
+    List<Ruta> rutasActivas = rutaRepository.buscarRutasActivas();
+
+    return rutasActivas.stream()
+        .map(this::toCamionActivoResponse)
+        .collect(Collectors.toList());
+  }
+
+  private Ubicacion toUbicacion(UbicacionRequest request) {
+    Ubicacion ubicacion = new Ubicacion();
+    ubicacion.setLatitud(request.latitud());
+    ubicacion.setLongitud(request.longitud());
+    ubicacion.setVelocidad(request.velocidad());
+    ubicacion.setTimestamp(request.timestamp() != null ? request.timestamp() : LocalDateTime.now());
+    return ubicacion;
+  }
+
+  private UbicacionResponse toUbicacionResponse(Ubicacion ubicacion) {
+    return new UbicacionResponse(
         ubicacion.getLatitud(),
         ubicacion.getLongitud(),
         ubicacion.getTimestamp(),
@@ -65,27 +79,28 @@ public class MonitoreoService {
     );
   }
 
-  public ObtenerCamionesActivosResponse obtenerCamionesActivos() {
-    List<Ruta> rutasActivas = rutaRepository.buscarRutasActivas();
+  private CamionActivoResponse toCamionActivoResponse(Ruta ruta) {
+    Camion camion = ruta.getCamion();
+    Ubicacion ubi = ruta.getUltimaUbicacion();
 
-    List<CamionActivoResponse> activos = rutasActivas.stream().map(ruta -> {
-      Camion camion = ruta.getCamion();
-      Ubicacion ubi = ruta.getUltimaUbicacion();
+    List<ParadaPendienteResponse> pendientes = ruta.getParadas() != null
+        ? ruta.getParadas().stream().map(this::toParadaPendienteResponse).collect(Collectors.toList())
+        : null;
 
-      List<ParadaPendienteResponse> pendientes = ruta.getParadas().stream()
-          .map(p -> new ParadaPendienteResponse(p.getOrden(), p.getDestino()))
-          .toList();
+    return new CamionActivoResponse(
+        camion.getId(),
+        camion.getPatente(),
+        ubi != null ? ubi.getLatitud() : null,
+        ubi != null ? ubi.getLongitud() : null,
+        ubi != null ? ubi.getVelocidad() : null,
+        pendientes
+    );
+  }
 
-      return new CamionActivoResponse(
-          camion.getId(),
-          camion.getPatente(),
-          (ubi != null) ? ubi.getLatitud() : null,
-          (ubi != null) ? ubi.getLongitud() : null,
-          (ubi != null) ? ubi.getVelocidad() : null,
-          pendientes
-      );
-    }).toList();
-
-    return new ObtenerCamionesActivosResponse(activos);
+  private ParadaPendienteResponse toParadaPendienteResponse(Parada parada) {
+    return new ParadaPendienteResponse(
+        parada.getOrden(),
+        parada.getDestino()
+    );
   }
 }

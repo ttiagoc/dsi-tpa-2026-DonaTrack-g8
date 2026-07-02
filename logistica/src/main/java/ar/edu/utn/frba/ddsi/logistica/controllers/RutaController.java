@@ -1,6 +1,7 @@
 package ar.edu.utn.frba.ddsi.logistica.controllers;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -11,8 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import ar.edu.utn.frba.ddsi.logistica.dto.ruta.ObtenerRutaResponse;
-import ar.edu.utn.frba.ddsi.logistica.dto.ruta.ObtenerTodasRutasResponse;
+import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaResponse;
 import ar.edu.utn.frba.ddsi.logistica.services.RutaService;
 
 @RestController
@@ -26,18 +26,14 @@ public class RutaController {
     }
 
     @GetMapping
-    public ResponseEntity<ObtenerTodasRutasResponse> obtenerTodas(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
+    public ResponseEntity<List<RutaResponse>> obtenerTodas(
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
         return ResponseEntity.ok(rutaService.obtenerTodas(fecha));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ObtenerRutaResponse> obtenerPorId(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(rutaService.obtenerPorId(id));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<RutaResponse> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(rutaService.obtenerPorId(id));
     }
 
     @DeleteMapping("/{id}")

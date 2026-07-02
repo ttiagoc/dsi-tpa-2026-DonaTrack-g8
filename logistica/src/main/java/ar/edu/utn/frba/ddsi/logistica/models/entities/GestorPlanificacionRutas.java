@@ -7,8 +7,8 @@ import java.util.concurrent.CompletableFuture;
 import org.springframework.web.client.RestTemplate;
 
 import ar.edu.utn.frba.ddsi.logistica.dto.DonacionDTO;
-import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.CamionPlanificacionInfo;
-import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.DireccionInfo;
+import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.CamionPlanificacionResponse;
+import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.DireccionResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
 
 public class GestorPlanificacionRutas {
@@ -37,13 +37,13 @@ public class GestorPlanificacionRutas {
                     }
                 }
 
-                DireccionInfo direccionInfo = new DireccionInfo("Medrano 951, CABA", donacionesAceptadas);
+                DireccionResponse direccionInfo = new DireccionResponse("Medrano 951, CABA", donacionesAceptadas);
 
                 Camion camion = camiones.get(0);
-                CamionPlanificacionInfo camionPlanif = new CamionPlanificacionInfo(camion.getId(),
+                CamionPlanificacionResponse camionPlanif = new CamionPlanificacionResponse(camion.getId(),
                         List.of(direccionInfo));
 
-                List<CamionPlanificacionInfo> camionesProcesados = new ArrayList<>();
+                List<CamionPlanificacionResponse> camionesProcesados = new ArrayList<>();
                 camionesProcesados.add(camionPlanif);
 
                 EjecutarPlanificacionRequest mockResponse = new EjecutarPlanificacionRequest(camionesProcesados,

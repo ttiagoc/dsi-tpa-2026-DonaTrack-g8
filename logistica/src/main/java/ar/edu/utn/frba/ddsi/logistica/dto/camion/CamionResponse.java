@@ -6,5 +6,5 @@ public record CamionResponse(
     Double capacidadVolumen,
     Double altura,
     Double capacidadCarga,
-    ChoferInfo chofer
+    ChoferResponse chofer
 ) {}

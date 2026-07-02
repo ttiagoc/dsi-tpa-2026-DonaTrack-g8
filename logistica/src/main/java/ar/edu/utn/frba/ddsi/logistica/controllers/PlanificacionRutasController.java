@@ -21,13 +21,8 @@ public class PlanificacionRutasController {
 
     @PostMapping("/confirmacion")
     public ResponseEntity<Void> ejecutarPlanificacion(
-            @RequestBody EjecutarPlanificacionRequest request) {
-        try {
-            planificacionRutasService.ejecutarPlanificacion(request);
-            return ResponseEntity.noContent().build();
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+        @RequestBody EjecutarPlanificacionRequest request) {
+        planificacionRutasService.ejecutarPlanificacion(request);
+        return ResponseEntity.noContent().build();
     }
-
 }

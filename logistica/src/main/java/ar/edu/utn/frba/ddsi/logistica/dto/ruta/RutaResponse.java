@@ -1,11 +1,13 @@
 package ar.edu.utn.frba.ddsi.logistica.dto.ruta;
 
 import java.time.LocalDate;
+import java.util.List;
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoRuta;
 
-public record ObtenerRutaResponse(
+public record RutaResponse(
     Long id,
     LocalDate fecha,
     EstadoRuta estado,
-    String patenteCamion
+    String patenteCamion,
+    List<ParadaResponse> paradas
 ) {}
