@@ -1,5 +1,7 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.repositories.impl;
 
+import ar.edu.utn.frba.ddsi.common.utils.GeneradorIdSecuencial;
+
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoPropuesta;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.ResultadoMatchmaking;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.ResultadoMatchmakingRepository;
@@ -14,11 +16,11 @@ import java.util.Optional;
 public class InMemoryResultadoMatchmaking implements ResultadoMatchmakingRepository {
     private List<ResultadoMatchmaking> propuestas = new ArrayList<>();
 
-    private Long proximoId = 1L;
+    private GeneradorIdSecuencial generadorId = new GeneradorIdSecuencial();
 
     public ResultadoMatchmaking save(ResultadoMatchmaking propuesta) {
         if (propuesta.getId() == null) {
-            propuesta.setId(proximoId++);
+            propuesta.setId(generadorId.siguiente());
             propuestas.add(propuesta);
         } else {
             findById(propuesta.getId()).ifPresent(propuestas::remove);
@@ -43,10 +45,5 @@ public class InMemoryResultadoMatchmaking implements ResultadoMatchmakingReposit
         return propuestas.stream()
                 .filter(p -> p.getEstado() == EstadoPropuesta.PENDIENTE)
                 .toList();
-    }
-
-    public void limpiar() {
-        propuestas.clear();
-        proximoId = 1L;
     }
 }

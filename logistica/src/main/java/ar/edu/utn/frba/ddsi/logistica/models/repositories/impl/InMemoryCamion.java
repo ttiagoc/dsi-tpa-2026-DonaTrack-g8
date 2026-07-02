@@ -1,5 +1,7 @@
 package ar.edu.utn.frba.ddsi.logistica.models.repositories.impl;
 
+import ar.edu.utn.frba.ddsi.common.utils.GeneradorIdSecuencial;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -23,11 +25,11 @@ public class InMemoryCamion implements CamionRepository {
 
     private List<Camion> camiones = new ArrayList<>();
 
-    private Long proximoId = 1L;
+    private GeneradorIdSecuencial generadorId = new GeneradorIdSecuencial();
 
     public Camion save(Camion camion) {
         if (camion.getId() == null) {
-            camion.setId(proximoId++);
+            camion.setId(generadorId.siguiente());
             camiones.add(camion);
         } else {
             findById(camion.getId()).ifPresent(camiones::remove);
@@ -74,10 +76,5 @@ public class InMemoryCamion implements CamionRepository {
             return true;
         }
         return false;
-    }
-
-    public void limpiar() {
-        camiones.clear();
-        proximoId = 1L;
     }
 }

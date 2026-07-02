@@ -17,7 +17,5 @@ public interface DonanteRepository {
 
     Optional<Donante> buscarPorEmail(String email);
 
-    void limpiar();
-
     boolean existsById(Long id);
 }

@@ -17,8 +17,6 @@ public interface RutaRepository {
 
     boolean deleteById(Long id);
 
-    void limpiar();
-
     List<Ruta> buscarRutasActivasPorCamion(Long idCamion);
 
     Ruta buscarRutaDelCamion(Long idCamion);

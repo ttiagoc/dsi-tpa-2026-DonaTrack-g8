@@ -14,6 +14,4 @@ public interface ResultadoMatchmakingRepository {
     List<ResultadoMatchmaking> findAll();
 
     List<ResultadoMatchmaking> buscarPendientes();
-
-    void limpiar();
 }

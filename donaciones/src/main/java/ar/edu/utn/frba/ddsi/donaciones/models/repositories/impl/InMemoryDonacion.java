@@ -1,6 +1,7 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.repositories.impl;
 
 import org.springframework.stereotype.Repository;
+import ar.edu.utn.frba.ddsi.common.utils.GeneradorIdSecuencial;
 
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
@@ -14,11 +15,11 @@ import java.util.Optional;
 public class InMemoryDonacion implements DonacionRepository {
     private List<Donacion> donaciones = new ArrayList<>();
 
-    private Long proximoId = 1L;
+    private GeneradorIdSecuencial generadorId = new GeneradorIdSecuencial();
 
     public Donacion save(Donacion donacion) {
         if (donacion.getId() == null) {
-            donacion.setId(proximoId++);
+            donacion.setId(generadorId.siguiente());
             donaciones.add(donacion);
         } else {
             findById(donacion.getId()).ifPresent(donaciones::remove);
@@ -30,7 +31,7 @@ public class InMemoryDonacion implements DonacionRepository {
     public List<Donacion> saveAll(List<Donacion> donaciones) {
         donaciones.forEach(d -> {
             if (d.getId() == null) {
-                d.setId(proximoId++);
+                d.setId(generadorId.siguiente());
             }
             donaciones.add(d);
         });
@@ -64,10 +65,5 @@ public class InMemoryDonacion implements DonacionRepository {
         return donaciones.stream()
                 .filter(d -> d.estadoActual() == estadoBuscado)
                 .toList();
-    }
-
-    public void limpiar() {
-        donaciones.clear();
-        proximoId = 1L;
     }
 }

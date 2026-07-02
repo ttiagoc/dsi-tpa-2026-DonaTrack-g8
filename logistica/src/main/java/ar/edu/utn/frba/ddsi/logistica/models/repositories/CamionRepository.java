@@ -18,6 +18,4 @@ public interface CamionRepository {
     List<Camion> findAllDisponibles();
 
     boolean deleteById(Long id);
-
-    void limpiar();
 }

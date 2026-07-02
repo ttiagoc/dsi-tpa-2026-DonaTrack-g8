@@ -1,5 +1,7 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.repositories.impl;
 
+import ar.edu.utn.frba.ddsi.common.utils.GeneradorIdSecuencial;
+
 import org.springframework.stereotype.Repository;
 
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
@@ -13,11 +15,11 @@ import java.util.Optional;
 public class InMemoryEntidadBeneficiaria implements EntidadBeneficiariaRepository {
     private List<EntidadBeneficiaria> entidades = new ArrayList<>();
 
-    private Long proximoId = 1L;
+    private GeneradorIdSecuencial generadorId = new GeneradorIdSecuencial();
 
     public EntidadBeneficiaria save(EntidadBeneficiaria entidad) {
         if (entidad.getId() == null) {
-            entidad.setId(proximoId++);
+            entidad.setId(generadorId.siguiente());
             entidades.add(entidad);
         } else {
             findById(entidad.getId()).ifPresent(entidades::remove);
@@ -45,11 +47,6 @@ public class InMemoryEntidadBeneficiaria implements EntidadBeneficiariaRepositor
             return true;
         }
         return false;
-    }
-
-    public void limpiar() {
-        entidades.clear();
-        proximoId = 1L;
     }
 
     public boolean existsById(Long id) {

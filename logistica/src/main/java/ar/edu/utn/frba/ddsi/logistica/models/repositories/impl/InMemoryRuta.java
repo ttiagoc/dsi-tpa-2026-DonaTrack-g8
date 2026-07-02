@@ -1,5 +1,7 @@
 package ar.edu.utn.frba.ddsi.logistica.models.repositories.impl;
 
+import ar.edu.utn.frba.ddsi.common.utils.GeneradorIdSecuencial;
+
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoRuta;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
@@ -14,11 +16,11 @@ import java.util.Optional;
 public class InMemoryRuta implements RutaRepository {
     private List<Ruta> rutas = new ArrayList<>();
 
-    private Long proximoId = 1L;
+    private GeneradorIdSecuencial generadorId = new GeneradorIdSecuencial();
 
     public Ruta save(Ruta ruta) {
         if (ruta.getId() == null) {
-            ruta.setId(proximoId++);
+            ruta.setId(generadorId.siguiente());
             rutas.add(ruta);
         } else {
             findById(ruta.getId()).ifPresent(rutas::remove);
@@ -52,11 +54,6 @@ public class InMemoryRuta implements RutaRepository {
             return true;
         }
         return false;
-    }
-
-    public void limpiar() {
-        rutas.clear();
-        proximoId = 1L;
     }
 
     public List<Ruta> buscarRutasActivasPorCamion(Long idCamion) {

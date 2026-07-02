@@ -15,7 +15,5 @@ public interface EntidadBeneficiariaRepository {
 
     boolean deleteById(Long id);
 
-    void limpiar();
-
     boolean existsById(Long id);
 }

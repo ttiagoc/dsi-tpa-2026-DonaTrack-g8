@@ -19,6 +19,4 @@ public interface DonacionRepository {
     boolean deleteById(Long id);
 
     List<Donacion> buscarPorEstado(TipoEstadoDonacion estadoBuscado);
-
-    void limpiar();
 }

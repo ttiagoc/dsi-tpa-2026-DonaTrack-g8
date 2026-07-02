@@ -1,5 +1,7 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.repositories.impl;
 
+import ar.edu.utn.frba.ddsi.common.utils.GeneradorIdSecuencial;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -14,11 +16,11 @@ import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
 @Repository
 public class InMemoryDonante implements DonanteRepository {
   private List<Donante> donantes = new ArrayList<>();
-  private Long proximoId = 1L;
+  private GeneradorIdSecuencial generadorId = new GeneradorIdSecuencial();
 
   public Donante save(Donante donante) {
     if (donante.getId() == null) {
-      donante.setId(proximoId++);
+      donante.setId(generadorId.siguiente());
       donantes.add(donante);
     } else {
       findById(donante.getId()).ifPresent(donantes::remove);
@@ -54,11 +56,6 @@ public class InMemoryDonante implements DonanteRepository {
     return donantes.stream()
         .filter(d -> tieneEmail(d.getContactos(), email))
         .findFirst();
-  }
-
-  public void limpiar() {
-    donantes.clear();
-    proximoId = 1L;
   }
 
   private boolean tieneEmail(List<MedioContacto> contactos, String emailBuscado) {
