@@ -3,7 +3,6 @@ package ar.edu.utn.frba.ddsi.donaciones.services;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ar.edu.utn.frba.ddsi.common.models.entities.Email;
@@ -18,13 +17,12 @@ import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
 @Service
 public class ImportadorDonantesService {
 
-  private DonanteRepository donanteRepository;
-  private ImportarCsv importarCsv;
+  private final DonanteRepository donanteRepository;
+  private final ImportarCsv importarCsv;
 
-  @Autowired
-  public ImportadorDonantesService(DonanteRepository donanteRepository) {
+  public ImportadorDonantesService(DonanteRepository donanteRepository, ImportarCsv importarCsv) {
     this.donanteRepository = donanteRepository;
-    this.importarCsv = new ImportarCsv();
+    this.importarCsv = importarCsv;
   }
 
   public void importarDonantes(String pathArchivo) {

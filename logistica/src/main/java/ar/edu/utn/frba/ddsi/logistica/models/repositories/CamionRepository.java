@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
@@ -14,8 +13,11 @@ import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
 @Repository
 public class CamionRepository {
 
-    @Autowired
-    private RutaRepository rutaRepository;
+    private final RutaRepository rutaRepository;
+
+    public CamionRepository(RutaRepository rutaRepository) {
+        this.rutaRepository = rutaRepository;
+    }
 
     private List<Camion> camiones = new ArrayList<>();
 
