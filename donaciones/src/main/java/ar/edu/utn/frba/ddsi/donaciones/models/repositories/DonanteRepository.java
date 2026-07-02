@@ -79,8 +79,8 @@ public class DonanteRepository {
     if (contactos == null)
       return false;
     return contactos.stream()
-        .filter(c -> c instanceof Email)
-        .map(c -> ((Email) c).getValor())
+        .filter(c -> c.getEstrategia() instanceof Email)
+        .map(c -> c.getValor())
         .anyMatch(val -> val != null && val.equalsIgnoreCase(emailBuscado.trim()));
   }
 

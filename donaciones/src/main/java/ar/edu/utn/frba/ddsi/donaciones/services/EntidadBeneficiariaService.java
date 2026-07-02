@@ -6,19 +6,19 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import ar.edu.utn.frba.ddsi.common.models.entities.Email;
+import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.entities.Telefono;
-import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.ActualizarEntidadBeneficiariaRequest;
-import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.ActualizarEntidadBeneficiariaResponse;
-import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.CrearEntidadBeneficiariaRequest;
-import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.CrearEntidadBeneficiariaResponse;
-import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.NecesidadInfo;
-import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.ObtenerEntidadResponse;
-import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.ObtenerNecesidadesResponse;
-import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.ObtenerTodasEntidadesResponse;
-import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.RegistrarNecesidadRequest;
-import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.RegistrarNecesidadResponse;
+import ar.edu.utn.frba.ddsi.common.models.entities.WhatsApp;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.CategoriaRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.SubcategoriaRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donante.MedioContactoRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaResponse;
+import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.NecesidadRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.NecesidadResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.ReportarNoRecibidaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.SubirFotosRecepcionRequest;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
@@ -43,40 +43,65 @@ public class EntidadBeneficiariaService {
         this.eventoService = eventoService;
     }
 
-    public List<ObtenerTodasEntidadesResponse> obtenerTodas() {
+    public List<EntidadBeneficiariaResponse> obtenerTodas() {
         return entidadBeneficiariaRepository.findAll().stream()
-                .map(e -> new ObtenerTodasEntidadesResponse(e.getId(), e.getRazonSocial(), e.getDireccion()))
+                .map(this::toEntidadBeneficiariaResponse)
                 .collect(Collectors.toList());
     }
 
-    public ObtenerEntidadResponse obtenerPorId(Long id) {
+    public EntidadBeneficiariaResponse obtenerPorId(Long id) {
         EntidadBeneficiaria e = entidadBeneficiariaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontro la entidad beneficiaria"));
 
-        List<NecesidadInfo> necesidades = e.getNecesidades() != null ? e.getNecesidades().stream()
-                .map(this::mapNecesidadToInfo).collect(Collectors.toList()) : new java.util.ArrayList<>();
+        return toEntidadBeneficiariaResponse(e);
+    }
 
-        return new ObtenerEntidadResponse(
-                e.getId(), e.getRazonSocial(), e.getDireccion(), e.getTelefono().toString(),
-                e.getCorreoRepresentantes().stream().map(correo -> correo.toString()).collect(Collectors.toList()),
+    private EntidadBeneficiariaResponse toEntidadBeneficiariaResponse(EntidadBeneficiaria e) {
+        List<NecesidadResponse> necesidades = e.getNecesidades() != null ? e.getNecesidades().stream()
+                .map(this::toNecesidadResponse).collect(Collectors.toList()) : new java.util.ArrayList<>();
+
+        return new EntidadBeneficiariaResponse(
+                e.getId(), e.getRazonSocial(), e.getDireccion(), e.getTelefono().getValor(),
+                e.getCorreoRepresentantes().stream().map(correo -> correo.getValor()).collect(Collectors.toList()),
                 necesidades);
     }
 
-    public CrearEntidadBeneficiariaResponse crear(CrearEntidadBeneficiariaRequest request) {
-        EntidadBeneficiaria entidad = new EntidadBeneficiaria();
-        entidad.setRazonSocial(request.razonSocial());
-        entidad.setDireccion(request.direccion());
-        Telefono telefono = new Telefono();
-        telefono.setValor(request.telefono().toString());
-        entidad.setTelefono(telefono);
-        List<Email> correos = request.correoRepresentantes().stream().map(correo -> {
-            Email c = new Email();
-            c.setValor(correo.toString());
-            return c;
-        }).collect(Collectors.toList());
-        entidad.setCorreoRepresentantes(correos);
-        entidad = entidadBeneficiariaRepository.save(entidad);
-        return new CrearEntidadBeneficiariaResponse(entidad.getId(), entidad.getRazonSocial());
+    private NecesidadResponse toNecesidadResponse(Necesidad n) {
+        return new NecesidadResponse(n.getId(), n.getSubcategoria().getNombre(),
+                n.getTipoNecesidad().getClass().getSimpleName(), n.getDescripcion(), n.getCantidad());
+    }
+
+    public EntidadBeneficiariaResponse crear(EntidadBeneficiariaRequest request) {
+        EntidadBeneficiaria entidad = toEntidadBeneficiaria(request);
+        return toEntidadBeneficiariaResponse(entidadBeneficiariaRepository.save(entidad));
+    }
+
+    private EntidadBeneficiaria toEntidadBeneficiaria(EntidadBeneficiariaRequest request) {
+        return new EntidadBeneficiaria(request.razonSocial(), request.direccion(),
+                request.telefono(),
+                request.correoRepresentantes().stream().map(this::toMedioContacto).collect(Collectors.toList()));
+    }
+
+    private MedioContacto toMedioContacto(MedioContactoRequest request) {
+        if (request == null || request.tipo() == null) {
+            return null;
+        }
+        MedioContacto contacto = new MedioContacto();
+        contacto.setValor(request.valor());
+        switch (request.tipo().toLowerCase()) {
+            case "email":
+                contacto.setEstrategia(new Email());
+                break;
+            case "telefono":
+                contacto.setEstrategia(new Telefono());
+                break;
+            case "whatsapp":
+                contacto.setEstrategia(new WhatsApp());
+                break;
+            default:
+                return null;
+        }
+        return contacto;
     }
 
     public boolean eliminar(Long id) {
@@ -86,57 +111,56 @@ public class EntidadBeneficiariaService {
         return true;
     }
 
-    public ActualizarEntidadBeneficiariaResponse actualizar(Long id, ActualizarEntidadBeneficiariaRequest request) {
+    public EntidadBeneficiariaResponse actualizar(Long id, EntidadBeneficiariaRequest request) {
+        EntidadBeneficiaria entidad = entidadBeneficiariaRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontro la entidad beneficiaria"));
+        entidad.setRazonSocial(request.razonSocial());
+        entidad.setDireccion(request.direccion());
+        entidad.setTelefono(new MedioContacto(request.telefono(), new Telefono()));
+        entidad.setCorreoRepresentantes(request.correoRepresentantes().stream().map(this::toMedioContacto)
+                .collect(Collectors.toList()));
+        return toEntidadBeneficiariaResponse(entidadBeneficiariaRepository.save(entidad));
+    }
+
+    public List<NecesidadResponse> obtenerNecesidades(Long id) {
         return entidadBeneficiariaRepository.findById(id)
-                .map(e -> {
-                    e.setRazonSocial(request.razonSocial());
-                    e.setDireccion(request.direccion());
-                    Telefono telefono = new Telefono();
-                    telefono.setValor(request.telefono().toString());
-                    e.setTelefono(telefono);
-                    List<Email> correos = request.correoRepresentantes().stream().map(correo -> {
-                        Email c = new Email();
-                        c.setValor(correo.toString());
-                        return c;
-                    }).collect(Collectors.toList());
-                    e.setCorreoRepresentantes(correos);
-                    e = entidadBeneficiariaRepository.save(e);
-                    return new ActualizarEntidadBeneficiariaResponse(e.getId(), e.getRazonSocial(), e.getDireccion());
-                })
+                .map(e -> e.getNecesidades().stream()
+                        .map(this::toNecesidadResponse)
+                        .collect(Collectors.toList()))
                 .orElseThrow(() -> new IllegalArgumentException("No se encontro la entidad beneficiaria"));
     }
 
-    public ObtenerNecesidadesResponse obtenerNecesidades(Long id) {
-        return entidadBeneficiariaRepository.findById(id)
-                .map(e -> {
-                    List<NecesidadInfo> necesidades = e.getNecesidades() != null ? e.getNecesidades().stream()
-                            .map(this::mapNecesidadToInfo).collect(Collectors.toList()) : new java.util.ArrayList<>();
-                    return new ObtenerNecesidadesResponse(necesidades);
-                })
-                .orElseThrow(() -> new IllegalArgumentException("No se encontro la entidad beneficiaria"));
+    private Necesidad toNecesidad(NecesidadRequest request) {
+        return new Necesidad(toSubcategoria(request.subcategoria()), toTipoNecesidad(request.tipoNecesidad()),
+                request.descripcion(), request.cantidad());
     }
 
-    public RegistrarNecesidadResponse registrarNecesidad(Long id, RegistrarNecesidadRequest request) {
-        return entidadBeneficiariaRepository.findById(id)
-                .map(e -> {
-                    Necesidad necesidad = new Necesidad();
-                    if (request.subcategoria() != null) {
-                        Subcategoria sub = new Subcategoria();
-                        sub.setNombre(request.subcategoria());
-                        necesidad.setSubcategoria(sub);
-                    }
-                    necesidad.setDescripcion(request.descripcion());
-                    necesidad.setCantidad(request.cantidad());
-                    necesidad.setTipoNecesidad(parseTipoNecesidad(request.tipoNecesidad()));
+    private Subcategoria toSubcategoria(SubcategoriaRequest subcategoria) {
+        return new Subcategoria(subcategoria.nombre(), toCategoria(subcategoria.categoria()));
+    }
 
-                    e.registrarNecesidad(necesidad);
-                    e = entidadBeneficiariaRepository.save(e);
+    private Categoria toCategoria(CategoriaRequest categoria) {
+        return new Categoria(categoria.nombre(), categoria.pideEstado(), categoria.esPerecedero());
+    }
 
-                    Necesidad nGuardada = e.getNecesidades().get(e.getNecesidades().size() - 1);
-                    return new RegistrarNecesidadResponse(nGuardada.getId(), nGuardada.getDescripcion(),
-                            nGuardada.getCantidad(), request.tipoNecesidad());
-                })
+    private TipoNecesidad toTipoNecesidad(String tipo) {
+        switch (tipo.toLowerCase()) {
+            case "recurrente":
+                return new NecesidadRecurrente();
+            case "extraordinaria":
+                return new NecesidadExtraordinaria();
+            default:
+                throw new IllegalArgumentException("Tipo de necesidad invalido");
+        }
+    }
+
+    public NecesidadResponse registrarNecesidad(Long id, NecesidadRequest request) {
+        EntidadBeneficiaria entidadBeneficiaria = entidadBeneficiariaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontro la entidad beneficiaria"));
+        Necesidad necesidad = toNecesidad(request);
+        entidadBeneficiaria.registrarNecesidad(necesidad);
+        entidadBeneficiariaRepository.save(entidadBeneficiaria);
+        return toNecesidadResponse(necesidad);
     }
 
     public void eliminarNecesidad(Long entidadId, Long necesidadId) {
@@ -184,21 +208,5 @@ public class EntidadBeneficiariaService {
                     return entidad;
                 })
                 .orElseThrow(() -> new IllegalArgumentException("No se encontro la entidad beneficiaria"));
-    }
-
-    private NecesidadInfo mapNecesidadToInfo(Necesidad n) {
-        String tipo = n.getTipoNecesidad() != null ? n.getTipoNecesidad().getClass().getSimpleName() : null;
-        String sub = n.getSubcategoria() != null ? n.getSubcategoria().getNombre() : null;
-        return new NecesidadInfo(n.getId(), sub, tipo, n.getDescripcion(), n.getCantidad());
-    }
-
-    private TipoNecesidad parseTipoNecesidad(String tipo) {
-        if (tipo == null)
-            return null;
-        if (tipo.toLowerCase().contains("recurrente"))
-            return new NecesidadRecurrente();
-        if (tipo.toLowerCase().contains("extraordinaria"))
-            return new NecesidadExtraordinaria();
-        return null;
     }
 }

@@ -5,9 +5,11 @@ import java.util.List;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import ar.edu.utn.frba.ddsi.common.models.entities.Email;
+import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoPropuesta;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
+import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.ObtenerPropuestasPendientesResponse;
+import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.PropuestaMatchmakingInfo;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.MotorDeMatchmaking;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.ResultadoMatchmaking;
@@ -19,8 +21,6 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoDonacionAsi
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.ResultadoMatchmakingRepository;
-import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.ObtenerPropuestasPendientesResponse;
-import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.PropuestaMatchmakingInfo;
 import lombok.AllArgsConstructor;
 
 @Service
@@ -113,7 +113,7 @@ public class MatchmakingService {
                 donacion.getDonante().getContactoPredeterminado());
         eventManager.emitir(eventoAsignacionDonante);
 
-        for (Email contacto : entidad.getCorreoRepresentantes()) {
+        for (MedioContacto contacto : entidad.getCorreoRepresentantes()) {
             Evento eventoAsignacionEntidad = new EventoDonacionAsignadaEntidad(contacto);
             eventManager.emitir(eventoAsignacionEntidad);
         }

@@ -88,8 +88,8 @@ public class ImportadorDonantesService {
     if (contactos == null)
       return null;
     return contactos.stream()
-        .filter(c -> c instanceof Email)
-        .map(c -> ((Email) c).getValor())
+        .filter(c -> c.getEstrategia() instanceof Email)
+        .map(c -> c.getValor())
         .findFirst()
         .orElse(null);
   }
@@ -98,8 +98,8 @@ public class ImportadorDonantesService {
     if (contactos == null)
       return "";
     return contactos.stream()
-        .filter(c -> c instanceof Telefono)
-        .map(c -> ((Telefono) c).getValor())
+        .filter(c -> c.getEstrategia() instanceof Telefono)
+        .map(c -> c.getValor())
         .findFirst()
         .orElse("");
   }
@@ -108,16 +108,21 @@ public class ImportadorDonantesService {
     if (contactos == null)
       return;
 
-    Optional<Email> emailOpt = contactos.stream()
-        .filter(c -> c instanceof Email)
-        .map(c -> (Email) c)
+    Optional<MedioContacto> emailOpt = contactos.stream()
+        .filter(c -> c.getEstrategia() instanceof Email)
         .findFirst();
-    emailOpt.ifPresent(email -> email.setValor(emailVal));
 
-    Optional<Telefono> telOpt = contactos.stream()
-        .filter(c -> c instanceof Telefono)
-        .map(c -> (Telefono) c)
+    if (emailOpt.isPresent()) {
+      emailOpt.get().setValor(emailVal);
+    } else {
+      MedioContacto email = new MedioContacto(emailVal, new Email());
+      contactos.add(email);
+    }
+
+    Optional<MedioContacto> telOpt = contactos.stream()
+        .filter(c -> c.getEstrategia() instanceof Telefono)
         .findFirst();
+
     if (telOpt.isPresent()) {
       if (!telefonoVal.isEmpty()) {
         telOpt.get().setValor(telefonoVal);
@@ -125,7 +130,7 @@ public class ImportadorDonantesService {
         contactos.remove(telOpt.get());
       }
     } else if (!telefonoVal.isEmpty()) {
-      Telefono tel = new Telefono(telefonoVal);
+      MedioContacto tel = new MedioContacto(telefonoVal, new Telefono());
       contactos.add(tel);
     }
   }

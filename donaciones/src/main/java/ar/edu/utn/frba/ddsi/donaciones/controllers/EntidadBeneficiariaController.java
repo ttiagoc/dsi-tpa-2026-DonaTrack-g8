@@ -19,18 +19,18 @@ public class EntidadBeneficiariaController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ObtenerTodasEntidadesResponse>> obtenerTodas() {
+    public ResponseEntity<List<EntidadBeneficiariaResponse>> obtenerTodas() {
         return ResponseEntity.ok(entidadBeneficiariaService.obtenerTodas());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ObtenerEntidadResponse> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<EntidadBeneficiariaResponse> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(entidadBeneficiariaService.obtenerPorId(id));
     }
 
     @PostMapping
-    public ResponseEntity<CrearEntidadBeneficiariaResponse> crear(
-            @RequestBody CrearEntidadBeneficiariaRequest request) {
+    public ResponseEntity<EntidadBeneficiariaResponse> crear(
+            @RequestBody EntidadBeneficiariaRequest request) {
         return ResponseEntity.ok(entidadBeneficiariaService.crear(request));
     }
 
@@ -44,19 +44,19 @@ public class EntidadBeneficiariaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ActualizarEntidadBeneficiariaResponse> actualizar(@PathVariable Long id,
-            @RequestBody ActualizarEntidadBeneficiariaRequest request) {
+    public ResponseEntity<EntidadBeneficiariaResponse> actualizar(@PathVariable Long id,
+            @RequestBody EntidadBeneficiariaRequest request) {
         return ResponseEntity.ok(entidadBeneficiariaService.actualizar(id, request));
     }
 
     @GetMapping("/{entidadId}/necesidades")
-    public ResponseEntity<ObtenerNecesidadesResponse> obtenerNecesidades(@PathVariable Long entidadId) {
+    public ResponseEntity<List<NecesidadResponse>> obtenerNecesidades(@PathVariable Long entidadId) {
         return ResponseEntity.ok(entidadBeneficiariaService.obtenerNecesidades(entidadId));
     }
 
     @PostMapping("/{entidadId}/necesidades")
-    public ResponseEntity<RegistrarNecesidadResponse> registrarNecesidad(@PathVariable Long entidadId,
-            @RequestBody RegistrarNecesidadRequest request) {
+    public ResponseEntity<NecesidadResponse> registrarNecesidad(@PathVariable Long entidadId,
+            @RequestBody NecesidadRequest request) {
         return ResponseEntity.ok(entidadBeneficiariaService.registrarNecesidad(entidadId, request));
     }
 

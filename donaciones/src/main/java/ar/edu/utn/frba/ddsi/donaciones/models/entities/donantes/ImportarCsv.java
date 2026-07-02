@@ -79,11 +79,11 @@ public class ImportarCsv {
         humana.setDni(dni);
 
         List<MedioContacto> contactos = new ArrayList<>();
-        Email email = new Email(emailVal);
+        MedioContacto email = new MedioContacto(emailVal, new Email());
         contactos.add(email);
 
         if (!telefonoVal.isEmpty()) {
-            Telefono tel = new Telefono(telefonoVal);
+            MedioContacto tel = new MedioContacto(telefonoVal, new Telefono());
             contactos.add(tel);
         }
 
@@ -102,11 +102,11 @@ public class ImportarCsv {
         juridica.setRepresentantes(new ArrayList<>());
 
         List<MedioContacto> contactos = new ArrayList<>();
-        Email email = new Email(emailVal);
+        MedioContacto email = new MedioContacto(emailVal, new Email());
         contactos.add(email);
 
         if (!telefonoVal.isEmpty()) {
-            Telefono tel = new Telefono(telefonoVal);
+            MedioContacto tel = new MedioContacto(telefonoVal, new Telefono());
             contactos.add(tel);
         }
 

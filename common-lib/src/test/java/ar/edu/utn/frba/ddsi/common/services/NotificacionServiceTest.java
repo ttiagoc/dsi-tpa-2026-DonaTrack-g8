@@ -27,8 +27,7 @@ class NotificacionServiceTest {
     @Test
     @DisplayName("Debería enviar notificación y guardarla en el historial como completada")
     void enviarNotificacionExitosamente() {
-        MedioContacto email = new Email();
-        ((Email) email).setValor("test@utn.edu.ar");
+        MedioContacto email = new MedioContacto("test@utn.edu.ar", new Email());
         String mensaje = "Mensaje de prueba de notificación";
 
         Notificacion notificacion = notificacionService.enviarNotificacion(email, mensaje);

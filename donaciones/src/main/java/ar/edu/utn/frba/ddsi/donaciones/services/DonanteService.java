@@ -1,6 +1,5 @@
 package ar.edu.utn.frba.ddsi.donaciones.services;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -10,7 +9,12 @@ import ar.edu.utn.frba.ddsi.common.models.entities.Email;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.entities.Telefono;
 import ar.edu.utn.frba.ddsi.common.models.entities.WhatsApp;
-import ar.edu.utn.frba.ddsi.donaciones.dto.donante.*;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donante.ActualizarPersonaHumanaRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donante.ActualizarPersonaJuridicaRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donante.CrearPersonaJuridicaRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donante.DonanteResponse;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donante.MedioContactoRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaHumanaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaJuridica;
@@ -26,30 +30,33 @@ public class DonanteService {
         this.donanteRepository = donanteRepository;
     }
 
-    public List<ObtenerTodosDonanteResponse> obtenerTodos() {
+    public List<DonanteResponse> obtenerTodos() {
         return donanteRepository.findAll().stream()
-                .map(d -> new ObtenerTodosDonanteResponse(
-                        d.getId(),
-                        d instanceof PersonaHumana ? "Persona Humana" : "Persona Jurídica",
-                        d instanceof PersonaHumana ? ((PersonaHumana) d).getNombre() + " " + ((PersonaHumana) d).getApellido() : ((PersonaJuridica) d).getRazonSocial()
-                ))
+                .map(this::toDonanteResponse)
                 .collect(Collectors.toList());
     }
 
-    public ObtenerDonanteResponse obtenerPorId(Long id) {
-        Donante d = donanteRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No se encontro el donante"));
-        
-        List<MedioContactoInfo> contactosInfo = d.getContactos() != null ? 
-                d.getContactos().stream().map(this::parseContactoInfo).collect(Collectors.toList()) : new ArrayList<>();
-        
-        String tipo = d instanceof PersonaHumana ? "Persona Humana" : "Persona Jurídica";
-        String nombre = d instanceof PersonaHumana ? ((PersonaHumana) d).getNombre() + " " + ((PersonaHumana) d).getApellido() : ((PersonaJuridica) d).getRazonSocial();
-        
-        return new ObtenerDonanteResponse(d.getId(), tipo, nombre, contactosInfo);
+    private String getStringTipoDonante(Donante d) {
+        if (d instanceof PersonaHumana) {
+            return "Persona Humana";
+        }
+        return "Persona Jurídica";
     }
 
-    public CrearPersonaHumanaResponse crearPersonaHumana(CrearPersonaHumanaRequest request) {
+    private DonanteResponse toDonanteResponse(Donante d) {
+        return new DonanteResponse(
+                d.getId(),
+                getStringTipoDonante(d),
+                d.getContactoPredeterminado().getValor());
+    }
+
+    public DonanteResponse obtenerPorId(Long id) {
+        Donante d = donanteRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontro el donante"));
+        return toDonanteResponse(d);
+    }
+
+    private PersonaHumana toPersonaHumana(PersonaHumanaRequest request) {
         PersonaHumana persona = new PersonaHumana();
         persona.setNombre(request.nombre());
         persona.setApellido(request.apellido());
@@ -58,86 +65,98 @@ public class DonanteService {
         persona.setGenero(request.genero());
         persona.setDireccion(request.direccion());
         if (request.contactos() != null) {
-            persona.setContactos(request.contactos().stream().map(this::parseContacto).collect(Collectors.toList()));
+            persona.setContactos(request.contactos().stream().map(this::toMedioContacto).collect(Collectors.toList()));
         }
-        
-        persona = (PersonaHumana) donanteRepository.save(persona);
-        return new CrearPersonaHumanaResponse(persona.getId(), persona.getNombre(), persona.getApellido(), persona.getDni());
+        return persona;
     }
 
-    public CrearPersonaJuridicaResponse crearPersonaJuridica(CrearPersonaJuridicaRequest request) {
+    private PersonaJuridica toPersonaJuridica(CrearPersonaJuridicaRequest request) {
         PersonaJuridica persona = new PersonaJuridica();
         persona.setRazonSocial(request.razonSocial());
         persona.setRubro(request.rubro());
         persona.setTipo(request.tipo());
         persona.setCuit(request.cuit());
-        
+
         if (request.representantes() != null) {
             List<Representante> representantes = request.representantes().stream()
-                    .map(r -> new Representante(r.nombre(), r.apellido(), new Email(r.correo())))
+                    .map(r -> new Representante(r.nombre(), r.apellido(), new MedioContacto(r.correo(), new Email())))
                     .collect(Collectors.toList());
             persona.setRepresentantes(representantes);
         }
-        
-        persona = (PersonaJuridica) donanteRepository.save(persona);
-        return new CrearPersonaJuridicaResponse(persona.getId(), persona.getRazonSocial(), persona.getCuit());
+        return persona;
     }
 
-    public ActualizarPersonaHumanaResponse actualizarPersonaHumana(Long id, ActualizarPersonaHumanaRequest request) {
+    public DonanteResponse crearPersonaHumana(PersonaHumanaRequest request) {
+        PersonaHumana persona = (PersonaHumana) donanteRepository.save(toPersonaHumana(request));
+        return toDonanteResponse(persona);
+    }
+
+    public DonanteResponse crearPersonaJuridica(CrearPersonaJuridicaRequest request) {
+        PersonaJuridica persona = (PersonaJuridica) donanteRepository.save(toPersonaJuridica(request));
+        return toDonanteResponse(persona);
+    }
+
+    public DonanteResponse actualizarPersonaHumana(Long id, ActualizarPersonaHumanaRequest request) {
         return donanteRepository.findById(id)
                 .filter(d -> d instanceof PersonaHumana)
-                .map(d -> {
-                    PersonaHumana persona = (PersonaHumana) d;
-                    persona.setNombre(request.nombre());
-                    persona.setApellido(request.apellido());
-                    persona.setFechaNacimiento(request.fechaNacimiento());
-                    persona.setDni(request.dni());
-                    persona.setGenero(request.genero());
-                    persona.setDireccion(request.direccion());
-                    
-                    persona = (PersonaHumana) donanteRepository.save(persona);
-                    return new ActualizarPersonaHumanaResponse(persona.getId(), persona.getNombre(), persona.getApellido(), persona.getDni());
-                })
+                .map(d -> toDonanteResponse(donanteRepository.save(toPersonaHumanaActualizar(request))))
                 .orElseThrow(() -> new IllegalArgumentException("No se encontro el donante Persona Humana"));
     }
 
-    public ActualizarPersonaJuridicaResponse actualizarPersonaJuridica(Long id, ActualizarPersonaJuridicaRequest request) {
+    private PersonaHumana toPersonaHumanaActualizar(ActualizarPersonaHumanaRequest request) {
+        PersonaHumana persona = new PersonaHumana();
+        persona.setNombre(request.nombre());
+        persona.setApellido(request.apellido());
+        persona.setFechaNacimiento(request.fechaNacimiento());
+        persona.setDni(request.dni());
+        persona.setGenero(request.genero());
+        persona.setDireccion(request.direccion());
+        return persona;
+    }
+
+    private PersonaJuridica toPersonaJuridicaActualizar(ActualizarPersonaJuridicaRequest request) {
+        PersonaJuridica persona = new PersonaJuridica();
+        persona.setRazonSocial(request.razonSocial());
+        persona.setRubro(request.rubro());
+        persona.setTipo(request.tipo());
+        persona.setCuit(request.cuit());
+        return persona;
+    }
+
+    public DonanteResponse actualizarPersonaJuridica(Long id,
+            ActualizarPersonaJuridicaRequest request) {
         return donanteRepository.findById(id)
                 .filter(d -> d instanceof PersonaJuridica)
-                .map(d -> {
-                    PersonaJuridica persona = (PersonaJuridica) d;
-                    persona.setRazonSocial(request.razonSocial());
-                    persona.setRubro(request.rubro());
-                    persona.setTipo(request.tipo());
-                    persona.setCuit(request.cuit());
-                    
-                    persona = (PersonaJuridica) donanteRepository.save(persona);
-                    return new ActualizarPersonaJuridicaResponse(persona.getId(), persona.getRazonSocial(), persona.getCuit());
-                })
+                .map(d -> toDonanteResponse(donanteRepository.save(toPersonaJuridicaActualizar(request))))
                 .orElseThrow(() -> new IllegalArgumentException("No se encontro el donante Persona Juridica"));
     }
 
     public boolean eliminar(Long id) {
-        if (!donanteRepository.existsById(id)) return false;
+        if (!donanteRepository.existsById(id))
+            return false;
         donanteRepository.deleteById(id);
         return true;
     }
 
-    private MedioContacto parseContacto(MedioContactoInfo info) {
-        if (info == null || info.tipo() == null) return null;
-        switch (info.tipo().toLowerCase()) {
-            case "email": return new Email(info.valor());
-            case "telefono": return new Telefono(info.valor());
-            case "whatsapp": return new WhatsApp(info.valor());
-            default: return null;
+    private MedioContacto toMedioContacto(MedioContactoRequest request) {
+        if (request == null || request.tipo() == null) {
+            return null;
         }
-    }
-
-    private MedioContactoInfo parseContactoInfo(MedioContacto mc) {
-        if (mc == null) return null;
-        if (mc instanceof Email) return new MedioContactoInfo("email", ((Email) mc).getValor());
-        if (mc instanceof Telefono) return new MedioContactoInfo("telefono", ((Telefono) mc).getValor());
-        if (mc instanceof WhatsApp) return new MedioContactoInfo("whatsapp", ((WhatsApp) mc).getValor());
-        return null;
+        MedioContacto contacto = new MedioContacto();
+        contacto.setValor(request.valor());
+        switch (request.tipo().toLowerCase()) {
+            case "email":
+                contacto.setEstrategia(new Email());
+                break;
+            case "telefono":
+                contacto.setEstrategia(new Telefono());
+                break;
+            case "whatsapp":
+                contacto.setEstrategia(new WhatsApp());
+                break;
+            default:
+                return null;
+        }
+        return contacto;
     }
 }

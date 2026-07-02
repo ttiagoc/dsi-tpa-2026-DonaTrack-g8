@@ -6,23 +6,26 @@ skinparam ranksep 80
 hide empty members
 
 package "Common Lib" {
-  interface MedioContacto {
+  interface NotificacionStrategy {
+    notificar(valor : String, mensaje : String)
+  }
+
+  class MedioContacto {
+    valor : String
+    estrategia : NotificacionStrategy
     notificar(mensaje : String)
   }
 
-  class Email implements MedioContacto {
-    valor : string
-    notificar(mensaje : String)
+  class Email implements NotificacionStrategy {
+    notificar(valor : String, mensaje : String)
   }
 
-  class Telefono implements MedioContacto {
-    valor : string
-    notificar(mensaje : String)
+  class Telefono implements NotificacionStrategy {
+    notificar(valor : String, mensaje : String)
   }
 
-  class WhatsApp implements MedioContacto {
-    valor : string
-    notificar(mensaje : String)
+  class WhatsApp implements NotificacionStrategy {
+    notificar(valor : String, mensaje : String)
   }
 
   class Notificacion {
@@ -96,7 +99,7 @@ package "Microservicio Donaciones" {
   class Representante {
     nombre: String
     apellido: String
-    correo : Email
+    correo : MedioContacto
   }
 
   class RegistroDonacion {
@@ -158,8 +161,8 @@ package "Microservicio Donaciones" {
     id : Long
     razonSocial : String
     direccion : String
-    telefono : Telefono
-    correoRepresentantes : List<Email>
+    telefono : MedioContacto
+    correoRepresentantes : List<MedioContacto>
     necesidades : List<Necesidad>
     registrarNecesidad(necesidad : Necesidad) : void
     confirmarEntrega(donacion : Donacion) : void
@@ -347,12 +350,13 @@ package "Microservicio Logistica" {
 }
 
 Notificacion --> MedioContacto
+MedioContacto --> NotificacionStrategy
 
 Donante --> "*" RegistroDonacion
 Donante --> "*" MedioContacto
 Donante --> MedioContacto
 PersonaJuridica --> "*" Representante
-Representante --> Email
+Representante --> MedioContacto
 
 RegistroDonacion --> "*" Bien
 Donacion --> Donante
@@ -366,8 +370,8 @@ Subcategoria --> Categoria
 Bien --> Subcategoria
 Bien --> EstadoBien
 
-EntidadBeneficiaria --> Telefono
-EntidadBeneficiaria --> "*" Email
+EntidadBeneficiaria --> MedioContacto
+EntidadBeneficiaria --> "*" MedioContacto
 EntidadBeneficiaria --> "*" Necesidad
 
 Necesidad --> Subcategoria

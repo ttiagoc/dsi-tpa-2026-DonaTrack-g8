@@ -6,7 +6,7 @@ import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ConfirmacionEntregaExitosaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.InicioRutaRequest;
-import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ParadaInfo;
+import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ParadaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
@@ -42,7 +42,7 @@ public class EventoService {
     }
 
     public void iniciarRuta(InicioRutaRequest request) {
-        for (ParadaInfo parada : request.paradas()) {
+        for (ParadaRequest parada : request.paradas()) {
 
             EntidadBeneficiaria entidad = entidadBeneficiariaRepository.findById(parada.entidadId())
                     .orElseThrow(() -> new IllegalArgumentException("Entidad no encontrada."));
