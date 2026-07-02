@@ -1,10 +1,11 @@
-package ar.edu.utn.frba.ddsi.logistica.controllers;
+﻿package ar.edu.utn.frba.ddsi.logistica.controllers;
 
 import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,32 +31,31 @@ public class RutaController {
     }
 
     @GetMapping
-    public ResponseEntity<List<RutaResponse>> obtenerTodas(
+    public List<RutaResponse> obtenerTodas(
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
-        return ResponseEntity.ok(rutaService.obtenerTodas(fecha));
+        return rutaService.obtenerTodas(fecha);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<RutaResponse> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(rutaService.obtenerPorId(id));
+    public RutaResponse obtenerPorId(@PathVariable Long id) {
+        return rutaService.obtenerPorId(id);
     }
 
-    @PostMapping
-    public ResponseEntity<RutaResponse> crear(@RequestBody RutaRequest request) {
-        return ResponseEntity.ok(rutaService.crear(request));
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public RutaResponse crear(@RequestBody RutaRequest request) {
+        return rutaService.crear(request);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<RutaResponse> actualizar(@PathVariable Long id, @RequestBody RutaRequest request) {
-        return ResponseEntity.ok(rutaService.actualizar(id, request));
+    public RutaResponse actualizar(@PathVariable Long id, @RequestBody RutaRequest request) {
+        return rutaService.actualizar(id, request);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        boolean eliminado = rutaService.eliminar(id);
-        if (!eliminado) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.noContent().build();
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eliminar(@PathVariable Long id) {
+        rutaService.eliminar(id);
+        
     }
 }

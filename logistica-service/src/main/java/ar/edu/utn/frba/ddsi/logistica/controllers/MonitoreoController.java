@@ -1,8 +1,9 @@
-package ar.edu.utn.frba.ddsi.logistica.controllers;
+﻿package ar.edu.utn.frba.ddsi.logistica.controllers;
 
 import java.util.List;
 
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,21 +26,22 @@ public class MonitoreoController {
     this.monitoreoService = monitoreoService;
   }
 
-  @PostMapping("/ubicacion/{patente}")
-  public ResponseEntity<Void> recibirTelemetria(
+  @PostMapping("/ubicacion/{patente}")
+    @ResponseStatus(HttpStatus.CREATED)
+  public void recibirTelemetria(
       @PathVariable String patente,
       @RequestBody UbicacionRequest request) {
     monitoreoService.actualizarUbicacionCamion(patente, request);
-    return ResponseEntity.noContent().build();
+    return;
   }
 
   @GetMapping("/ubicacion/{rutaId}")
-  public ResponseEntity<UbicacionResponse> obtenerUbicacionActual(@PathVariable Long rutaId) {
-    return ResponseEntity.ok(monitoreoService.obtenerUltimaUbicacionPorRuta(rutaId));
+  public UbicacionResponse obtenerUbicacionActual(@PathVariable Long rutaId) {
+    return monitoreoService.obtenerUltimaUbicacionPorRuta(rutaId);
   }
 
   @GetMapping("/activos")
-  public ResponseEntity<List<CamionActivoResponse>> obtenerCamionesActivos() {
-    return ResponseEntity.ok(monitoreoService.obtenerCamionesActivos());
+  public List<CamionActivoResponse> obtenerCamionesActivos() {
+    return monitoreoService.obtenerCamionesActivos();
   }
 }

@@ -1,8 +1,9 @@
-package ar.edu.utn.frba.ddsi.donaciones.controllers;
+﻿package ar.edu.utn.frba.ddsi.donaciones.controllers;
 
 import java.util.List;
 
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.*;
 
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.*;
@@ -19,44 +20,45 @@ public class DonanteController {
     }
 
     @GetMapping
-    public ResponseEntity<List<DonanteResponse>> obtenerTodos() {
-        return ResponseEntity.ok(donanteService.obtenerTodos());
+    public List<DonanteResponse> obtenerTodos() {
+        return donanteService.obtenerTodos();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DonanteResponse> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(donanteService.obtenerPorId(id));
+    public DonanteResponse obtenerPorId(@PathVariable Long id) {
+        return donanteService.obtenerPorId(id);
     }
 
-    @PostMapping("/persona-humana")
-    public ResponseEntity<DonanteResponse> crearPersonaHumana(
+    @PostMapping("/persona-humana")
+    @ResponseStatus(HttpStatus.CREATED)
+    public DonanteResponse crearPersonaHumana(
             @RequestBody PersonaHumanaRequest request) {
-        return ResponseEntity.ok(donanteService.crearPersonaHumana(request));
+        return donanteService.crearPersonaHumana(request);
     }
 
-    @PostMapping("/persona-juridica")
-    public ResponseEntity<DonanteResponse> crearPersonaJuridica(
+    @PostMapping("/persona-juridica")
+    @ResponseStatus(HttpStatus.CREATED)
+    public DonanteResponse crearPersonaJuridica(
             @RequestBody CrearPersonaJuridicaRequest request) {
-        return ResponseEntity.ok(donanteService.crearPersonaJuridica(request));
+        return donanteService.crearPersonaJuridica(request);
     }
 
     @PutMapping("/persona-humana/{id}")
-    public ResponseEntity<DonanteResponse> actualizarPersonaHumana(@PathVariable Long id,
+    public DonanteResponse actualizarPersonaHumana(@PathVariable Long id,
             @RequestBody ActualizarPersonaHumanaRequest request) {
-        return ResponseEntity.ok(donanteService.actualizarPersonaHumana(id, request));
+        return donanteService.actualizarPersonaHumana(id, request);
     }
 
     @PutMapping("/persona-juridica/{id}")
-    public ResponseEntity<DonanteResponse> actualizarPersonaJuridica(@PathVariable Long id,
+    public DonanteResponse actualizarPersonaJuridica(@PathVariable Long id,
             @RequestBody ActualizarPersonaJuridicaRequest request) {
-        return ResponseEntity.ok(donanteService.actualizarPersonaJuridica(id, request));
+        return donanteService.actualizarPersonaJuridica(id, request);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        if (donanteService.eliminar(id)) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eliminar(@PathVariable Long id) {
+        donanteService.eliminar(id);
     }
 }
+

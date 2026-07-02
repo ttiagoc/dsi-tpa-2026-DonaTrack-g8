@@ -1,6 +1,7 @@
-package ar.edu.utn.frba.ddsi.donaciones.controllers;
+﻿package ar.edu.utn.frba.ddsi.donaciones.controllers;
 
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,18 +19,21 @@ public class EventoController {
 
     private final EventoService eventoService;
 
-    @PostMapping("/inicio-ruta")
-    public ResponseEntity<String> iniciarRuta(@RequestBody InicioRutaRequest request) {
+    @PostMapping("/inicio-ruta")
+    @ResponseStatus(HttpStatus.CREATED)
+    public String iniciarRuta(@RequestBody InicioRutaRequest request) {
         eventoService.iniciarRuta(request);
-        return ResponseEntity.ok("Notificación de inicio de ruta enviada correctamente.");
+        return "NotificaciÃ³n de inicio de ruta enviada correctamente.";
     }
 
-    @PostMapping("/confirmacion-entrega-exitosa")
-    public ResponseEntity<String> confirmarEntregaExitosa(
+    @PostMapping("/confirmacion-entrega-exitosa")
+    @ResponseStatus(HttpStatus.CREATED)
+    public String confirmarEntregaExitosa(
             @RequestBody ConfirmacionEntregaExitosaRequest request) {
         eventoService.confirmarEntregaExitosa(request);
         return ResponseEntity.ok(
-                "Notificación de confirmacion de entrega exitosa enviada correctamente.");
+                "NotificaciÃ³n de confirmacion de entrega exitosa enviada correctamente.");
     }
 
 }
+

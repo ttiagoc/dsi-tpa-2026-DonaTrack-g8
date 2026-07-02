@@ -1,6 +1,7 @@
-package ar.edu.utn.frba.ddsi.logistica.controllers;
+﻿package ar.edu.utn.frba.ddsi.logistica.controllers;
 
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,16 +19,18 @@ public class EntregaDonacionesController {
         this.entregaDonacionesService = entregaDonacionesService;
     }
 
-    @PostMapping("/iniciar/{rutaId}")
-    public ResponseEntity<Void> iniciarRuta(@PathVariable Long rutaId) {
+    @PostMapping("/iniciar/{rutaId}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void iniciarRuta(@PathVariable Long rutaId) {
         entregaDonacionesService.iniciarRuta(rutaId);
-        return ResponseEntity.noContent().build();
+        return;
     }
 
-    @PostMapping("/confirmar/{paradaId}/{rutaId}")
-    public ResponseEntity<Void> recibirConfirmacionEntregaExitosa(@PathVariable Long paradaId,
+    @PostMapping("/confirmar/{paradaId}/{rutaId}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void recibirConfirmacionEntregaExitosa(@PathVariable Long paradaId,
                                                                   @PathVariable Long rutaId) {
         entregaDonacionesService.confirmarEntregaExitosa(paradaId, rutaId);
-        return ResponseEntity.noContent().build();
+        return;
     }
 }

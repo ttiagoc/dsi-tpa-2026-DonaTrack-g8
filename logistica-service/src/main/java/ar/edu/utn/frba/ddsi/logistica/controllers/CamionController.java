@@ -1,8 +1,9 @@
-package ar.edu.utn.frba.ddsi.logistica.controllers;
+﻿package ar.edu.utn.frba.ddsi.logistica.controllers;
 
 import java.util.List;
 
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,31 +28,30 @@ public class CamionController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CamionResponse>> obtenerTodos() {
-        return ResponseEntity.ok(camionService.obtenerTodos());
+    public List<CamionResponse> obtenerTodos() {
+        return camionService.obtenerTodos();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CamionResponse> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(camionService.obtenerPorId(id));
+    public CamionResponse obtenerPorId(@PathVariable Long id) {
+        return camionService.obtenerPorId(id);
     }
 
-    @PostMapping
-    public ResponseEntity<CamionResponse> crear(@RequestBody CamionRequest request) {
-        return ResponseEntity.ok(camionService.crear(request));
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public CamionResponse crear(@RequestBody CamionRequest request) {
+        return camionService.crear(request);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CamionResponse> actualizar(@PathVariable Long id, @RequestBody CamionRequest request) {
-        return ResponseEntity.ok(camionService.actualizar(id, request));
+    public CamionResponse actualizar(@PathVariable Long id, @RequestBody CamionRequest request) {
+        return camionService.actualizar(id, request);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        boolean eliminado = camionService.eliminar(id);
-        if (!eliminado) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.noContent().build();
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eliminar(@PathVariable Long id) {
+        camionService.eliminar(id);
+        
     }
 }

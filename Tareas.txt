@@ -18,7 +18,3 @@ En la carpeta exceptions se deben crear nuestras excepciones y extienden de RunT
 Tipos de Excepciones: (wrappear a status code correspondiente)
 - BusinessException
 - ResourceNotFoundException
-
-OTROS
-Las carpetas de los microservicios son ...-service, los controller tmb (donaciones-service)
-Ver los enums si realmente son necesarios en commons
