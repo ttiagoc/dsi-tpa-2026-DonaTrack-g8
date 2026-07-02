@@ -48,7 +48,7 @@ public class EntregaDonacionesServiceImpl implements EntregaDonacionesService {
         InicioRutaRequest inicioRutaRequest = new InicioRutaRequest(ruta.getId(), paradas);
 
         URI url = UriComponentsBuilder.fromUriString(properties.getBaseUrl())
-                .path("/donaciones/evento/inicio-ruta")
+                .path("/donaciones-service/evento/inicio-ruta")
                 .build().toUri();
         try {
             restTemplate.postForEntity(url, inicioRutaRequest, String.class);
@@ -73,7 +73,7 @@ public class EntregaDonacionesServiceImpl implements EntregaDonacionesService {
                 ruta.getCamion().getPatente(), LocalDateTime.now());
 
         URI url = UriComponentsBuilder.fromUriString(properties.getBaseUrl())
-                .path("/donaciones/evento/confirmacion-entrega-exitosa")
+                .path("/donaciones-service/evento/confirmacion-entrega-exitosa")
                 .build().toUri();
         try {
             restTemplate.postForEntity(url, request, String.class);
