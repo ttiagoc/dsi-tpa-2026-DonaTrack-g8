@@ -70,19 +70,6 @@ public class CamionService {
     }
 
     private CamionResponse toCamionResponse(Camion camion) {
-<<<<<<< HEAD
-        ChoferResponse choferResponse = camion.getChofer() != null
-            ? toChoferInfo(camion.getChofer())
-            : null;
-
-        return new CamionResponse(
-            camion.getId(),
-            camion.getPatente(),
-            camion.getCapacidadVolumen(),
-            camion.getAltura(),
-            camion.getCapacidadCarga(),
-            choferResponse);
-=======
         return new CamionResponse(
                 camion.getId(),
                 camion.getPatente(),
@@ -90,7 +77,6 @@ public class CamionService {
                 camion.getAltura(),
                 camion.getCapacidadCarga(),
                 toChoferResponse(camion.getChofer()));
->>>>>>> df03cf0d3f84a60cead8687d3a130eaee117b8f6
     }
 
     private Chofer toChofer(ChoferRequest request) {
@@ -102,17 +88,9 @@ public class CamionService {
         return chofer;
     }
 
-<<<<<<< HEAD
-    private ChoferResponse toChoferInfo(Chofer chofer) {
-        return new ChoferResponse(
-            chofer.getNombre(),
-            chofer.getApellido()
-        );
-=======
     private ChoferResponse toChoferResponse(Chofer chofer) {
         return new ChoferResponse(
                 chofer.getNombre(),
                 chofer.getApellido());
->>>>>>> df03cf0d3f84a60cead8687d3a130eaee117b8f6
     }
 }

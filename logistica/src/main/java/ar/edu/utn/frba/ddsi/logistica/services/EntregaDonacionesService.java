@@ -12,7 +12,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ar.edu.utn.frba.ddsi.logistica.config.RestLogisticaConfig;
 import ar.edu.utn.frba.ddsi.logistica.dto.entregadonaciones.ConfirmacionEntregaExitosaRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.entregadonaciones.InicioRutaRequest;
-import ar.edu.utn.frba.ddsi.logistica.dto.entregadonaciones.ParadaInfo;
+import ar.edu.utn.frba.ddsi.logistica.dto.ruta.ParadaRequest;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Parada;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
@@ -25,7 +25,7 @@ public class EntregaDonacionesService {
     private final RestLogisticaConfig properties;
 
     public EntregaDonacionesService(RutaRepository rutaRepository, RestTemplate restTemplate,
-                                    RestLogisticaConfig properties) {
+            RestLogisticaConfig properties) {
         this.rutaRepository = rutaRepository;
         this.restTemplate = restTemplate;
         this.properties = properties;
@@ -33,21 +33,22 @@ public class EntregaDonacionesService {
 
     public void iniciarRuta(Long rutaId) {
         Ruta ruta = rutaRepository.findById(rutaId)
-            .orElseThrow(() -> new IllegalArgumentException("Ruta no encontrada."));
+                .orElseThrow(() -> new IllegalArgumentException("Ruta no encontrada."));
 
         ruta.iniciar();
         rutaRepository.save(ruta);
 
-        List<ParadaInfo> paradas = new ArrayList<>();
+        List<ParadaRequest> paradas = new ArrayList<>();
         for (Parada parada : ruta.getParadas()) {
-            paradas.add(new ParadaInfo(parada.getEntidad(), parada.getEntregas()));
+            paradas.add(new ParadaRequest(parada.getOrden(), parada.getDestino(), parada.getEntidad(),
+                    parada.getEntregas()));
         }
 
         InicioRutaRequest inicioRutaRequest = new InicioRutaRequest(ruta.getId(), paradas);
 
         URI url = UriComponentsBuilder.fromUriString(properties.getBaseUrl())
-            .path("/donaciones/evento/inicio-ruta")
-            .build().toUri();
+                .path("/donaciones/evento/inicio-ruta")
+                .build().toUri();
         try {
             restTemplate.postForEntity(url, inicioRutaRequest, String.class);
         } catch (Exception e) {
@@ -57,22 +58,22 @@ public class EntregaDonacionesService {
 
     public void confirmarEntregaExitosa(Long paradaId, Long rutaId) {
         Ruta ruta = rutaRepository.findById(rutaId)
-            .orElseThrow(() -> new IllegalArgumentException("Ruta no encontrada."));
+                .orElseThrow(() -> new IllegalArgumentException("Ruta no encontrada."));
 
         Parada paradaAfectada = ruta.getParadas().stream()
-            .filter(p -> p.getOrden() == paradaId.intValue())
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("Parada no encontrada en la ruta especificada."));
+                .filter(p -> p.getOrden() == paradaId.intValue())
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Parada no encontrada en la ruta especificada."));
 
         List<Long> donaciones = paradaAfectada.getEntregas();
 
         ConfirmacionEntregaExitosaRequest request = new ConfirmacionEntregaExitosaRequest(
-            paradaAfectada.getEntidad(), donaciones,
-            ruta.getCamion().getPatente(), LocalDateTime.now());
+                paradaAfectada.getEntidad(), donaciones,
+                ruta.getCamion().getPatente(), LocalDateTime.now());
 
         URI url = UriComponentsBuilder.fromUriString(properties.getBaseUrl())
-            .path("/donaciones/evento/confirmacion-entrega-exitosa")
-            .build().toUri();
+                .path("/donaciones/evento/confirmacion-entrega-exitosa")
+                .build().toUri();
         try {
             restTemplate.postForEntity(url, request, String.class);
             System.out.println("Reporte de entrega exitosa enviado a Donaciones para Parada ID #" + paradaId);

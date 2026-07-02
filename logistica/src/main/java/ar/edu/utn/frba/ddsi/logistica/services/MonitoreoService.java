@@ -75,32 +75,27 @@ public class MonitoreoService {
         ubicacion.getLatitud(),
         ubicacion.getLongitud(),
         ubicacion.getTimestamp(),
-        ubicacion.getVelocidad()
-    );
+        ubicacion.getVelocidad());
   }
 
   private CamionActivoResponse toCamionActivoResponse(Ruta ruta) {
     Camion camion = ruta.getCamion();
     Ubicacion ubi = ruta.getUltimaUbicacion();
-
-    List<ParadaPendienteResponse> pendientes = ruta.getParadas() != null
-        ? ruta.getParadas().stream().map(this::toParadaPendienteResponse).collect(Collectors.toList())
-        : null;
+    List<ParadaPendienteResponse> pendientes = ruta.getParadas().stream().map(this::toParadaPendienteResponse)
+        .collect(Collectors.toList());
 
     return new CamionActivoResponse(
         camion.getId(),
         camion.getPatente(),
-        ubi != null ? ubi.getLatitud() : null,
-        ubi != null ? ubi.getLongitud() : null,
-        ubi != null ? ubi.getVelocidad() : null,
-        pendientes
-    );
+        ubi.getLatitud(),
+        ubi.getLongitud(),
+        ubi.getVelocidad(),
+        pendientes);
   }
 
   private ParadaPendienteResponse toParadaPendienteResponse(Parada parada) {
     return new ParadaPendienteResponse(
         parada.getOrden(),
-        parada.getDestino()
-    );
+        parada.getDestino());
   }
 }

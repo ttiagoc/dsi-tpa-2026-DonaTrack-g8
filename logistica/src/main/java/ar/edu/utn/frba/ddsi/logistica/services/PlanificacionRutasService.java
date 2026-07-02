@@ -30,7 +30,7 @@ public class PlanificacionRutasService {
     private static final int TAMANO_LOTE = 100;
 
     public PlanificacionRutasService(RestTemplate restTemplate, RestLogisticaConfig properties,
-                                     GestorPlanificacionRutas gestorPlanificacionRutas, CamionRepository camionRepository) {
+            GestorPlanificacionRutas gestorPlanificacionRutas, CamionRepository camionRepository) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.gestorPlanificacionRutas = gestorPlanificacionRutas;
@@ -48,36 +48,34 @@ public class PlanificacionRutasService {
     }
 
     public void ejecutarPlanificacion(EjecutarPlanificacionRequest request) {
-        // Mapeo inicial para extracción de IDs
         List<Long> donacionesPlanificadas = toListIdDonaciones(request.camiones());
 
-        // Notificación externa
         URI url = UriComponentsBuilder.fromUriString(properties.getBaseUrl())
-            .path("/donaciones/lista-entrega")
-            .build().toUri();
+                .path("/donaciones/lista-entrega")
+                .build().toUri();
 
         restTemplate.postForEntity(url, donacionesPlanificadas, Void.class);
 
-        // Ciclo de planificación
         planificarRutas();
     }
 
     private List<DonacionDTO> getLote() {
         URI url = UriComponentsBuilder.fromUriString(properties.getBaseUrl())
-            .path("/donaciones/asignadas")
-            .queryParam("limit", TAMANO_LOTE)
-            .build().toUri();
+                .path("/donaciones/asignadas")
+                .queryParam("limit", TAMANO_LOTE)
+                .build().toUri();
 
         ResponseEntity<List<DonacionDTO>> response = restTemplate.exchange(
-            url, HttpMethod.GET, null, new ParameterizedTypeReference<List<DonacionDTO>>() {});
+                url, HttpMethod.GET, null, new ParameterizedTypeReference<List<DonacionDTO>>() {
+                });
 
         return response.getBody() != null ? response.getBody() : List.of();
     }
 
     private List<Long> toListIdDonaciones(List<CamionPlanificacionResponse> camiones) {
         return camiones.stream()
-            .flatMap(c -> c.direcciones().stream())
-            .flatMap(d -> d.donacionesIds().stream())
-            .collect(Collectors.toList());
+                .flatMap(c -> c.direcciones().stream())
+                .flatMap(d -> d.donacionesIds().stream())
+                .collect(Collectors.toList());
     }
 }
