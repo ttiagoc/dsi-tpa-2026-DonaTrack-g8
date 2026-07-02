@@ -1,57 +1,21 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.repositories;
 
-import org.springframework.stereotype.Repository;
-
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
-public class EntidadBeneficiariaRepository {
-    private List<EntidadBeneficiaria> entidades = new ArrayList<>();
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
 
-    private Long proximoId = 1L;
+public interface EntidadBeneficiariaRepository {
 
-    public EntidadBeneficiaria save(EntidadBeneficiaria entidad) {
-        if (entidad.getId() == null) {
-            entidad.setId(proximoId++);
-            entidades.add(entidad);
-        } else {
-            findById(entidad.getId()).ifPresent(entidades::remove);
-            entidades.add(entidad);
-        }
-        return entidad;
-    }
+    EntidadBeneficiaria save(EntidadBeneficiaria entidad);
 
-    public Optional<EntidadBeneficiaria> findById(Long id) {
-        if (id == null)
-            return Optional.empty();
-        return entidades.stream()
-                .filter(e -> id.equals(e.getId()))
-                .findFirst();
-    }
+    Optional<EntidadBeneficiaria> findById(Long id);
 
-    public List<EntidadBeneficiaria> findAll() {
-        return new ArrayList<>(entidades);
-    }
+    List<EntidadBeneficiaria> findAll();
 
-    public boolean deleteById(Long id) {
-        Optional<EntidadBeneficiaria> entidad = findById(id);
-        if (entidad.isPresent()) {
-            entidades.remove(entidad.get());
-            return true;
-        }
-        return false;
-    }
+    boolean deleteById(Long id);
 
-    public void limpiar() {
-        entidades.clear();
-        proximoId = 1L;
-    }
+    void limpiar();
 
-    public boolean existsById(Long id) {
-        return findById(id).isPresent();
-    }
+    boolean existsById(Long id);
 }

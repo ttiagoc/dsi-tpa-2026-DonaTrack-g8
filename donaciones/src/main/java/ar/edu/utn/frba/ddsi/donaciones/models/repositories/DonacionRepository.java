@@ -1,72 +1,24 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.repositories;
 
-import org.springframework.stereotype.Repository;
+import java.util.List;
+import java.util.Optional;
 
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+public interface DonacionRepository {
 
-@Repository
-public class DonacionRepository {
-    private List<Donacion> donaciones = new ArrayList<>();
+    Donacion save(Donacion donacion);
 
-    private Long proximoId = 1L;
+    List<Donacion> saveAll(List<Donacion> donaciones);
 
-    public Donacion save(Donacion donacion) {
-        if (donacion.getId() == null) {
-            donacion.setId(proximoId++);
-            donaciones.add(donacion);
-        } else {
-            findById(donacion.getId()).ifPresent(donaciones::remove);
-            donaciones.add(donacion);
-        }
-        return donacion;
-    }
+    Optional<Donacion> findById(Long id);
 
-    public List<Donacion> saveAll(List<Donacion> donaciones) {
-        donaciones.forEach(d -> {
-            if (d.getId() == null) {
-                d.setId(proximoId++);
-            }
-            donaciones.add(d);
-        });
-        return donaciones;
-    }
+    List<Donacion> findAll();
 
-    public Optional<Donacion> findById(Long id) {
-        if (id == null)
-            return Optional.empty();
-        return donaciones.stream()
-                .filter(d -> id.equals(d.getId()))
-                .findFirst();
-    }
+    boolean deleteById(Long id);
 
-    public List<Donacion> findAll() {
-        return new ArrayList<>(donaciones);
-    }
+    List<Donacion> buscarPorEstado(TipoEstadoDonacion estadoBuscado);
 
-    public boolean deleteById(Long id) {
-        Optional<Donacion> donacion = findById(id);
-        if (donacion.isPresent()) {
-            donaciones.remove(donacion.get());
-            return true;
-        }
-        return false;
-    }
-
-    public List<Donacion> buscarPorEstado(TipoEstadoDonacion estadoBuscado) {
-        if (estadoBuscado == null)
-            return new ArrayList<>();
-        return donaciones.stream()
-                .filter(d -> d.estadoActual() == estadoBuscado)
-                .toList();
-    }
-
-    public void limpiar() {
-        donaciones.clear();
-        proximoId = 1L;
-    }
+    void limpiar();
 }

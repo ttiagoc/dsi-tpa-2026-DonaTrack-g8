@@ -1,90 +1,23 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.repositories;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.stereotype.Repository;
-
-import ar.edu.utn.frba.ddsi.common.models.entities.Email;
-import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 
-@Repository
-public class DonanteRepository {
-  private List<Donante> donantes = new ArrayList<>();
-  private Long proximoId = 1L;
+public interface DonanteRepository {
 
-  /**
-   * Guarda o actualiza un donante (Humana o Jurídica) en memoria.
-   */
-  public Donante save(Donante donante) {
-    if (donante.getId() == null) {
-      donante.setId(proximoId++);
-      donantes.add(donante);
-    } else {
-      findById(donante.getId()).ifPresent(donantes::remove);
-      donantes.add(donante);
-    }
-    return donante;
-  }
+    Donante save(Donante donante);
 
-  /**
-   * Busca un donante por su ID único (Esencial para GET /api/donantes/{id}).
-   */
-  public Optional<Donante> findById(Long id) {
-    if (id == null)
-      return Optional.empty();
-    return donantes.stream()
-        .filter(d -> id.equals(d.getId()))
-        .findFirst();
-  }
+    Optional<Donante> findById(Long id);
 
-  /**
-   * Devuelve todos los donantes registrados (Para GET /api/donantes).
-   */
-  public List<Donante> findAll() {
-    return new ArrayList<>(donantes);
-  }
+    List<Donante> findAll();
 
-  /**
-   * Elimina un donante por su ID (Para DELETE /api/donantes/{id}).
-   */
-  public boolean deleteById(Long id) {
-    Optional<Donante> donante = findById(id);
-    if (donante.isPresent()) {
-      donantes.remove(donante.get());
-      return true;
-    }
-    return false;
-  }
+    boolean deleteById(Long id);
 
-  /**
-   * Mantenemos la búsqueda por email útil para validaciones o el importador.
-   */
-  public Optional<Donante> buscarPorEmail(String email) {
-    if (email == null)
-      return Optional.empty();
-    return donantes.stream()
-        .filter(d -> tieneEmail(d.getContactos(), email))
-        .findFirst();
-  }
+    Optional<Donante> buscarPorEmail(String email);
 
-  public void limpiar() {
-    donantes.clear();
-    proximoId = 1L;
-  }
+    void limpiar();
 
-  private boolean tieneEmail(List<MedioContacto> contactos, String emailBuscado) {
-    if (contactos == null)
-      return false;
-    return contactos.stream()
-        .filter(c -> c.getEstrategia() instanceof Email)
-        .map(c -> c.getValor())
-        .anyMatch(val -> val != null && val.equalsIgnoreCase(emailBuscado.trim()));
-  }
-
-  public boolean existsById(Long id) {
-    return findById(id).isPresent();
-  }
+    boolean existsById(Long id);
 }

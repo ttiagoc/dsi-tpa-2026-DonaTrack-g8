@@ -1,50 +1,19 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.repositories;
 
-import ar.edu.utn.frba.ddsi.common.models.enums.EstadoPropuesta;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.ResultadoMatchmaking;
-import org.springframework.stereotype.Repository;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
-public class ResultadoMatchmakingRepository {
-    private List<ResultadoMatchmaking> propuestas = new ArrayList<>();
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.ResultadoMatchmaking;
 
-    private Long proximoId = 1L;
+public interface ResultadoMatchmakingRepository {
 
-    public ResultadoMatchmaking save(ResultadoMatchmaking propuesta) {
-        if (propuesta.getId() == null) {
-            propuesta.setId(proximoId++);
-            propuestas.add(propuesta);
-        } else {
-            findById(propuesta.getId()).ifPresent(propuestas::remove);
-            propuestas.add(propuesta);
-        }
-        return propuesta;
-    }
+    ResultadoMatchmaking save(ResultadoMatchmaking propuesta);
 
-    public Optional<ResultadoMatchmaking> findById(Long id) {
-        if (id == null)
-            return Optional.empty();
-        return propuestas.stream()
-                .filter(p -> id.equals(p.getId()))
-                .findFirst();
-    }
+    Optional<ResultadoMatchmaking> findById(Long id);
 
-    public List<ResultadoMatchmaking> findAll() {
-        return new ArrayList<>(propuestas);
-    }
+    List<ResultadoMatchmaking> findAll();
 
-    public List<ResultadoMatchmaking> buscarPendientes() {
-        return propuestas.stream()
-                .filter(p -> p.getEstado() == EstadoPropuesta.PENDIENTE)
-                .toList();
-    }
+    List<ResultadoMatchmaking> buscarPendientes();
 
-    public void limpiar() {
-        propuestas.clear();
-        proximoId = 1L;
-    }
+    void limpiar();
 }

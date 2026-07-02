@@ -1,81 +1,23 @@
 package ar.edu.utn.frba.ddsi.logistica.models.repositories;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Repository;
 
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
 
-@Repository
-public class CamionRepository {
+public interface CamionRepository {
 
-    private final RutaRepository rutaRepository;
+    Camion save(Camion camion);
 
-    public CamionRepository(RutaRepository rutaRepository) {
-        this.rutaRepository = rutaRepository;
-    }
+    Optional<Camion> findById(Long id);
 
-    private List<Camion> camiones = new ArrayList<>();
+    Optional<Camion> findByPatente(String patente);
 
-    private Long proximoId = 1L;
+    List<Camion> findAll();
 
-    public Camion save(Camion camion) {
-        if (camion.getId() == null) {
-            camion.setId(proximoId++);
-            camiones.add(camion);
-        } else {
-            findById(camion.getId()).ifPresent(camiones::remove);
-            camiones.add(camion);
-        }
-        return camion;
-    }
+    List<Camion> findAllDisponibles();
 
-    public Optional<Camion> findById(Long id) {
-        if (id == null)
-            return Optional.empty();
-        return camiones.stream()
-                .filter(c -> id.equals(c.getId()))
-                .findFirst();
-    }
+    boolean deleteById(Long id);
 
-    public Optional<Camion> findByPatente(String patente) {
-        if (patente == null)
-            return Optional.empty();
-        return camiones.stream()
-                .filter(c -> patente.equalsIgnoreCase(c.getPatente()))
-                .findFirst();
-    }
-
-    public List<Camion> findAll() {
-        return new ArrayList<>(camiones);
-    }
-
-    public List<Camion> findAllDisponibles() {
-        return camiones.stream()
-                .filter(c -> estaDisponible(c))
-                .collect(Collectors.toList());
-    }
-
-    private Boolean estaDisponible(Camion camion) {
-        List<Ruta> rutas = rutaRepository.buscarRutasActivasPorCamion(camion.getId());
-        return rutas.isEmpty();
-    }
-
-    public boolean deleteById(Long id) {
-        Optional<Camion> camion = findById(id);
-        if (camion.isPresent()) {
-            camiones.remove(camion.get());
-            return true;
-        }
-        return false;
-    }
-
-    public void limpiar() {
-        camiones.clear();
-        proximoId = 1L;
-    }
+    void limpiar();
 }

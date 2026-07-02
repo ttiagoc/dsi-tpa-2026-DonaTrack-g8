@@ -1,76 +1,25 @@
 package ar.edu.utn.frba.ddsi.logistica.models.repositories;
 
-import ar.edu.utn.frba.ddsi.common.models.enums.EstadoRuta;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
-import org.springframework.stereotype.Repository;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
-public class RutaRepository {
-    private List<Ruta> rutas = new ArrayList<>();
+import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
 
-    private Long proximoId = 1L;
+public interface RutaRepository {
 
-    public Ruta save(Ruta ruta) {
-        if (ruta.getId() == null) {
-            ruta.setId(proximoId++);
-            rutas.add(ruta);
-        } else {
-            findById(ruta.getId()).ifPresent(rutas::remove);
-            rutas.add(ruta);
-        }
-        return ruta;
-    }
+    Ruta save(Ruta ruta);
 
-    public Optional<Ruta> findById(Long id) {
-        if (id == null)
-            return Optional.empty();
-        return rutas.stream()
-                .filter(r -> id.equals(r.getId()))
-                .findFirst();
-    }
+    Optional<Ruta> findById(Long id);
 
-    public List<Ruta> findAll() {
-        return new ArrayList<>(rutas);
-    }
+    List<Ruta> findAll();
 
-    public List<Ruta> buscarRutasActivas() {
-        return rutas.stream()
-                .filter(r -> r.getEstado() == EstadoRuta.EN_TRASLADO)
-                .toList();
-    }
+    List<Ruta> buscarRutasActivas();
 
-    public boolean deleteById(Long id) {
-        Optional<Ruta> ruta = findById(id);
-        if (ruta.isPresent()) {
-            rutas.remove(ruta.get());
-            return true;
-        }
-        return false;
-    }
+    boolean deleteById(Long id);
 
-    public void limpiar() {
-        rutas.clear();
-        proximoId = 1L;
-    }
+    void limpiar();
 
-    public List<Ruta> buscarRutasActivasPorCamion(Long idCamion) {
-        return rutas.stream()
-                .filter(r -> estaActiva(r) && r.getCamion().getId().equals(idCamion))
-                .toList();
-    }
+    List<Ruta> buscarRutasActivasPorCamion(Long idCamion);
 
-    private boolean estaActiva(Ruta ruta) {
-        return !ruta.getEstado().equals(EstadoRuta.FINALIZADA);
-    }
-
-    public Ruta buscarRutaDelCamion(Long idCamion) {
-        return rutas.stream()
-                .filter(r -> r.getCamion().getId().equals(idCamion))
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("El camión no tiene ninguna ruta."));
-    }
+    Ruta buscarRutaDelCamion(Long idCamion);
 }
