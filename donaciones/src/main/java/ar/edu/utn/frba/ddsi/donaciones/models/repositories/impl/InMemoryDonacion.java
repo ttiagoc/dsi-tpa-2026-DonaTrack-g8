@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class DonacionRepositoryImpl implements DonacionRepository {
+public class InMemoryDonacion implements DonacionRepository {
     private List<Donacion> donaciones = new ArrayList<>();
 
     private Long proximoId = 1L;

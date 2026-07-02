@@ -12,7 +12,7 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
 
 @Repository
-public class DonanteRepositoryImpl implements DonanteRepository {
+public class InMemoryDonante implements DonanteRepository {
   private List<Donante> donantes = new ArrayList<>();
   private Long proximoId = 1L;
 

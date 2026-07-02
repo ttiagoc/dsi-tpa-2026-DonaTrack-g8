@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class RutaRepositoryImpl implements RutaRepository {
+public class InMemoryRuta implements RutaRepository {
     private List<Ruta> rutas = new ArrayList<>();
 
     private Long proximoId = 1L;

@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class ResultadoMatchmakingRepositoryImpl implements ResultadoMatchmakingRepository {
+public class InMemoryResultadoMatchmaking implements ResultadoMatchmakingRepository {
     private List<ResultadoMatchmaking> propuestas = new ArrayList<>();
 
     private Long proximoId = 1L;

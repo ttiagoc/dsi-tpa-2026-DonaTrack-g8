@@ -13,11 +13,11 @@ import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
 
 @Repository
-public class CamionRepositoryImpl implements CamionRepository {
+public class InMemoryCamion implements CamionRepository {
 
     private final RutaRepository rutaRepository;
 
-    public CamionRepositoryImpl(RutaRepository rutaRepository) {
+    public InMemoryCamion(RutaRepository rutaRepository) {
         this.rutaRepository = rutaRepository;
     }
 

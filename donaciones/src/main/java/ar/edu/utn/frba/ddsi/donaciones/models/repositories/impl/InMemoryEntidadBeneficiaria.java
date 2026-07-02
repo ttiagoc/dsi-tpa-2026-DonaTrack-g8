@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class EntidadBeneficiariaRepositoryImpl implements EntidadBeneficiariaRepository {
+public class InMemoryEntidadBeneficiaria implements EntidadBeneficiariaRepository {
     private List<EntidadBeneficiaria> entidades = new ArrayList<>();
 
     private Long proximoId = 1L;
