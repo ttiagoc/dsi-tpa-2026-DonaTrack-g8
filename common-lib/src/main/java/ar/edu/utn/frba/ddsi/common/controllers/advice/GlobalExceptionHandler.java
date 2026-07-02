@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.donaciones.controllers.advice;
+package ar.edu.utn.frba.ddsi.common.controllers.advice;
 
 import java.time.Instant;
 

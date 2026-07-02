@@ -11,9 +11,6 @@ Realizar los tests de los requerimientos de entrega 1 y 2
 
 EXCEPCIONES
 Utilizar el Optional en el repositry ya que me permite .orElseThrow en el service
-Agregar @ResponseStatus(HttpStatus.CREATED) para crear y @ResponseStatus(HttpStatus.NO_CONTENT) para delete
-En controllers.advice se crea un archivo GlobalExceptionHandler donde se controla cada tipo de excepcion (2:56:30) clase 4
-Crear un record ErrorResponse en dtos.error (1:13:00) clase 6
 En la carpeta exceptions se deben crear nuestras excepciones y extienden de RunTimeException
 Tipos de Excepciones: (wrappear a status code correspondiente)
 - BusinessException

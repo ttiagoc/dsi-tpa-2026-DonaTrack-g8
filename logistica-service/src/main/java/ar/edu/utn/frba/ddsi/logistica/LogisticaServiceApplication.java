@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 
 import ar.edu.utn.frba.ddsi.logistica.config.RestLogisticaConfig;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "ar.edu.utn.frba.ddsi")
 @EnableConfigurationProperties(RestLogisticaConfig.class)
 public class LogisticaServiceApplication {
     public static void main(String[] args) {
