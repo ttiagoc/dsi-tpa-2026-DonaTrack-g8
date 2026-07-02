@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import ar.edu.utn.frba.ddsi.logistica.dto.camion.CamionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.camion.CamionResponse;
-import ar.edu.utn.frba.ddsi.logistica.dto.camion.ChoferInfo;
+import ar.edu.utn.frba.ddsi.logistica.dto.camion.ChoferResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.camion.ChoferRequest;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Chofer;
@@ -24,13 +24,13 @@ public class CamionService {
 
     public List<CamionResponse> obtenerTodos() {
         return camionRepository.findAll().stream()
-            .map(this::toCamionResponse)
-            .collect(Collectors.toList());
+                .map(this::toCamionResponse)
+                .collect(Collectors.toList());
     }
 
     public CamionResponse obtenerPorId(Long id) {
         Camion camion = camionRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("No se encontro el camion"));
+                .orElseThrow(() -> new IllegalArgumentException("No se encontro el camion"));
 
         return this.toCamionResponse(camion);
     }
@@ -43,7 +43,7 @@ public class CamionService {
 
     public CamionResponse actualizar(Long id, CamionRequest request) {
         Camion existente = camionRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("No se encontro el camion"));
+                .orElseThrow(() -> new IllegalArgumentException("No se encontro el camion"));
 
         existente.setPatente(request.patente());
         existente.setCapacidadVolumen(request.capacidadVolumen());
@@ -70,31 +70,27 @@ public class CamionService {
     }
 
     private CamionResponse toCamionResponse(Camion camion) {
-        ChoferInfo choferInfo = camion.getChofer() != null
-            ? toChoferInfo(camion.getChofer())
-            : null;
-
         return new CamionResponse(
-            camion.getId(),
-            camion.getPatente(),
-            camion.getCapacidadVolumen(),
-            camion.getAltura(),
-            camion.getCapacidadCarga(),
-            choferInfo);
+                camion.getId(),
+                camion.getPatente(),
+                camion.getCapacidadVolumen(),
+                camion.getAltura(),
+                camion.getCapacidadCarga(),
+                toChoferResponse(camion.getChofer()));
     }
 
     private Chofer toChofer(ChoferRequest request) {
-        if (request == null) return null;
+        if (request == null)
+            return null;
         Chofer chofer = new Chofer();
         chofer.setNombre(request.nombre());
         chofer.setApellido(request.apellido());
         return chofer;
     }
 
-    private ChoferInfo toChoferInfo(Chofer chofer) {
-        return new ChoferInfo(
-            chofer.getNombre(),
-            chofer.getApellido()
-        );
+    private ChoferResponse toChoferResponse(Chofer chofer) {
+        return new ChoferResponse(
+                chofer.getNombre(),
+                chofer.getApellido());
     }
 }
