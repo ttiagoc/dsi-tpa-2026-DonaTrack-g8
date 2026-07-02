@@ -24,13 +24,13 @@ public class CamionService {
 
     public List<CamionResponse> obtenerTodos() {
         return camionRepository.findAll().stream()
-            .map(this::toCamionResponse)
-            .collect(Collectors.toList());
+                .map(this::toCamionResponse)
+                .collect(Collectors.toList());
     }
 
     public CamionResponse obtenerPorId(Long id) {
         Camion camion = camionRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("No se encontro el camion"));
+                .orElseThrow(() -> new IllegalArgumentException("No se encontro el camion"));
 
         return this.toCamionResponse(camion);
     }
@@ -43,7 +43,7 @@ public class CamionService {
 
     public CamionResponse actualizar(Long id, CamionRequest request) {
         Camion existente = camionRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("No se encontro el camion"));
+                .orElseThrow(() -> new IllegalArgumentException("No se encontro el camion"));
 
         existente.setPatente(request.patente());
         existente.setCapacidadVolumen(request.capacidadVolumen());
@@ -70,6 +70,7 @@ public class CamionService {
     }
 
     private CamionResponse toCamionResponse(Camion camion) {
+<<<<<<< HEAD
         ChoferResponse choferResponse = camion.getChofer() != null
             ? toChoferInfo(camion.getChofer())
             : null;
@@ -81,20 +82,37 @@ public class CamionService {
             camion.getAltura(),
             camion.getCapacidadCarga(),
             choferResponse);
+=======
+        return new CamionResponse(
+                camion.getId(),
+                camion.getPatente(),
+                camion.getCapacidadVolumen(),
+                camion.getAltura(),
+                camion.getCapacidadCarga(),
+                toChoferResponse(camion.getChofer()));
+>>>>>>> df03cf0d3f84a60cead8687d3a130eaee117b8f6
     }
 
     private Chofer toChofer(ChoferRequest request) {
-        if (request == null) return null;
+        if (request == null)
+            return null;
         Chofer chofer = new Chofer();
         chofer.setNombre(request.nombre());
         chofer.setApellido(request.apellido());
         return chofer;
     }
 
+<<<<<<< HEAD
     private ChoferResponse toChoferInfo(Chofer chofer) {
         return new ChoferResponse(
             chofer.getNombre(),
             chofer.getApellido()
         );
+=======
+    private ChoferResponse toChoferResponse(Chofer chofer) {
+        return new ChoferResponse(
+                chofer.getNombre(),
+                chofer.getApellido());
+>>>>>>> df03cf0d3f84a60cead8687d3a130eaee117b8f6
     }
 }

@@ -87,8 +87,15 @@ public class DonanteService {
     }
 
     public DonanteResponse crearPersonaHumana(PersonaHumanaRequest request) {
+        if (request.contactos().stream().noneMatch(this::esEmail)) {
+            throw new IllegalArgumentException("Debe haber al menos un medio de contacto de tipo Email");
+        }
         PersonaHumana persona = (PersonaHumana) donanteRepository.save(toPersonaHumana(request));
         return toDonanteResponse(persona);
+    }
+
+    private Boolean esEmail(MedioContactoRequest contacto) {
+        return contacto.tipo().equalsIgnoreCase("email");
     }
 
     public DonanteResponse crearPersonaJuridica(CrearPersonaJuridicaRequest request) {
