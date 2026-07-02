@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.donaciones.services;
+package ar.edu.utn.frba.ddsi.donaciones.services.impl;
 
 import java.util.List;
 
@@ -21,6 +21,7 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoDonacionAsi
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.ResultadoMatchmakingRepository;
+import ar.edu.utn.frba.ddsi.donaciones.services.MatchmakingService;
 import lombok.AllArgsConstructor;
 
 @Service

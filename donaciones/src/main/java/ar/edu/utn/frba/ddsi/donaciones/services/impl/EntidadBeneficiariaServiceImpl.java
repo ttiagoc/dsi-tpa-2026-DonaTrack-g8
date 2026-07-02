@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.donaciones.services;
+package ar.edu.utn.frba.ddsi.donaciones.services.impl;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,11 +12,11 @@ import ar.edu.utn.frba.ddsi.common.models.entities.WhatsApp;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.CategoriaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.SubcategoriaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.MedioContactoRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.ReportarNoRecibidaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.NecesidadRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.NecesidadResponse;
-import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.ReportarNoRecibidaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.SubirFotosRecepcionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
@@ -28,6 +28,8 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.NecesidadRecurr
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.TipoNecesidad;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
+import ar.edu.utn.frba.ddsi.donaciones.services.EntidadBeneficiariaService;
+import ar.edu.utn.frba.ddsi.donaciones.services.EventoService;
 
 @Service
 public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaService {

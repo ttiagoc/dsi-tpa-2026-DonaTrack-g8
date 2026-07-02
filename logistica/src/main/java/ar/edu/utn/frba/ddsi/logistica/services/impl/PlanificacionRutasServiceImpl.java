@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.logistica.services;
+package ar.edu.utn.frba.ddsi.logistica.services.impl;
 
 import java.net.URI;
 import java.util.List;
@@ -19,6 +19,7 @@ import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionReq
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.GestorPlanificacionRutas;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
+import ar.edu.utn.frba.ddsi.logistica.services.PlanificacionRutasService;
 
 @Service
 public class PlanificacionRutasServiceImpl implements PlanificacionRutasService {

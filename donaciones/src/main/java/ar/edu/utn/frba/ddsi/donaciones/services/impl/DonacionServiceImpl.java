@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.donaciones.services;
+package ar.edu.utn.frba.ddsi.donaciones.services.impl;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,6 +25,7 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.RegistroDonaci
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.SegmentadorDeDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
+import ar.edu.utn.frba.ddsi.donaciones.services.DonacionService;
 
 @Service
 public class DonacionServiceImpl implements DonacionService {

@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.donaciones.models.repositories;
+package ar.edu.utn.frba.ddsi.donaciones.models.repositories.impl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import ar.edu.utn.frba.ddsi.common.models.entities.Email;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
+import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
 
 @Repository
 public class DonanteRepositoryImpl implements DonanteRepository {

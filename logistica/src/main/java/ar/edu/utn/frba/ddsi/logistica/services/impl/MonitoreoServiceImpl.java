@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.logistica.services;
+package ar.edu.utn.frba.ddsi.logistica.services.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,6 +17,7 @@ import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Ubicacion;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
+import ar.edu.utn.frba.ddsi.logistica.services.MonitoreoService;
 
 @Service
 public class MonitoreoServiceImpl implements MonitoreoService {

@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.donaciones.services;
+package ar.edu.utn.frba.ddsi.donaciones.services.impl;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -26,6 +26,7 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoInicioRutaE
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
+import ar.edu.utn.frba.ddsi.donaciones.services.EventoService;
 
 @Service
 public class EventoServiceImpl implements EventoService {

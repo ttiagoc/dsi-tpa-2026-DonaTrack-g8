@@ -1,7 +1,9 @@
-package ar.edu.utn.frba.ddsi.donaciones.models.repositories;
+package ar.edu.utn.frba.ddsi.donaciones.models.repositories.impl;
 
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoPropuesta;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.ResultadoMatchmaking;
+import ar.edu.utn.frba.ddsi.donaciones.models.repositories.ResultadoMatchmakingRepository;
+
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.logistica.models.repositories;
+package ar.edu.utn.frba.ddsi.logistica.models.repositories.impl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
+import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
+import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
 
 @Repository
 public class CamionRepositoryImpl implements CamionRepository {

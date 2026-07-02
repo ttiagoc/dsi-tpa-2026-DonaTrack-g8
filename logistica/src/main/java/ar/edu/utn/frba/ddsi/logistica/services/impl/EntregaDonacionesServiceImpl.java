@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.logistica.services;
+package ar.edu.utn.frba.ddsi.logistica.services.impl;
 
 import java.net.URI;
 import java.time.LocalDateTime;
@@ -16,6 +16,7 @@ import ar.edu.utn.frba.ddsi.logistica.dto.ruta.ParadaRequest;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Parada;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
+import ar.edu.utn.frba.ddsi.logistica.services.EntregaDonacionesService;
 
 @Service
 public class EntregaDonacionesServiceImpl implements EntregaDonacionesService {

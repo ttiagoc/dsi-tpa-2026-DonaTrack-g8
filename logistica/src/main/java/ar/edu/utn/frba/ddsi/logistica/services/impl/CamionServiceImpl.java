@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.logistica.services;
+package ar.edu.utn.frba.ddsi.logistica.services.impl;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,6 +12,7 @@ import ar.edu.utn.frba.ddsi.logistica.dto.camion.ChoferRequest;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Chofer;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
+import ar.edu.utn.frba.ddsi.logistica.services.CamionService;
 
 @Service
 public class CamionServiceImpl implements CamionService {

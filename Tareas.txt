@@ -1,5 +1,3 @@
-Crear las interfaces de los services y repositories, y los que los implementan se nombran ...Impl
-
 Realizar las validaciones (en las entidades y en los services)
 Tipos de validacion:
 - Validaciones de negocio

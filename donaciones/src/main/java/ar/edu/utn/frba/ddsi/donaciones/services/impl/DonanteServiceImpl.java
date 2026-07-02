@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.donaciones.services;
+package ar.edu.utn.frba.ddsi.donaciones.services.impl;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,6 +20,7 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaJuridica;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Representante;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
+import ar.edu.utn.frba.ddsi.donaciones.services.DonanteService;
 
 @Service
 public class DonanteServiceImpl implements DonanteService {

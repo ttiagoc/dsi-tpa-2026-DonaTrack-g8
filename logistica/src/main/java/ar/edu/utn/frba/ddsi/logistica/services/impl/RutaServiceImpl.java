@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.logistica.services;
+package ar.edu.utn.frba.ddsi.logistica.services.impl;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -14,6 +14,7 @@ import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Parada;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
+import ar.edu.utn.frba.ddsi.logistica.services.RutaService;
 
 @Service
 public class RutaServiceImpl implements RutaService {
