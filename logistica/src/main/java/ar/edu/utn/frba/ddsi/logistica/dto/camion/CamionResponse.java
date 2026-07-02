@@ -1,6 +1,7 @@
 package ar.edu.utn.frba.ddsi.logistica.dto.camion;
 
-public record ActualizarCamionRequest(
+public record CamionResponse(
+    Long id,
     String patente,
     Double capacidadVolumen,
     Double altura,
