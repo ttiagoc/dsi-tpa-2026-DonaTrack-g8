@@ -1,4 +1,4 @@
-﻿package ar.edu.utn.frba.ddsi.donaciones.controllers;
+package ar.edu.utn.frba.ddsi.donaciones.controllers;
 
 import java.util.List;
 
@@ -22,7 +22,7 @@ import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EstadoDonacionResponse;
 import ar.edu.utn.frba.ddsi.donaciones.services.DonacionService;
 
 @RestController
-@RequestMapping("/api/donaciones/donacion")
+@RequestMapping("/api/donaciones-service/donacion")
 public class DonacionController {
 
     private final DonacionService donacionService;
@@ -41,17 +41,16 @@ public class DonacionController {
         return donacionService.obtenerPorId(id);
     }
 
-    @PostMapping
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public List<DonacionResponse> crear(@RequestBody DonacionRequest request) {
         return donacionService.crear(request);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminar(@PathVariable Long id) {
         donacionService.eliminar(id);
-        
     }
 
     @PutMapping("/estado/{id}")
@@ -66,18 +65,16 @@ public class DonacionController {
         return donacionService.obtenerDonacionesAsignadas(limit);
     }
 
-    @PostMapping("/lista-entrega")
-    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping("/lista-entrega")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void donacionesEntregaLista(@RequestBody List<Long> donacionesIds) {
         donacionService.donacionesEntregaLista(donacionesIds);
-        return;
     }
 
     @PutMapping("/{id}/replanificar")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void replanificar(@PathVariable Long id) {
         donacionService.replanificar(id);
-        return;
     }
 
 }
-

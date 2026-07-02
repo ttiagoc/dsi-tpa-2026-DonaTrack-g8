@@ -1,12 +1,14 @@
 package ar.edu.utn.frba.ddsi.donaciones.services;
 
-import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.ObtenerPropuestasPendientesResponse;
+import java.util.List;
+
+import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.PropuestaMatchmakingResponse;
 
 public interface MatchmakingService {
 
     void ejecutarProcesoNocturno();
 
-    ObtenerPropuestasPendientesResponse obtenerPropuestasPendientes();
+    List<PropuestaMatchmakingResponse> obtenerPropuestasPendientes();
 
     void procesarMatchmakingGlobal();
 

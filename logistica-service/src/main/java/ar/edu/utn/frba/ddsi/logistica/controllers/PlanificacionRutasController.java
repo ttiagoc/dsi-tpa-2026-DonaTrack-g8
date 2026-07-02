@@ -1,4 +1,4 @@
-﻿package ar.edu.utn.frba.ddsi.logistica.controllers;
+package ar.edu.utn.frba.ddsi.logistica.controllers;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -11,7 +11,7 @@ import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionReq
 import ar.edu.utn.frba.ddsi.logistica.services.PlanificacionRutasService;
 
 @RestController
-@RequestMapping("/api/logistica/planificacion")
+@RequestMapping("/api/logistica-service/planificacion")
 public class PlanificacionRutasController {
 
     private final PlanificacionRutasService planificacionRutasService;
@@ -20,11 +20,9 @@ public class PlanificacionRutasController {
         this.planificacionRutasService = planificacionRutasService;
     }
 
-    @PostMapping("/confirmacion")
-    @ResponseStatus(HttpStatus.CREATED)
-    public void ejecutarPlanificacion(
-        @RequestBody EjecutarPlanificacionRequest request) {
+    @PostMapping("/confirmacion")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void ejecutarPlanificacion(@RequestBody EjecutarPlanificacionRequest request) {
         planificacionRutasService.ejecutarPlanificacion(request);
-        return;
     }
 }

@@ -1,4 +1,4 @@
-﻿package ar.edu.utn.frba.ddsi.donaciones.controllers;
+package ar.edu.utn.frba.ddsi.donaciones.controllers;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -13,27 +13,22 @@ import ar.edu.utn.frba.ddsi.donaciones.services.EventoService;
 import lombok.AllArgsConstructor;
 
 @RestController
-@RequestMapping("/api/evento")
+@RequestMapping("/api/donaciones-service/evento")
 @AllArgsConstructor
 public class EventoController {
 
     private final EventoService eventoService;
 
-    @PostMapping("/inicio-ruta")
-    @ResponseStatus(HttpStatus.CREATED)
-    public String iniciarRuta(@RequestBody InicioRutaRequest request) {
+    @PostMapping("/inicio-ruta")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void iniciarRuta(@RequestBody InicioRutaRequest request) {
         eventoService.iniciarRuta(request);
-        return "NotificaciÃ³n de inicio de ruta enviada correctamente.";
     }
 
-    @PostMapping("/confirmacion-entrega-exitosa")
-    @ResponseStatus(HttpStatus.CREATED)
-    public String confirmarEntregaExitosa(
-            @RequestBody ConfirmacionEntregaExitosaRequest request) {
+    @PostMapping("/confirmacion-entrega-exitosa")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void confirmarEntregaExitosa(@RequestBody ConfirmacionEntregaExitosaRequest request) {
         eventoService.confirmarEntregaExitosa(request);
-        return ResponseEntity.ok(
-                "NotificaciÃ³n de confirmacion de entrega exitosa enviada correctamente.");
     }
 
 }
-

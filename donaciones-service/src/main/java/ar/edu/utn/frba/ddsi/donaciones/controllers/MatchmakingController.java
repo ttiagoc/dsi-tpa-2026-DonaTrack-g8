@@ -1,46 +1,41 @@
-﻿package ar.edu.utn.frba.ddsi.donaciones.controllers;
+package ar.edu.utn.frba.ddsi.donaciones.controllers;
 
-import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.AceptarPropuestaResponse;
-import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.ForzarEjecucionMatchmakingResponse;
-import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.ObtenerPropuestasPendientesResponse;
-import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.RechazarPropuestaResponse;
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.PropuestaMatchmakingResponse;
 import ar.edu.utn.frba.ddsi.donaciones.services.MatchmakingService;
 import lombok.AllArgsConstructor;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.*;
-
 @RestController
-@RequestMapping("/api/donaciones/matchmaking")
+@RequestMapping("/api/donaciones-service/matchmaking")
 @AllArgsConstructor
 public class MatchmakingController {
 
     private final MatchmakingService matchmakingService;
 
     @GetMapping("/pendientes")
-    public ObtenerPropuestasPendientesResponse obtenerPropuestasPendientes() {
+    public List<PropuestaMatchmakingResponse> obtenerPropuestasPendientes() {
         return matchmakingService.obtenerPropuestasPendientes();
     }
 
-    @PostMapping("/propuestas/{id}/aceptar")
-    @ResponseStatus(HttpStatus.CREATED)
-    public AceptarPropuestaResponse aceptarPropuesta(@PathVariable Long id, @RequestParam Long entidadId) {
+    @PostMapping("/propuestas/{id}/aceptar")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void aceptarPropuesta(@PathVariable Long id, @RequestParam Long entidadId) {
         matchmakingService.aceptarPropuesta(id, entidadId);
-        return new AceptarPropuestaResponse("DonaciÃ³n asignada correctamente.");
     }
 
-    @PostMapping("/propuestas/{id}/rechazar")
-    @ResponseStatus(HttpStatus.CREATED)
-    public RechazarPropuestaResponse rechazarPropuesta(@PathVariable Long id) {
+    @PostMapping("/propuestas/{id}/rechazar")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void rechazarPropuesta(@PathVariable Long id) {
         matchmakingService.rechazarPropuesta(id);
-        return new RechazarPropuestaResponse("Propuesta rechazada con Ã©xito.");
     }
 
-    @PostMapping("/forzar-ejecucion")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ForzarEjecucionMatchmakingResponse forzarEjecucion() {
+    @PostMapping("/forzar-ejecucion")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void forzarEjecucion() {
         matchmakingService.procesarMatchmakingGlobal();
-        return new ForzarEjecucionMatchmakingResponse("Proceso de matchmaking ejecutado manualmente con Ã©xito.");
     }
 }

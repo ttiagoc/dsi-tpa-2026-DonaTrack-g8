@@ -1,4 +1,4 @@
-﻿package ar.edu.utn.frba.ddsi.logistica.controllers;
+package ar.edu.utn.frba.ddsi.logistica.controllers;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -21,7 +21,7 @@ import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaResponse;
 import ar.edu.utn.frba.ddsi.logistica.services.RutaService;
 
 @RestController
-@RequestMapping("/api/logistica/rutas")
+@RequestMapping("/api/logistica-service/rutas")
 public class RutaController {
 
     private final RutaService rutaService;
@@ -32,7 +32,7 @@ public class RutaController {
 
     @GetMapping
     public List<RutaResponse> obtenerTodas(
-        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
         return rutaService.obtenerTodas(fecha);
     }
 
@@ -41,7 +41,7 @@ public class RutaController {
         return rutaService.obtenerPorId(id);
     }
 
-    @PostMapping
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public RutaResponse crear(@RequestBody RutaRequest request) {
         return rutaService.crear(request);
@@ -52,10 +52,9 @@ public class RutaController {
         return rutaService.actualizar(id, request);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminar(@PathVariable Long id) {
         rutaService.eliminar(id);
-        
     }
 }

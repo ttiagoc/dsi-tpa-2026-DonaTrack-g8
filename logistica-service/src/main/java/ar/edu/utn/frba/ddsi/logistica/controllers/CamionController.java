@@ -1,4 +1,4 @@
-﻿package ar.edu.utn.frba.ddsi.logistica.controllers;
+package ar.edu.utn.frba.ddsi.logistica.controllers;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ import ar.edu.utn.frba.ddsi.logistica.dto.camion.CamionResponse;
 import ar.edu.utn.frba.ddsi.logistica.services.CamionService;
 
 @RestController
-@RequestMapping("/api/logistica/camiones")
+@RequestMapping("/api/logistica-service/camiones")
 public class CamionController {
 
     private final CamionService camionService;
@@ -37,7 +37,7 @@ public class CamionController {
         return camionService.obtenerPorId(id);
     }
 
-    @PostMapping
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CamionResponse crear(@RequestBody CamionRequest request) {
         return camionService.crear(request);
@@ -48,10 +48,9 @@ public class CamionController {
         return camionService.actualizar(id, request);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminar(@PathVariable Long id) {
         camionService.eliminar(id);
-        
     }
 }

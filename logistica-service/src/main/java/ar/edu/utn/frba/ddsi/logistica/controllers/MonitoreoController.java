@@ -1,4 +1,4 @@
-﻿package ar.edu.utn.frba.ddsi.logistica.controllers;
+package ar.edu.utn.frba.ddsi.logistica.controllers;
 
 import java.util.List;
 
@@ -17,7 +17,7 @@ import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionResponse;
 import ar.edu.utn.frba.ddsi.logistica.services.MonitoreoService;
 
 @RestController
-@RequestMapping("/api/logistica/monitoreo")
+@RequestMapping("/api/logistica-service/monitoreo")
 public class MonitoreoController {
 
   private final MonitoreoService monitoreoService;
@@ -26,13 +26,12 @@ public class MonitoreoController {
     this.monitoreoService = monitoreoService;
   }
 
-  @PostMapping("/ubicacion/{patente}")
-    @ResponseStatus(HttpStatus.CREATED)
+  @PostMapping("/ubicacion/{patente}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
   public void recibirTelemetria(
       @PathVariable String patente,
       @RequestBody UbicacionRequest request) {
     monitoreoService.actualizarUbicacionCamion(patente, request);
-    return;
   }
 
   @GetMapping("/ubicacion/{rutaId}")

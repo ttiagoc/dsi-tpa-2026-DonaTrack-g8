@@ -8,8 +8,7 @@ import org.springframework.stereotype.Service;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoPropuesta;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
-import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.ObtenerPropuestasPendientesResponse;
-import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.PropuestaMatchmakingInfo;
+import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.PropuestaMatchmakingResponse;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.MotorDeMatchmaking;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.ResultadoMatchmaking;
@@ -40,17 +39,19 @@ public class MatchmakingServiceImpl implements MatchmakingService {
         this.procesarMatchmakingGlobal();
     }
 
-    public ObtenerPropuestasPendientesResponse obtenerPropuestasPendientes() {
+    public List<PropuestaMatchmakingResponse> obtenerPropuestasPendientes() {
         List<ResultadoMatchmaking> pendientes = resultadoRepository.buscarPendientes();
-        List<PropuestaMatchmakingInfo> infos = pendientes.stream()
-                .map(p -> new PropuestaMatchmakingInfo(
+        return pendientes.stream()
+                .map(this::toPropuestaMatchmakingResponse)
+                .toList();
+    }
+
+    private PropuestaMatchmakingResponse toPropuestaMatchmakingResponse(ResultadoMatchmaking p) {
+        return new PropuestaMatchmakingResponse(
                         p.getId(),
                         p.getDonacion().getId(),
                         p.getEntidadesSugeridas().stream().map(EntidadBeneficiaria::getId).toList(),
-                        p.getFechaEjecucion(),
-                        p.getEstado().name()))
-                .toList();
-        return new ObtenerPropuestasPendientesResponse(infos);
+                        p.getFechaEjecucion());
     }
 
     public void procesarMatchmakingGlobal() {
