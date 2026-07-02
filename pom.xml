@@ -11,8 +11,8 @@
   <url>https://github.com/dds-utn</url>
   <modules>
     <module>common-lib</module>
-    <module>donaciones</module>
-    <module>logistica</module>
+    <module>donaciones-service</module>
+    <module>logistica-service</module>
   </modules>
 
   <properties>

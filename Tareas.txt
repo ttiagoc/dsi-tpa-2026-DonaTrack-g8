@@ -20,6 +20,5 @@ Tipos de Excepciones: (wrappear a status code correspondiente)
 - ResourceNotFoundException
 
 OTROS
-Modificar nombre de atributo estrategia en MedioContacto
 Las carpetas de los microservicios son ...-service, los controller tmb (donaciones-service)
 Ver los enums si realmente son necesarios en commons
