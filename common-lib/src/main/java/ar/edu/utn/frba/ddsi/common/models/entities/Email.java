@@ -1,6 +1,6 @@
 package ar.edu.utn.frba.ddsi.common.models.entities;
 
-public class Email implements NotificacionStrategy {
+public class Email implements CanalContacto {
 
   @Override
   public void notificar(String valor, String mensaje) {

@@ -87,7 +87,7 @@ public class ImportadorDonantesServiceImpl implements ImportadorDonantesService 
     if (contactos == null)
       return null;
     return contactos.stream()
-        .filter(c -> c.getEstrategia() instanceof Email)
+        .filter(c -> c.getCanal() instanceof Email)
         .map(c -> c.getValor())
         .findFirst()
         .orElse(null);
@@ -97,7 +97,7 @@ public class ImportadorDonantesServiceImpl implements ImportadorDonantesService 
     if (contactos == null)
       return "";
     return contactos.stream()
-        .filter(c -> c.getEstrategia() instanceof Telefono)
+        .filter(c -> c.getCanal() instanceof Telefono)
         .map(c -> c.getValor())
         .findFirst()
         .orElse("");
@@ -108,7 +108,7 @@ public class ImportadorDonantesServiceImpl implements ImportadorDonantesService 
       return;
 
     Optional<MedioContacto> emailOpt = contactos.stream()
-        .filter(c -> c.getEstrategia() instanceof Email)
+        .filter(c -> c.getCanal() instanceof Email)
         .findFirst();
 
     if (emailOpt.isPresent()) {
@@ -119,7 +119,7 @@ public class ImportadorDonantesServiceImpl implements ImportadorDonantesService 
     }
 
     Optional<MedioContacto> telOpt = contactos.stream()
-        .filter(c -> c.getEstrategia() instanceof Telefono)
+        .filter(c -> c.getCanal() instanceof Telefono)
         .findFirst();
 
     if (telOpt.isPresent()) {

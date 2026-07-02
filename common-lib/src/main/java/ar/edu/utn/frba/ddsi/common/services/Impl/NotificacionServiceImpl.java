@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.common.services;
+package ar.edu.utn.frba.ddsi.common.services.Impl;
 
 import java.time.LocalDateTime;
 
@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.entities.Notificacion;
+import ar.edu.utn.frba.ddsi.common.services.NotificacionService;
 
 @Service
 public class NotificacionServiceImpl implements NotificacionService {

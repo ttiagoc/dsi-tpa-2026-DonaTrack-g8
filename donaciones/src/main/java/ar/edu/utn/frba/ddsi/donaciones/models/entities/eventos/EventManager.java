@@ -22,7 +22,10 @@ public class EventManager {
     }
 
     public void desregistrarListener(Class<? extends Evento> claseEvento, Listener listener) {
-        this.listeners.get(claseEvento).remove(listener);
+        List<Listener> suscriptores = this.listeners.get(claseEvento);
+        if (suscriptores != null) {
+            suscriptores.remove(listener);
+        }
     }
 
     public void emitir(Evento evento) {

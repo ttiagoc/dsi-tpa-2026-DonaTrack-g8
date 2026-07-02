@@ -62,7 +62,7 @@ public class InMemoryDonante implements DonanteRepository {
     if (contactos == null)
       return false;
     return contactos.stream()
-        .filter(c -> c.getEstrategia() instanceof Email)
+        .filter(c -> c.getCanal() instanceof Email)
         .map(c -> c.getValor())
         .anyMatch(val -> val != null && val.equalsIgnoreCase(emailBuscado.trim()));
   }

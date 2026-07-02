@@ -9,11 +9,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MedioContacto {
   private String valor;
-  private NotificacionStrategy estrategia;
+  private CanalContacto canal;
 
   public void notificar(String mensaje) {
-    if (estrategia != null) {
-      estrategia.notificar(this.valor, mensaje);
+    if (canal != null) {
+      canal.notificar(this.valor, mensaje);
     }
   }
 }

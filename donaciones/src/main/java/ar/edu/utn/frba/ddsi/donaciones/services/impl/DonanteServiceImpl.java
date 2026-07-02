@@ -154,13 +154,13 @@ public class DonanteServiceImpl implements DonanteService {
         contacto.setValor(request.valor());
         switch (request.tipo().toLowerCase()) {
             case "email":
-                contacto.setEstrategia(new Email());
+                contacto.setCanal(new Email());
                 break;
             case "telefono":
-                contacto.setEstrategia(new Telefono());
+                contacto.setCanal(new Telefono());
                 break;
             case "whatsapp":
-                contacto.setEstrategia(new WhatsApp());
+                contacto.setCanal(new WhatsApp());
                 break;
             default:
                 return null;
