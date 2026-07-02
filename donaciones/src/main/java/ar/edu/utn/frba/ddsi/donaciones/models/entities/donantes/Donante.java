@@ -7,18 +7,22 @@ import java.util.List;
 
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.RegistroDonacion;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 public abstract class Donante {
   private Long id;
   private List<RegistroDonacion> donaciones = new ArrayList<>();
   private List<MedioContacto> contactos = new ArrayList<>();
   private MedioContacto contactoPredeterminado;
+
+  public Donante(Long id, List<MedioContacto> contactos, MedioContacto contactoPredeterminado) {
+    this.id = id;
+    this.contactos = contactos;
+    this.contactoPredeterminado = contactoPredeterminado;
+  }
 
   public void agregarDonacion(RegistroDonacion donacion) {
     this.donaciones.add(donacion);
