@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -38,7 +37,6 @@ public class PlanificacionRutasServiceImpl implements PlanificacionRutasService 
         this.camionRepository = camionRepository;
     }
 
-    @Scheduled(cron = "0 0 3 * * *")
     public void planificarRutas() {
         List<DonacionDTO> lote = getLote();
         List<Camion> camionesDisponibles = camionRepository.findAllDisponibles();

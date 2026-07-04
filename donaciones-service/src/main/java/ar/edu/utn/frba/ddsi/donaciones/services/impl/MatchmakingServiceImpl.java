@@ -2,7 +2,6 @@ package ar.edu.utn.frba.ddsi.donaciones.services.impl;
 
 import java.util.List;
 
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
@@ -33,7 +32,6 @@ public class MatchmakingServiceImpl implements MatchmakingService {
     private final MotorDeMatchmaking motorDeMatchmaking;
     private final EventManager eventManager;
 
-    @Scheduled(cron = "0 0 3 * * *")
     public void ejecutarProcesoNocturno() {
         System.out.println("Iniciando procesamiento automático de Matchmaking nocturno...");
         this.procesarMatchmakingGlobal();

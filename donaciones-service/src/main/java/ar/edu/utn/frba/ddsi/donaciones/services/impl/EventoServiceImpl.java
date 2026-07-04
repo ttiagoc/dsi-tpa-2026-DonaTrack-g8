@@ -3,7 +3,6 @@ package ar.edu.utn.frba.ddsi.donaciones.services.impl;
 import java.time.LocalDate;
 import java.util.List;
 
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
@@ -49,7 +48,6 @@ public class EventoServiceImpl implements EventoService {
         eventManager.emitir(eventoAusencia);
     }
 
-    @Scheduled(cron = "0 0 3 * * *")
     public void verificarInactividadDonantes() {
         System.out.println("Iniciando escaneo diario de inactividad de donantes...");
 
