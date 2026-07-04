@@ -24,6 +24,6 @@ public class DonacionesScheduler {
 
     @Scheduled(cron = "0 30 2 * * *")
     public void ejecutarProcesoNocturno() {
-        matchmakingService.ejecutarProcesoNocturno();
+        matchmakingService.procesarMatchmaking();
     }
 }

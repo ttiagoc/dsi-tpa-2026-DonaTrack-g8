@@ -6,11 +6,9 @@ import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.PropuestaMatchmakingRespo
 
 public interface MatchmakingService {
 
-    void ejecutarProcesoNocturno();
-
     List<PropuestaMatchmakingResponse> obtenerPropuestasPendientes();
 
-    void procesarMatchmakingGlobal();
+    void procesarMatchmaking();
 
     void aceptarPropuesta(Long propuestaId, Long entidadId);
 

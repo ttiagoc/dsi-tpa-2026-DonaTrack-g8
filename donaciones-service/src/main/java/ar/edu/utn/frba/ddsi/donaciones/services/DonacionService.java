@@ -7,7 +7,6 @@ import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EstadoDonacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EstadoDonacionResponse;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 
 public interface DonacionService {
 
@@ -26,6 +25,4 @@ public interface DonacionService {
     void donacionesEntregaLista(List<Long> donacionesIds);
 
     void replanificar(Long id);
-
-    Donacion guardar(Donacion donacion);
 }

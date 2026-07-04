@@ -6,13 +6,16 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import ar.edu.utn.frba.ddsi.logistica.dto.ruta.ParadaResponse;
-import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaResponse;
+import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
+import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.ParadaRequest;
+import ar.edu.utn.frba.ddsi.logistica.dto.ruta.ParadaResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaRequest;
+import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaResponse;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Parada;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
+import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
 import ar.edu.utn.frba.ddsi.logistica.services.RutaService;
 
@@ -20,9 +23,11 @@ import ar.edu.utn.frba.ddsi.logistica.services.RutaService;
 public class RutaServiceImpl implements RutaService {
 
     private final RutaRepository rutaRepository;
+    private final CamionRepository camionRepository;
 
-    public RutaServiceImpl(RutaRepository rutaRepository) {
+    public RutaServiceImpl(RutaRepository rutaRepository, CamionRepository camionRepository) {
         this.rutaRepository = rutaRepository;
+        this.camionRepository = camionRepository;
     }
 
     public List<RutaResponse> obtenerTodas(LocalDate fecha) {
@@ -40,7 +45,7 @@ public class RutaServiceImpl implements RutaService {
 
     public RutaResponse obtenerPorId(Long id) {
         Ruta r = rutaRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No se encontro la ruta con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro una ruta con el id: " + id));
 
         return this.toRutaResponse(r);
     }
@@ -57,23 +62,18 @@ public class RutaServiceImpl implements RutaService {
 
     public RutaResponse actualizar(Long id, RutaRequest request) {
         Ruta existente = rutaRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No se encontro la ruta con id: " + id));
-
-        existente.setFecha(request.fecha());
-        existente.setEstado(request.estado());
-
-        if (request.patenteCamion() != null) {
-            Camion camion = new Camion();
-            camion.setPatente(request.patenteCamion());
-            existente.setCamion(camion);
-        } else {
-            existente.setCamion(null);
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro una ruta con el id: " + id));
+        if (request.fecha() != null) {
+            existente.setFecha(request.fecha());
         }
-
-        if (request.paradas() != null) {
+        if (request.idCamion() != null) {
+            Camion camion = camionRepository.findById(request.idCamion())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "No se encontro un camion con el id: " + request.idCamion()));
+            existente.setCamion(camion);
+        }
+        if (request.paradas() != null && !request.paradas().isEmpty()) {
             existente.setParadas(request.paradas().stream().map(this::toParada).collect(Collectors.toList()));
-        } else {
-            existente.setParadas(null);
         }
 
         existente = rutaRepository.save(existente);
@@ -104,24 +104,35 @@ public class RutaServiceImpl implements RutaService {
     }
 
     private Ruta toRuta(RutaRequest request) {
-        Ruta ruta = new Ruta();
-        ruta.setFecha(request.fecha());
-        ruta.setEstado(request.estado());
-
-        if (request.patenteCamion() != null) {
-            Camion camion = new Camion();
-            camion.setPatente(request.patenteCamion());
-            ruta.setCamion(camion);
+        if (request.fecha() == null) {
+            throw new BusinessException("La fecha de la ruta no puede ser nula");
+        }
+        if (request.paradas() == null || request.paradas().isEmpty()) {
+            throw new BusinessException("La ruta debe tener al menos una parada");
         }
 
-        if (request.paradas() != null) {
-            ruta.setParadas(request.paradas().stream().map(this::toParada).collect(Collectors.toList()));
-        }
+        Camion camion = camionRepository.findById(request.idCamion())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontro un camion con el id: " + request.idCamion()));
+        List<Parada> paradas = request.paradas().stream().map(this::toParada).collect(Collectors.toList());
 
-        return ruta;
+        return new Ruta(request.fecha(), camion, paradas);
     }
 
     private Parada toParada(ParadaRequest request) {
+        if (request.orden() == null || request.orden() < 0) {
+            throw new BusinessException("El orden de la parada debe ser mayor o igual a 0");
+        }
+        if (request.destino() == null || request.destino().isBlank()) {
+            throw new BusinessException("El destino de la parada no puede ser nulo ni estar vacio");
+        }
+        if (request.entidad() == null) {
+            throw new BusinessException("La entidad de la parada no puede ser nula");
+        }
+        if (request.entregas() == null || request.entregas().isEmpty()) {
+            throw new BusinessException("La parada debe tener al menos una entrega");
+        }
+
         Parada parada = new Parada();
         parada.setOrden(request.orden());
         parada.setDestino(request.destino());

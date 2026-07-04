@@ -36,6 +36,6 @@ public class MatchmakingController {
     @PostMapping("/forzar-ejecucion")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void forzarEjecucion() {
-        matchmakingService.procesarMatchmakingGlobal();
+        matchmakingService.procesarMatchmaking();
     }
 }

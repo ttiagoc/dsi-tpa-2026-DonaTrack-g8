@@ -32,11 +32,6 @@ public class MatchmakingServiceImpl implements MatchmakingService {
     private final MotorDeMatchmaking motorDeMatchmaking;
     private final EventManager eventManager;
 
-    public void ejecutarProcesoNocturno() {
-        System.out.println("Iniciando procesamiento automático de Matchmaking nocturno...");
-        this.procesarMatchmakingGlobal();
-    }
-
     public List<PropuestaMatchmakingResponse> obtenerPropuestasPendientes() {
         List<ResultadoMatchmaking> pendientes = resultadoRepository.buscarPendientes();
         return pendientes.stream()
@@ -46,13 +41,15 @@ public class MatchmakingServiceImpl implements MatchmakingService {
 
     private PropuestaMatchmakingResponse toPropuestaMatchmakingResponse(ResultadoMatchmaking p) {
         return new PropuestaMatchmakingResponse(
-                        p.getId(),
-                        p.getDonacion().getId(),
-                        p.getEntidadesSugeridas().stream().map(EntidadBeneficiaria::getId).toList(),
-                        p.getFechaEjecucion());
+                p.getId(),
+                p.getDonacion().getId(),
+                p.getEntidadesSugeridas().stream().map(EntidadBeneficiaria::getId).toList(),
+                p.getFechaEjecucion());
     }
 
-    public void procesarMatchmakingGlobal() {
+    public void procesarMatchmaking() {
+        System.out.println("Iniciando procesamiento automático de Matchmaking nocturno...");
+
         List<Donacion> donacionesEnDeposito = donacionRepository.buscarPorEstado(TipoEstadoDonacion.EN_DEPOSITO);
 
         List<EntidadBeneficiaria> todasLasEntidades = entidadRepository.findAll();

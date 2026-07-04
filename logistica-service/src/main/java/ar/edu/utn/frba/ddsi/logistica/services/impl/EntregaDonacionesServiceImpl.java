@@ -51,7 +51,7 @@ public class EntregaDonacionesServiceImpl implements EntregaDonacionesService {
                 .path("/donaciones-service/evento/inicio-ruta")
                 .build().toUri();
         try {
-            restTemplate.postForEntity(url, inicioRutaRequest, String.class);
+            restTemplate.postForObject(url, inicioRutaRequest, Void.class);
         } catch (Exception e) {
             System.err.println("ERROR: Falló la notificación masiva de inicio de ruta.");
         }
@@ -76,7 +76,7 @@ public class EntregaDonacionesServiceImpl implements EntregaDonacionesService {
                 .path("/donaciones-service/evento/confirmacion-entrega-exitosa")
                 .build().toUri();
         try {
-            restTemplate.postForEntity(url, request, String.class);
+            restTemplate.postForObject(url, request, Void.class);
             System.out.println("Reporte de entrega exitosa enviado a Donaciones para Parada ID #" + paradaId);
         } catch (Exception e) {
             System.err.println("ERROR: No se pudo transmitir la confirmación de entrega por red.");

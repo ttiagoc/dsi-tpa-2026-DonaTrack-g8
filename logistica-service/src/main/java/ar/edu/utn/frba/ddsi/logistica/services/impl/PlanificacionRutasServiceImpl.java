@@ -13,7 +13,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import ar.edu.utn.frba.ddsi.logistica.config.RestLogisticaConfig;
 import ar.edu.utn.frba.ddsi.logistica.dto.DonacionDTO;
-import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.CamionPlanificacionResponse;
+import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.CamionPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.GestorPlanificacionRutas;
@@ -71,7 +71,7 @@ public class PlanificacionRutasServiceImpl implements PlanificacionRutasService 
         return response.getBody() != null ? response.getBody() : List.of();
     }
 
-    private List<Long> toListIdDonaciones(List<CamionPlanificacionResponse> camiones) {
+    private List<Long> toListIdDonaciones(List<CamionPlanificacionRequest> camiones) {
         return camiones.stream()
                 .flatMap(c -> c.direcciones().stream())
                 .flatMap(d -> d.donacionesIds().stream())

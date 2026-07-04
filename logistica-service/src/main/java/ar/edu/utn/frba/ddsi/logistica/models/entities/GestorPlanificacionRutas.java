@@ -7,7 +7,7 @@ import java.util.concurrent.CompletableFuture;
 import org.springframework.web.client.RestTemplate;
 
 import ar.edu.utn.frba.ddsi.logistica.dto.DonacionDTO;
-import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.CamionPlanificacionResponse;
+import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.CamionPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.DireccionResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
 
@@ -40,10 +40,10 @@ public class GestorPlanificacionRutas {
                 DireccionResponse direccionInfo = new DireccionResponse("Medrano 951, CABA", donacionesAceptadas);
 
                 Camion camion = camiones.get(0);
-                CamionPlanificacionResponse camionPlanif = new CamionPlanificacionResponse(camion.getId(),
+                CamionPlanificacionRequest camionPlanif = new CamionPlanificacionRequest(camion.getId(),
                         List.of(direccionInfo));
 
-                List<CamionPlanificacionResponse> camionesProcesados = new ArrayList<>();
+                List<CamionPlanificacionRequest> camionesProcesados = new ArrayList<>();
                 camionesProcesados.add(camionPlanif);
 
                 EjecutarPlanificacionRequest mockResponse = new EjecutarPlanificacionRequest(camionesProcesados,
@@ -52,7 +52,7 @@ public class GestorPlanificacionRutas {
                 String urlCallback = "http://localhost:8081/api/planificacion/confirmacion";
                 System.out.println("Cálculo terminado. Golpeando la URL de callback...");
 
-                restTemplate.postForEntity(urlCallback, mockResponse, String.class);
+                restTemplate.postForObject(urlCallback, mockResponse, Void.class);
             } catch (Exception e) {
                 System.err.println("ERROR: Falló la simulación del componente externo: " + e.getMessage());
             }

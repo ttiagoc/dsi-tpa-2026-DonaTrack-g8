@@ -1,12 +1,13 @@
 package ar.edu.utn.frba.ddsi.donaciones.services.impl;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
+import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoBien;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.BienRequest;
@@ -46,7 +47,7 @@ public class DonacionServiceImpl implements DonacionService {
 
     public DonacionResponse obtenerPorId(Long id) {
         Donacion d = donacionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No se encontro la donacion"));
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro una donacion con el id: " + id));
 
         return this.toDonacionResponse(d);
     }
@@ -54,7 +55,6 @@ public class DonacionServiceImpl implements DonacionService {
     public List<DonacionResponse> crear(DonacionRequest request) {
         RegistroDonacion registro = toRegistroDonacion(request);
         List<Donacion> donacionesCreadas = segmentadorDeDonacion.segmentarDonacion(registro);
-        donacionesCreadas.forEach(d -> d.setId(null));
         donacionesCreadas = donacionRepository.saveAll(donacionesCreadas);
 
         List<DonacionResponse> donacionesResponses = donacionesCreadas.stream()
@@ -70,10 +70,11 @@ public class DonacionServiceImpl implements DonacionService {
 
     public EstadoDonacionResponse cambiarEstado(Long id, EstadoDonacionRequest request) {
         Donacion donacion = donacionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No se encontro la donacion"));
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro una donacion con el id: " + id));
+
         TipoEstadoDonacion nuevoEstado = toTipoEstadoDonacion(request.estado());
         donacion.cambiarEstado(nuevoEstado, request.justificacion());
-        donacion = donacionRepository.save(donacion);
+        donacion = this.guardar(donacion);
 
         return new EstadoDonacionResponse(
                 donacion.getId(),
@@ -102,37 +103,38 @@ public class DonacionServiceImpl implements DonacionService {
     public void donacionesEntregaLista(List<Long> donacionesIds) {
         for (Long donacionId : donacionesIds) {
             Donacion donacion = donacionRepository.findById(donacionId)
-                    .orElseThrow(() -> new IllegalArgumentException("No se encontro la donacion"));
-            donacion.cambiarEstado(TipoEstadoDonacion.LISTA_PARA_ENTREGAR, null);
-            donacionRepository.save(donacion);
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "No se encontro una donacion con el id: " + donacionId));
+
+            donacion.cambiarEstado(TipoEstadoDonacion.LISTA_PARA_ENTREGAR, "Donacion lista para entregar");
+            this.guardar(donacion);
         }
     }
 
     public void replanificar(Long id) {
         Donacion donacion = donacionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No se encontro la donacion"));
-        donacion.cambiarEstado(TipoEstadoDonacion.EN_DEPOSITO, "Replanificación de entrega fallida");
-        donacionRepository.save(donacion);
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro una donacion con el id: " + id));
+
+        donacion.cambiarEstado(TipoEstadoDonacion.EN_DEPOSITO, "Replanificacion de entrega fallida");
+        this.guardar(donacion);
     }
 
-    public Donacion guardar(Donacion donacion) {
+    private Donacion guardar(Donacion donacion) {
         return donacionRepository.save(donacion);
     }
 
     private RegistroDonacion toRegistroDonacion(DonacionRequest donacionRequest) {
-        RegistroDonacion registroDonacion = new RegistroDonacion();
-        registroDonacion.setFecha(LocalDateTime.now());
         if (donacionRequest.bienes() == null || donacionRequest.bienes().isEmpty()) {
-            throw new IllegalArgumentException("La donacion debe tener al menos un bien");
+            throw new BusinessException("La donacion debe tener al menos un bien");
         }
-        registroDonacion.setBienes(donacionRequest.bienes().stream().map(this::toBien).collect(Collectors.toList()));
-        return registroDonacion;
+        return new RegistroDonacion(donacionRequest.descripcion(),
+                donacionRequest.bienes().stream().map(this::toBien).collect(Collectors.toList()));
     }
 
     private DonacionResponse toDonacionResponse(Donacion d) {
         return new DonacionResponse(
                 d.getId(),
-                d.getBienes().stream().map(this::toBienInfo).collect(Collectors.toList()),
+                d.getBienes().stream().map(this::toBienResonse).collect(Collectors.toList()),
                 d.estadoActual().toString(),
                 d.getFecha(),
                 d.getDonante().getId(),
@@ -140,18 +142,24 @@ public class DonacionServiceImpl implements DonacionService {
     }
 
     private Bien toBien(BienRequest bienRequest) {
-        Bien bien = new Bien();
-        bien.setDescripcion(bienRequest.descripcion());
-        bien.setCantidad(bienRequest.cantidad());
-        bien.setPesoKgPorUnidad(bienRequest.pesoKgPorUnidad());
-        bien.setVolumenM3PorUnidad(bienRequest.volumenM3PorUnidad());
-        bien.setEstadoBien(toEstadoBien(bienRequest.estado()));
-        bien.setFechaVencimiento(bienRequest.fechaVencimiento());
-        bien.setSubcategoria(toSubcategoria(bienRequest.subcategoria()));
-        return bien;
+        if (bienRequest.descripcion() == null || bienRequest.descripcion().isBlank()) {
+            throw new BusinessException("La descripcion del bien no puede ser nula ni estar vacia");
+        }
+        if (bienRequest.cantidad() == null || bienRequest.cantidad() <= 0) {
+            throw new BusinessException("La cantidad del bien debe ser mayor a 0");
+        }
+        if (bienRequest.pesoKgPorUnidad() == null || bienRequest.pesoKgPorUnidad() <= 0) {
+            throw new BusinessException("El peso del bien debe ser mayor a 0");
+        }
+        if (bienRequest.volumenM3PorUnidad() == null || bienRequest.volumenM3PorUnidad() <= 0) {
+            throw new BusinessException("El volumen del bien debe ser mayor a 0");
+        }
+        return new Bien(bienRequest.descripcion(), bienRequest.cantidad(), bienRequest.pesoKgPorUnidad(),
+                bienRequest.volumenM3PorUnidad(), toSubcategoria(bienRequest.subcategoria()),
+                toEstadoBien(bienRequest.estado()), bienRequest.fechaVencimiento());
     }
 
-    private BienResponse toBienInfo(Bien b) {
+    private BienResponse toBienResonse(Bien b) {
         return new BienResponse(
                 b.getDescripcion(),
                 b.getCantidad(),
@@ -163,7 +171,7 @@ public class DonacionServiceImpl implements DonacionService {
         try {
             return TipoEstadoDonacion.valueOf(estado.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Estado del bien no valido");
+            throw new BusinessException("Estado de donacion '" + estado + "' no valido");
         }
     }
 
@@ -171,15 +179,21 @@ public class DonacionServiceImpl implements DonacionService {
         try {
             return EstadoBien.valueOf(estado.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Estado del bien no valido");
+            throw new BusinessException("Estado del bien '" + estado + "' no valido");
         }
     }
 
     private Subcategoria toSubcategoria(SubcategoriaRequest subcategoria) {
+        if (subcategoria.nombre() == null || subcategoria.nombre().isBlank()) {
+            throw new BusinessException("El nombre de la subcategoria no puede ser nulo ni estar vacio");
+        }
         return new Subcategoria(subcategoria.nombre(), toCategoria(subcategoria.categoria()));
     }
 
     private Categoria toCategoria(CategoriaRequest categoria) {
+        if (categoria.nombre() == null || categoria.nombre().isBlank()) {
+            throw new BusinessException("El nombre de la categoria no puede ser nulo ni estar vacio");
+        }
         return new Categoria(categoria.nombre(), categoria.pideEstado(), categoria.esPerecedero());
     }
 

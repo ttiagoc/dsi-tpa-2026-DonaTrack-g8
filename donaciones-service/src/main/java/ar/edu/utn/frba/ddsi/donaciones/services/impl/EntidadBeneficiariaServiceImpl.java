@@ -5,6 +5,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
+import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.common.models.entities.Email;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.entities.Telefono;
@@ -53,7 +55,8 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
 
     public EntidadBeneficiariaResponse obtenerPorId(Long id) {
         EntidadBeneficiaria e = entidadBeneficiariaRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No se encontro la entidad beneficiaria"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontro una entidad beneficiaria con el id: " + id));
 
         return toEntidadBeneficiariaResponse(e);
     }
@@ -75,10 +78,23 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
 
     public EntidadBeneficiariaResponse crear(EntidadBeneficiariaRequest request) {
         EntidadBeneficiaria entidad = toEntidadBeneficiaria(request);
-        return toEntidadBeneficiariaResponse(entidadBeneficiariaRepository.save(entidad));
+        return toEntidadBeneficiariaResponse(this.guardar(entidad));
     }
 
     private EntidadBeneficiaria toEntidadBeneficiaria(EntidadBeneficiariaRequest request) {
+        if (request.razonSocial() == null || request.razonSocial().isBlank()) {
+            throw new BusinessException("La razon social no puede ser nula ni estar vacia");
+        }
+        if (request.direccion() == null || request.direccion().isBlank()) {
+            throw new BusinessException("La direccion no puede ser nula ni estar vacia");
+        }
+        if (request.telefono() == null || request.telefono().isBlank()) {
+            throw new BusinessException("El telefono no puede ser nulo ni estar vacio");
+        }
+        if (request.correoRepresentantes() == null || request.correoRepresentantes().isEmpty()) {
+            throw new BusinessException("Debe haber al menos un correo de representante");
+        }
+
         return new EntidadBeneficiaria(request.razonSocial(), request.direccion(),
                 request.telefono(),
                 request.correoRepresentantes().stream().map(this::toMedioContacto).collect(Collectors.toList()));
@@ -86,7 +102,10 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
 
     private MedioContacto toMedioContacto(MedioContactoRequest request) {
         if (request == null || request.tipo() == null) {
-            return null;
+            throw new BusinessException("El medio de contacto y su tipo no pueden ser nulos");
+        }
+        if (request.valor() == null || request.valor().isBlank()) {
+            throw new BusinessException("El valor del medio de contacto no puede ser nulo ni estar vacio");
         }
         MedioContacto contacto = new MedioContacto();
         contacto.setValor(request.valor());
@@ -101,7 +120,7 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
                 contacto.setCanal(new WhatsApp());
                 break;
             default:
-                return null;
+                throw new BusinessException("El tipo de medio de contacto no es valido");
         }
         return contacto;
     }
@@ -115,13 +134,22 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
 
     public EntidadBeneficiariaResponse actualizar(Long id, EntidadBeneficiariaRequest request) {
         EntidadBeneficiaria entidad = entidadBeneficiariaRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No se encontro la entidad beneficiaria"));
-        entidad.setRazonSocial(request.razonSocial());
-        entidad.setDireccion(request.direccion());
-        entidad.setTelefono(new MedioContacto(request.telefono(), new Telefono()));
-        entidad.setCorreoRepresentantes(request.correoRepresentantes().stream().map(this::toMedioContacto)
-                .collect(Collectors.toList()));
-        return toEntidadBeneficiariaResponse(entidadBeneficiariaRepository.save(entidad));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontro una entidad beneficiaria con el id: " + id));
+        if (request.razonSocial() != null && !request.razonSocial().isBlank()) {
+            entidad.setRazonSocial(request.razonSocial());
+        }
+        if (request.direccion() != null && !request.direccion().isBlank()) {
+            entidad.setDireccion(request.direccion());
+        }
+        if (request.telefono() != null && !request.telefono().isBlank()) {
+            entidad.setTelefono(new MedioContacto(request.telefono(), new Telefono()));
+        }
+        if (request.correoRepresentantes() != null && !request.correoRepresentantes().isEmpty()) {
+            entidad.setCorreoRepresentantes(request.correoRepresentantes().stream().map(this::toMedioContacto)
+                    .collect(Collectors.toList()));
+        }
+        return toEntidadBeneficiariaResponse(this.guardar(entidad));
     }
 
     public List<NecesidadResponse> obtenerNecesidades(Long id) {
@@ -129,39 +157,56 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
                 .map(e -> e.getNecesidades().stream()
                         .map(this::toNecesidadResponse)
                         .collect(Collectors.toList()))
-                .orElseThrow(() -> new IllegalArgumentException("No se encontro la entidad beneficiaria"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontro una entidad beneficiaria con el id: " + id));
     }
 
     private Necesidad toNecesidad(NecesidadRequest request) {
+        if (request.descripcion() == null || request.descripcion().isBlank()) {
+            throw new BusinessException("La descripcion de la necesidad no puede ser nula ni estar vacia");
+        }
+        if (request.cantidad() == null || request.cantidad() <= 0) {
+            throw new BusinessException("La cantidad de la necesidad debe ser mayor a 0");
+        }
         return new Necesidad(toSubcategoria(request.subcategoria()), toTipoNecesidad(request.tipoNecesidad()),
                 request.descripcion(), request.cantidad());
     }
 
     private Subcategoria toSubcategoria(SubcategoriaRequest subcategoria) {
+        if (subcategoria.nombre() == null || subcategoria.nombre().isBlank()) {
+            throw new BusinessException("El nombre de la subcategoria no puede ser nulo ni estar vacio");
+        }
         return new Subcategoria(subcategoria.nombre(), toCategoria(subcategoria.categoria()));
     }
 
     private Categoria toCategoria(CategoriaRequest categoria) {
+        if (categoria.nombre() == null || categoria.nombre().isBlank()) {
+            throw new BusinessException("El nombre de la categoria no puede ser nulo ni estar vacio");
+        }
         return new Categoria(categoria.nombre(), categoria.pideEstado(), categoria.esPerecedero());
     }
 
     private TipoNecesidad toTipoNecesidad(String tipo) {
+        if (tipo == null || tipo.isBlank()) {
+            throw new BusinessException("El tipo de necesidad no puede ser nulo ni estar vacio");
+        }
         switch (tipo.toLowerCase()) {
             case "recurrente":
                 return new NecesidadRecurrente();
             case "extraordinaria":
                 return new NecesidadExtraordinaria();
             default:
-                throw new IllegalArgumentException("Tipo de necesidad invalido");
+                throw new BusinessException("Tipo de necesidad invalido");
         }
     }
 
     public NecesidadResponse registrarNecesidad(Long id, NecesidadRequest request) {
         EntidadBeneficiaria entidadBeneficiaria = entidadBeneficiariaRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No se encontro la entidad beneficiaria"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontro una entidad beneficiaria con el id: " + id));
         Necesidad necesidad = toNecesidad(request);
         entidadBeneficiaria.registrarNecesidad(necesidad);
-        entidadBeneficiariaRepository.save(entidadBeneficiaria);
+        this.guardar(entidadBeneficiaria);
         return toNecesidadResponse(necesidad);
     }
 
@@ -169,21 +214,24 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
         entidadBeneficiariaRepository.findById(entidadId)
                 .map(entidad -> {
                     entidad.eliminarNecesidad(necesidadId);
-                    return entidadBeneficiariaRepository.save(entidad);
+                    return this.guardar(entidad);
                 })
-                .orElseThrow(() -> new IllegalArgumentException("No se encontro la entidad beneficiaria"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontro una entidad beneficiaria con el id: " + entidadId));
     }
 
     public void confirmarEntrega(Long entidadId, Long donacionId) {
         entidadBeneficiariaRepository.findById(entidadId)
                 .map(entidad -> {
                     Donacion donacion = donacionRepository.findById(donacionId)
-                            .orElseThrow(() -> new IllegalArgumentException("No se encontro la donacion"));
+                            .orElseThrow(() -> new ResourceNotFoundException(
+                                    "No se encontro una donacion con el id: " + donacionId));
                     entidad.confirmarEntrega(donacion);
-                    entidadBeneficiariaRepository.save(entidad);
+                    this.guardar(entidad);
                     return entidad;
                 })
-                .orElseThrow(() -> new IllegalArgumentException("No se encontro la entidad beneficiaria"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontro una entidad beneficiaria con el id: " + entidadId));
     }
 
     public void reportarNoRecibida(Long entidadId, Long donacionId, ReportarNoRecibidaRequest request) {
@@ -192,14 +240,16 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
                     eventoService.notificarEntregaFallida(donacionId, request.motivo());
                     return entidad;
                 })
-                .orElseThrow(() -> new IllegalArgumentException("No se encontro la entidad beneficiaria"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontro una entidad beneficiaria con el id: " + entidadId));
     }
 
     public void subirFotosRecepcion(Long entidadId, Long donacionId, SubirFotosRecepcionRequest request) {
         entidadBeneficiariaRepository.findById(entidadId)
                 .map(entidad -> {
                     Donacion donacion = donacionRepository.findById(donacionId)
-                            .orElseThrow(() -> new IllegalArgumentException("No se encontro la donacion"));
+                            .orElseThrow(() -> new ResourceNotFoundException(
+                                    "No se encontro una donacion con el id: " + donacionId));
                     if (donacion.getFotosRecepcion() == null) {
                         donacion.setFotosRecepcion(new java.util.ArrayList<>());
                     }
@@ -209,6 +259,11 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
                     donacionRepository.save(donacion);
                     return entidad;
                 })
-                .orElseThrow(() -> new IllegalArgumentException("No se encontro la entidad beneficiaria"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontro una entidad beneficiaria con el id: " + entidadId));
+    }
+
+    private EntidadBeneficiaria guardar(EntidadBeneficiaria entidadBeneficiaria) {
+        return entidadBeneficiariaRepository.save(entidadBeneficiaria);
     }
 }

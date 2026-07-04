@@ -5,16 +5,17 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
+import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.common.models.entities.Email;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.entities.Telefono;
 import ar.edu.utn.frba.ddsi.common.models.entities.WhatsApp;
-import ar.edu.utn.frba.ddsi.donaciones.dto.donante.ActualizarPersonaHumanaRequest;
-import ar.edu.utn.frba.ddsi.donaciones.dto.donante.ActualizarPersonaJuridicaRequest;
-import ar.edu.utn.frba.ddsi.donaciones.dto.donante.CrearPersonaJuridicaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.DonanteResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.MedioContactoRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaHumanaRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaJuridicaRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donante.RepresentanteRequest;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaJuridica;
@@ -53,43 +54,80 @@ public class DonanteServiceImpl implements DonanteService {
 
     public DonanteResponse obtenerPorId(Long id) {
         Donante d = donanteRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No se encontro el donante"));
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro un donante con el id: " + id));
         return toDonanteResponse(d);
     }
 
     private PersonaHumana toPersonaHumana(PersonaHumanaRequest request) {
-        PersonaHumana persona = new PersonaHumana();
-        persona.setNombre(request.nombre());
-        persona.setApellido(request.apellido());
-        persona.setFechaNacimiento(request.fechaNacimiento());
-        persona.setDni(request.dni());
-        persona.setGenero(request.genero());
-        persona.setDireccion(request.direccion());
-        if (request.contactos() != null) {
-            persona.setContactos(request.contactos().stream().map(this::toMedioContacto).collect(Collectors.toList()));
+        if (request.nombre() == null || request.nombre().isBlank()) {
+            throw new BusinessException("El nombre de la persona humana no puede ser nulo ni estar vacio");
         }
-        return persona;
+        if (request.apellido() == null || request.apellido().isBlank()) {
+            throw new BusinessException("El apellido de la persona humana no puede ser nulo ni estar vacio");
+        }
+        if (request.dni() == null || request.dni().isBlank()) {
+            throw new BusinessException("El DNI de la persona humana no puede ser nulo ni estar vacio");
+        }
+        if (request.fechaNacimiento() == null) {
+            throw new BusinessException("La fecha de nacimiento de la persona humana no puede ser nula");
+        }
+        if (request.genero() == null || request.genero().isBlank()) {
+            throw new BusinessException("El genero de la persona humana no puede ser nulo ni estar vacio");
+        }
+        if (request.direccion() == null || request.direccion().isBlank()) {
+            throw new BusinessException("La direccion de la persona humana no puede ser nula ni estar vacia");
+        }
+        if (request.contactos() == null || request.contactos().isEmpty()) {
+            throw new BusinessException("Debe haber al menos un medio de contacto");
+        }
+
+        return new PersonaHumana(null, request.contactos().stream().map(this::toMedioContacto)
+                .collect(Collectors.toList()), toMedioContacto(request.contactoPredeterminado()), request.nombre(),
+                request.apellido(), request.fechaNacimiento(), request.dni(), request.genero(),
+                request.direccion());
     }
 
-    private PersonaJuridica toPersonaJuridica(CrearPersonaJuridicaRequest request) {
-        PersonaJuridica persona = new PersonaJuridica();
-        persona.setRazonSocial(request.razonSocial());
-        persona.setRubro(request.rubro());
-        persona.setTipo(request.tipo());
-        persona.setCuit(request.cuit());
-
-        if (request.representantes() != null) {
-            List<Representante> representantes = request.representantes().stream()
-                    .map(r -> new Representante(r.nombre(), r.apellido(), new MedioContacto(r.correo(), new Email())))
-                    .collect(Collectors.toList());
-            persona.setRepresentantes(representantes);
+    private PersonaJuridica toPersonaJuridica(PersonaJuridicaRequest request) {
+        if (request.razonSocial() == null || request.razonSocial().isBlank()) {
+            throw new BusinessException("La razon social de la persona juridica no puede ser nula ni estar vacia");
         }
-        return persona;
+        if (request.rubro() == null || request.rubro().isBlank()) {
+            throw new BusinessException("El rubro de la persona juridica no puede ser nulo ni estar vacio");
+        }
+        if (request.tipo() == null || request.tipo().isBlank()) {
+            throw new BusinessException("El tipo de la persona juridica no puede ser nulo ni estar vacio");
+        }
+        if (request.cuit() == null || request.cuit().isBlank()) {
+            throw new BusinessException("El CUIT de la persona juridica no puede ser nulo ni estar vacio");
+        }
+        if (request.representantes() == null || request.representantes().isEmpty()) {
+            throw new BusinessException("Debe haber al menos un representante");
+        }
+
+        return new PersonaJuridica(null,
+                request.contactos().stream().map(this::toMedioContacto).collect(Collectors.toList()),
+                toMedioContacto(request.contactoPredeterminado()), request.razonSocial(), request.rubro(),
+                request.tipo(), request.cuit(),
+                request.representantes().stream().map(this::toRepresentante).collect(Collectors.toList()));
+    }
+
+    private Representante toRepresentante(RepresentanteRequest request) {
+        if (request.nombre() == null || request.nombre().isBlank()) {
+            throw new BusinessException("El nombre del representante no puede ser nulo ni estar vacio");
+        }
+        if (request.apellido() == null || request.apellido().isBlank()) {
+            throw new BusinessException("El apellido del representante no puede ser nulo ni estar vacio");
+        }
+        if (request.correo() == null || request.correo().isBlank()) {
+            throw new BusinessException("El correo del representante no puede ser nulo ni estar vacio");
+        }
+        return new Representante(request.nombre(), request.apellido(),
+                new MedioContacto(request.correo(), new Email()));
     }
 
     public DonanteResponse crearPersonaHumana(PersonaHumanaRequest request) {
         if (request.contactos().stream().noneMatch(this::esEmail)) {
-            throw new IllegalArgumentException("Debe haber al menos un medio de contacto de tipo Email");
+            throw new BusinessException("Debe haber al menos un medio de contacto de tipo Email");
         }
         PersonaHumana persona = (PersonaHumana) donanteRepository.save(toPersonaHumana(request));
         return toDonanteResponse(persona);
@@ -99,44 +137,47 @@ public class DonanteServiceImpl implements DonanteService {
         return contacto.tipo().equalsIgnoreCase("email");
     }
 
-    public DonanteResponse crearPersonaJuridica(CrearPersonaJuridicaRequest request) {
+    public DonanteResponse crearPersonaJuridica(PersonaJuridicaRequest request) {
         PersonaJuridica persona = (PersonaJuridica) donanteRepository.save(toPersonaJuridica(request));
         return toDonanteResponse(persona);
     }
 
-    public DonanteResponse actualizarPersonaHumana(Long id, ActualizarPersonaHumanaRequest request) {
-        return donanteRepository.findById(id)
-                .filter(d -> d instanceof PersonaHumana)
-                .map(d -> toDonanteResponse(donanteRepository.save(toPersonaHumanaActualizar(request))))
-                .orElseThrow(() -> new IllegalArgumentException("No se encontro el donante Persona Humana"));
+    public DonanteResponse actualizarPersonaHumana(Long id, PersonaHumanaRequest request) {
+        PersonaHumana d = (PersonaHumana) donanteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontro un donante de tipo Persona Humana con id: " + id));
+
+        if (request.nombre() != null && !request.nombre().isBlank()) {
+            d.setNombre(request.nombre());
+        }
+        if (request.apellido() != null && !request.apellido().isBlank()) {
+            d.setApellido(request.apellido());
+        }
+        if (request.fechaNacimiento() != null) {
+            d.setFechaNacimiento(request.fechaNacimiento());
+        }
+        if (request.genero() != null && !request.genero().isBlank()) {
+            d.setGenero(request.genero());
+        }
+        if (request.direccion() != null && !request.direccion().isBlank()) {
+            d.setDireccion(request.direccion());
+        }
+        if (request.contactos() != null && !request.contactos().isEmpty()) {
+            d.setContactos(request.contactos().stream().map(this::toMedioContacto).collect(Collectors.toList()));
+        }
+        if (request.contactoPredeterminado() != null) {
+            d.setContactoPredeterminado(toMedioContacto(request.contactoPredeterminado()));
+        }
+
+        return toDonanteResponse(donanteRepository.save(d));
     }
 
-    private PersonaHumana toPersonaHumanaActualizar(ActualizarPersonaHumanaRequest request) {
-        PersonaHumana persona = new PersonaHumana();
-        persona.setNombre(request.nombre());
-        persona.setApellido(request.apellido());
-        persona.setFechaNacimiento(request.fechaNacimiento());
-        persona.setDni(request.dni());
-        persona.setGenero(request.genero());
-        persona.setDireccion(request.direccion());
-        return persona;
-    }
-
-    private PersonaJuridica toPersonaJuridicaActualizar(ActualizarPersonaJuridicaRequest request) {
-        PersonaJuridica persona = new PersonaJuridica();
-        persona.setRazonSocial(request.razonSocial());
-        persona.setRubro(request.rubro());
-        persona.setTipo(request.tipo());
-        persona.setCuit(request.cuit());
-        return persona;
-    }
-
-    public DonanteResponse actualizarPersonaJuridica(Long id,
-            ActualizarPersonaJuridicaRequest request) {
+    public DonanteResponse actualizarPersonaJuridica(Long id, PersonaJuridicaRequest request) {
         return donanteRepository.findById(id)
                 .filter(d -> d instanceof PersonaJuridica)
-                .map(d -> toDonanteResponse(donanteRepository.save(toPersonaJuridicaActualizar(request))))
-                .orElseThrow(() -> new IllegalArgumentException("No se encontro el donante Persona Juridica"));
+                .map(d -> toDonanteResponse(donanteRepository.save(toPersonaJuridica(request))))
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontro un donante de tipo Persona Juridica con id: " + id));
     }
 
     public boolean eliminar(Long id) {
@@ -148,7 +189,10 @@ public class DonanteServiceImpl implements DonanteService {
 
     private MedioContacto toMedioContacto(MedioContactoRequest request) {
         if (request == null || request.tipo() == null) {
-            return null;
+            throw new BusinessException("El medio de contacto no puede ser nulo");
+        }
+        if (request.valor() == null || request.valor().isBlank()) {
+            throw new BusinessException("El valor del medio de contacto no puede ser nulo ni estar vacio");
         }
         MedioContacto contacto = new MedioContacto();
         contacto.setValor(request.valor());
@@ -163,7 +207,7 @@ public class DonanteServiceImpl implements DonanteService {
                 contacto.setCanal(new WhatsApp());
                 break;
             default:
-                return null;
+                throw new BusinessException("El tipo de medio de contacto no es valido");
         }
         return contacto;
     }

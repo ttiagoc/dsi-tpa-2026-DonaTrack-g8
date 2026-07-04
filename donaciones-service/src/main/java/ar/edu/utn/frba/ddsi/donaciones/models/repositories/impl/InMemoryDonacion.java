@@ -28,13 +28,13 @@ public class InMemoryDonacion implements DonacionRepository {
         return donacion;
     }
 
-    public List<Donacion> saveAll(List<Donacion> donaciones) {
-        donaciones.forEach(d -> {
+    public List<Donacion> saveAll(List<Donacion> nuevasDonaciones) {
+        for (Donacion d : nuevasDonaciones) {
             if (d.getId() == null) {
                 d.setId(generadorId.siguiente());
             }
             donaciones.add(d);
-        });
+        }
         return donaciones;
     }
 

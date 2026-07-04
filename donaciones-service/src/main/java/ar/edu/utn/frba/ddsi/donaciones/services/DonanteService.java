@@ -2,11 +2,9 @@ package ar.edu.utn.frba.ddsi.donaciones.services;
 
 import java.util.List;
 
-import ar.edu.utn.frba.ddsi.donaciones.dto.donante.ActualizarPersonaHumanaRequest;
-import ar.edu.utn.frba.ddsi.donaciones.dto.donante.ActualizarPersonaJuridicaRequest;
-import ar.edu.utn.frba.ddsi.donaciones.dto.donante.CrearPersonaJuridicaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.DonanteResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaHumanaRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaJuridicaRequest;
 
 public interface DonanteService {
 
@@ -16,12 +14,11 @@ public interface DonanteService {
 
     DonanteResponse crearPersonaHumana(PersonaHumanaRequest request);
 
-    DonanteResponse crearPersonaJuridica(CrearPersonaJuridicaRequest request);
+    DonanteResponse crearPersonaJuridica(PersonaJuridicaRequest request);
 
-    DonanteResponse actualizarPersonaHumana(Long id, ActualizarPersonaHumanaRequest request);
+    DonanteResponse actualizarPersonaHumana(Long id, PersonaHumanaRequest request);
 
-    DonanteResponse actualizarPersonaJuridica(Long id,
-            ActualizarPersonaJuridicaRequest request);
+    DonanteResponse actualizarPersonaJuridica(Long id, PersonaJuridicaRequest request);
 
     boolean eliminar(Long id);
 }

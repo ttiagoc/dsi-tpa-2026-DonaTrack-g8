@@ -1,8 +1,10 @@
 package ar.edu.utn.frba.ddsi.logistica.models.entities;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class Camion {
     private Long id;
     private String patente;
@@ -10,4 +12,14 @@ public class Camion {
     private Double altura;
     private Double capacidadCarga;
     private Chofer chofer;
+
+    public Camion(String patente, Double capacidadVolumen, Double altura, Double capacidadCarga, Chofer chofer) {
+        this.id = null;
+        this.patente = patente;
+        this.capacidadVolumen = capacidadVolumen;
+        this.altura = altura;
+        this.capacidadCarga = capacidadCarga;
+        this.chofer = chofer;
+    }
+
 }
