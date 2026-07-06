@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.logistica.config.RestLogisticaConfig;
 import ar.edu.utn.frba.ddsi.logistica.dto.entregadonaciones.ConfirmacionEntregaExitosaRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.entregadonaciones.InicioRutaRequest;
@@ -34,7 +35,7 @@ public class EntregaDonacionesServiceImpl implements EntregaDonacionesService {
 
     public void iniciarRuta(Long rutaId) {
         Ruta ruta = rutaRepository.findById(rutaId)
-                .orElseThrow(() -> new IllegalArgumentException("Ruta no encontrada."));
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro una ruta con el id: " + rutaId));
 
         ruta.iniciar();
         rutaRepository.save(ruta);
@@ -59,12 +60,13 @@ public class EntregaDonacionesServiceImpl implements EntregaDonacionesService {
 
     public void confirmarEntregaExitosa(Long paradaId, Long rutaId) {
         Ruta ruta = rutaRepository.findById(rutaId)
-                .orElseThrow(() -> new IllegalArgumentException("Ruta no encontrada."));
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro una ruta con el id: " + rutaId));
 
         Parada paradaAfectada = ruta.getParadas().stream()
                 .filter(p -> p.getOrden() == paradaId.intValue())
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Parada no encontrada en la ruta especificada."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontro una parada con el id: " + paradaId + " en la ruta " + rutaId));
 
         List<Long> donaciones = paradaAfectada.getEntregas();
 

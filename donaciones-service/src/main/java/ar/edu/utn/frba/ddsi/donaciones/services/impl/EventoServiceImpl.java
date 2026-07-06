@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ConfirmacionEntregaExitosaRequest;
@@ -68,24 +69,27 @@ public class EventoServiceImpl implements EventoService {
         for (ParadaRequest parada : request.paradas()) {
 
             EntidadBeneficiaria entidad = entidadBeneficiariaRepository.findById(parada.entidadId())
-                    .orElseThrow(() -> new IllegalArgumentException("Entidad no encontrada."));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "No se encontro una entidad beneficiaria con el id: " + parada.entidadId()));
 
             for (MedioContacto contacto : entidad.getCorreoRepresentantes()) {
                 Evento evento = new EventoInicioRutaEntidad(contacto,
-                        "http://localhost:8080/api/logistica/monitoreo/ubicacion/" + request.rutaId());
+                        "http://localhost:8080/api/logistica-service/monitoreo/ubicacion/" + request.rutaId());
                 eventManager.emitir(evento);
             }
 
             for (Long donacionId : parada.donacionIds()) {
                 Donacion donacion = donacionRepository.findById(donacionId)
-                        .orElseThrow(() -> new IllegalArgumentException("Donación no encontrada."));
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                "No se encontro una donacion con el id: " + donacionId));
 
-                donacion.cambiarEstado(TipoEstadoDonacion.EN_TRASLADO, "Donación arriba del camión en viaje.");
+                donacion.cambiarEstado(TipoEstadoDonacion.EN_TRASLADO,
+                        "La donación se encuentra en camino a su destino.");
                 donacionRepository.save(donacion);
 
                 Donante donante = donacion.getDonante();
                 Evento evento = new EventoInicioRutaDonante(donante.getContactoPredeterminado(),
-                        "http://localhost:8080/api/logistica/monitoreo/ubicacion/" + request.rutaId());
+                        "http://localhost:8080/api/logistica-service/monitoreo/ubicacion/" + request.rutaId());
                 eventManager.emitir(evento);
             }
         }
@@ -93,27 +97,23 @@ public class EventoServiceImpl implements EventoService {
 
     public void confirmarEntregaExitosa(ConfirmacionEntregaExitosaRequest request) {
         EntidadBeneficiaria entidad = entidadBeneficiariaRepository.findById(request.entidadId())
-                .orElseThrow(() -> new IllegalArgumentException("Entidad Beneficiaria no encontrada."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontro una entidad beneficiaria con el id: " + request.entidadId()));
 
         ComprobanteEntrega comprobante = new ComprobanteEntrega(request.patenteCamion(), request.fechaHora());
 
         for (Long donacionId : request.donacionIds()) {
-            Donacion donacion = donacionRepository.findById(donacionId).orElse(null);
+            Donacion donacion = donacionRepository.findById(donacionId)
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "No se encontro una donacion con el id: " + donacionId));
 
-            if (donacion != null) {
-                donacion.cambiarEstado(TipoEstadoDonacion.ENTREGADA,
-                        "Entrega confirmada en sede por la entidad.");
-                donacionRepository.save(donacion);
+            entidad.confirmarEntrega(donacion);
+            donacionRepository.save(donacion);
 
-                entidad.confirmarEntrega(donacion);
-
-                Donante donante = donacion.getDonante();
-                if (donante != null) {
-                    Evento evDonante = new EventoEntregaExitosaDonante(
-                            donante.getContactoPredeterminado(), comprobante);
-                    eventManager.emitir(evDonante);
-                }
-            }
+            Donante donante = donacion.getDonante();
+            Evento evDonante = new EventoEntregaExitosaDonante(
+                    donante.getContactoPredeterminado(), comprobante);
+            eventManager.emitir(evDonante);
         }
 
         for (MedioContacto correo : entidad.getCorreoRepresentantes()) {
@@ -124,7 +124,8 @@ public class EventoServiceImpl implements EventoService {
 
     public void notificarEntregaFallida(Long donacionId, String motivo) {
         Donacion donacion = donacionRepository.findById(donacionId)
-                .orElseThrow(() -> new IllegalArgumentException("Donación no encontrada."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontro una donacion con el id: " + donacionId));
 
         donacion.cambiarEstado(TipoEstadoDonacion.ENTREGA_FALLIDA, "Entrega fallida reportada. Motivo: " + motivo);
         donacionRepository.save(donacion);
@@ -132,18 +133,14 @@ public class EventoServiceImpl implements EventoService {
         EntidadBeneficiaria entidad = donacion.getEntidadBeneficiariaAsignada();
         Donante donante = donacion.getDonante();
 
-        if (donante != null && donante.getContactoPredeterminado() != null) {
-            Evento eventoDonante = new EventoEntregaFallida(
-                    donante.getContactoPredeterminado(), donacionId, motivo);
-            eventManager.emitir(eventoDonante);
-        }
+        Evento eventoDonante = new EventoEntregaFallida(
+                donante.getContactoPredeterminado(), donacionId, motivo);
+        eventManager.emitir(eventoDonante);
 
-        if (entidad != null) {
-            for (MedioContacto correo : entidad.getCorreoRepresentantes()) {
-                Evento eventoEntidad = new EventoEntregaFallida(
-                        correo, donacionId, motivo);
-                eventManager.emitir(eventoEntidad);
-            }
+        for (MedioContacto correo : entidad.getCorreoRepresentantes()) {
+            Evento eventoEntidad = new EventoEntregaFallida(
+                    correo, donacionId, motivo);
+            eventManager.emitir(eventoEntidad);
         }
     }
 }

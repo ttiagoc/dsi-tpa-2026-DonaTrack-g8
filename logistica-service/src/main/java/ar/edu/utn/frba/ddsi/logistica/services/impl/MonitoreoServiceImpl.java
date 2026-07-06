@@ -1,11 +1,12 @@
 package ar.edu.utn.frba.ddsi.logistica.services.impl;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
+import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoRuta;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.CamionActivoResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.ParadaPendienteResponse;
@@ -32,11 +33,11 @@ public class MonitoreoServiceImpl implements MonitoreoService {
 
   public void actualizarUbicacionCamion(String patente, UbicacionRequest request) {
     Camion camion = camionRepository.findByPatente(patente)
-        .orElseThrow(() -> new IllegalArgumentException("Camión no encontrado: " + patente));
+        .orElseThrow(() -> new ResourceNotFoundException("No se encontro un camion con la patente: " + patente));
 
     Ruta ruta = rutaRepository.buscarRutaDelCamion(camion.getId());
     if (ruta.getEstado() != EstadoRuta.EN_TRASLADO) {
-      throw new IllegalStateException("El camión no tiene ninguna ruta en estado EN_TRASLADO.");
+      throw new BusinessException("El camión no tiene ninguna ruta en estado EN_TRASLADO.");
     }
 
     ruta.actualizarUbicacion(toUbicacion(request));
@@ -45,10 +46,10 @@ public class MonitoreoServiceImpl implements MonitoreoService {
 
   public UbicacionResponse obtenerUltimaUbicacionPorRuta(Long rutaId) {
     Ruta ruta = rutaRepository.findById(rutaId)
-        .orElseThrow(() -> new IllegalArgumentException("Ruta no encontrada: " + rutaId));
+        .orElseThrow(() -> new ResourceNotFoundException("No se encontro una ruta con el id: " + rutaId));
 
     if (ruta.getUltimaUbicacion() == null) {
-      throw new IllegalStateException("No se han registrado ubicaciones para esta ruta.");
+      throw new ResourceNotFoundException("No se han registrado ubicaciones para esta ruta.");
     }
 
     return this.toUbicacionResponse(ruta.getUltimaUbicacion());
@@ -63,12 +64,13 @@ public class MonitoreoServiceImpl implements MonitoreoService {
   }
 
   private Ubicacion toUbicacion(UbicacionRequest request) {
-    Ubicacion ubicacion = new Ubicacion();
-    ubicacion.setLatitud(request.latitud());
-    ubicacion.setLongitud(request.longitud());
-    ubicacion.setVelocidad(request.velocidad());
-    ubicacion.setTimestamp(request.timestamp() != null ? request.timestamp() : LocalDateTime.now());
-    return ubicacion;
+    if (request.latitud() == null || request.longitud() == null) {
+      throw new BusinessException("La ubicacion es inválida.");
+    }
+    if (request.velocidad() == null) {
+      throw new BusinessException("La velocidad es inválida.");
+    }
+    return new Ubicacion(request.latitud(), request.longitud(), request.velocidad());
   }
 
   private UbicacionResponse toUbicacionResponse(Ubicacion ubicacion) {

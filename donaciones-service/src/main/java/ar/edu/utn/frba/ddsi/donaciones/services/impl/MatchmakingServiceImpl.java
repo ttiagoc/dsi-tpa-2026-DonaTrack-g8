@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoPropuesta;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
@@ -68,12 +69,13 @@ public class MatchmakingServiceImpl implements MatchmakingService {
 
     public void aceptarPropuesta(Long propuestaId, Long entidadId) {
         ResultadoMatchmaking propuesta = resultadoRepository.findById(propuestaId)
-                .orElseThrow(() -> new IllegalArgumentException("No se encontró la propuesta con ID: " + propuestaId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontro una propuesta con el id: " + propuestaId));
 
         EntidadBeneficiaria entidadElegida = propuesta.getEntidadesSugeridas().stream()
                 .filter(e -> e.getId().equals(entidadId))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "La entidad elegida no forma parte de las sugerencias válidas"));
 
         propuesta.setEstado(EstadoPropuesta.ACEPTADO);
@@ -98,7 +100,8 @@ public class MatchmakingServiceImpl implements MatchmakingService {
 
     public void rechazarPropuesta(Long propuestaId) {
         ResultadoMatchmaking propuesta = resultadoRepository.findById(propuestaId)
-                .orElseThrow(() -> new IllegalArgumentException("No se encontró la propuesta con ID: " + propuestaId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontro una propuesta con el id: " + propuestaId));
 
         propuesta.setEstado(EstadoPropuesta.RECHAZADO);
         resultadoRepository.save(propuesta);

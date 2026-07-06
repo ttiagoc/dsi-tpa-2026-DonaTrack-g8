@@ -28,9 +28,7 @@ public class MonitoreoController {
 
   @PostMapping("/ubicacion/{patente}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void recibirTelemetria(
-      @PathVariable String patente,
-      @RequestBody UbicacionRequest request) {
+  public void recibirTelemetria(@PathVariable String patente, @RequestBody UbicacionRequest request) {
     monitoreoService.actualizarUbicacionCamion(patente, request);
   }
 
