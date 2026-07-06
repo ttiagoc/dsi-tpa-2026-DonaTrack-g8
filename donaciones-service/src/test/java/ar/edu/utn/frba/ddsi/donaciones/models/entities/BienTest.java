@@ -1,6 +1,11 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.entities;
 
-import org.junit.jupiter.api.BeforeEach;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -10,147 +15,75 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Bien;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
 
-import java.time.LocalDate;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-@DisplayName("Categorización de Bienes y generación de keys")
+@DisplayName("Tests de la entidad Bien")
 class BienTest {
 
     @Nested
-    @DisplayName("Subcategoría hereda propiedades de Categoría")
-    class SubcategoriaTests {
+    @DisplayName("Lógica de herencia de propiedades (Categoría -> Subcategoría -> Bien)")
+    class PropiedadesTests {
 
         @Test
-        @DisplayName("Una subcategoría de categoría perecedera es perecedera")
-        void subcategoriaEsPerecedera() {
-            Categoria cat = new Categoria("Alimentos", false, true, null);
-            Subcategoria sub = new Subcategoria("Fideos", cat);
+        @DisplayName("Una subcategoría hereda el atributo esPerecedero de su categoría padre")
+        void subcategoriaHeredaPerecedero() {
+            Categoria catAlimentos = new Categoria("Alimentos", false, true);
+            Subcategoria subFideos = new Subcategoria("Fideos", catAlimentos);
 
-            assertTrue(sub.esPerecedero());
-            assertFalse(sub.pideEstado());
+            assertTrue(subFideos.esPerecedero());
+            assertFalse(subFideos.pideEstado());
         }
 
         @Test
-        @DisplayName("Una subcategoría de categoría que pide estado, pide estado")
-        void subcategoriaPideEstado() {
-            Categoria cat = new Categoria("Muebles", true, false, null);
-            Subcategoria sub = new Subcategoria("Sillas", cat);
+        @DisplayName("Una subcategoría hereda el atributo pideEstado de su categoría padre")
+        void subcategoriaHeredaPideEstado() {
+            Categoria catMuebles = new Categoria("Muebles", true, false);
+            Subcategoria subSillas = new Subcategoria("Sillas", catMuebles);
 
-            assertFalse(sub.esPerecedero());
-            assertTrue(sub.pideEstado());
-        }
-
-        @Test
-        @DisplayName("Subcategoría sin categoría asignada retorna false para ambas propiedades")
-        void sinCategoriaRetornaFalse() {
-            Subcategoria sub = new Subcategoria("Huérfana", null);
-
-            assertFalse(sub.esPerecedero());
-            assertFalse(sub.pideEstado());
+            assertTrue(subSillas.pideEstado());
+            assertFalse(subSillas.esPerecedero());
         }
     }
 
     @Nested
-    @DisplayName("Generación de key para segmentación")
-    class GenerarKeyTests {
+    @DisplayName("Validaciones al instanciar un Bien")
+    class ValidacionesBienTests {
 
-        private Categoria categoriaAlimentos;
-        private Categoria categoriaMuebles;
+        @Test
+        @DisplayName("Debe permitir instanciar un bien válido")
+        void bienValido() {
+            Categoria catMuebles = new Categoria("Muebles", true, false);
+            Subcategoria subSillas = new Subcategoria("Sillas", catMuebles);
 
-        @BeforeEach
-        void setUp() {
-            categoriaAlimentos = new Categoria("Alimentos", false, true, null);
-            categoriaMuebles = new Categoria("Muebles", true, false, null);
+            Bien silla = new Bien("Silla de madera", 4L, 1.0, 1.0, subSillas, EstadoBien.NUEVO, null);
+
+            assertEquals("Silla de madera", silla.getDescripcion());
+            assertEquals(EstadoBien.NUEVO, silla.getEstadoBien());
+            assertNull(silla.getFechaVencimiento());
         }
 
         @Test
-        @DisplayName("Key base es el nombre de la subcategoría")
-        void keyBaseEsNombreSubcategoria() {
-            Categoria catSimple = new Categoria("Servicios", false, false, null);
-            Subcategoria sub = new Subcategoria("Clases", catSimple);
-            Bien bien = new Bien(null, null, null, null, sub, null, null);
+        @DisplayName("Debe exigir fecha de vencimiento si es perecedero")
+        void bienPerecederoExigeVencimiento() {
+            Categoria catAlimentos = new Categoria("Alimentos", false, true);
+            Subcategoria subFideos = new Subcategoria("Fideos", catAlimentos);
 
-            assertEquals("Clases", bien.generarKey());
+            Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+                new Bien("Fideos tirabuzón", 10L, 1.0, 1.0, subFideos, null, null);
+            });
+
+            assertTrue(ex.getMessage().contains("fecha de vencimiento"));
         }
 
         @Test
-        @DisplayName("Perecedero incluye fecha de vencimiento en la key")
-        void perecederoIncluyeVencimiento() {
-            Subcategoria sub = new Subcategoria("Fideos", categoriaAlimentos);
+        @DisplayName("Debe exigir estado si la categoría pide estado")
+        void bienConEstadoExigeEstado() {
+            Categoria catMuebles = new Categoria("Muebles", true, false);
+            Subcategoria subSillas = new Subcategoria("Sillas", catMuebles);
 
-            Bien bien = new Bien(null, null, null, null, sub, null, null);
-            bien.setFechaVencimiento(LocalDate.of(2026, 12, 1));
+            Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+                new Bien("Silla de madera", 4L, 1.0, 1.0, subSillas, null, null);
+            });
 
-            assertEquals("Fideos-2026-12-01", bien.generarKey());
-        }
-
-        @Test
-        @DisplayName("Perecedero sin fecha de vencimiento NO incluye vencimiento")
-        void perecederoSinFechaSoloNombre() {
-            Subcategoria sub = new Subcategoria("Fideos", categoriaAlimentos);
-            Bien bien = new Bien(null, null, null, null, sub, null, null);
-            bien.setFechaVencimiento(null);
-
-            assertEquals("Fideos", bien.generarKey());
-        }
-
-        @Test
-        @DisplayName("Categoría que pide estado incluye el EstadoBien en la key")
-        void pideEstadoIncluyeEstado() {
-            Subcategoria sub = new Subcategoria("Sillas", categoriaMuebles);
-            Bien bien = new Bien(null, null, null, null, sub, EstadoBien.USADO, null);
-            bien.setEstadoBien(EstadoBien.USADO);
-
-            assertEquals("Sillas-USADO", bien.generarKey());
-        }
-
-        @Test
-        @DisplayName("Categoría que pide estado pero bien sin estado asignado NO incluye estado")
-        void pideEstadoPeroSinEstado() {
-            Subcategoria sub = new Subcategoria("Sillas", categoriaMuebles);
-            Bien bien = new Bien(null, null, null, null, sub, null, null);
-            bien.setEstadoBien(null);
-
-            assertEquals("Sillas", bien.generarKey());
-        }
-
-        @Test
-        @DisplayName("Dos bienes iguales generan la misma key")
-        void dosIgualesGeneranMismaKey() {
-            Subcategoria sub = new Subcategoria("Fideos", categoriaAlimentos);
-            LocalDate vencimiento = LocalDate.of(2026, 12, 1);
-
-            Bien bien1 = new Bien(null, null, null, null, sub, null, vencimiento);
-            Bien bien2 = new Bien(null, null, null, null, sub, null, vencimiento);
-
-            assertEquals(bien1.generarKey(), bien2.generarKey());
-        }
-
-        @Test
-        @DisplayName("Dos bienes con distinto vencimiento generan diferente key (perecederos)")
-        void distintoVencimientoDistintaKey() {
-            Subcategoria sub = new Subcategoria("Leche", categoriaAlimentos);
-
-            LocalDate vencimiento1 = LocalDate.of(2026, 6, 1);
-            Bien bien1 = new Bien(null, null, null, null, sub, null, vencimiento1);
-
-            LocalDate vencimiento2 = LocalDate.of(2026, 12, 1);
-            Bien bien2 = new Bien(null, null, null, null, sub, null, vencimiento2);
-
-            assertNotEquals(bien1.generarKey(), bien2.generarKey());
-        }
-
-        @Test
-        @DisplayName("Dos bienes con distinto estado generan diferente key (pide estado)")
-        void distintoEstadoDistintaKey() {
-            Subcategoria sub = new Subcategoria("Sillas", categoriaMuebles);
-
-            Bien bien1 = new Bien(null, null, null, null, sub, EstadoBien.NUEVO, null);
-
-            Bien bien2 = new Bien(null, null, null, null, sub, EstadoBien.USADO, null);
-
-            assertNotEquals(bien1.generarKey(), bien2.generarKey());
+            assertTrue(ex.getMessage().contains("estado"));
         }
     }
 }

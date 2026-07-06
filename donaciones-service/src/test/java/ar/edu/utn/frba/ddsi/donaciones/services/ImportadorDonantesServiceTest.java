@@ -1,71 +1,121 @@
 package ar.edu.utn.frba.ddsi.donaciones.services;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.Assertions;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
+import ar.edu.utn.frba.ddsi.common.models.entities.Email;
+import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
+import ar.edu.utn.frba.ddsi.common.models.entities.Notificacion;
+import ar.edu.utn.frba.ddsi.common.services.NotificacionService;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.ImportarCsv;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaJuridica;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
+import ar.edu.utn.frba.ddsi.donaciones.services.impl.ImportadorDonantesServiceImpl;
 
-@SpringBootTest
-public class ImportadorDonantesServiceTest {
+@DisplayName("Tests del ImportadorDonantesService")
+class ImportadorDonantesServiceTest {
 
-  @Autowired
-  private DonanteRepository donanteRepository;
+    private DonanteRepository donanteRepository;
+    private ImportarCsv importarCsv;
+    private NotificacionService notificacionService;
+    private ImportadorDonantesServiceImpl importadorService;
 
-  @Autowired
-  private ImportadorDonantesService importadorDonantesService;
+    @BeforeEach
+    void setUp() {
+        donanteRepository = mock(DonanteRepository.class);
+        importarCsv = mock(ImportarCsv.class);
+        notificacionService = mock(NotificacionService.class);
 
-  @BeforeEach
-  void setUp() {
-    donanteRepository.limpiar();
-  }
+        importadorService = new ImportadorDonantesServiceImpl(donanteRepository, importarCsv, notificacionService);
+    }
 
-  @Test
-  @DisplayName("Debería importar donantes masivamente y actualizar registros existentes por Email")
-  void testImportadorDonantesCSV() throws IOException {
-    Path tempFile = Files.createTempFile("donantes_test", ".csv");
+    @Test
+    @DisplayName("Debe importar y guardar nuevos donantes notificándolos exitosamente")
+    void importarNuevosDonantesYNotificar() {
+        MedioContacto emailHumana = new MedioContacto("humana@test.com", new Email());
+        PersonaHumana humana = new PersonaHumana(
+                null,
+                new ArrayList<>(List.of(emailHumana)),
+                emailHumana,
+                "Ana",
+                "Lopez",
+                null,
+                "11222333",
+                null,
+                null);
 
-    List<String> lineas = List.of(
-        "TipoPersona,TipoDoc,Documento,Nombre/Razón Social,Email,Teléfono",
-        "HUMANA,DNI,12345678,Ana Perez,ana@mail.com,+54 11 5555-5555",
-        "JURIDICA,CUIT,30-12345678-9,Arcos Plateados S.A.,contacto@empresa.com,+54 11 4444-4444",
-        "HUMANA,DNI,87654321,Ana Gomez Perez,ana@mail.com,+54 11 9999-9999");
-    Files.write(tempFile, lineas);
+        MedioContacto emailJuridica = new MedioContacto("juridica@test.com", new Email());
+        PersonaJuridica juridica = new PersonaJuridica(
+                null,
+                new ArrayList<>(List.of(emailJuridica)),
+                emailJuridica,
+                "Empresa Test",
+                null,
+                null,
+                "30-11222333-4",
+                new ArrayList<>());
 
-    importadorDonantesService.importarDonantes(tempFile.toAbsolutePath().toString());
+        List<Donante> donantesCsv = List.of(humana, juridica);
+        when(importarCsv.importar("test_path.csv")).thenReturn(donantesCsv);
 
-    List<Donante> todosLosDonantes = donanteRepository.findAll();
+        when(donanteRepository.buscarPorEmail(anyString())).thenReturn(Optional.empty());
 
-    List<PersonaHumana> humanas = todosLosDonantes.stream()
-        .filter(d -> d instanceof PersonaHumana)
-        .map(d -> (PersonaHumana) d)
-        .toList();
+        importadorService.importarDonantes("test_path.csv");
 
-    List<PersonaJuridica> juridicas = todosLosDonantes.stream()
-        .filter(d -> d instanceof PersonaJuridica)
-        .map(d -> (PersonaJuridica) d)
-        .toList();
+        verify(donanteRepository, times(1)).save(humana);
+        verify(donanteRepository, times(1)).save(juridica);
 
-    Assertions.assertEquals(1, humanas.size(), "Debería haber solo una persona humana por la actualización de email");
-    PersonaHumana humana = humanas.getFirst();
-    Assertions.assertEquals("Ana Gomez Perez", humana.getNombre() + " " + humana.getApellido());
-    Assertions.assertEquals("87654321", humana.getDni());
+        verify(notificacionService, times(2)).enviarNotificacion(any(Notificacion.class));
+    }
 
-    Assertions.assertEquals(1, juridicas.size());
-    Assertions.assertEquals("Arcos Plateados S.A.", juridicas.getFirst().getRazonSocial());
-    Assertions.assertEquals("30-12345678-9", juridicas.getFirst().getCuit());
+    @Test
+    @DisplayName("Debe actualizar los datos de donantes si ya existen y no notificar")
+    void actualizarDonantesExistentes() {
+        MedioContacto emailHumana = new MedioContacto("humana@test.com", new Email());
+        PersonaHumana humana = new PersonaHumana(
+                null,
+                new ArrayList<>(List.of(emailHumana)),
+                emailHumana,
+                "Ana",
+                null,
+                null,
+                null,
+                null,
+                null);
 
-    Files.deleteIfExists(tempFile);
-  }
+        List<Donante> donantesCsv = List.of(humana);
+        when(importarCsv.importar("test_path.csv")).thenReturn(donantesCsv);
+
+        PersonaHumana humanaExistente = new PersonaHumana(
+                1L,
+                new ArrayList<>(List.of(emailHumana)),
+                emailHumana,
+                "Ana",
+                "Vieja",
+                null,
+                "11111111",
+                null,
+                null);
+        when(donanteRepository.buscarPorEmail("humana@test.com")).thenReturn(Optional.of(humanaExistente));
+
+        importadorService.importarDonantes("test_path.csv");
+
+        verify(donanteRepository, times(1)).save(humanaExistente);
+
+        verify(notificacionService, times(0)).enviarNotificacion(any(Notificacion.class));
+    }
 }

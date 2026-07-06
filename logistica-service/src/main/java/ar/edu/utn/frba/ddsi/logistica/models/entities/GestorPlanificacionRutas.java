@@ -8,7 +8,7 @@ import org.springframework.web.client.RestTemplate;
 
 import ar.edu.utn.frba.ddsi.logistica.dto.DonacionDTO;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.CamionPlanificacionRequest;
-import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.DireccionResponse;
+import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.DireccionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
 
 public class GestorPlanificacionRutas {
@@ -37,7 +37,7 @@ public class GestorPlanificacionRutas {
                     }
                 }
 
-                DireccionResponse direccionInfo = new DireccionResponse("Medrano 951, CABA", donacionesAceptadas);
+                DireccionRequest direccionInfo = new DireccionRequest("Medrano 951, CABA", donacionesAceptadas);
 
                 Camion camion = camiones.get(0);
                 CamionPlanificacionRequest camionPlanif = new CamionPlanificacionRequest(camion.getId(),
