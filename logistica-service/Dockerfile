@@ -5,7 +5,7 @@ FROM maven:3.9.6-eclipse-temurin-21 AS builder
 WORKDIR /app
 
 # nombre del directorio físico del servicio,
-ARG SERVICE_NAME=notificaciones-service
+ARG SERVICE_NAME=logistica-service
 
 # Copiar los archivos de configuración de Maven
 COPY . .
@@ -23,7 +23,7 @@ FROM eclipse-temurin:21-jre
 WORKDIR /app
 
 # nombre del directorio físico del servicio,
-ARG SERVICE_NAME=notificaciones-service
+ARG SERVICE_NAME=logistica-service
 
 # Copiar el JAR compilado desde la etapa anterior
 COPY --from=builder /app/${SERVICE_NAME}/target/*.jar app.jar

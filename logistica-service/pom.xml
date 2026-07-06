@@ -9,7 +9,7 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>notificaciones-service</artifactId>
+    <artifactId>logistica-service</artifactId>
     <packaging>jar</packaging>
 
 
