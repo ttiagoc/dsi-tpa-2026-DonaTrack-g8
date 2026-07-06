@@ -2,16 +2,21 @@ package ar.edu.utn.frba.ddsi.common.models.entities;
 
 import java.time.LocalDateTime;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class Notificacion {
-  private LocalDateTime fecha;
+  private LocalDateTime fechaDeEnvio;
   private String mensaje;
   private MedioContacto contacto;
   private Boolean completada;
+
+  public Notificacion(String mensaje, MedioContacto contacto) {
+    this.fechaDeEnvio = null;
+    this.mensaje = mensaje;
+    this.contacto = contacto;
+    this.completada = false;
+  }
 }

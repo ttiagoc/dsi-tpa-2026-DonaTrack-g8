@@ -29,7 +29,7 @@ package "Common Lib" {
   }
 
   class Notificacion {
-    fecha : LocalDateTime
+    fechaDeEnvio : LocalDateTime
     mensaje : String
     contacto : MedioContacto
     completada : Boolean

@@ -4,19 +4,21 @@ import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
 
-import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
+import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.models.entities.Notificacion;
 import ar.edu.utn.frba.ddsi.common.services.NotificacionService;
 
 @Service
 public class NotificacionServiceImpl implements NotificacionService {
-  public Notificacion enviarNotificacion(MedioContacto contacto, String mensaje) {
-    if (contacto == null) {
-      throw new IllegalArgumentException("El medio de contacto no puede ser nulo");
+  public Notificacion enviarNotificacion(Notificacion notificacion) {
+    if (notificacion.getContacto() == null) {
+      throw new BusinessException("El medio de contacto no puede ser nulo");
     }
-
-    Notificacion notificacion = new Notificacion(LocalDateTime.now(), mensaje, contacto, false);
-    contacto.notificar(mensaje);
+    if (notificacion.getMensaje() == null || notificacion.getMensaje().isBlank()) {
+      throw new BusinessException("El mensaje no puede ser nulo ni estar vacío");
+    }
+    notificacion.setFechaDeEnvio(LocalDateTime.now());
+    notificacion.getContacto().notificar(notificacion.getMensaje());
     notificacion.setCompletada(true);
 
     return notificacion;

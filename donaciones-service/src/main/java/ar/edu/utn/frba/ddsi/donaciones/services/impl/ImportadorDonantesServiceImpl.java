@@ -7,7 +7,9 @@ import org.springframework.stereotype.Service;
 
 import ar.edu.utn.frba.ddsi.common.models.entities.Email;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
+import ar.edu.utn.frba.ddsi.common.models.entities.Notificacion;
 import ar.edu.utn.frba.ddsi.common.models.entities.Telefono;
+import ar.edu.utn.frba.ddsi.common.services.NotificacionService;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.ImportarCsv;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
@@ -20,10 +22,13 @@ public class ImportadorDonantesServiceImpl implements ImportadorDonantesService 
 
   private final DonanteRepository donanteRepository;
   private final ImportarCsv importarCsv;
+  private final NotificacionService notificacionService;
 
-  public ImportadorDonantesServiceImpl(DonanteRepository donanteRepository, ImportarCsv importarCsv) {
+  public ImportadorDonantesServiceImpl(DonanteRepository donanteRepository, ImportarCsv importarCsv,
+      NotificacionService notificacionService) {
     this.donanteRepository = donanteRepository;
     this.importarCsv = importarCsv;
+    this.notificacionService = notificacionService;
   }
 
   public void importarDonantes(String pathArchivo) {
@@ -56,8 +61,9 @@ public class ImportadorDonantesServiceImpl implements ImportadorDonantesService 
       donanteRepository.save(humanaNueva);
       String nombreAMostrar = humanaNueva.getNombre()
           + (humanaNueva.getApellido().isEmpty() ? "" : " " + humanaNueva.getApellido());
-      humanaNueva.getContactoPredeterminado().notificar(
-          "Bienvenido/a a DonaTrack, " + nombreAMostrar.trim() + "! Tu usuario ha sido creado con Éxito.");
+      notificacionService.enviarNotificacion(new Notificacion(
+          "Bienvenido/a a DonaTrack, " + nombreAMostrar.trim() + "! Tu usuario ha sido creado con Éxito.",
+          humanaNueva.getContactoPredeterminado()));
     }
   }
 
@@ -77,9 +83,10 @@ public class ImportadorDonantesServiceImpl implements ImportadorDonantesService 
       donanteRepository.save(juridica);
     } else {
       donanteRepository.save(juridicaNueva);
-      juridicaNueva.getContactoPredeterminado().notificar(
+      notificacionService.enviarNotificacion(new Notificacion(
           "Bienvenido/a a DonaTrack, " + juridicaNueva.getRazonSocial()
-              + "! El usuario de su organización ha sido creado con Éxito.");
+              + "! El usuario de su organización ha sido creado con Éxito.",
+          juridicaNueva.getContactoPredeterminado()));
     }
   }
 

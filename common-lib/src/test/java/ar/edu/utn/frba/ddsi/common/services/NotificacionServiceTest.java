@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import ar.edu.utn.frba.ddsi.common.models.entities.Email;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.entities.Notificacion;
+import ar.edu.utn.frba.ddsi.common.services.Impl.NotificacionServiceImpl;
 
 @DisplayName("NotificacionService Tests")
 class NotificacionServiceTest {
@@ -21,7 +22,7 @@ class NotificacionServiceTest {
 
     @BeforeEach
     void setUp() {
-        notificacionService = new NotificacionService();
+        notificacionService = new NotificacionServiceImpl();
     }
 
     @Test
@@ -30,21 +31,23 @@ class NotificacionServiceTest {
         MedioContacto email = new MedioContacto("test@utn.edu.ar", new Email());
         String mensaje = "Mensaje de prueba de notificación";
 
-        Notificacion notificacion = notificacionService.enviarNotificacion(email, mensaje);
+        Notificacion nuevaNotificacion = new Notificacion(mensaje, email);
+        Notificacion notificacion = notificacionService.enviarNotificacion(nuevaNotificacion);
 
         assertNotNull(notificacion);
         assertEquals(mensaje, notificacion.getMensaje());
         assertSame(email, notificacion.getContacto());
         assertTrue(notificacion.getCompletada(), "La notificación debe quedar marcada como completada");
-        assertNotNull(notificacion.getFecha(), "Debe haber registrado la fecha de envío");
+        assertNotNull(notificacion.getFechaDeEnvio(), "Debe haber registrado la fecha de envío");
     }
 
     @Test
     @DisplayName("Debería lanzar excepción si el medio de contacto es nulo")
     void enviarNotificacionContactoNulo() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            notificacionService.enviarNotificacion(null, "Test mensaje");
-        });
+        ar.edu.utn.frba.ddsi.common.exceptions.BusinessException exception = assertThrows(
+                ar.edu.utn.frba.ddsi.common.exceptions.BusinessException.class, () -> {
+                    notificacionService.enviarNotificacion(new Notificacion("Test mensaje", null));
+                });
 
         assertEquals("El medio de contacto no puede ser nulo", exception.getMessage());
     }
