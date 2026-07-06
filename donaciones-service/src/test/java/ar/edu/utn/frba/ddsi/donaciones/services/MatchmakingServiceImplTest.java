@@ -9,6 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,7 +70,7 @@ class MatchmakingServiceImplTest {
     void procesarMatchmakingExitoso() {
         Categoria cat = new Categoria("Alimentos", false, true);
         Subcategoria sub = new Subcategoria("Fideos", cat);
-        Bien bienBase = new Bien("Fideos", 1L, 0.5, 0.5, sub, EstadoBien.NUEVO, null);
+        Bien bienBase = new Bien("Fideos", 1L, 0.5, 0.5, sub, EstadoBien.NUEVO, LocalDate.now().plusDays(10));
         Donacion donacion = new Donacion(bienBase, LocalDateTime.now());
         donacion.setId(100L);
 
@@ -110,7 +111,7 @@ class MatchmakingServiceImplTest {
         MedioContacto emailDonante = new MedioContacto("donante@test.com", new Email());
         PersonaHumana donante = new PersonaHumana(10L, new ArrayList<>(List.of(emailDonante)), emailDonante, "Juan", "Perez", null, "111", null, null);
         
-        Bien bienBase = new Bien("Fideos", 1L, 0.5, 0.5, sub, EstadoBien.NUEVO, null);
+        Bien bienBase = new Bien("Fideos", 1L, 0.5, 0.5, sub, EstadoBien.NUEVO, LocalDate.now().plusDays(10));
         Donacion donacion = new Donacion(bienBase, LocalDateTime.now());
         donacion.setId(100L);
         donacion.setDonante(donante);
@@ -146,7 +147,7 @@ class MatchmakingServiceImplTest {
         
         Categoria cat = new Categoria("Alimentos", false, true);
         Subcategoria sub = new Subcategoria("Fideos", cat);
-        Bien bienBase = new Bien("Fideos", 1L, 0.5, 0.5, sub, EstadoBien.NUEVO, null);
+        Bien bienBase = new Bien("Fideos", 1L, 0.5, 0.5, sub, EstadoBien.NUEVO, LocalDate.now().plusDays(10));
         Donacion donacion = new Donacion(bienBase, LocalDateTime.now());
 
         ResultadoMatchmaking propuesta = new ResultadoMatchmaking(donacion, List.of(entidad));

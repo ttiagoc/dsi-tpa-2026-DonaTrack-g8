@@ -6,6 +6,9 @@ import java.util.List;
 
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class PrioridadSubAtendidos implements AlgoritmoAsignacion {
     @Override
     public List<EntidadBeneficiaria> generarRanking(Donacion donacion, List<EntidadBeneficiaria> entidadesCandidatas) {

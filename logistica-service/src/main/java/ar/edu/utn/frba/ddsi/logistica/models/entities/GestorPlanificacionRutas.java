@@ -11,6 +11,9 @@ import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.CamionPlanificacionReque
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.DireccionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class GestorPlanificacionRutas {
 
     private final RestTemplate restTemplate;

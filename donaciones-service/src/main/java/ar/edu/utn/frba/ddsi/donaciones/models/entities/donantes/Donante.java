@@ -29,15 +29,14 @@ public abstract class Donante {
   }
 
   public LocalDate getFechaUltimaDonacion() {
-    LocalDate fechaUltimaDonacion = this.donaciones.stream()
+    LocalDateTime maxFecha = this.donaciones.stream()
         .map(RegistroDonacion::getFecha)
         .max(LocalDateTime::compareTo)
-        .orElse(null)
-        .toLocalDate();
+        .orElse(null);
 
-    if (fechaUltimaDonacion == null) {
+    if (maxFecha == null) {
       throw new RuntimeException("El donante no tiene donaciones registradas.");
     }
-    return fechaUltimaDonacion;
+    return maxFecha.toLocalDate();
   }
 }

@@ -52,7 +52,7 @@ class EntidadBeneficiariaServiceTest {
     @DisplayName("Debe fallar al crear una entidad beneficiaria si faltan datos obligatorios")
     void crearEntidadFaltanDatos() {
         List<MedioContactoRequest> correos = new ArrayList<>();
-        correos.add(new MedioContactoRequest("entidad@org.com", "EMAIL"));
+        correos.add(new MedioContactoRequest("EMAIL", "entidad@org.com"));
 
         EntidadBeneficiariaRequest requestSinRazonSocial = new EntidadBeneficiariaRequest(
                 "", "Medrano 951", "11223344", correos
@@ -69,7 +69,7 @@ class EntidadBeneficiariaServiceTest {
     @DisplayName("Debe poder crear exitosamente la entidad beneficiaria")
     void crearEntidadExitosamente() {
         List<MedioContactoRequest> correos = new ArrayList<>();
-        correos.add(new MedioContactoRequest("entidad@org.com", "EMAIL"));
+        correos.add(new MedioContactoRequest("EMAIL", "entidad@org.com"));
 
         EntidadBeneficiariaRequest requestValido = new EntidadBeneficiariaRequest(
                 "Comedor Los Niños", "Medrano 951", "11223344", correos

@@ -3,6 +3,9 @@ package ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class SegmentadorDeDonacion {
     public List<Donacion> segmentarDonacion(RegistroDonacion registroDonacion) {
         List<Bien> bienes = registroDonacion.getBienes();

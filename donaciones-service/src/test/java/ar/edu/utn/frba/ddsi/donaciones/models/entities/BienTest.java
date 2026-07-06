@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoBien;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Bien;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
@@ -66,7 +67,7 @@ class BienTest {
             Categoria catAlimentos = new Categoria("Alimentos", false, true);
             Subcategoria subFideos = new Subcategoria("Fideos", catAlimentos);
 
-            Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            Exception ex = assertThrows(BusinessException.class, () -> {
                 new Bien("Fideos tirabuzón", 10L, 1.0, 1.0, subFideos, null, null);
             });
 
@@ -79,7 +80,7 @@ class BienTest {
             Categoria catMuebles = new Categoria("Muebles", true, false);
             Subcategoria subSillas = new Subcategoria("Sillas", catMuebles);
 
-            Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            Exception ex = assertThrows(BusinessException.class, () -> {
                 new Bien("Silla de madera", 4L, 1.0, 1.0, subSillas, null, null);
             });
 

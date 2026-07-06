@@ -2,6 +2,7 @@ package ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones;
 
 import java.time.LocalDate;
 
+import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoBien;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,6 +21,14 @@ public class Bien {
 
   public Bien(String descripcion, Long cantidad, Double pesoKgPorUnidad, Double volumenM3PorUnidad,
       Subcategoria subcategoria, EstadoBien estadoBien, LocalDate fechaVencimiento) {
+    if (subcategoria != null) {
+      if (subcategoria.esPerecedero() && fechaVencimiento == null) {
+        throw new BusinessException("Un bien perecedero exige fecha de vencimiento");
+      }
+      if (subcategoria.pideEstado() && estadoBien == null) {
+        throw new BusinessException("Un bien de esta categoría exige estado");
+      }
+    }
     this.descripcion = descripcion;
     this.foto = null;
     this.cantidad = cantidad;
