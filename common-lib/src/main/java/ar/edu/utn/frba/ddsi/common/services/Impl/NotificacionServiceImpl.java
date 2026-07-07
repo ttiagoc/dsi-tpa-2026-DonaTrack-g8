@@ -6,11 +6,19 @@ import org.springframework.stereotype.Service;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.models.entities.Notificacion;
+import ar.edu.utn.frba.ddsi.common.models.entities.Notificador;
 import ar.edu.utn.frba.ddsi.common.services.NotificacionService;
 
 @Service
 public class NotificacionServiceImpl implements NotificacionService {
+  private final Notificador notificador;
+
+  public NotificacionServiceImpl(Notificador notificador) {
+    this.notificador = notificador;
+  }
+
   public Notificacion enviarNotificacion(Notificacion notificacion) {
+
     if (notificacion.getContacto() == null) {
       throw new BusinessException("El medio de contacto no puede ser nulo");
     }
@@ -18,7 +26,7 @@ public class NotificacionServiceImpl implements NotificacionService {
       throw new BusinessException("El mensaje no puede ser nulo ni estar vacío");
     }
     notificacion.setFechaDeEnvio(LocalDateTime.now());
-    notificacion.getContacto().notificar(notificacion.getMensaje());
+    notificador.notificar(notificacion);
     notificacion.setCompletada(true);
 
     return notificacion;

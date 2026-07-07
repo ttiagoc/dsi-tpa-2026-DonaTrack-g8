@@ -31,7 +31,7 @@ import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
 import ar.edu.utn.frba.ddsi.logistica.services.impl.EntregaDonacionesServiceImpl;
 
 @DisplayName("Tests de EntregaDonacionesServiceImpl")
-class EntregaDonacionesServiceImplTest {
+class EntregaDonacionesServiceTest {
 
     private RutaRepository rutaRepository;
     private RestTemplate restTemplate;
@@ -55,7 +55,7 @@ class EntregaDonacionesServiceImplTest {
         Long rutaId = 1L;
         Ruta ruta = mock(Ruta.class);
         when(ruta.getId()).thenReturn(rutaId);
-        
+
         Parada parada = mock(Parada.class);
         when(parada.getOrden()).thenReturn(1);
         when(parada.getDestino()).thenReturn("Dir 1");
@@ -94,12 +94,14 @@ class EntregaDonacionesServiceImplTest {
 
         when(rutaRepository.findById(rutaId)).thenReturn(Optional.of(ruta));
 
-        URI urlPost = UriComponentsBuilder.fromUriString("http://localhost:8080/donaciones-service/evento/confirmacion-entrega-exitosa")
+        URI urlPost = UriComponentsBuilder
+                .fromUriString("http://localhost:8080/donaciones-service/evento/confirmacion-entrega-exitosa")
                 .build().toUri();
 
         entregaService.confirmarEntregaExitosa(paradaId, rutaId);
 
-        verify(restTemplate, times(1)).postForObject(eq(urlPost), any(ConfirmacionEntregaExitosaRequest.class), eq(Void.class));
+        verify(restTemplate, times(1)).postForObject(eq(urlPost), any(ConfirmacionEntregaExitosaRequest.class),
+                eq(Void.class));
     }
 
     @Test

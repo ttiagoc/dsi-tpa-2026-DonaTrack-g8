@@ -5,10 +5,9 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
-import ar.edu.utn.frba.ddsi.common.models.entities.Email;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.entities.Notificacion;
-import ar.edu.utn.frba.ddsi.common.models.entities.Telefono;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.common.services.NotificacionService;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.ImportarCsv;
@@ -94,7 +93,7 @@ public class ImportadorDonantesServiceImpl implements ImportadorDonantesService 
     if (contactos == null)
       return null;
     return contactos.stream()
-        .filter(c -> c.getCanal() instanceof Email)
+        .filter(c -> c.getTipoContacto() == TipoContacto.EMAIL)
         .map(c -> c.getValor())
         .findFirst()
         .orElse(null);
@@ -104,7 +103,7 @@ public class ImportadorDonantesServiceImpl implements ImportadorDonantesService 
     if (contactos == null)
       return "";
     return contactos.stream()
-        .filter(c -> c.getCanal() instanceof Telefono)
+        .filter(c -> c.getTipoContacto() == TipoContacto.SMS)
         .map(c -> c.getValor())
         .findFirst()
         .orElse("");
@@ -115,18 +114,18 @@ public class ImportadorDonantesServiceImpl implements ImportadorDonantesService 
       return;
 
     Optional<MedioContacto> emailOpt = contactos.stream()
-        .filter(c -> c.getCanal() instanceof Email)
+        .filter(c -> c.getTipoContacto() == TipoContacto.EMAIL)
         .findFirst();
 
     if (emailOpt.isPresent()) {
       emailOpt.get().setValor(emailVal);
     } else {
-      MedioContacto email = new MedioContacto(emailVal, new Email());
+      MedioContacto email = new MedioContacto(emailVal, TipoContacto.EMAIL);
       contactos.add(email);
     }
 
     Optional<MedioContacto> telOpt = contactos.stream()
-        .filter(c -> c.getCanal() instanceof Telefono)
+        .filter(c -> c.getTipoContacto() == TipoContacto.SMS)
         .findFirst();
 
     if (telOpt.isPresent()) {
@@ -136,7 +135,7 @@ public class ImportadorDonantesServiceImpl implements ImportadorDonantesService 
         contactos.remove(telOpt.get());
       }
     } else if (!telefonoVal.isEmpty()) {
-      MedioContacto tel = new MedioContacto(telefonoVal, new Telefono());
+      MedioContacto tel = new MedioContacto(telefonoVal, TipoContacto.SMS);
       contactos.add(tel);
     }
   }

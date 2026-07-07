@@ -31,7 +31,7 @@ import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
 import ar.edu.utn.frba.ddsi.logistica.services.impl.MonitoreoServiceImpl;
 
 @DisplayName("Tests de MonitoreoServiceImpl")
-class MonitoreoServiceImplTest {
+class MonitoreoServiceTest {
 
     private CamionRepository camionRepository;
     private RutaRepository rutaRepository;

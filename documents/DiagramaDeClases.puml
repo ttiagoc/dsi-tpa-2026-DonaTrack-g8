@@ -6,26 +6,60 @@ skinparam ranksep 80
 hide empty members
 
 package "Common Lib" {
-  interface NotificacionStrategy {
-    notificar(valor : String, mensaje : String)
+  interface EstrategiaNotificacion {
+    getTipoContacto() : TipoContacto
+    notificar(valor : String, mensaje : String) : void
   }
 
   class MedioContacto {
     valor : String
-    estrategia : NotificacionStrategy
-    notificar(mensaje : String)
+    tipoContacto : TipoContacto
   }
 
-  class Email implements NotificacionStrategy {
-    notificar(valor : String, mensaje : String)
+  interface ProveedorEmail {
+    enviar(email: String, asunto: String, mensaje: String)
   }
 
-  class Telefono implements NotificacionStrategy {
-    notificar(valor : String, mensaje : String)
+  interface ProveedorSMS {
+    enviar(telefono: String, mensaje: String)
   }
 
-  class WhatsApp implements NotificacionStrategy {
-    notificar(valor : String, mensaje : String)
+  interface ProveedorWhatsapp {
+    enviar(telefono: String, mensaje: String)
+  }
+
+  class ResendEmail implements ProveedorEmail {
+    enviar(email: String, asunto: String, mensaje: String)
+  }
+
+  class Twilio implements ProveedorSMS, ProveedorWhatsapp {
+    enviar(telefono: String, mensaje: String)
+  }
+
+  class Email implements EstrategiaNotificacion {
+    proveedor: ProveedorEmail
+    tipoContacto: TipoContacto
+    getTipoContacto() : TipoContacto
+    notificar(valor : String, mensaje : String) : void
+  }
+
+  class SMS implements EstrategiaNotificacion {
+    proveedor: ProveedorSMS
+    tipoContacto: TipoContacto
+    getTipoContacto() : TipoContacto
+    notificar(valor : String, mensaje : String) : void
+  }
+
+  class WhatsApp implements EstrategiaNotificacion {
+    proveedor: ProveedorWhatsapp
+    tipoContacto: TipoContacto
+    getTipoContacto() : TipoContacto
+    notificar(valor : String, mensaje : String) : void
+  }
+
+  class Notificador {
+    estrategiasContactos : Map<TipoContacto, EstrategiaNotificacion>
+    notificar(notificacion : Notificacion) : void
   }
 
   class Notificacion {
@@ -33,6 +67,12 @@ package "Common Lib" {
     mensaje : String
     contacto : MedioContacto
     completada : Boolean
+  }
+
+  enum TipoContacto {
+    EMAIL
+    SMS
+    WHATSAPP
   }
 
   enum TipoEstadoDonacion {
@@ -350,7 +390,9 @@ package "Microservicio Logistica" {
 }
 
 Notificacion --> MedioContacto
-MedioContacto --> NotificacionStrategy
+MedioContacto --> TipoContacto
+Notificador --> "*" EstrategiaNotificacion
+Notificador ..> Notificacion
 
 Donante --> "*" RegistroDonacion
 Donante --> "*" MedioContacto
@@ -426,5 +468,9 @@ EventManager ..> Listener
 SegmentadorDeDonacion ..> Donacion
 
 ImportarCsv ..> Donante
+
+Email --> ProveedorEmail
+SMS --> ProveedorSMS
+WhatsApp --> ProveedorWhatsapp
 
 @enduml

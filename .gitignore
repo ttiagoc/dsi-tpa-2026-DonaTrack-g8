@@ -44,3 +44,6 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Env Vars ###
+**/src/main/resources/application.yaml

@@ -1,0 +1,8 @@
+twilio:
+  sid: xxxxxxxxxxxxxxx
+  token: xxxxxxxxxxxxxxx
+  phone: xxxxxxxxx
+
+resend:
+  apiKey: xxxxxxxxxxxxxxx
+  from: xxxxxxxxxxx

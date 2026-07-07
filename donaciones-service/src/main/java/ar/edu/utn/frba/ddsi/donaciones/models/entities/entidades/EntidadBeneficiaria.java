@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
-import ar.edu.utn.frba.ddsi.common.models.entities.Telefono;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,7 +23,7 @@ public class EntidadBeneficiaria {
       List<MedioContacto> correoRepresentantes) {
     this.razonSocial = razonSocial;
     this.direccion = direccion;
-    this.telefono = new MedioContacto(valorTelefono, new Telefono());
+    this.telefono = new MedioContacto(valorTelefono, TipoContacto.SMS);
     this.correoRepresentantes = correoRepresentantes;
     this.necesidades = new ArrayList<>();
   }

@@ -17,8 +17,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import ar.edu.utn.frba.ddsi.common.models.entities.Email;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoBien;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ConfirmacionEntregaExitosaRequest;
@@ -44,7 +44,7 @@ import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRe
 import ar.edu.utn.frba.ddsi.donaciones.services.impl.EventoServiceImpl;
 
 @DisplayName("Tests de EventoServiceImpl")
-class EventoServiceImplTest {
+class EventoServiceTest {
 
     private EventManager eventManager;
     private DonacionRepository donacionRepository;
@@ -70,7 +70,7 @@ class EventoServiceImplTest {
         RegistroDonacion regInactivo = new RegistroDonacion();
         regInactivo.setFecha(LocalDateTime.now().minusDays(30)); // 30 días, debe notificar
         donanteInactivo.agregarDonacion(regInactivo);
-        donanteInactivo.setContactoPredeterminado(new MedioContacto("inactivo@test.com", new Email()));
+        donanteInactivo.setContactoPredeterminado(new MedioContacto("inactivo@test.com", TipoContacto.EMAIL));
 
         PersonaHumana donanteActivo = new PersonaHumana();
         donanteActivo.setId(2L);
@@ -92,11 +92,11 @@ class EventoServiceImplTest {
         Long donacionId = 100L;
 
         EntidadBeneficiaria entidad = new EntidadBeneficiaria("Hogar", "Dir", "123",
-                new ArrayList<>(List.of(new MedioContacto("hogar@test.com", new Email()))));
+                new ArrayList<>(List.of(new MedioContacto("hogar@test.com", TipoContacto.EMAIL))));
         entidad.setId(entidadId);
 
         PersonaHumana donante = new PersonaHumana();
-        donante.setContactoPredeterminado(new MedioContacto("donante@test.com", new Email()));
+        donante.setContactoPredeterminado(new MedioContacto("donante@test.com", TipoContacto.EMAIL));
 
         Categoria cat = new Categoria("Muebles", true, false);
         Subcategoria sub = new Subcategoria("Sillas", cat);
@@ -127,11 +127,11 @@ class EventoServiceImplTest {
         Long donacionId = 100L;
 
         EntidadBeneficiaria entidad = new EntidadBeneficiaria("Hogar", "Dir", "123",
-                new ArrayList<>(List.of(new MedioContacto("hogar@test.com", new Email()))));
+                new ArrayList<>(List.of(new MedioContacto("hogar@test.com", TipoContacto.EMAIL))));
         entidad.setId(entidadId);
 
         PersonaHumana donante = new PersonaHumana();
-        donante.setContactoPredeterminado(new MedioContacto("donante@test.com", new Email()));
+        donante.setContactoPredeterminado(new MedioContacto("donante@test.com", TipoContacto.EMAIL));
 
         Categoria cat = new Categoria("Muebles", true, false);
         Subcategoria sub = new Subcategoria("Sillas", cat);
@@ -160,9 +160,9 @@ class EventoServiceImplTest {
         Long donacionId = 100L;
 
         EntidadBeneficiaria entidad = new EntidadBeneficiaria("Hogar", "Dir", "123",
-                new ArrayList<>(List.of(new MedioContacto("hogar@test.com", new Email()))));
+                new ArrayList<>(List.of(new MedioContacto("hogar@test.com", TipoContacto.EMAIL))));
         PersonaHumana donante = new PersonaHumana();
-        donante.setContactoPredeterminado(new MedioContacto("donante@test.com", new Email()));
+        donante.setContactoPredeterminado(new MedioContacto("donante@test.com", TipoContacto.EMAIL));
 
         Categoria cat = new Categoria("Muebles", true, false);
         Subcategoria sub = new Subcategoria("Sillas", cat);

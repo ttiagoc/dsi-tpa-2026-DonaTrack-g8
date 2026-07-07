@@ -1,9 +1,5 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes;
 
-import ar.edu.utn.frba.ddsi.common.models.entities.Email;
-import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
-import ar.edu.utn.frba.ddsi.common.models.entities.Telefono;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -11,6 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
+
+import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 
 @Component
 public class ImportarCsv {
@@ -82,11 +81,11 @@ public class ImportarCsv {
         humana.setDni(dni);
 
         List<MedioContacto> contactos = new ArrayList<>();
-        MedioContacto email = new MedioContacto(emailVal, new Email());
+        MedioContacto email = new MedioContacto(emailVal, TipoContacto.EMAIL);
         contactos.add(email);
 
         if (!telefonoVal.isEmpty()) {
-            MedioContacto tel = new MedioContacto(telefonoVal, new Telefono());
+            MedioContacto tel = new MedioContacto(telefonoVal, TipoContacto.SMS);
             contactos.add(tel);
         }
 
@@ -105,11 +104,11 @@ public class ImportarCsv {
         juridica.setRepresentantes(new ArrayList<>());
 
         List<MedioContacto> contactos = new ArrayList<>();
-        MedioContacto email = new MedioContacto(emailVal, new Email());
+        MedioContacto email = new MedioContacto(emailVal, TipoContacto.EMAIL);
         contactos.add(email);
 
         if (!telefonoVal.isEmpty()) {
-            MedioContacto tel = new MedioContacto(telefonoVal, new Telefono());
+            MedioContacto tel = new MedioContacto(telefonoVal, TipoContacto.SMS);
             contactos.add(tel);
         }
 

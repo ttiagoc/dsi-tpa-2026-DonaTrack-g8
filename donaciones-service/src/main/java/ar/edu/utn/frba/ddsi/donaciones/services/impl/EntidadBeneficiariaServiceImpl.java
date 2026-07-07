@@ -7,18 +7,16 @@ import org.springframework.stereotype.Service;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
-import ar.edu.utn.frba.ddsi.common.models.entities.Email;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
-import ar.edu.utn.frba.ddsi.common.models.entities.Telefono;
-import ar.edu.utn.frba.ddsi.common.models.entities.WhatsApp;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.CategoriaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.SubcategoriaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.MedioContactoRequest;
-import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.ReportarNoRecibidaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.NecesidadRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.NecesidadResponse;
+import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.ReportarNoRecibidaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.SubirFotosRecepcionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
@@ -111,13 +109,13 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
         contacto.setValor(request.valor());
         switch (request.tipo().toLowerCase()) {
             case "email":
-                contacto.setCanal(new Email());
+                contacto.setTipoContacto(TipoContacto.EMAIL);
                 break;
             case "telefono":
-                contacto.setCanal(new Telefono());
+                contacto.setTipoContacto(TipoContacto.SMS);
                 break;
             case "whatsapp":
-                contacto.setCanal(new WhatsApp());
+                contacto.setTipoContacto(TipoContacto.WHATSAPP);
                 break;
             default:
                 throw new BusinessException("El tipo de medio de contacto no es valido");
@@ -143,7 +141,7 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
             entidad.setDireccion(request.direccion());
         }
         if (request.telefono() != null && !request.telefono().isBlank()) {
-            entidad.setTelefono(new MedioContacto(request.telefono(), new Telefono()));
+            entidad.setTelefono(new MedioContacto(request.telefono(), TipoContacto.SMS));
         }
         if (request.correoRepresentantes() != null && !request.correoRepresentantes().isEmpty()) {
             entidad.setCorreoRepresentantes(request.correoRepresentantes().stream().map(this::toMedioContacto)

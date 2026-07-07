@@ -20,8 +20,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
-import ar.edu.utn.frba.ddsi.common.models.entities.Email;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoBien;
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoPropuesta;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
@@ -44,7 +44,7 @@ import ar.edu.utn.frba.ddsi.donaciones.models.repositories.ResultadoMatchmakingR
 import ar.edu.utn.frba.ddsi.donaciones.services.impl.MatchmakingServiceImpl;
 
 @DisplayName("Tests de MatchmakingServiceImpl")
-class MatchmakingServiceImplTest {
+class MatchmakingServiceTest {
 
     private DonacionRepository donacionRepository;
     private EntidadBeneficiariaRepository entidadRepository;
@@ -96,21 +96,23 @@ class MatchmakingServiceImplTest {
         Long propuestaId = 10L;
         Long entidadId = 1L;
 
-        MedioContacto emailEntidad = new MedioContacto("entidad@test.com", new Email());
-        EntidadBeneficiaria entidad = new EntidadBeneficiaria("Comedor", "Dir 1", "123", new ArrayList<>(List.of(emailEntidad)));
+        MedioContacto emailEntidad = new MedioContacto("entidad@test.com", TipoContacto.EMAIL);
+        EntidadBeneficiaria entidad = new EntidadBeneficiaria("Comedor", "Dir 1", "123",
+                new ArrayList<>(List.of(emailEntidad)));
         entidad.setId(entidadId);
-        
+
         Categoria cat = new Categoria("Alimentos", false, true);
         Subcategoria sub = new Subcategoria("Fideos", cat);
-        
+
         // Agregar necesidad a la entidad para verificar que se le asigna la donación
         TipoNecesidad mockTipoNecesidad = mock(TipoNecesidad.class);
         Necesidad necesidad = new Necesidad(sub, mockTipoNecesidad, "Necesitamos fideos", 100L);
         entidad.registrarNecesidad(necesidad);
 
-        MedioContacto emailDonante = new MedioContacto("donante@test.com", new Email());
-        PersonaHumana donante = new PersonaHumana(10L, new ArrayList<>(List.of(emailDonante)), emailDonante, "Juan", "Perez", null, "111", null, null);
-        
+        MedioContacto emailDonante = new MedioContacto("donante@test.com", TipoContacto.EMAIL);
+        PersonaHumana donante = new PersonaHumana(10L, new ArrayList<>(List.of(emailDonante)), emailDonante, "Juan",
+                "Perez", null, "111", null, null);
+
         Bien bienBase = new Bien("Fideos", 1L, 0.5, 0.5, sub, EstadoBien.NUEVO, LocalDate.now().plusDays(10));
         Donacion donacion = new Donacion(bienBase, LocalDateTime.now());
         donacion.setId(100L);
@@ -144,7 +146,7 @@ class MatchmakingServiceImplTest {
 
         EntidadBeneficiaria entidad = new EntidadBeneficiaria("Comedor", "Dir 1", "123", new ArrayList<>());
         entidad.setId(entidadIdValida);
-        
+
         Categoria cat = new Categoria("Alimentos", false, true);
         Subcategoria sub = new Subcategoria("Fideos", cat);
         Bien bienBase = new Bien("Fideos", 1L, 0.5, 0.5, sub, EstadoBien.NUEVO, LocalDate.now().plusDays(10));

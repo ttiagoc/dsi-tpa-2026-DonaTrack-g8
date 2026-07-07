@@ -15,8 +15,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import ar.edu.utn.frba.ddsi.common.models.entities.Email;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.common.models.entities.Notificacion;
 import ar.edu.utn.frba.ddsi.common.services.NotificacionService;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
@@ -46,7 +46,7 @@ class ImportadorDonantesServiceTest {
     @Test
     @DisplayName("Debe importar y guardar nuevos donantes notificándolos exitosamente")
     void importarNuevosDonantesYNotificar() {
-        MedioContacto emailHumana = new MedioContacto("humana@test.com", new Email());
+        MedioContacto emailHumana = new MedioContacto("humana@test.com", TipoContacto.EMAIL);
         PersonaHumana humana = new PersonaHumana(
                 null,
                 new ArrayList<>(List.of(emailHumana)),
@@ -58,7 +58,7 @@ class ImportadorDonantesServiceTest {
                 null,
                 null);
 
-        MedioContacto emailJuridica = new MedioContacto("juridica@test.com", new Email());
+        MedioContacto emailJuridica = new MedioContacto("juridica@test.com", TipoContacto.EMAIL);
         PersonaJuridica juridica = new PersonaJuridica(
                 null,
                 new ArrayList<>(List.of(emailJuridica)),
@@ -85,7 +85,7 @@ class ImportadorDonantesServiceTest {
     @Test
     @DisplayName("Debe actualizar los datos de donantes si ya existen y no notificar")
     void actualizarDonantesExistentes() {
-        MedioContacto emailHumana = new MedioContacto("humana@test.com", new Email());
+        MedioContacto emailHumana = new MedioContacto("humana@test.com", TipoContacto.EMAIL);
         PersonaHumana humana = new PersonaHumana(
                 null,
                 new ArrayList<>(List.of(emailHumana)),

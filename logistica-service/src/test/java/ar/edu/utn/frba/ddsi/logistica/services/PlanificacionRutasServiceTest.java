@@ -32,7 +32,7 @@ import ar.edu.utn.frba.ddsi.logistica.services.impl.PlanificacionRutasServiceImp
 
 @DisplayName("Tests de PlanificacionRutasServiceImpl")
 @SuppressWarnings("unchecked")
-class PlanificacionRutasServiceImplTest {
+class PlanificacionRutasServiceTest {
 
         private RestTemplate restTemplate;
         private RestLogisticaConfig properties;

@@ -10,25 +10,29 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import ar.edu.utn.frba.ddsi.common.models.entities.Email;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.entities.Notificacion;
+import ar.edu.utn.frba.ddsi.common.models.entities.Notificador;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.common.services.Impl.NotificacionServiceImpl;
+import org.mockito.Mockito;
 
 @DisplayName("NotificacionService Tests")
 class NotificacionServiceTest {
 
     private NotificacionService notificacionService;
+    private Notificador notificador;
 
     @BeforeEach
     void setUp() {
-        notificacionService = new NotificacionServiceImpl();
+        notificador = Mockito.mock(Notificador.class);
+        notificacionService = new NotificacionServiceImpl(notificador);
     }
 
     @Test
     @DisplayName("Debería enviar notificación y guardarla en el historial como completada")
     void enviarNotificacionExitosamente() {
-        MedioContacto email = new MedioContacto("test@utn.edu.ar", new Email());
+        MedioContacto email = new MedioContacto("test@utn.edu.ar", TipoContacto.EMAIL);
         String mensaje = "Mensaje de prueba de notificación";
 
         Notificacion nuevaNotificacion = new Notificacion(mensaje, email);
@@ -39,6 +43,7 @@ class NotificacionServiceTest {
         assertSame(email, notificacion.getContacto());
         assertTrue(notificacion.getCompletada(), "La notificación debe quedar marcada como completada");
         assertNotNull(notificacion.getFechaDeEnvio(), "Debe haber registrado la fecha de envío");
+        Mockito.verify(notificador).notificar(nuevaNotificacion);
     }
 
     @Test

@@ -20,8 +20,8 @@ import org.junit.jupiter.api.Test;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
-import ar.edu.utn.frba.ddsi.common.models.entities.Email;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.MedioContactoRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaResponse;
@@ -100,7 +100,7 @@ class EntidadBeneficiariaServiceTest {
         String motivo = "El camion nunca llegó";
 
         EntidadBeneficiaria entidad = new EntidadBeneficiaria(
-                "Comedor", "Calle Falsa 123", "123", new ArrayList<>(List.of(new MedioContacto("x@x.com", new Email())))
+                 "Comedor", "Calle Falsa 123", "123", new ArrayList<>(List.of(new MedioContacto("x@x.com", TipoContacto.EMAIL)))
         );
         entidad.setId(entidadId);
 

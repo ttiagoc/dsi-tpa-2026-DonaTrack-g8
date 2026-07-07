@@ -1,15 +1,14 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.repositories.impl;
 
-import ar.edu.utn.frba.ddsi.common.utils.GeneradorIdSecuencial;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
 
-import ar.edu.utn.frba.ddsi.common.models.entities.Email;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
+import ar.edu.utn.frba.ddsi.common.utils.GeneradorIdSecuencial;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
 
@@ -62,7 +61,7 @@ public class InMemoryDonante implements DonanteRepository {
     if (contactos == null)
       return false;
     return contactos.stream()
-        .filter(c -> c.getCanal() instanceof Email)
+        .filter(c -> c.getTipoContacto() == TipoContacto.EMAIL)
         .map(c -> c.getValor())
         .anyMatch(val -> val != null && val.equalsIgnoreCase(emailBuscado.trim()));
   }

@@ -3,8 +3,8 @@ package ar.edu.utn.frba.ddsi.donaciones.models.entities;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import ar.edu.utn.frba.ddsi.common.models.entities.Email;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.EstadoBien;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Bien;
@@ -28,7 +28,7 @@ class EntidadBeneficiariaTest {
     @DisplayName("Debe poder crearse con sus correos y su teléfono correctamente")
     void creacionEntidadBeneficiaria() {
         List<MedioContacto> correos = new ArrayList<>();
-        correos.add(new MedioContacto("entidad@org.com", new Email()));
+        correos.add(new MedioContacto("entidad@org.com", TipoContacto.EMAIL));
 
         EntidadBeneficiaria entidad = new EntidadBeneficiaria("Fundación UTN", "Medrano 951", "1122334455", correos);
 

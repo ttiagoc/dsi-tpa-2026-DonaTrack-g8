@@ -7,10 +7,8 @@ import org.springframework.stereotype.Service;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
-import ar.edu.utn.frba.ddsi.common.models.entities.Email;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
-import ar.edu.utn.frba.ddsi.common.models.entities.Telefono;
-import ar.edu.utn.frba.ddsi.common.models.entities.WhatsApp;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.DonanteResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.MedioContactoRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaHumanaRequest;
@@ -122,7 +120,7 @@ public class DonanteServiceImpl implements DonanteService {
             throw new BusinessException("El correo del representante no puede ser nulo ni estar vacio");
         }
         return new Representante(request.nombre(), request.apellido(),
-                new MedioContacto(request.correo(), new Email()));
+                new MedioContacto(request.correo(), TipoContacto.EMAIL));
     }
 
     public DonanteResponse crearPersonaHumana(PersonaHumanaRequest request) {
@@ -198,13 +196,13 @@ public class DonanteServiceImpl implements DonanteService {
         contacto.setValor(request.valor());
         switch (request.tipo().toLowerCase()) {
             case "email":
-                contacto.setCanal(new Email());
+                contacto.setTipoContacto(TipoContacto.EMAIL);
                 break;
             case "telefono":
-                contacto.setCanal(new Telefono());
+                contacto.setTipoContacto(TipoContacto.SMS);
                 break;
             case "whatsapp":
-                contacto.setCanal(new WhatsApp());
+                contacto.setTipoContacto(TipoContacto.WHATSAPP);
                 break;
             default:
                 throw new BusinessException("El tipo de medio de contacto no es valido");

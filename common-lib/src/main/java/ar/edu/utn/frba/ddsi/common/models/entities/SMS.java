@@ -5,13 +5,13 @@ import org.springframework.stereotype.Component;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 
 @Component
-public class Email implements EstrategiaNotificacion {
+public class SMS implements EstrategiaNotificacion {
 
-  private final ProveedorEmail proveedorEmail;
-  private final TipoContacto tipoContacto = TipoContacto.EMAIL;
+  private final ProveedorSMS proveedorSMS;
+  private final TipoContacto tipoContacto = TipoContacto.SMS;
 
-  public Email(ProveedorEmail proveedorEmail) {
-    this.proveedorEmail = proveedorEmail;
+  public SMS(ProveedorSMS proveedorSMS) {
+    this.proveedorSMS = proveedorSMS;
   }
 
   @Override
@@ -21,6 +21,6 @@ public class Email implements EstrategiaNotificacion {
 
   @Override
   public void notificar(String valor, String mensaje) {
-    proveedorEmail.enviarEmail(valor, mensaje);
+    proveedorSMS.enviarSMS(valor, mensaje);
   }
 }
