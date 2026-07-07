@@ -1,7 +1,8 @@
 twilio:
   sid: xxxxxxxxxxxxxxx
   token: xxxxxxxxxxxxxxx
-  phone: xxxxxxxxx
+  smsNumber: xxxxxxxxx
+  whatsappNumber: xxxxxxxxx
 
 resend:
   apiKey: xxxxxxxxxxxxxxx
