@@ -50,7 +50,7 @@ public class PlanificacionRutasServiceImpl implements PlanificacionRutasService 
         List<Long> donacionesPlanificadas = toListIdDonaciones(request.camiones());
 
         URI url = UriComponentsBuilder.fromUriString(properties.getDonacionesUrl())
-                .path("/donaciones-service/lista-entrega")
+                .path("/donaciones-service/donacion/lista-entrega")
                 .build().toUri();
 
         restTemplate.postForEntity(url, donacionesPlanificadas, Void.class);
@@ -60,7 +60,7 @@ public class PlanificacionRutasServiceImpl implements PlanificacionRutasService 
 
     private List<DonacionDTO> getLote() {
         URI url = UriComponentsBuilder.fromUriString(properties.getDonacionesUrl())
-                .path("/donaciones-service/asignadas")
+                .path("/donaciones-service/donacion/asignadas")
                 .queryParam("limit", TAMANO_LOTE)
                 .build().toUri();
 
