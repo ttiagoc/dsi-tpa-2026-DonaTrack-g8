@@ -1,8 +1,8 @@
 package ar.edu.utn.frba.ddsi.notificaciones.services;
 
-import ar.edu.utn.frba.ddsi.notificaciones.models.entities.Notificacion;
+import ar.edu.utn.frba.ddsi.notificaciones.dto.NotificacionRequest;
 
 public interface NotificacionService {
 
-    Notificacion enviarNotificacion(Notificacion notificacion);
+    void enviarNotificacion(NotificacionRequest notificacion);
 }

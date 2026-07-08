@@ -11,9 +11,9 @@ import java.util.Optional;
 
 @Repository
 public class InMemoryNotificacion implements NotificacionRepository {
-    private List<Notificacion> notificaciones = new ArrayList<>();
+    private final List<Notificacion> notificaciones = new ArrayList<>();
 
-    private GeneradorIdSecuencial generadorId = new GeneradorIdSecuencial();
+    private final GeneradorIdSecuencial generadorId = new GeneradorIdSecuencial();
 
     @Override
     public Notificacion save(Notificacion notificacion) {

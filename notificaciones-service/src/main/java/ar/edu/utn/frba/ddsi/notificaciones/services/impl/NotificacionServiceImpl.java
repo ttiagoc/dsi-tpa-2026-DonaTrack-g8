@@ -2,6 +2,8 @@ package ar.edu.utn.frba.ddsi.notificaciones.services.impl;
 
 import java.time.LocalDateTime;
 
+import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
+import ar.edu.utn.frba.ddsi.notificaciones.dto.NotificacionRequest;
 import org.springframework.stereotype.Service;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
@@ -40,7 +42,7 @@ public class NotificacionServiceImpl implements NotificacionService {
     notificador.notificar(notificacion);
     notificacion.setCompletada(true);
 
-    return notificacionRepository.save(notificacion);
+    notificacionRepository.save(notificacion);
   }
 }
 
