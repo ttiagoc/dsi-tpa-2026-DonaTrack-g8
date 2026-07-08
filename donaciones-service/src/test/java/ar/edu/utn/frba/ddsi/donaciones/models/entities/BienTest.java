@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
-import ar.edu.utn.frba.ddsi.common.models.enums.EstadoBien;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoBien;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Bien;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;

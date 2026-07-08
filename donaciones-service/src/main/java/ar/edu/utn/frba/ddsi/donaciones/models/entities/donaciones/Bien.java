@@ -3,7 +3,7 @@ package ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones;
 import java.time.LocalDate;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
-import ar.edu.utn.frba.ddsi.common.models.enums.EstadoBien;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoBien;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

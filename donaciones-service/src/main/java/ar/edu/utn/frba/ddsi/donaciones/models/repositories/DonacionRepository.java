@@ -3,7 +3,7 @@ package ar.edu.utn.frba.ddsi.donaciones.models.repositories;
 import java.util.List;
 import java.util.Optional;
 
-import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 
 public interface DonacionRepository {

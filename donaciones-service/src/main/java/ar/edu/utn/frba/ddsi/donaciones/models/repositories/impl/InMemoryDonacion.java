@@ -3,7 +3,7 @@ package ar.edu.utn.frba.ddsi.donaciones.models.repositories.impl;
 import org.springframework.stereotype.Repository;
 import ar.edu.utn.frba.ddsi.common.utils.GeneradorIdSecuencial;
 
-import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 

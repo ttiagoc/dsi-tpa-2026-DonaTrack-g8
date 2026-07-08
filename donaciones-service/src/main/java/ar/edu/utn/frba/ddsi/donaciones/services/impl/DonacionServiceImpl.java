@@ -8,8 +8,8 @@ import org.springframework.stereotype.Service;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
-import ar.edu.utn.frba.ddsi.common.models.enums.EstadoBien;
-import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoBien;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.BienRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.BienResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.CategoriaRequest;

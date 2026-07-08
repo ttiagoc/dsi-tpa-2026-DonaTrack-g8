@@ -2,7 +2,7 @@ package ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades;
 
 import java.util.List;
 
-import ar.edu.utn.frba.ddsi.common.models.enums.Periodo;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.Periodo;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import lombok.AllArgsConstructor;
 import lombok.Data;

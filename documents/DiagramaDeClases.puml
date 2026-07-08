@@ -16,40 +16,6 @@ package "Common Lib" {
     SMS
     WHATSAPP
   }
-
-  enum TipoEstadoDonacion {
-    EN_DEPOSITO
-    ASIGNACION_REALIZADA
-    LISTA_PARA_ENTREGAR
-    EN_TRASLADO
-    ENTREGADA
-    ENTREGA_FALLIDA
-    VENCIDA
-  }
-
-  enum EstadoBien {
-    NUEVO
-    USADO
-  }
-
-  enum Periodo {
-    DIARIO
-    SEMANAL
-    MENSUAL
-    ANUAL
-  }
-
-  enum EstadoPropuesta {
-    PENDIENTE
-    ACEPTADO
-    RECHAZADO
-  }
-
-  enum EstadoRuta {
-    PLANIFICADA
-    EN_TRASLADO
-    FINALIZADA
-  }
 }
 
 package "Microservicio Notificaciones" {
@@ -340,6 +306,34 @@ package "Microservicio Donaciones" {
   class ImportarCsv {
     importar(pathArchivo: String): List<Donante>
   }
+
+  enum TipoEstadoDonacion {
+    EN_DEPOSITO
+    ASIGNACION_REALIZADA
+    LISTA_PARA_ENTREGAR
+    EN_TRASLADO
+    ENTREGADA
+    ENTREGA_FALLIDA
+    VENCIDA
+  }
+
+  enum EstadoBien {
+    NUEVO
+    USADO
+  }
+
+  enum Periodo {
+    DIARIO
+    SEMANAL
+    MENSUAL
+    ANUAL
+  }
+
+  enum EstadoPropuesta {
+    PENDIENTE
+    ACEPTADO
+    RECHAZADO
+  }
 }
 
 package "Microservicio Logistica" {
@@ -389,6 +383,11 @@ package "Microservicio Logistica" {
     fraccionarEnLotes(donaciones : List<Long>) : List<List<Long>>
   }
 
+  enum EstadoRuta {
+    PLANIFICADA
+    EN_TRASLADO
+    FINALIZADA
+  }
 }
 
 Notificacion --> MedioContacto
@@ -398,7 +397,6 @@ Notificador ..> Notificacion
 
 Donante --> "*" RegistroDonacion
 Donante --> "*" MedioContacto
-Donante --> MedioContacto
 PersonaJuridica --> "*" Representante
 Representante --> MedioContacto
 
@@ -414,7 +412,6 @@ Subcategoria --> Categoria
 Bien --> Subcategoria
 Bien --> EstadoBien
 
-EntidadBeneficiaria --> MedioContacto
 EntidadBeneficiaria --> "*" MedioContacto
 EntidadBeneficiaria --> "*" Necesidad
 

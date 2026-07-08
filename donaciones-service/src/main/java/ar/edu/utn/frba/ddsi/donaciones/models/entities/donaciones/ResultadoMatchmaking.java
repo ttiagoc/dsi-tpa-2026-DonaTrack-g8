@@ -3,7 +3,7 @@ package ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import ar.edu.utn.frba.ddsi.common.models.enums.EstadoPropuesta;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoPropuesta;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
 import lombok.AllArgsConstructor;
 import lombok.Data;

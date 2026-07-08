@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
-import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ConfirmacionEntregaExitosaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.InicioRutaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ParadaRequest;

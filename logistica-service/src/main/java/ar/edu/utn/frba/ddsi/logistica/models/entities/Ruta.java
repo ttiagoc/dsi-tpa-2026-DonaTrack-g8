@@ -3,7 +3,7 @@ package ar.edu.utn.frba.ddsi.logistica.models.entities;
 import java.time.LocalDate;
 import java.util.List;
 
-import ar.edu.utn.frba.ddsi.common.models.enums.EstadoRuta;
+import ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoRuta;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
-import ar.edu.utn.frba.ddsi.common.models.enums.EstadoRuta;
+import ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoRuta;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.CamionActivoResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.ParadaPendienteResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionRequest;

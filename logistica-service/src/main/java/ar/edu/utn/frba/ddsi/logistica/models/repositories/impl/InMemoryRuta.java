@@ -2,7 +2,7 @@ package ar.edu.utn.frba.ddsi.logistica.models.repositories.impl;
 
 import ar.edu.utn.frba.ddsi.common.utils.GeneradorIdSecuencial;
 
-import ar.edu.utn.frba.ddsi.common.models.enums.EstadoRuta;
+import ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoRuta;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
 

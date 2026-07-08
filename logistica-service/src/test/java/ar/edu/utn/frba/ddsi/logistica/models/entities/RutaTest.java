@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import ar.edu.utn.frba.ddsi.common.models.enums.EstadoRuta;
+import ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoRuta;
 
 @DisplayName("Tests de Ruta")
 class RutaTest {

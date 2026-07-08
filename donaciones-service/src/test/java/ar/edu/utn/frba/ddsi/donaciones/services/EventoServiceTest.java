@@ -19,8 +19,8 @@ import org.junit.jupiter.api.Test;
 
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
-import ar.edu.utn.frba.ddsi.common.models.enums.EstadoBien;
-import ar.edu.utn.frba.ddsi.common.models.enums.TipoEstadoDonacion;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoBien;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ConfirmacionEntregaExitosaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.InicioRutaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ParadaRequest;

@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.common.models.enums;
+package ar.edu.utn.frba.ddsi.donaciones.models.enums;
 
 import java.time.LocalDateTime;
 import java.time.temporal.IsoFields;
