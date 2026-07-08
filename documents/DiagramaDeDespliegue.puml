@@ -1,21 +1,40 @@
 @startuml DiagramaDespliegueDonaTrack
-' Forzar orientación y líneas ortogonales limpias
+
+' Forzar orientación horizontal y líneas limpias
 left to right direction
 skinparam linetype ortho
 skinparam nodesep 50
-skinparam ranksep 80
+skinparam ranksep 60
 
-' Colores base
+' Estilos y Colores Globales
 skinparam node {
-  BackgroundColor #E3F2FD
-  BorderColor #1976D2
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #0D47A1
+    FontStyle bold
 }
 skinparam component {
-  BackgroundColor #FFFFFF
-  BorderColor #1976D2
+    BackgroundColor #FFFFFF
+    BorderColor #1976D2
+    FontColor #212121
 }
 skinparam rectangle {
-  BorderColor #666666
+    BackgroundColor #F5F5F5
+    BorderColor #BDBDBD
+    FontColor #424242
+    FontStyle bold
+}
+skinparam database {
+    BackgroundColor #E8F5E9
+    BorderColor #388E3C
+    FontColor #1B5E20
+    FontStyle bold
+}
+skinparam cloud {
+    BackgroundColor #E0F7FA
+    BorderColor #00ACC1
+    FontColor #006064
+    FontStyle bold
 }
 
 ' --- 1. CAPA CLIENTE ---
@@ -23,49 +42,66 @@ node "Computadora Personal" <<Device>> {
     component "Navegador Web" as Nav
 }
 
+' --- RED INTERMEDIA ---
+cloud "Internet" as Net
+
 ' --- 2. CAPA FRONTEND ---
-rectangle "FrontEnd y Orquestación" {
+rectangle "Capa de Presentación" {
     node "Servidor Frontend" {
         component "App Frontend" as Front
     }
 }
 
-' --- 3. CAPA DOMINIO ---
-rectangle "Dominio" {
-    node "Servidor Donaciones" {
+' --- 3. CAPA DOMINIO (MICROSERVICIOS) ---
+rectangle "Capa de Dominio" {
+    node "Servidor Donaciones" as NodeS1 {
         component "Microservicio Donaciones" as S1
     }
-    node "Servidor Logística" {
+    node "Servidor Logística" as NodeS2 {
         component "Microservicio Logística" as S2
+    }
+    node "Servidor Notificaciones" as NodeS3 {
+        component "Microservicio Notificaciones" as S3
     }
 }
 
 ' --- 4. CAPA PERSISTENCIA Y EXTERNOS ---
-rectangle "Persistencia" {
-    node "Servidor de Base de Datos" {
+rectangle "Capa de Persistencia" {
+    database "Servidor de Base de Datos" {
         component "Motor de Base de Datos" as DB
     }
 }
 
-node "Sistemas Externos" <<External System>> {
+node "Sistemas Externos" <<External System>> #ECEFF1 {
     component "APIs de Mensajería" as Ext
 }
 
-' Flujo Cliente -> Frontend
-Nav --> Front : HTTPS
+' --- ALINEACIÓN VERTICAL INTERNA PARA LA CAPA DE DOMINIO ---
+NodeS1 -[hidden]down-> NodeS2
+NodeS2 -[hidden]down-> NodeS3
 
-' Flujo Frontend -> Servicios
+' --- FLUJOS Y CONEXIONES (Izquierda a Derecha) ---
+
+' Cliente -> Internet -> Frontend
+Nav --> Net : HTTPS
+Net --> Front : HTTPS
+
+' Frontend -> Microservicios
 Front --> S1 : HTTP - API REST
 Front --> S2 : HTTP - API REST
+Front --> S3 : HTTP - API REST
 
-' Flujo Servicios -> Persistencia
+' Conexiones cruzadas entre Microservicios
+S1 <--> S2 : HTTP - API REST
+S2 <--> S3 : HTTP - API REST
+S1 <--> S3 : HTTP - API REST
+
+' Microservicios -> Base de Datos
 S1 --> DB : TCP/IP
 S2 --> DB : TCP/IP
+S3 --> DB : TCP/IP
 
-' Salida a Notificaciones Externas
-S1 --> Ext : HTTPS
-
-' Conexion entre Servicios
-S2 <--> S1 : HTTP - API REST
+' Salida a Sistemas Externos
+S3 --> Ext : HTTPS
 
 @enduml
