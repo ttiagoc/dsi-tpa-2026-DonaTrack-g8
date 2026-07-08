@@ -55,8 +55,7 @@ class EntidadBeneficiariaServiceTest {
         correos.add(new MedioContactoRequest("EMAIL", "entidad@org.com"));
 
         EntidadBeneficiariaRequest requestSinRazonSocial = new EntidadBeneficiariaRequest(
-                "", "Medrano 951", "11223344", correos
-        );
+                "", "Medrano 951", "11223344", correos);
 
         Exception ex = assertThrows(BusinessException.class, () -> {
             entidadService.crear(requestSinRazonSocial);
@@ -72,8 +71,7 @@ class EntidadBeneficiariaServiceTest {
         correos.add(new MedioContactoRequest("EMAIL", "entidad@org.com"));
 
         EntidadBeneficiariaRequest requestValido = new EntidadBeneficiariaRequest(
-                "Comedor Los Niños", "Medrano 951", "11223344", correos
-        );
+                "Comedor Los Niños", "Medrano 951", "11223344", correos);
 
         // Al guardar debe retornar la misma entidad con ID 1
         when(entidadRepository.save(any(EntidadBeneficiaria.class))).thenAnswer(invocation -> {
@@ -88,7 +86,7 @@ class EntidadBeneficiariaServiceTest {
         assertEquals(1L, response.id());
         assertEquals("Comedor Los Niños", response.razonSocial());
         assertEquals("Medrano 951", response.direccion());
-        
+
         verify(entidadRepository, times(1)).save(any(EntidadBeneficiaria.class));
     }
 
@@ -100,8 +98,8 @@ class EntidadBeneficiariaServiceTest {
         String motivo = "El camion nunca llegó";
 
         EntidadBeneficiaria entidad = new EntidadBeneficiaria(
-                 "Comedor", "Calle Falsa 123", "123", new ArrayList<>(List.of(new MedioContacto("x@x.com", TipoContacto.EMAIL)))
-        );
+                "Comedor", "Calle Falsa 123", "123",
+                new ArrayList<>(List.of(new MedioContacto("x@x.com", TipoContacto.EMAIL))));
         entidad.setId(entidadId);
 
         when(entidadRepository.findById(entidadId)).thenReturn(Optional.of(entidad));
@@ -112,14 +110,14 @@ class EntidadBeneficiariaServiceTest {
         // Se debió llamar a EventoService
         verify(eventoService, times(1)).notificarEntregaFallida(donacionId, motivo);
     }
-    
+
     @Test
     @DisplayName("Debe lanzar ResourceNotFound si la entidad no existe al reportar")
     void reportarNoRecibidaEntidadNoExiste() {
         when(entidadRepository.findById(99L)).thenReturn(Optional.empty());
 
         ReportarNoRecibidaRequest request = new ReportarNoRecibidaRequest("Fallo");
-        
+
         Exception ex = assertThrows(ResourceNotFoundException.class, () -> {
             entidadService.reportarNoRecibida(99L, 1L, request);
         });

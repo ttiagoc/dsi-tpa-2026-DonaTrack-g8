@@ -47,7 +47,7 @@ class PlanificacionRutasServiceTest {
                 gestorPlanificacionRutas = mock(GestorPlanificacionRutas.class);
                 camionRepository = mock(CamionRepository.class);
 
-                when(properties.getBaseUrl()).thenReturn("http://localhost:8080");
+                when(properties.getDonacionesUrl()).thenReturn("http://localhost:8080");
 
                 planificacionRutasService = new PlanificacionRutasServiceImpl(restTemplate, properties,
                                 gestorPlanificacionRutas, camionRepository);
@@ -57,7 +57,7 @@ class PlanificacionRutasServiceTest {
         @DisplayName("Debe delegar la planificacion al gestor cuando hay lote y camiones disponibles")
         void planificarRutasExitoso() {
                 URI urlGetLote = UriComponentsBuilder
-                                .fromUriString("http://localhost:8080/donaciones-service/asignadas")
+                                .fromUriString("http://localhost:8080/api/donaciones-service/asignadas")
                                 .queryParam("limit", 100).build().toUri();
 
                 List<DonacionDTO> loteSimulado = List.of(new DonacionDTO(1L, 50.0, 2.0, "Calle 123"));
@@ -80,7 +80,7 @@ class PlanificacionRutasServiceTest {
         @DisplayName("No debe solicitar planificacion si no hay camiones disponibles")
         void planificarRutasSinCamiones() {
                 URI urlGetLote = UriComponentsBuilder
-                                .fromUriString("http://localhost:8080/donaciones-service/asignadas")
+                                .fromUriString("http://localhost:8080/api/donaciones-service/asignadas")
                                 .queryParam("limit", 100).build().toUri();
 
                 List<DonacionDTO> loteSimulado = List.of(new DonacionDTO(1L, 50.0, 2.0, "Calle 123"));
@@ -106,12 +106,12 @@ class PlanificacionRutasServiceTest {
                                 List.of());
 
                 URI urlPostLista = UriComponentsBuilder
-                                .fromUriString("http://localhost:8080/donaciones-service/lista-entrega")
+                                .fromUriString("http://localhost:8080/api/donaciones-service/lista-entrega")
                                 .build().toUri();
 
                 // Simular getLote() vacío para que termine rápido la cadena
                 URI urlGetLote = UriComponentsBuilder
-                                .fromUriString("http://localhost:8080/donaciones-service/asignadas")
+                                .fromUriString("http://localhost:8080/api/donaciones-service/asignadas")
                                 .queryParam("limit", 100).build().toUri();
                 ResponseEntity<List<DonacionDTO>> responseMock = ResponseEntity.ok(List.of());
                 when(restTemplate.exchange(eq(urlGetLote), eq(HttpMethod.GET), eq(null),

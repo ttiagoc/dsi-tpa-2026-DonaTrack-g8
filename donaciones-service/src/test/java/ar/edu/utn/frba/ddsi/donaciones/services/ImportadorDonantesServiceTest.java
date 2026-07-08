@@ -2,6 +2,7 @@ package ar.edu.utn.frba.ddsi.donaciones.services;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -14,11 +15,12 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.client.RestTemplate;
 
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
-import ar.edu.utn.frba.ddsi.common.models.entities.Notificacion;
-import ar.edu.utn.frba.ddsi.common.services.NotificacionService;
+import ar.edu.utn.frba.ddsi.donaciones.config.RestDonacionesConfig;
+import ar.edu.utn.frba.ddsi.donaciones.dto.evento.NotificacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.ImportarCsv;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
@@ -31,16 +33,20 @@ class ImportadorDonantesServiceTest {
 
     private DonanteRepository donanteRepository;
     private ImportarCsv importarCsv;
-    private NotificacionService notificacionService;
+    private RestTemplate restTemplate;
+    private RestDonacionesConfig properties;
     private ImportadorDonantesServiceImpl importadorService;
 
     @BeforeEach
     void setUp() {
         donanteRepository = mock(DonanteRepository.class);
         importarCsv = mock(ImportarCsv.class);
-        notificacionService = mock(NotificacionService.class);
+        restTemplate = mock(RestTemplate.class);
+        properties = mock(RestDonacionesConfig.class);
 
-        importadorService = new ImportadorDonantesServiceImpl(donanteRepository, importarCsv, notificacionService);
+        when(properties.getNotificacionesUrl()).thenReturn("http://localhost:8082/api/notificaciones-service");
+
+        importadorService = new ImportadorDonantesServiceImpl(donanteRepository, importarCsv, restTemplate, properties);
     }
 
     @Test
@@ -79,7 +85,11 @@ class ImportadorDonantesServiceTest {
         verify(donanteRepository, times(1)).save(humana);
         verify(donanteRepository, times(1)).save(juridica);
 
-        verify(notificacionService, times(2)).enviarNotificacion(any(Notificacion.class));
+        verify(restTemplate, times(2)).postForObject(
+                eq("http://localhost:8082/api/notificaciones-service/notificar"),
+                any(NotificacionRequest.class),
+                eq(Void.class)
+        );
     }
 
     @Test
@@ -116,6 +126,11 @@ class ImportadorDonantesServiceTest {
 
         verify(donanteRepository, times(1)).save(humanaExistente);
 
-        verify(notificacionService, times(0)).enviarNotificacion(any(Notificacion.class));
+        verify(restTemplate, times(0)).postForObject(
+                anyString(),
+                any(NotificacionRequest.class),
+                eq(Void.class)
+        );
     }
 }
+

@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.logistica.config;
+package ar.edu.utn.frba.ddsi.donaciones.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -6,6 +6,6 @@ import lombok.Data;
 
 @ConfigurationProperties(prefix = "rest")
 @Data
-public class RestLogisticaConfig {
-    private String donacionesUrl;
+public class RestDonacionesConfig {
+    private String notificacionesUrl;
 }

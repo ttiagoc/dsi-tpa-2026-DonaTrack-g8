@@ -66,10 +66,11 @@ class EntidadBeneficiariaTest {
 
         Categoria catAlimentos = new Categoria("Alimentos", false, true);
         Subcategoria subFideos = new Subcategoria("Fideos", catAlimentos);
-        Bien bienFideos = new Bien("Fideos moñito", 1L, 0.5, 0.5, subFideos, EstadoBien.NUEVO, LocalDateTime.now().plusDays(10).toLocalDate());
+        Bien bienFideos = new Bien("Fideos moñito", 1L, 0.5, 0.5, subFideos, EstadoBien.NUEVO,
+                LocalDateTime.now().plusDays(10).toLocalDate());
 
         Donacion donacion = new Donacion(bienFideos, LocalDateTime.now());
-        
+
         // Estado inicial de la donación es EN_DEPOSITO
         assertEquals(TipoEstadoDonacion.EN_DEPOSITO, donacion.estadoActual());
 

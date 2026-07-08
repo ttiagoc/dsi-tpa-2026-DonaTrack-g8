@@ -1,2 +1,2 @@
 rest:
-  base-url: "http://localhost:8080/api"
+  donaciones-url: "http://localhost:8080/api"

@@ -6,14 +6,56 @@ skinparam ranksep 80
 hide empty members
 
 package "Common Lib" {
-  interface EstrategiaNotificacion {
-    getTipoContacto() : TipoContacto
-    notificar(valor : String, mensaje : String) : void
-  }
-
   class MedioContacto {
     valor : String
     tipoContacto : TipoContacto
+  }
+
+  enum TipoContacto {
+    EMAIL
+    SMS
+    WHATSAPP
+  }
+
+  enum TipoEstadoDonacion {
+    EN_DEPOSITO
+    ASIGNACION_REALIZADA
+    LISTA_PARA_ENTREGAR
+    EN_TRASLADO
+    ENTREGADA
+    ENTREGA_FALLIDA
+    VENCIDA
+  }
+
+  enum EstadoBien {
+    NUEVO
+    USADO
+  }
+
+  enum Periodo {
+    DIARIO
+    SEMANAL
+    MENSUAL
+    ANUAL
+  }
+
+  enum EstadoPropuesta {
+    PENDIENTE
+    ACEPTADO
+    RECHAZADO
+  }
+
+  enum EstadoRuta {
+    PLANIFICADA
+    EN_TRASLADO
+    FINALIZADA
+  }
+}
+
+package "Microservicio Notificaciones" {
+  interface EstrategiaNotificacion {
+    getTipoContacto() : TipoContacto
+    notificar(valor : String, mensaje : String) : void
   }
 
   interface ProveedorEmail {
@@ -67,46 +109,6 @@ package "Common Lib" {
     mensaje : String
     contacto : MedioContacto
     completada : Boolean
-  }
-
-  enum TipoContacto {
-    EMAIL
-    SMS
-    WHATSAPP
-  }
-
-  enum TipoEstadoDonacion {
-    EN_DEPOSITO
-    ASIGNACION_REALIZADA
-    LISTA_PARA_ENTREGAR
-    EN_TRASLADO
-    ENTREGADA
-    ENTREGA_FALLIDA
-    VENCIDA
-  }
-
-  enum EstadoBien {
-    NUEVO
-    USADO
-  }
-
-  enum Periodo {
-    DIARIO
-    SEMANAL
-    MENSUAL
-    ANUAL
-  }
-
-  enum EstadoPropuesta {
-    PENDIENTE
-    ACEPTADO
-    RECHAZADO
-  }
-
-  enum EstadoRuta {
-    PLANIFICADA
-    EN_TRASLADO
-    FINALIZADA
   }
 }
 

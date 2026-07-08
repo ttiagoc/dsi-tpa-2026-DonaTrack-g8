@@ -44,7 +44,7 @@ class EntregaDonacionesServiceTest {
         restTemplate = mock(RestTemplate.class);
         properties = mock(RestLogisticaConfig.class);
 
-        when(properties.getBaseUrl()).thenReturn("http://localhost:8080");
+        when(properties.getDonacionesUrl()).thenReturn("http://localhost:8080");
 
         entregaService = new EntregaDonacionesServiceImpl(rutaRepository, restTemplate, properties);
     }

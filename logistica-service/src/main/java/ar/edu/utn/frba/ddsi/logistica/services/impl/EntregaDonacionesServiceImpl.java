@@ -48,7 +48,7 @@ public class EntregaDonacionesServiceImpl implements EntregaDonacionesService {
 
         InicioRutaRequest inicioRutaRequest = new InicioRutaRequest(ruta.getId(), paradas);
 
-        URI url = UriComponentsBuilder.fromUriString(properties.getBaseUrl())
+        URI url = UriComponentsBuilder.fromUriString(properties.getDonacionesUrl())
                 .path("/donaciones-service/evento/inicio-ruta")
                 .build().toUri();
         try {
@@ -74,7 +74,7 @@ public class EntregaDonacionesServiceImpl implements EntregaDonacionesService {
                 paradaAfectada.getEntidad(), donaciones,
                 ruta.getCamion().getPatente(), LocalDateTime.now());
 
-        URI url = UriComponentsBuilder.fromUriString(properties.getBaseUrl())
+        URI url = UriComponentsBuilder.fromUriString(properties.getDonacionesUrl())
                 .path("/donaciones-service/evento/confirmacion-entrega-exitosa")
                 .build().toUri();
         try {

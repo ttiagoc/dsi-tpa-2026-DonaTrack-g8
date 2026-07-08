@@ -49,7 +49,7 @@ public class PlanificacionRutasServiceImpl implements PlanificacionRutasService 
     public void ejecutarPlanificacion(EjecutarPlanificacionRequest request) {
         List<Long> donacionesPlanificadas = toListIdDonaciones(request.camiones());
 
-        URI url = UriComponentsBuilder.fromUriString(properties.getBaseUrl())
+        URI url = UriComponentsBuilder.fromUriString(properties.getDonacionesUrl())
                 .path("/donaciones-service/lista-entrega")
                 .build().toUri();
 
@@ -59,7 +59,7 @@ public class PlanificacionRutasServiceImpl implements PlanificacionRutasService 
     }
 
     private List<DonacionDTO> getLote() {
-        URI url = UriComponentsBuilder.fromUriString(properties.getBaseUrl())
+        URI url = UriComponentsBuilder.fromUriString(properties.getDonacionesUrl())
                 .path("/donaciones-service/asignadas")
                 .queryParam("limit", TAMANO_LOTE)
                 .build().toUri();

@@ -4,11 +4,12 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
-import ar.edu.utn.frba.ddsi.common.models.entities.Notificacion;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
-import ar.edu.utn.frba.ddsi.common.services.NotificacionService;
+import ar.edu.utn.frba.ddsi.donaciones.config.RestDonacionesConfig;
+import ar.edu.utn.frba.ddsi.donaciones.dto.evento.NotificacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.ImportarCsv;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
@@ -21,13 +22,15 @@ public class ImportadorDonantesServiceImpl implements ImportadorDonantesService 
 
   private final DonanteRepository donanteRepository;
   private final ImportarCsv importarCsv;
-  private final NotificacionService notificacionService;
+  private final RestTemplate restTemplate;
+  private final RestDonacionesConfig config;
 
   public ImportadorDonantesServiceImpl(DonanteRepository donanteRepository, ImportarCsv importarCsv,
-      NotificacionService notificacionService) {
+      RestTemplate restTemplate, RestDonacionesConfig config) {
     this.donanteRepository = donanteRepository;
     this.importarCsv = importarCsv;
-    this.notificacionService = notificacionService;
+    this.restTemplate = restTemplate;
+    this.config = config;
   }
 
   public void importarDonantes(String pathArchivo) {
@@ -60,9 +63,16 @@ public class ImportadorDonantesServiceImpl implements ImportadorDonantesService 
       donanteRepository.save(humanaNueva);
       String nombreAMostrar = humanaNueva.getNombre()
           + (humanaNueva.getApellido().isEmpty() ? "" : " " + humanaNueva.getApellido());
-      notificacionService.enviarNotificacion(new Notificacion(
-          "Bienvenido/a a DonaTrack, " + nombreAMostrar.trim() + "! Tu usuario ha sido creado con Éxito.",
-          humanaNueva.getContactoPredeterminado()));
+      try {
+        String url = config.getNotificacionesUrl() + "/notificar";
+        NotificacionRequest request = new NotificacionRequest(
+            emailVal,
+            TipoContacto.EMAIL,
+            "¡Bienvenido a DonaTrack, " + nombreAMostrar + "! Tu cuenta ha sido registrada con éxito.");
+        restTemplate.postForObject(url, request, Void.class);
+      } catch (Exception e) {
+        System.err.println("Error notificando alta de donante humano: " + e.getMessage());
+      }
     }
   }
 
@@ -82,10 +92,16 @@ public class ImportadorDonantesServiceImpl implements ImportadorDonantesService 
       donanteRepository.save(juridica);
     } else {
       donanteRepository.save(juridicaNueva);
-      notificacionService.enviarNotificacion(new Notificacion(
-          "Bienvenido/a a DonaTrack, " + juridicaNueva.getRazonSocial()
-              + "! El usuario de su organización ha sido creado con Éxito.",
-          juridicaNueva.getContactoPredeterminado()));
+      try {
+        String url = config.getNotificacionesUrl() + "/notificar";
+        NotificacionRequest request = new NotificacionRequest(
+            emailVal,
+            TipoContacto.EMAIL,
+            "¡Bienvenido a DonaTrack, " + juridicaNueva.getRazonSocial() + "! Tu cuenta ha sido registrada con éxito.");
+        restTemplate.postForObject(url, request, Void.class);
+      } catch (Exception e) {
+        System.err.println("Error notificando alta de donante jurídico: " + e.getMessage());
+      }
     }
   }
 
