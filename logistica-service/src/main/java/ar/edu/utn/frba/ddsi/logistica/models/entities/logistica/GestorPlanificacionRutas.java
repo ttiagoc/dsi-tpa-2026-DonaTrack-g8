@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.logistica.models.entities;
+package ar.edu.utn.frba.ddsi.logistica.models.entities.logistica;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.concurrent.CompletableFuture;
 
 import org.springframework.web.client.RestTemplate;
 
-import ar.edu.utn.frba.ddsi.logistica.dto.DonacionDTO;
+import ar.edu.utn.frba.ddsi.logistica.dto.donacion.DonacionDTO;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.CamionPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.DireccionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;

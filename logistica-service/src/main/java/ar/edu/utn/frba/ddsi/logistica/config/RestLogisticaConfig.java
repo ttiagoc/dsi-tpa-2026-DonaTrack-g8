@@ -8,4 +8,5 @@ import lombok.Data;
 @Data
 public class RestLogisticaConfig {
     private String donacionesUrl;
+    private String notificacionesUrl;
 }

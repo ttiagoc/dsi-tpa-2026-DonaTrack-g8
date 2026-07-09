@@ -1,2 +1,3 @@
 rest:
   donaciones-url: "http://localhost:8080/api"
+  notificaciones-url: "http://localhost:8082/api"

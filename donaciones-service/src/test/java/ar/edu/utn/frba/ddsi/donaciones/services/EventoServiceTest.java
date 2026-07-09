@@ -31,13 +31,10 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.RegistroDonaci
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventManager;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventManagerDonaciones;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoAusenciaPlataforma;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoEntregaExitosaDonante;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoEntregaExitosaEntidad;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoEntregaExitosa;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoEntregaFallida;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoInicioRutaDonante;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoInicioRutaEntidad;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
@@ -46,7 +43,7 @@ import ar.edu.utn.frba.ddsi.donaciones.services.impl.EventoServiceImpl;
 @DisplayName("Tests de EventoServiceImpl")
 class EventoServiceTest {
 
-    private EventManager eventManager;
+    private EventManagerDonaciones eventManager;
     private DonacionRepository donacionRepository;
     private EntidadBeneficiariaRepository entidadRepository;
     private DonanteRepository donanteRepository;
@@ -54,7 +51,7 @@ class EventoServiceTest {
 
     @BeforeEach
     void setUp() {
-        eventManager = mock(EventManager.class);
+        eventManager = mock(EventManagerDonaciones.class);
         donacionRepository = mock(DonacionRepository.class);
         entidadRepository = mock(EntidadBeneficiariaRepository.class);
         donanteRepository = mock(DonanteRepository.class);
@@ -115,9 +112,6 @@ class EventoServiceTest {
 
         assertEquals(TipoEstadoDonacion.EN_TRASLADO, donacion.estadoActual());
         verify(donacionRepository, times(1)).save(donacion);
-
-        verify(eventManager, times(1)).emitir(any(EventoInicioRutaEntidad.class));
-        verify(eventManager, times(1)).emitir(any(EventoInicioRutaDonante.class));
     }
 
     @Test
@@ -150,8 +144,7 @@ class EventoServiceTest {
         assertEquals(TipoEstadoDonacion.ENTREGADA, donacion.estadoActual());
         verify(donacionRepository, times(1)).save(donacion);
 
-        verify(eventManager, times(1)).emitir(any(EventoEntregaExitosaDonante.class));
-        verify(eventManager, times(1)).emitir(any(EventoEntregaExitosaEntidad.class));
+        verify(eventManager, times(1)).emitir(any(EventoEntregaExitosa.class));
     }
 
     @Test
@@ -180,6 +173,6 @@ class EventoServiceTest {
         assertTrue(donacion.getHistorialEstados().getLast().getJustificacion().contains("Camión averiado"));
 
         verify(donacionRepository, times(1)).save(donacion);
-        verify(eventManager, times(2)).emitir(any(EventoEntregaFallida.class)); // 1 donante + 1 entidad
+        verify(eventManager, times(1)).emitir(any(EventoEntregaFallida.class));
     }
 }

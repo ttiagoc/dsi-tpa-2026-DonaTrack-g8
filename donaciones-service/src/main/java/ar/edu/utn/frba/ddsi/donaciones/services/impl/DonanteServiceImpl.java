@@ -209,4 +209,11 @@ public class DonanteServiceImpl implements DonanteService {
         }
         return contacto;
     }
+
+    @Override
+    public MedioContacto obtenerContactoPredeterminado(Long id) {
+        Donante donante = donanteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro un donante con el id: " + id));
+        return donante.getContactoPredeterminado();
+    }
 }

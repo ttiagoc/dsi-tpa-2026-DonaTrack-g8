@@ -12,9 +12,9 @@ import ar.edu.utn.frba.ddsi.logistica.dto.ruta.ParadaRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.ParadaResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaResponse;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.Parada;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Camion;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Parada;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ruta;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
 import ar.edu.utn.frba.ddsi.logistica.services.RutaService;
@@ -99,8 +99,8 @@ public class RutaServiceImpl implements RutaService {
         return new ParadaResponse(
                 parada.getOrden(),
                 parada.getDestino(),
-                parada.getEntidad(),
-                parada.getEntregas());
+                parada.getEntidadId(),
+                parada.getDonacionIds());
     }
 
     private Ruta toRuta(RutaRequest request) {
@@ -136,8 +136,8 @@ public class RutaServiceImpl implements RutaService {
         Parada parada = new Parada();
         parada.setOrden(request.orden());
         parada.setDestino(request.destino());
-        parada.setEntidad(request.entidad());
-        parada.setEntregas(request.entregas());
+        parada.setEntidadId(request.entidad());
+        parada.setDonacionIds(request.entregas());
         return parada;
     }
 }

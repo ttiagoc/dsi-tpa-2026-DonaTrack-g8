@@ -35,9 +35,8 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.Necesidad;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.TipoNecesidad;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventManager;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoDonacionAsignadaDonante;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoDonacionAsignadaEntidad;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventManagerDonaciones;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoDonacionAsignada;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.ResultadoMatchmakingRepository;
@@ -50,7 +49,7 @@ class MatchmakingServiceTest {
     private EntidadBeneficiariaRepository entidadRepository;
     private ResultadoMatchmakingRepository resultadoRepository;
     private MotorDeMatchmaking motorDeMatchmaking;
-    private EventManager eventManager;
+    private EventManagerDonaciones eventManager;
     private MatchmakingServiceImpl matchmakingService;
 
     @BeforeEach
@@ -59,7 +58,7 @@ class MatchmakingServiceTest {
         entidadRepository = mock(EntidadBeneficiariaRepository.class);
         resultadoRepository = mock(ResultadoMatchmakingRepository.class);
         motorDeMatchmaking = mock(MotorDeMatchmaking.class);
-        eventManager = mock(EventManager.class);
+        eventManager = mock(EventManagerDonaciones.class);
 
         matchmakingService = new MatchmakingServiceImpl(donacionRepository, entidadRepository, resultadoRepository,
                 motorDeMatchmaking, eventManager);
@@ -133,8 +132,7 @@ class MatchmakingServiceTest {
         verify(donacionRepository, times(1)).save(donacion);
         verify(entidadRepository, times(1)).save(entidad);
 
-        verify(eventManager, times(1)).emitir(any(EventoDonacionAsignadaDonante.class));
-        verify(eventManager, times(1)).emitir(any(EventoDonacionAsignadaEntidad.class));
+        verify(eventManager, times(1)).emitir(any(EventoDonacionAsignada.class));
     }
 
     @Test

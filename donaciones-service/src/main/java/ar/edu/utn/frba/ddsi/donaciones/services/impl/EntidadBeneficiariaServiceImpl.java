@@ -264,4 +264,12 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
     private EntidadBeneficiaria guardar(EntidadBeneficiaria entidadBeneficiaria) {
         return entidadBeneficiariaRepository.save(entidadBeneficiaria);
     }
+
+    @Override
+    public List<MedioContacto> obtenerContactos(Long id) {
+        EntidadBeneficiaria entidad = entidadBeneficiariaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontro una entidad beneficiaria con el id: " + id));
+        return entidad.getCorreoRepresentantes();
+    }
 }

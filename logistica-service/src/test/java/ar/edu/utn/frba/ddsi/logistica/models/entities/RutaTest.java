@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Camion;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ruta;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ubicacion;
 import ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoRuta;
 
 @DisplayName("Tests de Ruta")
@@ -32,7 +35,7 @@ class RutaTest {
     @DisplayName("Debe actualizar correctamente la ultima ubicacion")
     void actualizarUbicacion() {
         Ruta ruta = new Ruta(LocalDate.now(), null, new ArrayList<>());
-        
+
         Ubicacion ubi = new Ubicacion(-34.0, -58.0, 45.0);
         ruta.actualizarUbicacion(ubi);
 
@@ -56,7 +59,7 @@ class RutaTest {
     void finalizarRuta() {
         Ruta ruta = new Ruta(LocalDate.now(), null, new ArrayList<>());
         ruta.iniciar();
-        
+
         ruta.finalizar();
 
         assertEquals(EstadoRuta.FINALIZADA, ruta.getEstado());

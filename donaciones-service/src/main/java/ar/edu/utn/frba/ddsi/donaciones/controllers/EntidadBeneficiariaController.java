@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.*;
 import ar.edu.utn.frba.ddsi.donaciones.services.EntidadBeneficiariaService;
 
@@ -84,5 +85,10 @@ public class EntidadBeneficiariaController {
     public void subirFotosRecepcion(@PathVariable Long entidadId, @PathVariable Long donacionId,
             @RequestBody SubirFotosRecepcionRequest request) {
         entidadBeneficiariaService.subirFotosRecepcion(entidadId, donacionId, request);
+    }
+
+    @GetMapping("/{id}/contactos")
+    public List<MedioContacto> obtenerContactos(@PathVariable Long id) {
+        return entidadBeneficiariaService.obtenerContactos(id);
     }
 }

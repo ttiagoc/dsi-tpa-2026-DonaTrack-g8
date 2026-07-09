@@ -25,41 +25,42 @@ package "Microservicio Notificaciones" {
   }
 
   interface ProveedorEmail {
-    enviar(email: String, asunto: String, mensaje: String)
+    enviarEmail(destino: String, mensaje: String) : void
   }
 
   interface ProveedorSMS {
-    enviar(telefono: String, mensaje: String)
+    enviarSMS(destino: String, mensaje: String) : void
   }
 
   interface ProveedorWhatsapp {
-    enviar(telefono: String, mensaje: String)
+    enviarWhatsapp(destino: String, mensaje: String) : void
   }
 
-  class ResendEmail implements ProveedorEmail {
-    enviar(email: String, asunto: String, mensaje: String)
+  class ResendAdapter implements ProveedorEmail {
+    enviarEmail(destino: String, mensaje: String) : void
   }
 
-  class Twilio implements ProveedorSMS, ProveedorWhatsapp {
-    enviar(telefono: String, mensaje: String)
+  class TwilioAdapter implements ProveedorSMS, ProveedorWhatsapp {
+    enviarSMS(destino: String, mensaje: String) : void
+    enviarWhatsapp(destino: String, mensaje: String) : void
   }
 
   class Email implements EstrategiaNotificacion {
-    proveedor: ProveedorEmail
+    proveedorEmail: ProveedorEmail
     tipoContacto: TipoContacto
     getTipoContacto() : TipoContacto
     notificar(valor : String, mensaje : String) : void
   }
 
   class SMS implements EstrategiaNotificacion {
-    proveedor: ProveedorSMS
+    proveedorSMS: ProveedorSMS
     tipoContacto: TipoContacto
     getTipoContacto() : TipoContacto
     notificar(valor : String, mensaje : String) : void
   }
 
   class WhatsApp implements EstrategiaNotificacion {
-    proveedor: ProveedorWhatsapp
+    proveedorWhatsapp: ProveedorWhatsapp
     tipoContacto: TipoContacto
     getTipoContacto() : TipoContacto
     notificar(valor : String, mensaje : String) : void
@@ -201,76 +202,58 @@ package "Microservicio Donaciones" {
     estaSatisfecha(donaciones : List<Donacion>, cantidadRequerida : Long) : Boolean
   }
 
-  class EventManager {
-    listeners: Map<Evento, List<Listener>>
-    emitir(evento: Evento) : void 
-    registrarListener(listener: Listener) : void
-    desregistrarListener(listener: Listener) : void
+  class EventManagerDonaciones {
+    listeners: Map
+    registrarListener(claseEvento: Class, listener: ListenerDonaciones) : void
+    desregistrarListener(claseEvento: Class, listener: ListenerDonaciones) : void
+    emitir(evento: EventoDonaciones) : void
   }
 
-  interface Evento {
-    getContacto() : MedioContacto
-    getMensaje() : String
+  interface EventoDonaciones {
   }
 
-  class EventoAusenciaPlataforma implements Evento {
-    contacto : MedioContacto
-    getContacto() : MedioContacto
-    getMensaje() : String
+  class EventoAusenciaPlataforma implements EventoDonaciones {
+    donante : Donante
   }
 
-  class EventoDonacionAsignadaDonante implements Evento {
-    contacto : MedioContacto
-    getContacto() : MedioContacto
-    getMensaje() : String
+  class EventoDonacionAsignada implements EventoDonaciones {
+    donante : Donante
+    entidad : EntidadBeneficiaria
   }
 
-  class EventoDonacionAsignadaEntidad implements Evento {
-    contacto : MedioContacto
-    getContacto() : MedioContacto
-    getMensaje() : String
-  }
-
-  class EventoInicioRutaDonante implements Evento {
-    contacto : MedioContacto
-    urlMapa : String
-    getContacto() : MedioContacto
-    getMensaje() : String
-  }
-
-  class EventoInicioRutaEntidad implements Evento {
-    contacto : MedioContacto
-    urlMapa : String
-    getContacto() : MedioContacto
-    getMensaje() : String
-  }
-
-  class EventoEntregaExitosaDonante implements Evento {
-    contacto : MedioContacto
+  class EventoEntregaExitosa implements EventoDonaciones {
+    entidad : EntidadBeneficiaria
+    donaciones : List<Donacion>
     comprobante : ComprobanteEntrega
-    getContacto() : MedioContacto
-    getMensaje() : String
   }
 
-  class EventoEntregaExitosaEntidad implements Evento {
-    contacto : MedioContacto
-    comprobante : ComprobanteEntrega
-    getContacto() : MedioContacto
-    getMensaje() : String
+  class EventoEntregaFallida implements EventoDonaciones {
+    donacion : Donacion
+    motivo : String
   }
 
-  class EventoEntregaFallida implements Evento {
-    contacto : MedioContacto
-    getContacto() : MedioContacto
-    getMensaje() : String
+  interface ListenerDonaciones {
+    ejecutar(evento: T) : void
   }
 
-  interface Listener {
-    ejecutar(evento: Evento) : void
+  class AusenciaPlataformaListener implements ListenerDonaciones {
+    register() : void
+    ejecutar(evento: EventoAusenciaPlataforma) : void
   }
 
-  class NotificacionesAdapter implements Listener {
-    ejecutar(evento: Evento) : void
+  class DonacionAsignadaListener implements ListenerDonaciones {
+    register() : void
+    ejecutar(evento: EventoDonacionAsignada) : void
+  }
+
+  class EntregaExitosaListener implements ListenerDonaciones {
+    register() : void
+    ejecutar(evento: EventoEntregaExitosa) : void
+  }
+
+  class EntregaFallidaListener implements ListenerDonaciones {
+    register() : void
+    ejecutar(evento: EventoEntregaFallida) : void
   }
 
   interface AlgoritmoAsignacion {
@@ -388,6 +371,30 @@ package "Microservicio Logistica" {
     EN_TRASLADO
     FINALIZADA
   }
+
+  interface EventoLogistica {
+  }
+
+  interface ListenerLogistica {
+    ejecutar(evento: T) : void
+  }
+
+  class EventManagerLogistica {
+    listeners: Map
+    registrarListener(claseEvento: Class, listener: ListenerLogistica) : void
+    desregistrarListener(claseEvento: Class, listener: ListenerLogistica) : void
+    emitir(evento: EventoLogistica) : void
+  }
+
+  class EventoInicioRuta implements EventoLogistica {
+    ruta: Ruta
+    mapaUrl: String
+  }
+
+  class InicioRutaListener implements ListenerLogistica {
+    registerListeners() : void
+    ejecutar(evento: EventoInicioRuta) : void
+  }
 }
 
 Notificacion --> MedioContacto
@@ -420,11 +427,9 @@ Necesidad --> TipoNecesidad
 Necesidad --> "*" Donacion
 NecesidadRecurrente --> Periodo
 
-EventManager --> "*" Listener
-Evento --> MedioContacto
+EventManagerDonaciones --> "*" ListenerDonaciones
 
-EventoEntregaExitosaDonante --> ComprobanteEntrega
-EventoEntregaExitosaEntidad --> ComprobanteEntrega
+EventoEntregaExitosa --> ComprobanteEntrega
 
 MotorDeMatchmaking --> "*" AlgoritmoAsignacion
 ResultadoMatchmaking --> Donacion
@@ -444,9 +449,27 @@ TipoNecesidad ..> Donacion
 NecesidadExtraordinaria ..> Donacion
 NecesidadRecurrente ..> Donacion
 
-EventManager ..> Evento
-Listener ..> Evento
-NotificacionesAdapter ..> Evento
+EventManagerDonaciones ..> EventoDonaciones
+ListenerDonaciones ..> EventoDonaciones
+
+AusenciaPlataformaListener ..> EventoAusenciaPlataforma
+DonacionAsignadaListener ..> EventoDonacionAsignada
+EntregaExitosaListener ..> EventoEntregaExitosa
+EntregaFallidaListener ..> EventoEntregaFallida
+
+EventoAusenciaPlataforma --> Donante
+EventoDonacionAsignada --> Donante
+EventoDonacionAsignada --> EntidadBeneficiaria
+EventoEntregaExitosa --> EntidadBeneficiaria
+EventoEntregaExitosa --> "*" Donacion
+EventoEntregaFallida --> Donacion
+
+EventManagerLogistica --> "*" ListenerLogistica
+EventManagerLogistica ..> EventoLogistica
+ListenerLogistica ..> EventoLogistica
+EventoInicioRuta --> Ruta
+InicioRutaListener ..> EventoInicioRuta
+InicioRutaListener ..> EventManagerLogistica
 
 AlgoritmoAsignacion ..> Donacion
 AlgoritmoAsignacion ..> EntidadBeneficiaria
@@ -461,8 +484,7 @@ MotorDeMatchmaking ..> ResultadoMatchmaking
 
 GestorPlanificacionRutas ..> Camion
 
-EventManager ..> Evento
-EventManager ..> Listener
+EventManagerDonaciones ..> ListenerDonaciones
 
 SegmentadorDeDonacion ..> Donacion
 

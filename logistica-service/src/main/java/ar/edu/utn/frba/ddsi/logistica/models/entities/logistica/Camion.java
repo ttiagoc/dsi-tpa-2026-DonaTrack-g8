@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.logistica.models.entities;
+package ar.edu.utn.frba.ddsi.logistica.models.entities.logistica;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

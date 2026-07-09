@@ -24,9 +24,9 @@ import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.logistica.config.RestLogisticaConfig;
 import ar.edu.utn.frba.ddsi.logistica.dto.entregadonaciones.ConfirmacionEntregaExitosaRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.entregadonaciones.InicioRutaRequest;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.Parada;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Camion;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Parada;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ruta;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
 import ar.edu.utn.frba.ddsi.logistica.services.impl.EntregaDonacionesServiceImpl;
 
@@ -36,6 +36,7 @@ class EntregaDonacionesServiceTest {
     private RutaRepository rutaRepository;
     private RestTemplate restTemplate;
     private RestLogisticaConfig properties;
+    private ar.edu.utn.frba.ddsi.logistica.models.entities.eventos.EventManagerLogistica eventManager;
     private EntregaDonacionesServiceImpl entregaService;
 
     @BeforeEach
@@ -43,10 +44,11 @@ class EntregaDonacionesServiceTest {
         rutaRepository = mock(RutaRepository.class);
         restTemplate = mock(RestTemplate.class);
         properties = mock(RestLogisticaConfig.class);
+        eventManager = mock(ar.edu.utn.frba.ddsi.logistica.models.entities.eventos.EventManagerLogistica.class);
 
         when(properties.getDonacionesUrl()).thenReturn("http://localhost:8080");
 
-        entregaService = new EntregaDonacionesServiceImpl(rutaRepository, restTemplate, properties);
+        entregaService = new EntregaDonacionesServiceImpl(rutaRepository, restTemplate, properties, eventManager);
     }
 
     @Test
@@ -59,8 +61,8 @@ class EntregaDonacionesServiceTest {
         Parada parada = mock(Parada.class);
         when(parada.getOrden()).thenReturn(1);
         when(parada.getDestino()).thenReturn("Dir 1");
-        when(parada.getEntidad()).thenReturn(100L);
-        when(parada.getEntregas()).thenReturn(List.of(200L, 300L));
+        when(parada.getEntidadId()).thenReturn(100L);
+        when(parada.getDonacionIds()).thenReturn(List.of(200L, 300L));
         when(ruta.getParadas()).thenReturn(List.of(parada));
 
         when(rutaRepository.findById(rutaId)).thenReturn(Optional.of(ruta));
@@ -87,8 +89,8 @@ class EntregaDonacionesServiceTest {
         Parada parada = mock(Parada.class);
         when(parada.getOrden()).thenReturn(1);
         when(parada.getDestino()).thenReturn("Dir 1");
-        when(parada.getEntidad()).thenReturn(entidadId);
-        when(parada.getEntregas()).thenReturn(List.of(200L, 300L));
+        when(parada.getEntidadId()).thenReturn(entidadId);
+        when(parada.getDonacionIds()).thenReturn(List.of(200L, 300L));
 
         Ruta ruta = new Ruta(LocalDate.now(), camion, List.of(parada));
 

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.DonanteResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaHumanaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaJuridicaRequest;
@@ -68,5 +69,10 @@ public class DonanteController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminar(@PathVariable Long id) {
         donanteService.eliminar(id);
+    }
+
+    @GetMapping("/{id}/contacto")
+    public MedioContacto obtenerContactoPredeterminado(@PathVariable Long id) {
+        return donanteService.obtenerContactoPredeterminado(id);
     }
 }

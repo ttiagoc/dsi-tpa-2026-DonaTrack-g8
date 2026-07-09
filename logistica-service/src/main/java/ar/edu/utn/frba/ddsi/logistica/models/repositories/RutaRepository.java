@@ -3,7 +3,7 @@ package ar.edu.utn.frba.ddsi.logistica.models.repositories;
 import java.util.List;
 import java.util.Optional;
 
-import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ruta;
 
 public interface RutaRepository {
 

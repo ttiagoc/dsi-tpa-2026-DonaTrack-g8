@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.logistica.models.entities;
+package ar.edu.utn.frba.ddsi.logistica.models.entities.logistica;
 
 import java.util.List;
 
@@ -8,6 +8,6 @@ import lombok.Data;
 public class Parada {
     private Integer orden;
     private String destino;
-    private Long entidad;
-    private List<Long> entregas;
+    private Long entidadId;
+    private List<Long> donacionIds;
 }

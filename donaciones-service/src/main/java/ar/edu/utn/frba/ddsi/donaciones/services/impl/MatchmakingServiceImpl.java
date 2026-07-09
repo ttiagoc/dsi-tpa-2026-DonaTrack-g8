@@ -5,18 +5,15 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
-import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
-import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoPropuesta;
-import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.PropuestaMatchmakingResponse;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.MotorDeMatchmaking;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.ResultadoMatchmaking;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventManager;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.Evento;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoDonacionAsignadaDonante;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoDonacionAsignadaEntidad;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventManagerDonaciones;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoDonacionAsignada;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoPropuesta;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.ResultadoMatchmakingRepository;
@@ -31,7 +28,7 @@ public class MatchmakingServiceImpl implements MatchmakingService {
     private final EntidadBeneficiariaRepository entidadRepository;
     private final ResultadoMatchmakingRepository resultadoRepository;
     private final MotorDeMatchmaking motorDeMatchmaking;
-    private final EventManager eventManager;
+    private final EventManagerDonaciones eventManager;
 
     public List<PropuestaMatchmakingResponse> obtenerPropuestasPendientes() {
         List<ResultadoMatchmaking> pendientes = resultadoRepository.buscarPendientes();
@@ -109,14 +106,8 @@ public class MatchmakingServiceImpl implements MatchmakingService {
     }
 
     private void ejecutarNotificaciones(Donacion donacion, EntidadBeneficiaria entidad) {
-        Evento eventoAsignacionDonante = new EventoDonacionAsignadaDonante(
-                donacion.getDonante().getContactoPredeterminado());
-        eventManager.emitir(eventoAsignacionDonante);
-
-        for (MedioContacto contacto : entidad.getCorreoRepresentantes()) {
-            Evento eventoAsignacionEntidad = new EventoDonacionAsignadaEntidad(contacto);
-            eventManager.emitir(eventoAsignacionEntidad);
-        }
+        eventManager
+                .emitir(new EventoDonacionAsignada(donacion.getDonante(), entidad));
     }
 
 }

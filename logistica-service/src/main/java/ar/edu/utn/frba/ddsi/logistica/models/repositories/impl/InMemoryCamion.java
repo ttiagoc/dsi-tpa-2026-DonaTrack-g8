@@ -9,8 +9,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 
-import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.Ruta;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Camion;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ruta;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
 

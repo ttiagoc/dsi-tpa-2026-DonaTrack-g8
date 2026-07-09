@@ -12,11 +12,11 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ar.edu.utn.frba.ddsi.logistica.config.RestLogisticaConfig;
-import ar.edu.utn.frba.ddsi.logistica.dto.DonacionDTO;
+import ar.edu.utn.frba.ddsi.logistica.dto.donacion.DonacionDTO;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.CamionPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.Camion;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.GestorPlanificacionRutas;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Camion;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.GestorPlanificacionRutas;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
 import ar.edu.utn.frba.ddsi.logistica.services.PlanificacionRutasService;
 
