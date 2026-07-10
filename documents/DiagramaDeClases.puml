@@ -118,7 +118,7 @@ package "Microservicio Donaciones" {
   }
 
   class SegmentadorDeDonacion {
-    segmentarDonacion() : List<Donacion>
+    segmentarDonacion(registroDonacion : RegistroDonacion) : List<Donacion>
   }
 
   class Donacion {
@@ -487,6 +487,7 @@ GestorPlanificacionRutas ..> Camion
 EventManagerDonaciones ..> ListenerDonaciones
 
 SegmentadorDeDonacion ..> Donacion
+SegmentadorDeDonacion ..> RegistroDonacion
 
 ImportarCsv ..> Donante
 
