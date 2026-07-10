@@ -9,4 +9,5 @@ import lombok.Data;
 public class RestLogisticaConfig {
     private String donacionesUrl;
     private String notificacionesUrl;
+    private String logisticaUrl;
 }

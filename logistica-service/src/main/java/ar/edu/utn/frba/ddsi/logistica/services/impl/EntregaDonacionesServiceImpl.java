@@ -54,8 +54,8 @@ public class EntregaDonacionesServiceImpl implements EntregaDonacionesService {
             System.err.println("ERROR: Falló la notificación masiva de inicio de ruta.");
         }
 
-        String mapaUrl = "http://localhost:8080/api/logistica-service/monitoreo/ubicacion/" + ruta.getId();
-        eventManager.emitir(new EventoInicioRuta(ruta, mapaUrl));
+        eventManager.emitir(
+                new EventoInicioRuta(ruta, properties.getLogisticaUrl() + "/monitoreo/ubicacion/" + ruta.getId()));
     }
 
     private InicioRutaRequest mapToInicioRutaRequest(Ruta ruta) {
