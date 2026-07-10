@@ -203,7 +203,7 @@ package "Microservicio Donaciones" {
   }
 
   class EventManagerDonaciones {
-    listeners: Map
+    listeners: Map<EventoDonaciones, ListenerDonaciones>
     registrarListener(claseEvento: Class, listener: ListenerDonaciones) : void
     desregistrarListener(claseEvento: Class, listener: ListenerDonaciones) : void
     emitir(evento: EventoDonaciones) : void
@@ -380,7 +380,7 @@ package "Microservicio Logistica" {
   }
 
   class EventManagerLogistica {
-    listeners: Map
+    listeners: Map<EventoLogistica, ListenerLogistica>
     registrarListener(claseEvento: Class, listener: ListenerLogistica) : void
     desregistrarListener(claseEvento: Class, listener: ListenerLogistica) : void
     emitir(evento: EventoLogistica) : void
