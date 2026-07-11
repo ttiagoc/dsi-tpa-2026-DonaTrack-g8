@@ -1,9 +1,12 @@
-package ar.edu.utn.frba.ddsi.notificaciones.services;
+package ar.edu.utn.frba.ddsi.notificaciones.models.entities;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,23 +17,25 @@ import org.mockito.Mockito;
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.notificaciones.dto.NotificacionRequest;
-import ar.edu.utn.frba.ddsi.notificaciones.models.entities.Notificacion;
-import ar.edu.utn.frba.ddsi.notificaciones.models.entities.Notificador;
 import ar.edu.utn.frba.ddsi.notificaciones.models.repositories.NotificacionRepository;
-import ar.edu.utn.frba.ddsi.notificaciones.services.impl.NotificacionServiceImpl;
 
-@DisplayName("NotificacionService Tests")
-class NotificacionServiceTest {
+@DisplayName("Notificador Tests")
+class NotificadorTest {
 
-    private NotificacionService notificacionService;
     private Notificador notificador;
+    private EstrategiaNotificacion estrategiaMock;
     private NotificacionRepository notificacionRepository;
 
     @BeforeEach
     void setUp() {
-        notificador = Mockito.mock(Notificador.class);
+        estrategiaMock = Mockito.mock(EstrategiaNotificacion.class);
+        Mockito.when(estrategiaMock.getTipoContacto()).thenReturn(TipoContacto.EMAIL);
+        
+        List<EstrategiaNotificacion> estrategias = new ArrayList<>();
+        estrategias.add(estrategiaMock);
+
         notificacionRepository = Mockito.mock(NotificacionRepository.class);
-        notificacionService = new NotificacionServiceImpl(notificador, notificacionRepository);
+        notificador = new Notificador(estrategias, notificacionRepository);
     }
 
     @Test
@@ -42,29 +47,28 @@ class NotificacionServiceTest {
 
         NotificacionRequest request = new NotificacionRequest(valor, tipo, mensaje);
 
+        notificador.enviarNotificacion(request);
+
+        Mockito.verify(estrategiaMock).notificar(valor, mensaje);
+
         ArgumentCaptor<Notificacion> captor = ArgumentCaptor.forClass(Notificacion.class);
+        Mockito.verify(notificacionRepository).save(captor.capture());
+        Notificacion notificacionGuardada = captor.getValue();
 
-        notificacionService.enviarNotificacion(request);
-
-        Mockito.verify(notificador).notificar(captor.capture());
-        Notificacion notificacionEnviada = captor.getValue();
-
-        assertNotNull(notificacionEnviada);
-        assertEquals(mensaje, notificacionEnviada.getMensaje());
-        assertNotNull(notificacionEnviada.getContacto());
-        assertEquals(valor, notificacionEnviada.getContacto().getValor());
-        assertEquals(tipo, notificacionEnviada.getContacto().getTipoContacto());
-        assertTrue(notificacionEnviada.getCompletada(), "La notificación debe quedar marcada como completada");
-        assertNotNull(notificacionEnviada.getFechaDeEnvio(), "Debe haber registrado la fecha de envío");
-
-        Mockito.verify(notificacionRepository).save(notificacionEnviada);
+        assertNotNull(notificacionGuardada);
+        assertEquals(mensaje, notificacionGuardada.getMensaje());
+        assertNotNull(notificacionGuardada.getContacto());
+        assertEquals(valor, notificacionGuardada.getContacto().getValor());
+        assertEquals(tipo, notificacionGuardada.getContacto().getTipoContacto());
+        assertTrue(notificacionGuardada.getCompletada(), "La notificación debe quedar marcada como completada");
+        assertNotNull(notificacionGuardada.getFechaDeEnvio(), "Debe haber registrado la fecha de envío");
     }
 
     @Test
     @DisplayName("Debería lanzar excepción si el request es nulo")
     void enviarNotificacionRequestNulo() {
         BusinessException exception = assertThrows(BusinessException.class, () -> {
-            notificacionService.enviarNotificacion(null);
+            notificador.enviarNotificacion(null);
         });
         assertEquals("La notificación no puede ser nula", exception.getMessage());
     }
@@ -74,7 +78,7 @@ class NotificacionServiceTest {
     void enviarNotificacionContactoNulo() {
         NotificacionRequest request = new NotificacionRequest("test@utn.edu.ar", null, "Test mensaje");
         BusinessException exception = assertThrows(BusinessException.class, () -> {
-            notificacionService.enviarNotificacion(request);
+            notificador.enviarNotificacion(request);
         });
         assertEquals("El medio de contacto no puede ser nulo", exception.getMessage());
     }
@@ -84,7 +88,7 @@ class NotificacionServiceTest {
     void enviarNotificacionMensajeNulo() {
         NotificacionRequest request = new NotificacionRequest("test@utn.edu.ar", TipoContacto.EMAIL, null);
         BusinessException exception = assertThrows(BusinessException.class, () -> {
-            notificacionService.enviarNotificacion(request);
+            notificador.enviarNotificacion(request);
         });
         assertEquals("El mensaje no puede ser nulo ni estar vacío", exception.getMessage());
     }
@@ -94,7 +98,7 @@ class NotificacionServiceTest {
     void enviarNotificacionMensajeVacio() {
         NotificacionRequest request = new NotificacionRequest("test@utn.edu.ar", TipoContacto.EMAIL, "  ");
         BusinessException exception = assertThrows(BusinessException.class, () -> {
-            notificacionService.enviarNotificacion(request);
+            notificador.enviarNotificacion(request);
         });
         assertEquals("El mensaje no puede ser nulo ni estar vacío", exception.getMessage());
     }
@@ -104,7 +108,7 @@ class NotificacionServiceTest {
     void enviarNotificacionValorNulo() {
         NotificacionRequest request = new NotificacionRequest(null, TipoContacto.EMAIL, "Test mensaje");
         BusinessException exception = assertThrows(BusinessException.class, () -> {
-            notificacionService.enviarNotificacion(request);
+            notificador.enviarNotificacion(request);
         });
         assertEquals("El valor del medio de contacto no puede ser nulo ni estar vacío", exception.getMessage());
     }
@@ -114,9 +118,8 @@ class NotificacionServiceTest {
     void enviarNotificacionValorVacio() {
         NotificacionRequest request = new NotificacionRequest("   ", TipoContacto.EMAIL, "Test mensaje");
         BusinessException exception = assertThrows(BusinessException.class, () -> {
-            notificacionService.enviarNotificacion(request);
+            notificador.enviarNotificacion(request);
         });
         assertEquals("El valor del medio de contacto no puede ser nulo ni estar vacío", exception.getMessage());
     }
 }
-

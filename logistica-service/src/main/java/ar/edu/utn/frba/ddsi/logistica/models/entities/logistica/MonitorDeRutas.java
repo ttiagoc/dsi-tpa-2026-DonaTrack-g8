@@ -1,32 +1,27 @@
-package ar.edu.utn.frba.ddsi.logistica.services.impl;
+package ar.edu.utn.frba.ddsi.logistica.models.entities.logistica;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Camion;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Parada;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ruta;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ubicacion;
-import ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoRuta;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.CamionActivoResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.ParadaPendienteResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionResponse;
+import ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoRuta;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
-import ar.edu.utn.frba.ddsi.logistica.services.MonitoreoService;
 
-@Service
-public class MonitoreoServiceImpl implements MonitoreoService {
+@Component
+public class MonitorDeRutas {
 
   private final CamionRepository camionRepository;
   private final RutaRepository rutaRepository;
 
-  public MonitoreoServiceImpl(CamionRepository camionRepository, RutaRepository rutaRepository) {
+  public MonitorDeRutas(CamionRepository camionRepository, RutaRepository rutaRepository) {
     this.camionRepository = camionRepository;
     this.rutaRepository = rutaRepository;
   }

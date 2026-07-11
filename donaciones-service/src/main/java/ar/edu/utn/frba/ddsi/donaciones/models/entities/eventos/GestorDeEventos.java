@@ -1,9 +1,9 @@
-package ar.edu.utn.frba.ddsi.donaciones.services.impl;
+package ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos;
 
 import java.time.LocalDate;
 import java.util.List;
 
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ConfirmacionEntregaExitosaRequest;
@@ -12,27 +12,20 @@ import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ParadaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.ComprobanteEntrega;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventManagerDonaciones;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoDonaciones;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoAusenciaPlataforma;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoEntregaExitosa;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoEntregaFallida;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
-import ar.edu.utn.frba.ddsi.donaciones.services.EventoService;
 
-@Service
-public class EventoServiceImpl implements EventoService {
+@Component
+public class GestorDeEventos {
 
     private final EventManagerDonaciones eventManager;
     private final DonacionRepository donacionRepository;
     private final EntidadBeneficiariaRepository entidadBeneficiariaRepository;
     private final DonanteRepository donanteRepository;
 
-    public EventoServiceImpl(EventManagerDonaciones eventManager, DonacionRepository donacionRepository,
+    public GestorDeEventos(EventManagerDonaciones eventManager, DonacionRepository donacionRepository,
             EntidadBeneficiariaRepository entidadBeneficiariaRepository, DonanteRepository donanteRepository) {
         this.eventManager = eventManager;
         this.donacionRepository = donacionRepository;
@@ -53,7 +46,6 @@ public class EventoServiceImpl implements EventoService {
 
         for (Donante donante : donantes) {
             if (donante.getFechaUltimaDonacion().isBefore(limiteInactividad)) {
-
                 System.out.println("Se detectó inactividad prolongada en Donante ID #" + donante.getId());
                 this.notificarAusenciaDonante(donante);
             }
@@ -63,7 +55,6 @@ public class EventoServiceImpl implements EventoService {
 
     public void iniciarRuta(InicioRutaRequest request) {
         for (ParadaRequest parada : request.paradas()) {
-
             for (Long donacionId : parada.donacionIds()) {
                 Donacion donacion = donacionRepository.findById(donacionId)
                         .orElseThrow(() -> new ResourceNotFoundException(

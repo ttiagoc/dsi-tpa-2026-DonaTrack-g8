@@ -14,31 +14,31 @@ import org.springframework.web.bind.annotation.RestController;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.CamionActivoResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionResponse;
-import ar.edu.utn.frba.ddsi.logistica.services.MonitoreoService;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.MonitorDeRutas;
 
 @RestController
 @RequestMapping("/api/logistica-service/monitoreo")
 public class MonitoreoController {
 
-  private final MonitoreoService monitoreoService;
+  private final MonitorDeRutas monitorDeRutas;
 
-  public MonitoreoController(MonitoreoService monitoreoService) {
-    this.monitoreoService = monitoreoService;
+  public MonitoreoController(MonitorDeRutas monitorDeRutas) {
+    this.monitorDeRutas = monitorDeRutas;
   }
 
   @PostMapping("/ubicacion/{patente}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void recibirTelemetria(@PathVariable String patente, @RequestBody UbicacionRequest request) {
-    monitoreoService.actualizarUbicacionCamion(patente, request);
+    monitorDeRutas.actualizarUbicacionCamion(patente, request);
   }
 
   @GetMapping("/ubicacion/{rutaId}")
   public UbicacionResponse obtenerUbicacionActual(@PathVariable Long rutaId) {
-    return monitoreoService.obtenerUltimaUbicacionPorRuta(rutaId);
+    return monitorDeRutas.obtenerUltimaUbicacionPorRuta(rutaId);
   }
 
   @GetMapping("/activos")
   public List<CamionActivoResponse> obtenerCamionesActivos() {
-    return monitoreoService.obtenerCamionesActivos();
+    return monitorDeRutas.obtenerCamionesActivos();
   }
 }

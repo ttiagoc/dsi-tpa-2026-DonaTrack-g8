@@ -1,11 +1,11 @@
-package ar.edu.utn.frba.ddsi.logistica.services.impl;
+package ar.edu.utn.frba.ddsi.logistica.models.entities.logistica;
 
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -16,20 +16,17 @@ import ar.edu.utn.frba.ddsi.logistica.dto.entregadonaciones.InicioRutaRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.ParadaRequest;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.eventos.EventManagerLogistica;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.eventos.EventoInicioRuta;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Parada;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ruta;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
-import ar.edu.utn.frba.ddsi.logistica.services.EntregaDonacionesService;
 
-@Service
-public class EntregaDonacionesServiceImpl implements EntregaDonacionesService {
+@Component
+public class GestorDeRutas {
 
     private final RutaRepository rutaRepository;
     private final RestTemplate restTemplate;
     private final RestLogisticaConfig properties;
     private final EventManagerLogistica eventManager;
 
-    public EntregaDonacionesServiceImpl(RutaRepository rutaRepository, RestTemplate restTemplate,
+    public GestorDeRutas(RutaRepository rutaRepository, RestTemplate restTemplate,
             RestLogisticaConfig properties, EventManagerLogistica eventManager) {
         this.rutaRepository = rutaRepository;
         this.restTemplate = restTemplate;

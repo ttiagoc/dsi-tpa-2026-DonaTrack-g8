@@ -1,14 +1,10 @@
-package ar.edu.utn.frba.ddsi.logistica.models.entities;
+package ar.edu.utn.frba.ddsi.logistica.models.entities.logistica;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Camion;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Chofer;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ubicacion;
 
 @DisplayName("Tests de Camion")
 class CamionTest {

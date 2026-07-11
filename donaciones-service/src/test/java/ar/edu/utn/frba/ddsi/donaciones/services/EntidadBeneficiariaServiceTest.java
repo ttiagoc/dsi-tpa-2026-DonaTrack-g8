@@ -27,6 +27,7 @@ import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiar
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.ReportarNoRecibidaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.GestorDeEventos;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.services.impl.EntidadBeneficiariaServiceImpl;
@@ -36,16 +37,16 @@ class EntidadBeneficiariaServiceTest {
 
     private EntidadBeneficiariaRepository entidadRepository;
     private DonacionRepository donacionRepository;
-    private EventoService eventoService;
+    private GestorDeEventos gestorDeEventos;
     private EntidadBeneficiariaServiceImpl entidadService;
 
     @BeforeEach
     void setUp() {
         entidadRepository = mock(EntidadBeneficiariaRepository.class);
         donacionRepository = mock(DonacionRepository.class);
-        eventoService = mock(EventoService.class);
+        gestorDeEventos = mock(GestorDeEventos.class);
 
-        entidadService = new EntidadBeneficiariaServiceImpl(entidadRepository, donacionRepository, eventoService);
+        entidadService = new EntidadBeneficiariaServiceImpl(entidadRepository, donacionRepository, gestorDeEventos);
     }
 
     @Test
@@ -108,7 +109,7 @@ class EntidadBeneficiariaServiceTest {
         entidadService.reportarNoRecibida(entidadId, donacionId, request);
 
         // Se debió llamar a EventoService
-        verify(eventoService, times(1)).notificarEntregaFallida(donacionId, motivo);
+        verify(gestorDeEventos, times(1)).notificarEntregaFallida(donacionId, motivo);
     }
 
     @Test

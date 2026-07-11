@@ -3,19 +3,19 @@ package ar.edu.utn.frba.ddsi.logistica.schedulers;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import ar.edu.utn.frba.ddsi.logistica.services.PlanificacionRutasService;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.PlanificadorDeRutas;
 
 @Component
 public class LogisticaScheduler {
 
-    private final PlanificacionRutasService planificacionRutasService;
+    private final PlanificadorDeRutas planificadorDeRutas;
 
-    public LogisticaScheduler(PlanificacionRutasService planificacionRutasService) {
-        this.planificacionRutasService = planificacionRutasService;
+    public LogisticaScheduler(PlanificadorDeRutas planificadorDeRutas) {
+        this.planificadorDeRutas = planificadorDeRutas;
     }
 
     @Scheduled(cron = "0 0 3 * * *")
     public void planificarRutas() {
-        planificacionRutasService.planificarRutas();
+        planificadorDeRutas.planificarRutas();
     }
 }

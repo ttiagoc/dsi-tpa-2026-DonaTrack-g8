@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.logistica.services;
+package ar.edu.utn.frba.ddsi.logistica.models.entities.logistica;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -24,20 +24,16 @@ import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.logistica.config.RestLogisticaConfig;
 import ar.edu.utn.frba.ddsi.logistica.dto.entregadonaciones.ConfirmacionEntregaExitosaRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.entregadonaciones.InicioRutaRequest;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Camion;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Parada;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ruta;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
-import ar.edu.utn.frba.ddsi.logistica.services.impl.EntregaDonacionesServiceImpl;
 
-@DisplayName("Tests de EntregaDonacionesServiceImpl")
-class EntregaDonacionesServiceTest {
+@DisplayName("Tests de GestorDeRutas")
+class GestorDeRutasTest {
 
     private RutaRepository rutaRepository;
     private RestTemplate restTemplate;
     private RestLogisticaConfig properties;
     private ar.edu.utn.frba.ddsi.logistica.models.entities.eventos.EventManagerLogistica eventManager;
-    private EntregaDonacionesServiceImpl entregaService;
+    private GestorDeRutas gestorDeRutas;
 
     @BeforeEach
     void setUp() {
@@ -48,11 +44,11 @@ class EntregaDonacionesServiceTest {
 
         when(properties.getDonacionesUrl()).thenReturn("http://localhost:8080");
 
-        entregaService = new EntregaDonacionesServiceImpl(rutaRepository, restTemplate, properties, eventManager);
+        gestorDeRutas = new GestorDeRutas(rutaRepository, restTemplate, properties, eventManager);
     }
 
     @Test
-    @DisplayName("Debe iniciar ruta y notificar al otro microservicio")
+    @DisplayName("Debería iniciar ruta y notificar al otro microservicio")
     void iniciarRuta() {
         Long rutaId = 1L;
         Ruta ruta = mock(Ruta.class);
@@ -70,7 +66,7 @@ class EntregaDonacionesServiceTest {
         URI urlPost = UriComponentsBuilder.fromUriString("http://localhost:8080/donaciones-service/evento/inicio-ruta")
                 .build().toUri();
 
-        entregaService.iniciarRuta(rutaId);
+        gestorDeRutas.iniciarRuta(rutaId);
 
         verify(ruta, times(1)).iniciar();
         verify(rutaRepository, times(1)).save(ruta);
@@ -78,7 +74,7 @@ class EntregaDonacionesServiceTest {
     }
 
     @Test
-    @DisplayName("Debe confirmar entrega exitosa enviando el evento al donaciones-service")
+    @DisplayName("Debería confirmar entrega exitosa enviando el evento al donaciones-service")
     void confirmarEntregaExitosa() {
         Long rutaId = 1L;
         Long paradaId = 1L;
@@ -100,19 +96,19 @@ class EntregaDonacionesServiceTest {
                 .fromUriString("http://localhost:8080/donaciones-service/evento/confirmacion-entrega-exitosa")
                 .build().toUri();
 
-        entregaService.confirmarEntregaExitosa(paradaId, rutaId);
+        gestorDeRutas.confirmarEntregaExitosa(paradaId, rutaId);
 
         verify(restTemplate, times(1)).postForObject(eq(urlPost), any(ConfirmacionEntregaExitosaRequest.class),
                 eq(Void.class));
     }
 
     @Test
-    @DisplayName("Debe arrojar excepcion si la ruta no existe al iniciar")
+    @DisplayName("Debería arrojar excepción si la ruta no existe al iniciar")
     void iniciarRutaInexistente() {
         when(rutaRepository.findById(99L)).thenReturn(Optional.empty());
 
         Exception ex = assertThrows(ResourceNotFoundException.class, () -> {
-            entregaService.iniciarRuta(99L);
+            gestorDeRutas.iniciarRuta(99L);
         });
 
         assertTrue(ex.getMessage().contains("No se encontro una ruta"));

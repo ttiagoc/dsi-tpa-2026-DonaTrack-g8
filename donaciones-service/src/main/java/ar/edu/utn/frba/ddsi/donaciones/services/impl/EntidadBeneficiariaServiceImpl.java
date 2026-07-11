@@ -28,21 +28,21 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.NecesidadRecurr
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.TipoNecesidad;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.GestorDeEventos;
 import ar.edu.utn.frba.ddsi.donaciones.services.EntidadBeneficiariaService;
-import ar.edu.utn.frba.ddsi.donaciones.services.EventoService;
 
 @Service
 public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaService {
 
     private final EntidadBeneficiariaRepository entidadBeneficiariaRepository;
     private final DonacionRepository donacionRepository;
-    private final EventoService eventoService;
+    private final GestorDeEventos gestorDeEventos;
 
     public EntidadBeneficiariaServiceImpl(EntidadBeneficiariaRepository entidadBeneficiariaRepository,
-            DonacionRepository donacionRepository, EventoService eventoService) {
+            DonacionRepository donacionRepository, GestorDeEventos gestorDeEventos) {
         this.entidadBeneficiariaRepository = entidadBeneficiariaRepository;
         this.donacionRepository = donacionRepository;
-        this.eventoService = eventoService;
+        this.gestorDeEventos = gestorDeEventos;
     }
 
     public List<EntidadBeneficiariaResponse> obtenerTodas() {
@@ -235,7 +235,7 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
     public void reportarNoRecibida(Long entidadId, Long donacionId, ReportarNoRecibidaRequest request) {
         entidadBeneficiariaRepository.findById(entidadId)
                 .map(entidad -> {
-                    eventoService.notificarEntregaFallida(donacionId, request.motivo());
+                    gestorDeEventos.notificarEntregaFallida(donacionId, request.motivo());
                     return entidad;
                 })
                 .orElseThrow(() -> new ResourceNotFoundException(

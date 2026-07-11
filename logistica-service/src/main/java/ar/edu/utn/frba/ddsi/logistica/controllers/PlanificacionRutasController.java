@@ -8,21 +8,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
-import ar.edu.utn.frba.ddsi.logistica.services.PlanificacionRutasService;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.PlanificadorDeRutas;
 
 @RestController
 @RequestMapping("/api/logistica-service/planificacion")
 public class PlanificacionRutasController {
 
-    private final PlanificacionRutasService planificacionRutasService;
+    private final PlanificadorDeRutas planificadorDeRutas;
 
-    public PlanificacionRutasController(PlanificacionRutasService planificacionRutasService) {
-        this.planificacionRutasService = planificacionRutasService;
+    public PlanificacionRutasController(PlanificadorDeRutas planificadorDeRutas) {
+        this.planificadorDeRutas = planificadorDeRutas;
     }
 
     @PostMapping("/confirmacion")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void ejecutarPlanificacion(@RequestBody EjecutarPlanificacionRequest request) {
-        planificacionRutasService.ejecutarPlanificacion(request);
+        planificadorDeRutas.ejecutarPlanificacion(request);
     }
 }

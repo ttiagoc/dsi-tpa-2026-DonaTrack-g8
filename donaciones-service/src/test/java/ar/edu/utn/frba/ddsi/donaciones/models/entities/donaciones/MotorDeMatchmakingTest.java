@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.donaciones.services;
+package ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -25,12 +25,6 @@ import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoBien;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoPropuesta;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoEstadoDonacion;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Bien;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.MotorDeMatchmaking;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.ResultadoMatchmaking;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.Necesidad;
@@ -40,33 +34,35 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoDonacionAsi
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.ResultadoMatchmakingRepository;
-import ar.edu.utn.frba.ddsi.donaciones.services.impl.MatchmakingServiceImpl;
 
-@DisplayName("Tests de MatchmakingServiceImpl")
-class MatchmakingServiceTest {
+@DisplayName("Tests de MotorDeMatchmaking")
+class MotorDeMatchmakingTest {
 
     private DonacionRepository donacionRepository;
     private EntidadBeneficiariaRepository entidadRepository;
     private ResultadoMatchmakingRepository resultadoRepository;
-    private MotorDeMatchmaking motorDeMatchmaking;
     private EventManagerDonaciones eventManager;
-    private MatchmakingServiceImpl matchmakingService;
+    private List<AlgoritmoAsignacion> algoritmos;
+    private MotorDeMatchmaking motorDeMatchmaking;
 
     @BeforeEach
     void setUp() {
         donacionRepository = mock(DonacionRepository.class);
         entidadRepository = mock(EntidadBeneficiariaRepository.class);
         resultadoRepository = mock(ResultadoMatchmakingRepository.class);
-        motorDeMatchmaking = mock(MotorDeMatchmaking.class);
         eventManager = mock(EventManagerDonaciones.class);
+        algoritmos = new ArrayList<>();
 
-        matchmakingService = new MatchmakingServiceImpl(donacionRepository, entidadRepository, resultadoRepository,
-                motorDeMatchmaking, eventManager);
+        motorDeMatchmaking = new MotorDeMatchmaking(algoritmos, donacionRepository, entidadRepository,
+                resultadoRepository, eventManager);
     }
 
     @Test
     @DisplayName("Debe ejecutar matchmaking para donaciones en depósito y guardar los resultados")
     void procesarMatchmakingExitoso() {
+        AlgoritmoAsignacion alg = mock(AlgoritmoAsignacion.class);
+        algoritmos.add(alg);
+
         Categoria cat = new Categoria("Alimentos", false, true);
         Subcategoria sub = new Subcategoria("Fideos", cat);
         Bien bienBase = new Bien("Fideos", 1L, 0.5, 0.5, sub, EstadoBien.NUEVO, LocalDate.now().plusDays(10));
@@ -81,12 +77,11 @@ class MatchmakingServiceTest {
         List<EntidadBeneficiaria> entidades = List.of(entidad);
         when(entidadRepository.findAll()).thenReturn(entidades);
 
-        ResultadoMatchmaking resultadoSimulado = new ResultadoMatchmaking(donacion, entidades);
-        when(motorDeMatchmaking.ejecutarMatchmaking(donacion, entidades)).thenReturn(resultadoSimulado);
+        when(alg.generarRanking(donacion, entidades)).thenReturn(entidades);
 
-        matchmakingService.procesarMatchmaking();
+        motorDeMatchmaking.procesarMatchmaking();
 
-        verify(resultadoRepository, times(1)).save(resultadoSimulado);
+        verify(resultadoRepository, times(1)).save(any(ResultadoMatchmaking.class));
     }
 
     @Test
@@ -103,7 +98,6 @@ class MatchmakingServiceTest {
         Categoria cat = new Categoria("Alimentos", false, true);
         Subcategoria sub = new Subcategoria("Fideos", cat);
 
-        // Agregar necesidad a la entidad para verificar que se le asigna la donación
         TipoNecesidad mockTipoNecesidad = mock(TipoNecesidad.class);
         Necesidad necesidad = new Necesidad(sub, mockTipoNecesidad, "Necesitamos fideos", 100L);
         entidad.registrarNecesidad(necesidad);
@@ -122,7 +116,7 @@ class MatchmakingServiceTest {
 
         when(resultadoRepository.findById(propuestaId)).thenReturn(Optional.of(propuesta));
 
-        matchmakingService.aceptarPropuesta(propuestaId, entidadId);
+        motorDeMatchmaking.aceptarPropuesta(propuestaId, entidadId);
 
         assertEquals(EstadoPropuesta.ACEPTADO, propuesta.getEstado());
         assertEquals(TipoEstadoDonacion.ASIGNACION_REALIZADA, donacion.estadoActual());
@@ -156,7 +150,7 @@ class MatchmakingServiceTest {
         when(resultadoRepository.findById(propuestaId)).thenReturn(Optional.of(propuesta));
 
         Exception ex = assertThrows(ResourceNotFoundException.class, () -> {
-            matchmakingService.aceptarPropuesta(propuestaId, entidadIdInvalida);
+            motorDeMatchmaking.aceptarPropuesta(propuestaId, entidadIdInvalida);
         });
 
         assertTrue(ex.getMessage().contains("La entidad elegida no forma parte de las sugerencias"));
@@ -171,7 +165,7 @@ class MatchmakingServiceTest {
 
         when(resultadoRepository.findById(propuestaId)).thenReturn(Optional.of(propuesta));
 
-        matchmakingService.rechazarPropuesta(propuestaId);
+        motorDeMatchmaking.rechazarPropuesta(propuestaId);
 
         assertEquals(EstadoPropuesta.RECHAZADO, propuesta.getEstado());
         verify(resultadoRepository, times(1)).save(propuesta);

@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.donaciones.services;
+package ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -31,23 +31,18 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.RegistroDonaci
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventManagerDonaciones;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoAusenciaPlataforma;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoEntregaExitosa;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoEntregaFallida;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
-import ar.edu.utn.frba.ddsi.donaciones.services.impl.EventoServiceImpl;
 
-@DisplayName("Tests de EventoServiceImpl")
-class EventoServiceTest {
+@DisplayName("Tests de GestorDeEventos")
+class GestorDeEventosTest {
 
     private EventManagerDonaciones eventManager;
     private DonacionRepository donacionRepository;
     private EntidadBeneficiariaRepository entidadRepository;
     private DonanteRepository donanteRepository;
-    private EventoServiceImpl eventoService;
+    private GestorDeEventos gestorDeEventos;
 
     @BeforeEach
     void setUp() {
@@ -56,7 +51,7 @@ class EventoServiceTest {
         entidadRepository = mock(EntidadBeneficiariaRepository.class);
         donanteRepository = mock(DonanteRepository.class);
 
-        eventoService = new EventoServiceImpl(eventManager, donacionRepository, entidadRepository, donanteRepository);
+        gestorDeEventos = new GestorDeEventos(eventManager, donacionRepository, entidadRepository, donanteRepository);
     }
 
     @Test
@@ -77,7 +72,7 @@ class EventoServiceTest {
 
         when(donanteRepository.findAll()).thenReturn(List.of(donanteInactivo, donanteActivo));
 
-        eventoService.verificarInactividadDonantes();
+        gestorDeEventos.verificarInactividadDonantes();
 
         verify(eventManager, times(1)).emitir(any(EventoAusenciaPlataforma.class));
     }
@@ -108,7 +103,7 @@ class EventoServiceTest {
         ParadaRequest parada = new ParadaRequest(entidadId, List.of(donacionId));
         InicioRutaRequest request = new InicioRutaRequest(10L, List.of(parada));
 
-        eventoService.iniciarRuta(request);
+        gestorDeEventos.iniciarRuta(request);
 
         assertEquals(TipoEstadoDonacion.EN_TRASLADO, donacion.estadoActual());
         verify(donacionRepository, times(1)).save(donacion);
@@ -139,7 +134,7 @@ class EventoServiceTest {
 
         ConfirmacionEntregaExitosaRequest request = new ConfirmacionEntregaExitosaRequest(entidadId,
                 List.of(donacionId), "AB123CD", LocalDateTime.now());
-        eventoService.confirmarEntregaExitosa(request);
+        gestorDeEventos.confirmarEntregaExitosa(request);
 
         assertEquals(TipoEstadoDonacion.ENTREGADA, donacion.estadoActual());
         verify(donacionRepository, times(1)).save(donacion);
@@ -167,7 +162,7 @@ class EventoServiceTest {
 
         when(donacionRepository.findById(donacionId)).thenReturn(Optional.of(donacion));
 
-        eventoService.notificarEntregaFallida(donacionId, "Camión averiado");
+        gestorDeEventos.notificarEntregaFallida(donacionId, "Camión averiado");
 
         assertEquals(TipoEstadoDonacion.ENTREGA_FALLIDA, donacion.estadoActual());
         assertTrue(donacion.getHistorialEstados().getLast().getJustificacion().contains("Camión averiado"));

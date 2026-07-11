@@ -68,6 +68,7 @@ package "Microservicio Notificaciones" {
 
   class Notificador {
     estrategiasContactos : Map<TipoContacto, EstrategiaNotificacion>
+    enviarNotificacion(notificacionRequest : NotificacionRequest) : void
     notificar(notificacion : Notificacion) : void
   }
 
@@ -209,6 +210,14 @@ package "Microservicio Donaciones" {
     emitir(evento: EventoDonaciones) : void
   }
 
+  class GestorDeEventos {
+    notificarAusenciaDonante(donante: Donante): void
+    verificarInactividadDonantes(): void
+    iniciarRuta(request: InicioRutaRequest): void
+    confirmarEntregaExitosa(request: ConfirmacionEntregaExitosaRequest): void
+    notificarEntregaFallida(donacionId: Long, motivo: String): void
+  }
+
   interface EventoDonaciones {
   }
 
@@ -270,7 +279,10 @@ package "Microservicio Donaciones" {
 
   class MotorDeMatchmaking {
     algoritmos: List<AlgoritmoAsignacion>
-    ejecutarMatchmaking(donacion: Donacion, entidadesCandidatas: List<EntidadBeneficiaria>): ResultadoMatchmaking
+    obtenerPropuestasPendientes(): List<PropuestaMatchmakingResponse>
+    procesarMatchmaking(): void
+    aceptarPropuesta(propuestaId: Long, entidadId: Long): void
+    rechazarPropuesta(propuestaId: Long): void
   }
 
   class ResultadoMatchmaking {
@@ -286,8 +298,8 @@ package "Microservicio Donaciones" {
     fechaHora: LocalDateTime
   }
 
-  class ImportarCsv {
-    importar(pathArchivo: String): List<Donante>
+  class ImportadorDeDonantes {
+    importarDonantes(pathArchivo: String): void
   }
 
   enum TipoEstadoDonacion {
@@ -364,6 +376,22 @@ package "Microservicio Logistica" {
   class GestorPlanificacionRutas {
     planificarRutas(donacionesAsignadas : List<Long>, camiones : List<Camion>)
     fraccionarEnLotes(donaciones : List<Long>) : List<List<Long>>
+  }
+
+  class GestorDeRutas {
+    iniciarRuta(rutaId : Long) : void
+    confirmarEntregaExitosa(paradaId : Long, rutaId : Long) : void
+  }
+
+  class PlanificadorDeRutas {
+    planificarRutas() : void
+    ejecutarPlanificacion(request: EjecutarPlanificacionRequest) : void
+  }
+
+  class MonitorDeRutas {
+    actualizarUbicacionCamion(patente : String, request : UbicacionRequest) : void
+    obtenerUltimaUbicacionPorRuta(rutaId : Long) : UbicacionResponse
+    obtenerCamionesActivos() : List<CamionActivoResponse>
   }
 
   enum EstadoRuta {
@@ -483,13 +511,25 @@ MotorDeMatchmaking ..> EntidadBeneficiaria
 MotorDeMatchmaking ..> ResultadoMatchmaking
 
 GestorPlanificacionRutas ..> Camion
+GestorDeRutas ..> Ruta
+GestorDeRutas ..> Parada
+GestorDeRutas ..> EventManagerLogistica
+PlanificadorDeRutas ..> GestorPlanificacionRutas
+PlanificadorDeRutas ..> Camion
+MonitorDeRutas ..> Camion
+MonitorDeRutas ..> Ruta
+MonitorDeRutas ..> Ubicacion
 
 EventManagerDonaciones ..> ListenerDonaciones
+GestorDeEventos ..> Donante
+GestorDeEventos ..> Donacion
+GestorDeEventos ..> EntidadBeneficiaria
+GestorDeEventos ..> EventManagerDonaciones
 
 SegmentadorDeDonacion ..> Donacion
 SegmentadorDeDonacion ..> RegistroDonacion
 
-ImportarCsv ..> Donante
+ImportadorDeDonantes ..> Donante
 
 Email --> ProveedorEmail
 SMS --> ProveedorSMS

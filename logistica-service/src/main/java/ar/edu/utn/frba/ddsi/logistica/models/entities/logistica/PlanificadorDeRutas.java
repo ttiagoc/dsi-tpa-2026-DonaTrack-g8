@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.logistica.services.impl;
+package ar.edu.utn.frba.ddsi.logistica.models.entities.logistica;
 
 import java.net.URI;
 import java.util.List;
@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -15,13 +15,10 @@ import ar.edu.utn.frba.ddsi.logistica.config.RestLogisticaConfig;
 import ar.edu.utn.frba.ddsi.logistica.dto.donacion.DonacionDTO;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.CamionPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Camion;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.GestorPlanificacionRutas;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
-import ar.edu.utn.frba.ddsi.logistica.services.PlanificacionRutasService;
 
-@Service
-public class PlanificacionRutasServiceImpl implements PlanificacionRutasService {
+@Component
+public class PlanificadorDeRutas {
 
     private final RestTemplate restTemplate;
     private final RestLogisticaConfig properties;
@@ -29,7 +26,7 @@ public class PlanificacionRutasServiceImpl implements PlanificacionRutasService 
     private final CamionRepository camionRepository;
     private static final int TAMANO_LOTE = 100;
 
-    public PlanificacionRutasServiceImpl(RestTemplate restTemplate, RestLogisticaConfig properties,
+    public PlanificadorDeRutas(RestTemplate restTemplate, RestLogisticaConfig properties,
             GestorPlanificacionRutas gestorPlanificacionRutas, CamionRepository camionRepository) {
         this.restTemplate = restTemplate;
         this.properties = properties;

@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.logistica.models.entities;
+package ar.edu.utn.frba.ddsi.logistica.models.entities.logistica;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -10,8 +10,6 @@ import java.util.ArrayList;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Camion;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ruta;
 import ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoRuta;
 
 @DisplayName("Tests de Ruta")
@@ -29,8 +27,6 @@ class RutaTest {
         assertNotNull(ruta.getParadas());
         assertEquals(0, ruta.getParadas().size());
     }
-
-
 
     @Test
     @DisplayName("iniciar() debe mutar el estado a EN_TRASLADO")

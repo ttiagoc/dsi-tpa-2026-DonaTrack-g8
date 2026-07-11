@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.logistica.services;
+package ar.edu.utn.frba.ddsi.logistica.models.entities.logistica;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -22,26 +22,21 @@ import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.CamionActivoResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionResponse;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Camion;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Parada;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ruta;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ubicacion;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
-import ar.edu.utn.frba.ddsi.logistica.services.impl.MonitoreoServiceImpl;
 
-@DisplayName("Tests de MonitoreoServiceImpl")
-class MonitoreoServiceTest {
+@DisplayName("Tests de MonitorDeRutas")
+class MonitorDeRutasTest {
 
     private CamionRepository camionRepository;
     private RutaRepository rutaRepository;
-    private MonitoreoServiceImpl monitoreoService;
+    private MonitorDeRutas monitorDeRutas;
 
     @BeforeEach
     void setUp() {
         camionRepository = mock(CamionRepository.class);
         rutaRepository = mock(RutaRepository.class);
-        monitoreoService = new MonitoreoServiceImpl(camionRepository, rutaRepository);
+        monitorDeRutas = new MonitorDeRutas(camionRepository, rutaRepository);
     }
 
     @Test
@@ -60,7 +55,7 @@ class MonitoreoServiceTest {
 
         UbicacionRequest request = new UbicacionRequest(-34.6037, -58.3816, 60.5);
 
-        monitoreoService.actualizarUbicacionCamion(patente, request);
+        monitorDeRutas.actualizarUbicacionCamion(patente, request);
 
         assertEquals(-34.6037, camion.getUbicacion().getLatitud());
         assertEquals(-58.3816, camion.getUbicacion().getLongitud());
@@ -85,7 +80,7 @@ class MonitoreoServiceTest {
         UbicacionRequest request = new UbicacionRequest(-34.6037, -58.3816, 60.5);
 
         Exception ex = assertThrows(BusinessException.class, () -> {
-            monitoreoService.actualizarUbicacionCamion(patente, request);
+            monitorDeRutas.actualizarUbicacionCamion(patente, request);
         });
 
         assertTrue(ex.getMessage().contains("El camión no tiene ninguna ruta en estado EN_TRASLADO"));
@@ -103,7 +98,7 @@ class MonitoreoServiceTest {
 
         when(rutaRepository.findById(rutaId)).thenReturn(Optional.of(ruta));
 
-        UbicacionResponse response = monitoreoService.obtenerUltimaUbicacionPorRuta(rutaId);
+        UbicacionResponse response = monitorDeRutas.obtenerUltimaUbicacionPorRuta(rutaId);
 
         assertEquals(-34.0, response.latitud());
         assertEquals(-58.0, response.longitud());
@@ -126,7 +121,7 @@ class MonitoreoServiceTest {
 
         when(rutaRepository.buscarRutasActivas()).thenReturn(List.of(ruta));
 
-        List<CamionActivoResponse> activos = monitoreoService.obtenerCamionesActivos();
+        List<CamionActivoResponse> activos = monitorDeRutas.obtenerCamionesActivos();
 
         assertEquals(1, activos.size());
         assertEquals(camion.getPatente(), activos.get(0).patente());

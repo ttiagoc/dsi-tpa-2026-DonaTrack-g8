@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.logistica.services;
+package ar.edu.utn.frba.ddsi.logistica.models.entities.logistica;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -25,20 +25,17 @@ import ar.edu.utn.frba.ddsi.logistica.dto.donacion.DonacionDTO;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.CamionPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.DireccionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Camion;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.GestorPlanificacionRutas;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
-import ar.edu.utn.frba.ddsi.logistica.services.impl.PlanificacionRutasServiceImpl;
 
-@DisplayName("Tests de PlanificacionRutasServiceImpl")
+@DisplayName("Tests de PlanificadorDeRutas")
 @SuppressWarnings("unchecked")
-class PlanificacionRutasServiceTest {
+class PlanificadorDeRutasTest {
 
         private RestTemplate restTemplate;
         private RestLogisticaConfig properties;
         private GestorPlanificacionRutas gestorPlanificacionRutas;
         private CamionRepository camionRepository;
-        private PlanificacionRutasServiceImpl planificacionRutasService;
+        private PlanificadorDeRutas planificadorDeRutas;
 
         @BeforeEach
         void setUp() {
@@ -49,7 +46,7 @@ class PlanificacionRutasServiceTest {
 
                 when(properties.getDonacionesUrl()).thenReturn("http://localhost:8080/api");
 
-                planificacionRutasService = new PlanificacionRutasServiceImpl(restTemplate, properties,
+                planificadorDeRutas = new PlanificadorDeRutas(restTemplate, properties,
                                 gestorPlanificacionRutas, camionRepository);
         }
 
@@ -71,7 +68,7 @@ class PlanificacionRutasServiceTest {
                 List<Camion> camiones = List.of(camion);
                 when(camionRepository.findAllDisponibles()).thenReturn(camiones);
 
-                planificacionRutasService.planificarRutas();
+                planificadorDeRutas.planificarRutas();
 
                 verify(gestorPlanificacionRutas, times(1)).solicitarPlanificacion(loteSimulado, camiones);
         }
@@ -92,7 +89,7 @@ class PlanificacionRutasServiceTest {
 
                 when(camionRepository.findAllDisponibles()).thenReturn(List.of());
 
-                planificacionRutasService.planificarRutas();
+                planificadorDeRutas.planificarRutas();
 
                 verify(gestorPlanificacionRutas, never()).solicitarPlanificacion(any(), any());
         }
@@ -118,7 +115,7 @@ class PlanificacionRutasServiceTest {
                                 any(ParameterizedTypeReference.class)))
                                 .thenReturn(responseMock);
 
-                planificacionRutasService.ejecutarPlanificacion(request);
+                planificadorDeRutas.ejecutarPlanificacion(request);
 
                 List<Long> expectedIdsPost = List.of(10L, 20L);
                 verify(restTemplate, times(1)).postForEntity(eq(urlPostLista), eq(expectedIdsPost), eq(Void.class));
