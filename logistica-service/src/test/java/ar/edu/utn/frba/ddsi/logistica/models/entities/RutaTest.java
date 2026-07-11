@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Camion;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ruta;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ubicacion;
 import ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoRuta;
 
 @DisplayName("Tests de Ruta")
@@ -31,17 +30,7 @@ class RutaTest {
         assertEquals(0, ruta.getParadas().size());
     }
 
-    @Test
-    @DisplayName("Debe actualizar correctamente la ultima ubicacion")
-    void actualizarUbicacion() {
-        Ruta ruta = new Ruta(LocalDate.now(), null, new ArrayList<>());
 
-        Ubicacion ubi = new Ubicacion(-34.0, -58.0, 45.0);
-        ruta.actualizarUbicacion(ubi);
-
-        assertEquals(ubi, ruta.getUltimaUbicacion());
-        assertEquals(-34.0, ruta.getUltimaUbicacion().getLatitud());
-    }
 
     @Test
     @DisplayName("iniciar() debe mutar el estado a EN_TRASLADO")

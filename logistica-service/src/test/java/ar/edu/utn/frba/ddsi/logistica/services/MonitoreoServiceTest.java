@@ -62,10 +62,10 @@ class MonitoreoServiceTest {
 
         monitoreoService.actualizarUbicacionCamion(patente, request);
 
-        assertEquals(-34.6037, ruta.getUltimaUbicacion().getLatitud());
-        assertEquals(-58.3816, ruta.getUltimaUbicacion().getLongitud());
-        assertEquals(60.5, ruta.getUltimaUbicacion().getVelocidad());
-        verify(rutaRepository, times(1)).save(ruta);
+        assertEquals(-34.6037, camion.getUbicacion().getLatitud());
+        assertEquals(-58.3816, camion.getUbicacion().getLongitud());
+        assertEquals(60.5, camion.getUbicacion().getVelocidad());
+        verify(camionRepository, times(1)).save(camion);
     }
 
     @Test
@@ -95,10 +95,11 @@ class MonitoreoServiceTest {
     @DisplayName("Debe obtener la ultima ubicacion por ruta")
     void obtenerUltimaUbicacionPorRuta() {
         Long rutaId = 100L;
-        Ruta ruta = spy(new Ruta(LocalDate.now(), null, List.of()));
+        Camion camion = new Camion("XYZ987", 20.0, 3.0, 1000.0, null);
+        Ruta ruta = spy(new Ruta(LocalDate.now(), camion, List.of()));
         doReturn(rutaId).when(ruta).getId();
         Ubicacion ubi = new Ubicacion(-34.0, -58.0, 80.0);
-        ruta.actualizarUbicacion(ubi);
+        camion.actualizarUbicacion(ubi);
 
         when(rutaRepository.findById(rutaId)).thenReturn(Optional.of(ruta));
 
@@ -114,6 +115,7 @@ class MonitoreoServiceTest {
     void obtenerCamionesActivos() {
         Camion camion = spy(new Camion("XYZ987", 20.0, 3.0, 1000.0, null));
         doReturn(1L).when(camion).getId();
+        camion.actualizarUbicacion(new Ubicacion(-34.0, -58.0, 45.0));
 
         Parada parada = mock(Parada.class);
         when(parada.getOrden()).thenReturn(1);
@@ -121,7 +123,6 @@ class MonitoreoServiceTest {
 
         Ruta ruta = spy(new Ruta(LocalDate.now(), camion, List.of(parada)));
         doReturn(100L).when(ruta).getId();
-        ruta.actualizarUbicacion(new Ubicacion(-34.0, -58.0, 45.0));
 
         when(rutaRepository.buscarRutasActivas()).thenReturn(List.of(ruta));
 

@@ -16,7 +16,6 @@ public class Ruta {
     private Camion camion;
     private Chofer chofer;
     private List<Parada> paradas;
-    private Ubicacion ultimaUbicacion;
 
     public Ruta(LocalDate fecha, Camion camion, List<Parada> paradas) {
         this.id = null;
@@ -24,10 +23,6 @@ public class Ruta {
         this.estado = EstadoRuta.PLANIFICADA;
         this.camion = camion;
         this.paradas = paradas;
-    }
-
-    public void actualizarUbicacion(Ubicacion nuevaUbicacion) {
-        this.ultimaUbicacion = nuevaUbicacion;
     }
 
     public void iniciar() {

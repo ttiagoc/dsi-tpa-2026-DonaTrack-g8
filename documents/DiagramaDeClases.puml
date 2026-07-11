@@ -328,6 +328,8 @@ package "Microservicio Logistica" {
     altura: Double
     capacidadCarga: Double
     chofer: Chofer
+    ubicacion: Ubicacion
+    actualizarUbicacion(nuevaUbicacion: Ubicacion)
   }
 
   class Chofer {
@@ -342,8 +344,6 @@ package "Microservicio Logistica" {
     camion: Camion
     chofer: Chofer
     paradas: List<Parada>
-    ultimaUbicacion: Ubicacion
-    actualizarUbicacion(nuevaUbicacion: Ubicacion)
     iniciar()
     finalizar()
   }
@@ -441,7 +441,7 @@ Ruta --> EstadoRuta
 Ruta --> Camion
 Ruta --> Chofer
 Ruta --> "*" Parada
-Ruta --> Ubicacion
+Camion --> Ubicacion
 
 EntidadBeneficiaria ..> Donacion
 

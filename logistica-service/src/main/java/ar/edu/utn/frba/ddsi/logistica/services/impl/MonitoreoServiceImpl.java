@@ -40,19 +40,20 @@ public class MonitoreoServiceImpl implements MonitoreoService {
       throw new BusinessException("El camión no tiene ninguna ruta en estado EN_TRASLADO.");
     }
 
-    ruta.actualizarUbicacion(toUbicacion(request));
-    rutaRepository.save(ruta);
+    camion.actualizarUbicacion(toUbicacion(request));
+    camionRepository.save(camion);
   }
 
   public UbicacionResponse obtenerUltimaUbicacionPorRuta(Long rutaId) {
     Ruta ruta = rutaRepository.findById(rutaId)
         .orElseThrow(() -> new ResourceNotFoundException("No se encontro una ruta con el id: " + rutaId));
 
-    if (ruta.getUltimaUbicacion() == null) {
+    Camion camion = ruta.getCamion();
+    if (camion == null || camion.getUbicacion() == null) {
       throw new ResourceNotFoundException("No se han registrado ubicaciones para esta ruta.");
     }
 
-    return this.toUbicacionResponse(ruta.getUltimaUbicacion());
+    return this.toUbicacionResponse(camion.getUbicacion());
   }
 
   public List<CamionActivoResponse> obtenerCamionesActivos() {
@@ -83,16 +84,16 @@ public class MonitoreoServiceImpl implements MonitoreoService {
 
   private CamionActivoResponse toCamionActivoResponse(Ruta ruta) {
     Camion camion = ruta.getCamion();
-    Ubicacion ubi = ruta.getUltimaUbicacion();
+    Ubicacion ubi = camion.getUbicacion();
     List<ParadaPendienteResponse> pendientes = ruta.getParadas().stream().map(this::toParadaPendienteResponse)
         .collect(Collectors.toList());
 
     return new CamionActivoResponse(
         camion.getId(),
         camion.getPatente(),
-        ubi.getLatitud(),
-        ubi.getLongitud(),
-        ubi.getVelocidad(),
+        ubi != null ? ubi.getLatitud() : null,
+        ubi != null ? ubi.getLongitud() : null,
+        ubi != null ? ubi.getVelocidad() : null,
         pendientes);
   }
 

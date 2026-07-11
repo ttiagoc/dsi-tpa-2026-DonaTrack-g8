@@ -12,6 +12,7 @@ public class Camion {
     private Double altura;
     private Double capacidadCarga;
     private Chofer chofer;
+    private Ubicacion ubicacion;
 
     public Camion(String patente, Double capacidadVolumen, Double altura, Double capacidadCarga, Chofer chofer) {
         this.id = null;
@@ -20,6 +21,10 @@ public class Camion {
         this.altura = altura;
         this.capacidadCarga = capacidadCarga;
         this.chofer = chofer;
+    }
+
+    public void actualizarUbicacion(Ubicacion nuevaUbicacion) {
+        this.ubicacion = nuevaUbicacion;
     }
 
 }
