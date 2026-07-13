@@ -53,7 +53,7 @@ public class PlanificadorDeRutas {
                     .build().toUri();
 
             EstadoDonacionRequest requestBody = new EstadoDonacionRequest(
-                    "lista_para_entregar",
+                    "LISTA_PARA_ENTREGAR",
                     "Donacion lista para entregar");
 
             restTemplate.put(url, requestBody);
