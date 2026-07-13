@@ -58,6 +58,8 @@ public class PlanificadorDeRutas {
 
             restTemplate.put(url, requestBody);
         }
+
+        planificarRutas();
     }
 
     private List<DonacionDTO> getLote() {

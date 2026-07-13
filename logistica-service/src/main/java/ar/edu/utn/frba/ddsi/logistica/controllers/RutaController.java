@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionResponse;
-import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaResponse;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.PlanificadorDeRutas;
@@ -81,14 +80,8 @@ public class RutaController {
     }
 
     @PostMapping("/planificaciones")
-    @ResponseStatus(HttpStatus.ACCEPTED)
-    public void iniciarPlanificacion() {
-        planificadorDeRutas.planificarRutas();
-    }
-
-    @PostMapping("/planificaciones/callback")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void recibirCallback(@RequestBody EjecutarPlanificacionRequest request) {
-        planificadorDeRutas.ejecutarPlanificacion(request);
+    public void planificarRutas() {
+        planificadorDeRutas.planificarRutas();
     }
 }
