@@ -45,6 +45,7 @@ class GestorDeEventosTest {
     void setUp() {
         eventManager = mock(EventManagerDonaciones.class);
         donacionRepository = mock(DonacionRepository.class);
+        donanteRepository = mock(DonanteRepository.class);
 
         gestorDeEventos = new GestorDeEventos(eventManager, donacionRepository, donanteRepository);
     }
