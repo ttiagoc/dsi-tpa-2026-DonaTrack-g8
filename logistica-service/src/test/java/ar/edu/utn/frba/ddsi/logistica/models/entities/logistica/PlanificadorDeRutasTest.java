@@ -96,7 +96,7 @@ class PlanificadorDeRutasTest {
         }
 
         @Test
-        @DisplayName("Debe notificar donaciones planificadas y desencadenar nueva planificacion")
+        @DisplayName("Debe notificar donaciones planificadas")
         void ejecutarPlanificacion() {
                 DireccionRequest dir1 = new DireccionRequest("Calle 1", List.of(10L, 20L));
                 CamionPlanificacionRequest camionRequest = new CamionPlanificacionRequest(1L, List.of(dir1));
@@ -106,18 +106,9 @@ class PlanificadorDeRutasTest {
                 URI url1 = UriComponentsBuilder.fromUriString("http://localhost:8080/api/donaciones/10/estado").build().toUri();
                 URI url2 = UriComponentsBuilder.fromUriString("http://localhost:8080/api/donaciones/20/estado").build().toUri();
                 EstadoDonacionRequest payload = new EstadoDonacionRequest(
-                                "LISTA_PARA_ENTREGAR",
+                                "lista_para_entregar",
                                 "Donacion lista para entregar"
                 );
-
-                // Simular getLote() vacío para que termine rápido la cadena
-                URI urlGetLote = UriComponentsBuilder
-                                .fromUriString("http://localhost:8080/api/donaciones/estado/asignacion_realizada")
-                                .queryParam("limit", 100).build().toUri();
-                ResponseEntity<List<DonacionDTO>> responseMock = ResponseEntity.ok(List.of());
-                when(restTemplate.exchange(eq(urlGetLote), eq(HttpMethod.GET), eq(null),
-                                any(ParameterizedTypeReference.class)))
-                                .thenReturn(responseMock);
 
                 planificadorDeRutas.ejecutarPlanificacion(request);
 

@@ -4,14 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import ar.edu.utn.frba.ddsi.logistica.dto.donacion.DonacionDTO;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.CamionPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.DireccionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
-
-import org.springframework.stereotype.Component;
 
 @Component
 public class GestorPlanificacionRutas {
@@ -52,7 +51,7 @@ public class GestorPlanificacionRutas {
                 EjecutarPlanificacionRequest mockResponse = new EjecutarPlanificacionRequest(camionesProcesados,
                         donacionesSobrantes);
 
-                String urlCallback = "http://localhost:8081/api/rutas/planificaciones";
+                String urlCallback = "http://localhost:8081/api/rutas/planificaciones/callback";
                 System.out.println("Cálculo terminado. Golpeando la URL de callback...");
 
                 restTemplate.postForObject(urlCallback, mockResponse, Void.class);
