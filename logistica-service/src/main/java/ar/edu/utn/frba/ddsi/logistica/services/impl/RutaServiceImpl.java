@@ -8,17 +8,15 @@ import org.springframework.stereotype.Service;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
+import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.ParadaRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.ParadaResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaResponse;
-import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionResponse;
-import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Camion;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.GestorDeRutas;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.MonitorDeRutas;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Parada;
-import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.PlanificadorDeRutas;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ruta;
 import ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoRuta;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
@@ -32,15 +30,13 @@ public class RutaServiceImpl implements RutaService {
     private final CamionRepository camionRepository;
     private final GestorDeRutas gestorDeRutas;
     private final MonitorDeRutas monitorDeRutas;
-    private final PlanificadorDeRutas planificadorDeRutas;
 
     public RutaServiceImpl(RutaRepository rutaRepository, CamionRepository camionRepository,
-            GestorDeRutas gestorDeRutas, MonitorDeRutas monitorDeRutas, PlanificadorDeRutas planificadorDeRutas) {
+            GestorDeRutas gestorDeRutas, MonitorDeRutas monitorDeRutas) {
         this.rutaRepository = rutaRepository;
         this.camionRepository = camionRepository;
         this.gestorDeRutas = gestorDeRutas;
         this.monitorDeRutas = monitorDeRutas;
-        this.planificadorDeRutas = planificadorDeRutas;
     }
 
     public List<RutaResponse> obtenerTodas(LocalDate fecha) {
@@ -188,9 +184,5 @@ public class RutaServiceImpl implements RutaService {
 
     public UbicacionResponse obtenerUbicacionActual(Long id) {
         return monitorDeRutas.obtenerUltimaUbicacionPorRuta(id);
-    }
-
-    public void ejecutarPlanificacion(EjecutarPlanificacionRequest request) {
-        planificadorDeRutas.ejecutarPlanificacion(request);
     }
 }

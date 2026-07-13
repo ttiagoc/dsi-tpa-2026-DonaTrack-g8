@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionResponse;
-import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaResponse;
 
@@ -25,6 +24,4 @@ public interface RutaService {
     void confirmarEntregaExitosa(Long rutaId, Long paradaId);
 
     UbicacionResponse obtenerUbicacionActual(Long id);
-
-    void ejecutarPlanificacion(EjecutarPlanificacionRequest request);
 }

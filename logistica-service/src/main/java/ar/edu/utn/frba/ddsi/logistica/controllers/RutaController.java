@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,12 +13,13 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionResponse;
-import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaResponse;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.PlanificadorDeRutas;
 import ar.edu.utn.frba.ddsi.logistica.services.RutaService;
 
 @RestController
@@ -27,9 +27,11 @@ import ar.edu.utn.frba.ddsi.logistica.services.RutaService;
 public class RutaController {
 
     private final RutaService rutaService;
+    private final PlanificadorDeRutas planificadorDeRutas;
 
-    public RutaController(RutaService rutaService) {
+    public RutaController(RutaService rutaService, PlanificadorDeRutas planificadorDeRutas) {
         this.rutaService = rutaService;
+        this.planificadorDeRutas = planificadorDeRutas;
     }
 
     @GetMapping
@@ -79,7 +81,7 @@ public class RutaController {
 
     @PostMapping("/planificaciones")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void ejecutarPlanificacion(@RequestBody EjecutarPlanificacionRequest request) {
-        rutaService.ejecutarPlanificacion(request);
+    public void planificarRutas() {
+        planificadorDeRutas.planificarRutas();
     }
 }

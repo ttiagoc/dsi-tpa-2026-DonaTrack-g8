@@ -17,6 +17,7 @@ import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.DonanteResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaHumanaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaJuridicaRequest;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.GestorDeEventos;
 import ar.edu.utn.frba.ddsi.donaciones.services.DonanteService;
 
 @RestController
@@ -24,9 +25,11 @@ import ar.edu.utn.frba.ddsi.donaciones.services.DonanteService;
 public class DonanteController {
 
     private final DonanteService donanteService;
+    private final GestorDeEventos gestorDeEventos;
 
-    public DonanteController(DonanteService donanteService) {
+    public DonanteController(DonanteService donanteService, GestorDeEventos gestorDeEventos) {
         this.donanteService = donanteService;
+        this.gestorDeEventos = gestorDeEventos;
     }
 
     @GetMapping
@@ -74,5 +77,11 @@ public class DonanteController {
     @GetMapping("/{id}/contacto")
     public MedioContacto obtenerContactoPredeterminado(@PathVariable Long id) {
         return donanteService.obtenerContactoPredeterminado(id);
+    }
+
+    @PostMapping("/inactividad/verificaciones")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void verificarInactividad() {
+        gestorDeEventos.verificarInactividadDonantes();
     }
 }
