@@ -16,33 +16,23 @@ import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiar
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.NecesidadRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.NecesidadResponse;
-import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.ReportarNoRecibidaRequest;
-import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.SubirFotosRecepcionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.Necesidad;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.NecesidadExtraordinaria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.NecesidadRecurrente;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.TipoNecesidad;
-import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.GestorDeEventos;
 import ar.edu.utn.frba.ddsi.donaciones.services.EntidadBeneficiariaService;
 
 @Service
 public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaService {
 
     private final EntidadBeneficiariaRepository entidadBeneficiariaRepository;
-    private final DonacionRepository donacionRepository;
-    private final GestorDeEventos gestorDeEventos;
 
-    public EntidadBeneficiariaServiceImpl(EntidadBeneficiariaRepository entidadBeneficiariaRepository,
-            DonacionRepository donacionRepository, GestorDeEventos gestorDeEventos) {
+    public EntidadBeneficiariaServiceImpl(EntidadBeneficiariaRepository entidadBeneficiariaRepository) {
         this.entidadBeneficiariaRepository = entidadBeneficiariaRepository;
-        this.donacionRepository = donacionRepository;
-        this.gestorDeEventos = gestorDeEventos;
     }
 
     public List<EntidadBeneficiariaResponse> obtenerTodas() {
@@ -213,49 +203,6 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
                 .map(entidad -> {
                     entidad.eliminarNecesidad(necesidadId);
                     return this.guardar(entidad);
-                })
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "No se encontro una entidad beneficiaria con el id: " + entidadId));
-    }
-
-    public void confirmarEntrega(Long entidadId, Long donacionId) {
-        entidadBeneficiariaRepository.findById(entidadId)
-                .map(entidad -> {
-                    Donacion donacion = donacionRepository.findById(donacionId)
-                            .orElseThrow(() -> new ResourceNotFoundException(
-                                    "No se encontro una donacion con el id: " + donacionId));
-                    entidad.confirmarEntrega(donacion);
-                    this.guardar(entidad);
-                    return entidad;
-                })
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "No se encontro una entidad beneficiaria con el id: " + entidadId));
-    }
-
-    public void reportarNoRecibida(Long entidadId, Long donacionId, ReportarNoRecibidaRequest request) {
-        entidadBeneficiariaRepository.findById(entidadId)
-                .map(entidad -> {
-                    gestorDeEventos.notificarEntregaFallida(donacionId, request.motivo());
-                    return entidad;
-                })
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "No se encontro una entidad beneficiaria con el id: " + entidadId));
-    }
-
-    public void subirFotosRecepcion(Long entidadId, Long donacionId, SubirFotosRecepcionRequest request) {
-        entidadBeneficiariaRepository.findById(entidadId)
-                .map(entidad -> {
-                    Donacion donacion = donacionRepository.findById(donacionId)
-                            .orElseThrow(() -> new ResourceNotFoundException(
-                                    "No se encontro una donacion con el id: " + donacionId));
-                    if (donacion.getFotosRecepcion() == null) {
-                        donacion.setFotosRecepcion(new java.util.ArrayList<>());
-                    }
-                    if (request.fotosUrl() != null) {
-                        donacion.getFotosRecepcion().addAll(request.fotosUrl());
-                    }
-                    donacionRepository.save(donacion);
-                    return entidad;
                 })
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontro una entidad beneficiaria con el id: " + entidadId));

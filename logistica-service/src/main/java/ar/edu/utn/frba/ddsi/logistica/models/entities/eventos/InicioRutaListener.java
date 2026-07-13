@@ -47,7 +47,7 @@ public class InicioRutaListener implements ListenerLogistica<EventoInicioRuta> {
             Long entidadId = parada.getEntidadId();
             try {
                 String contactosEntidadUrl = UriComponentsBuilder.fromUriString(config.getDonacionesUrl())
-                        .path("/donaciones-service/entidad-beneficiaria/" + entidadId + "/contactos")
+                        .path("/entidad-beneficiaria/" + entidadId + "/contactos")
                         .build().toUriString();
 
                 ResponseEntity<List<MedioContacto>> response = restTemplate.exchange(
@@ -73,14 +73,14 @@ public class InicioRutaListener implements ListenerLogistica<EventoInicioRuta> {
             for (Long donacionId : parada.getDonacionIds()) {
                 try {
                     String donacionUrl = UriComponentsBuilder.fromUriString(config.getDonacionesUrl())
-                            .path("/donaciones-service/donacion/" + donacionId)
+                            .path("/donaciones/" + donacionId)
                             .build().toUriString();
 
                     DonacionResponse responseDonacion = restTemplate.getForObject(donacionUrl, DonacionResponse.class);
                     Long donanteId = responseDonacion.donanteId();
 
                     String contactoDonanteUrl = UriComponentsBuilder.fromUriString(config.getDonacionesUrl())
-                            .path("/donaciones-service/donantes/" + donanteId + "/contacto")
+                            .path("/donantes/" + donanteId + "/contacto")
                             .build().toUriString();
                     MedioContacto contactoDonante = restTemplate.getForObject(
                             contactoDonanteUrl,

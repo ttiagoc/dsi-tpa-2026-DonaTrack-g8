@@ -15,10 +15,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ar.edu.utn.frba.ddsi.logistica.dto.camion.CamionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.camion.CamionResponse;
+import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.CamionActivoResponse;
+import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.services.CamionService;
 
 @RestController
-@RequestMapping("/api/logistica-service/camiones")
+@RequestMapping("/api/camiones")
 public class CamionController {
 
     private final CamionService camionService;
@@ -52,5 +54,16 @@ public class CamionController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminar(@PathVariable Long id) {
         camionService.eliminar(id);
+    }
+
+    @GetMapping("/activos")
+    public List<CamionActivoResponse> obtenerCamionesActivos() {
+        return camionService.obtenerCamionesActivos();
+    }
+
+    @PostMapping("/ubicacion/{patente}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void recibirTelemetria(@PathVariable String patente, @RequestBody UbicacionRequest request) {
+        camionService.recibirTelemetria(patente, request);
     }
 }

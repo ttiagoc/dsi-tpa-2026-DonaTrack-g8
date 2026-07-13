@@ -12,7 +12,7 @@ import ar.edu.utn.frba.ddsi.notificaciones.models.entities.Notificador;
 import lombok.AllArgsConstructor;
 
 @RestController
-@RequestMapping("/api/notificaciones-service/notificar")
+@RequestMapping("/api/notificar")
 @AllArgsConstructor
 public class NotificacionController {
 

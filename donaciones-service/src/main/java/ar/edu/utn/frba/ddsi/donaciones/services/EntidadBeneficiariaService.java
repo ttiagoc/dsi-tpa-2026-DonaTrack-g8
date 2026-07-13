@@ -7,8 +7,6 @@ import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiar
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.NecesidadRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.NecesidadResponse;
-import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.ReportarNoRecibidaRequest;
-import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.SubirFotosRecepcionRequest;
 
 public interface EntidadBeneficiariaService {
 
@@ -27,12 +25,6 @@ public interface EntidadBeneficiariaService {
     NecesidadResponse registrarNecesidad(Long id, NecesidadRequest request);
 
     void eliminarNecesidad(Long entidadId, Long necesidadId);
-
-    void confirmarEntrega(Long entidadId, Long donacionId);
-
-    void reportarNoRecibida(Long entidadId, Long donacionId, ReportarNoRecibidaRequest request);
-
-    void subirFotosRecepcion(Long entidadId, Long donacionId, SubirFotosRecepcionRequest request);
 
     List<MedioContacto> obtenerContactos(Long id);
 }

@@ -6,6 +6,8 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
+import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
+import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.EstadoPropuestaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.PropuestaMatchmakingResponse;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventManagerDonaciones;
@@ -147,6 +149,22 @@ public class MotorDeMatchmaking {
         propuesta.setEstado(EstadoPropuesta.RECHAZADO);
         resultadoRepository.save(propuesta);
         System.out.println("Propuesta " + propuestaId + " RECHAZADA por el administrador.");
+    }
+
+    public void actualizarEstadoPropuesta(Long id, EstadoPropuestaRequest request) {
+        if ("ACEPTADO".equalsIgnoreCase(request.estado())) {
+            if (request.entidadId() == null) {
+                throw new BusinessException("La entidadId es requerida para aceptar la propuesta");
+            }
+            if (!entidadRepository.existsById(request.entidadId())) {
+                throw new ResourceNotFoundException("No se encontro una entidad beneficiaria con el id: " + request.entidadId());
+            }
+            this.aceptarPropuesta(id, request.entidadId());
+        } else if ("RECHAZADO".equalsIgnoreCase(request.estado())) {
+            this.rechazarPropuesta(id);
+        } else {
+            throw new BusinessException("Estado no soportado: " + request.estado());
+        }
     }
 
     private void ejecutarNotificaciones(Donacion donacion, EntidadBeneficiaria entidad) {

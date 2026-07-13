@@ -10,7 +10,7 @@ import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.*;
 import ar.edu.utn.frba.ddsi.donaciones.services.EntidadBeneficiariaService;
 
 @RestController
-@RequestMapping("/api/donaciones-service/entidad-beneficiaria")
+@RequestMapping("/api/entidad-beneficiaria")
 public class EntidadBeneficiariaController {
 
     private final EntidadBeneficiariaService entidadBeneficiariaService;
@@ -65,26 +65,6 @@ public class EntidadBeneficiariaController {
     public void eliminarNecesidad(@PathVariable Long entidadId,
             @PathVariable Long necesidadId) {
         entidadBeneficiariaService.eliminarNecesidad(entidadId, necesidadId);
-    }
-
-    @PostMapping("/{entidadId}/entregas/{donacionId}/confirmar")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void confirmarEntrega(@PathVariable Long entidadId, @PathVariable Long donacionId) {
-        entidadBeneficiariaService.confirmarEntrega(entidadId, donacionId);
-    }
-
-    @PostMapping("/{entidadId}/entregas/{donacionId}/no-recibida")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void reportarNoRecibida(@PathVariable Long entidadId, @PathVariable Long donacionId,
-            @RequestBody ReportarNoRecibidaRequest request) {
-        entidadBeneficiariaService.reportarNoRecibida(entidadId, donacionId, request);
-    }
-
-    @PostMapping("/{entidadId}/entregas/{donacionId}/fotos")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void subirFotosRecepcion(@PathVariable Long entidadId, @PathVariable Long donacionId,
-            @RequestBody SubirFotosRecepcionRequest request) {
-        entidadBeneficiariaService.subirFotosRecepcion(entidadId, donacionId, request);
     }
 
     @GetMapping("/{id}/contactos")

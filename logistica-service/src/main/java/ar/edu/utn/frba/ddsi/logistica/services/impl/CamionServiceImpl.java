@@ -12,8 +12,11 @@ import ar.edu.utn.frba.ddsi.logistica.dto.camion.CamionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.camion.CamionResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.camion.ChoferResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.camion.ChoferRequest;
+import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.CamionActivoResponse;
+import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Camion;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Chofer;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.MonitorDeRutas;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
 import ar.edu.utn.frba.ddsi.logistica.services.CamionService;
 
@@ -21,9 +24,11 @@ import ar.edu.utn.frba.ddsi.logistica.services.CamionService;
 public class CamionServiceImpl implements CamionService {
 
     private final CamionRepository camionRepository;
+    private final MonitorDeRutas monitorDeRutas;
 
-    public CamionServiceImpl(CamionRepository camionRepository) {
+    public CamionServiceImpl(CamionRepository camionRepository, MonitorDeRutas monitorDeRutas) {
         this.camionRepository = camionRepository;
+        this.monitorDeRutas = monitorDeRutas;
     }
 
     public List<CamionResponse> obtenerTodos() {
@@ -120,5 +125,13 @@ public class CamionServiceImpl implements CamionService {
         return new ChoferResponse(
                 chofer.getNombre(),
                 chofer.getApellido());
+    }
+
+    public List<CamionActivoResponse> obtenerCamionesActivos() {
+        return monitorDeRutas.obtenerCamionesActivos();
+    }
+
+    public void recibirTelemetria(String patente, UbicacionRequest request) {
+        monitorDeRutas.actualizarUbicacionCamion(patente, request);
     }
 }

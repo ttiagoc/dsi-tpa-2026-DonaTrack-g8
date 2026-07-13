@@ -13,6 +13,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import ar.edu.utn.frba.ddsi.logistica.config.RestLogisticaConfig;
 import ar.edu.utn.frba.ddsi.logistica.dto.donacion.DonacionDTO;
+import ar.edu.utn.frba.ddsi.logistica.dto.donacion.EstadoDonacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.CamionPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
@@ -46,18 +47,24 @@ public class PlanificadorDeRutas {
     public void ejecutarPlanificacion(EjecutarPlanificacionRequest request) {
         List<Long> donacionesPlanificadas = toListIdDonaciones(request.camiones());
 
-        URI url = UriComponentsBuilder.fromUriString(properties.getDonacionesUrl())
-                .path("/donaciones-service/donacion/lista-entrega")
-                .build().toUri();
+        for (Long donacionId : donacionesPlanificadas) {
+            URI url = UriComponentsBuilder.fromUriString(properties.getDonacionesUrl())
+                    .path("/donaciones/" + donacionId + "/estado")
+                    .build().toUri();
 
-        restTemplate.postForEntity(url, donacionesPlanificadas, Void.class);
+            EstadoDonacionRequest requestBody = new EstadoDonacionRequest(
+                    "lista_para_entregar",
+                    "Donacion lista para entregar");
+
+            restTemplate.put(url, requestBody);
+        }
 
         planificarRutas();
     }
 
     private List<DonacionDTO> getLote() {
         URI url = UriComponentsBuilder.fromUriString(properties.getDonacionesUrl())
-                .path("/donaciones-service/donacion/asignadas")
+                .path("/donaciones/estado/asignacion_realizada")
                 .queryParam("limit", TAMANO_LOTE)
                 .build().toUri();
 

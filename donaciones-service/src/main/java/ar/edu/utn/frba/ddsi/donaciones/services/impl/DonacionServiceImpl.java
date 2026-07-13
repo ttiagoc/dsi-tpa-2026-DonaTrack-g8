@@ -19,6 +19,11 @@ import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EstadoDonacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EstadoDonacionResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.SubcategoriaRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.SubirFotosRecepcionRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ConfirmacionEntregaExitosaRequest;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.GestorDeEventos;
+import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Bien;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
@@ -33,10 +38,14 @@ public class DonacionServiceImpl implements DonacionService {
 
     private final DonacionRepository donacionRepository;
     private final SegmentadorDeDonacion segmentadorDeDonacion;
+    private final GestorDeEventos gestorDeEventos;
+    private final EntidadBeneficiariaRepository entidadBeneficiariaRepository;
 
-    public DonacionServiceImpl(DonacionRepository donacionRepository, SegmentadorDeDonacion segmentadorDeDonacion) {
+    public DonacionServiceImpl(DonacionRepository donacionRepository, SegmentadorDeDonacion segmentadorDeDonacion, GestorDeEventos gestorDeEventos, EntidadBeneficiariaRepository entidadBeneficiariaRepository) {
         this.donacionRepository = donacionRepository;
         this.segmentadorDeDonacion = segmentadorDeDonacion;
+        this.gestorDeEventos = gestorDeEventos;
+        this.entidadBeneficiariaRepository = entidadBeneficiariaRepository;
     }
 
     public List<DonacionResponse> obtenerTodas() {
@@ -73,8 +82,13 @@ public class DonacionServiceImpl implements DonacionService {
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro una donacion con el id: " + id));
 
         TipoEstadoDonacion nuevoEstado = toTipoEstadoDonacion(request.estado());
-        donacion.cambiarEstado(nuevoEstado, request.justificacion());
-        donacion = this.guardar(donacion);
+        if (nuevoEstado == TipoEstadoDonacion.ENTREGA_FALLIDA) {
+            gestorDeEventos.notificarEntregaFallida(id, request.justificacion());
+            donacion = donacionRepository.findById(id).orElseThrow();
+        } else {
+            donacion.cambiarEstado(nuevoEstado, request.justificacion());
+            donacion = this.guardar(donacion);
+        }
 
         return new EstadoDonacionResponse(
                 donacion.getId(),
@@ -82,8 +96,10 @@ public class DonacionServiceImpl implements DonacionService {
                 donacion.getHistorialEstados().get(donacion.getHistorialEstados().size() - 1).getFecha());
     }
 
-    public List<DonacionAsignadaResponse> obtenerDonacionesAsignadas(int limit) {
-        List<Donacion> donaciones = donacionRepository.buscarPorEstado(TipoEstadoDonacion.ASIGNACION_REALIZADA);
+    public List<DonacionAsignadaResponse> obtenerDonacionesSegunEstado(String estado, int limit) {
+        TipoEstadoDonacion tipoEstado = toTipoEstadoDonacion(estado);
+
+        List<Donacion> donaciones = donacionRepository.buscarPorEstado(tipoEstado);
         if (donaciones.size() > limit) {
             donaciones = donaciones.subList(0, limit);
         }
@@ -100,24 +116,38 @@ public class DonacionServiceImpl implements DonacionService {
         return donacionesAsignadas;
     }
 
-    public void donacionesEntregaLista(List<Long> donacionesIds) {
-        for (Long donacionId : donacionesIds) {
+    public void subirFotosRecepcion(Long id, SubirFotosRecepcionRequest request) {
+        Donacion donacion = donacionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro una donacion con el id: " + id));
+        if (donacion.getFotosRecepcion() == null) {
+            donacion.setFotosRecepcion(new java.util.ArrayList<>());
+        }
+        if (request.fotosUrl() != null) {
+            donacion.getFotosRecepcion().addAll(request.fotosUrl());
+        }
+        donacionRepository.save(donacion);
+    }
+
+    public void confirmarEntregaExitosa(ConfirmacionEntregaExitosaRequest request) {
+        EntidadBeneficiaria entidad = entidadBeneficiariaRepository.findById(request.entidadId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontro una entidad beneficiaria con el id: " + request.entidadId()));
+
+        List<Donacion> donaciones = new java.util.ArrayList<>();
+
+        for (Long donacionId : request.donacionIds()) {
             Donacion donacion = donacionRepository.findById(donacionId)
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "No se encontro una donacion con el id: " + donacionId));
 
-            donacion.cambiarEstado(TipoEstadoDonacion.LISTA_PARA_ENTREGAR, "Donacion lista para entregar");
-            this.guardar(donacion);
+            entidad.confirmarEntrega(donacion);
+            donacionRepository.save(donacion);
+            donaciones.add(donacion);
         }
+
+        gestorDeEventos.emitirEntregaExitosa(entidad, donaciones, request.patenteCamion(), request.fechaHora());
     }
 
-    public void replanificar(Long id) {
-        Donacion donacion = donacionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro una donacion con el id: " + id));
-
-        donacion.cambiarEstado(TipoEstadoDonacion.EN_DEPOSITO, "Replanificacion de entrega fallida");
-        this.guardar(donacion);
-    }
 
     private Donacion guardar(Donacion donacion) {
         return donacionRepository.save(donacion);

@@ -20,7 +20,7 @@ import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaJuridicaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.services.DonanteService;
 
 @RestController
-@RequestMapping("/api/donaciones-service/donantes")
+@RequestMapping("/api/donantes")
 public class DonanteController {
 
     private final DonanteService donanteService;

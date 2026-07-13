@@ -2,86 +2,61 @@ package ar.edu.utn.frba.ddsi.logistica.models.entities.logistica;
 
 import java.net.URI;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.logistica.config.RestLogisticaConfig;
+import ar.edu.utn.frba.ddsi.logistica.dto.donacion.EstadoDonacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.entregadonaciones.ConfirmacionEntregaExitosaRequest;
-import ar.edu.utn.frba.ddsi.logistica.dto.entregadonaciones.InicioRutaRequest;
-import ar.edu.utn.frba.ddsi.logistica.dto.ruta.ParadaRequest;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.eventos.EventManagerLogistica;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.eventos.EventoInicioRuta;
-import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
 
 @Component
 public class GestorDeRutas {
 
-    private final RutaRepository rutaRepository;
     private final RestTemplate restTemplate;
     private final RestLogisticaConfig properties;
     private final EventManagerLogistica eventManager;
 
-    public GestorDeRutas(RutaRepository rutaRepository, RestTemplate restTemplate,
+    public GestorDeRutas(RestTemplate restTemplate,
             RestLogisticaConfig properties, EventManagerLogistica eventManager) {
-        this.rutaRepository = rutaRepository;
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.eventManager = eventManager;
     }
 
-    public void iniciarRuta(Long rutaId) {
-        Ruta ruta = rutaRepository.findById(rutaId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro una ruta con el id: " + rutaId));
-
-        ruta.iniciar();
-        rutaRepository.save(ruta);
-
-        InicioRutaRequest inicioRutaRequest = mapToInicioRutaRequest(ruta);
-        URI url = UriComponentsBuilder.fromUriString(properties.getDonacionesUrl())
-                .path("/donaciones-service/evento/inicio-ruta")
-                .build().toUri();
-        try {
-            restTemplate.postForObject(url, inicioRutaRequest, Void.class);
-        } catch (Exception e) {
-            System.err.println("ERROR: Falló la notificación masiva de inicio de ruta.");
+    public void iniciarRuta(Ruta ruta) {
+        for (Parada parada : ruta.getParadas()) {
+            for (Long donacionId : parada.getDonacionIds()) {
+                URI url = UriComponentsBuilder.fromUriString(properties.getDonacionesUrl())
+                        .path("/donaciones/" + donacionId + "/estado")
+                        .build().toUri();
+                try {
+                    EstadoDonacionRequest requestBody = new EstadoDonacionRequest(
+                            "EN_TRASLADO",
+                            "La donación se encuentra en camino a su destino.");
+                    restTemplate.put(url, requestBody);
+                } catch (Exception e) {
+                    System.err
+                            .println("ERROR: Falló la notificación de inicio de ruta para donación ID: " + donacionId);
+                }
+            }
         }
 
         eventManager.emitir(
                 new EventoInicioRuta(ruta, properties.getLogisticaUrl() + "/monitoreo/ubicacion/" + ruta.getId()));
     }
 
-    private InicioRutaRequest mapToInicioRutaRequest(Ruta ruta) {
-        List<ParadaRequest> paradasRequests = new ArrayList<>();
-        for (Parada parada : ruta.getParadas()) {
-            paradasRequests.add(new ParadaRequest(parada.getOrden(), parada.getDestino(), parada.getEntidadId(),
-                    parada.getDonacionIds()));
-        }
-
-        return new InicioRutaRequest(ruta.getId(), paradasRequests);
-    }
-
-    public void confirmarEntregaExitosa(Long paradaId, Long rutaId) {
-        Ruta ruta = rutaRepository.findById(rutaId)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro una ruta con el id: " + rutaId));
-
-        Parada paradaAfectada = ruta.getParadas().stream()
-                .filter(p -> p.getOrden() == paradaId.intValue())
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "No se encontro una parada con el id: " + paradaId + " en la ruta " + rutaId));
-
+    public void confirmarEntregaExitosa(Parada paradaAfectada, Ruta ruta) {
         ConfirmacionEntregaExitosaRequest request = mapToConfirmacionEntregaExitosaRequest(paradaAfectada, ruta);
         URI url = UriComponentsBuilder.fromUriString(properties.getDonacionesUrl())
-                .path("/donaciones-service/evento/confirmacion-entrega-exitosa")
+                .path("/donaciones/recepciones")
                 .build().toUri();
         try {
             restTemplate.postForObject(url, request, Void.class);
-            System.out.println("Reporte de entrega exitosa enviado a Donaciones para Parada ID: " + paradaId);
+            System.out.println("Reporte de entrega exitosa enviado a Donaciones para Parada ID: " + paradaAfectada.getOrden());
         } catch (Exception e) {
             System.err.println("ERROR: No se pudo transmitir la confirmación de entrega por red.");
         }

@@ -19,9 +19,6 @@ import org.junit.jupiter.api.Test;
 
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
-import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoBien;
-import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoEstadoDonacion;
-import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ConfirmacionEntregaExitosaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.InicioRutaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ParadaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Bien;
@@ -31,16 +28,16 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.RegistroDonaci
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoBien;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
-import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
 
 @DisplayName("Tests de GestorDeEventos")
 class GestorDeEventosTest {
 
     private EventManagerDonaciones eventManager;
     private DonacionRepository donacionRepository;
-    private EntidadBeneficiariaRepository entidadRepository;
     private DonanteRepository donanteRepository;
     private GestorDeEventos gestorDeEventos;
 
@@ -48,10 +45,8 @@ class GestorDeEventosTest {
     void setUp() {
         eventManager = mock(EventManagerDonaciones.class);
         donacionRepository = mock(DonacionRepository.class);
-        entidadRepository = mock(EntidadBeneficiariaRepository.class);
-        donanteRepository = mock(DonanteRepository.class);
 
-        gestorDeEventos = new GestorDeEventos(eventManager, donacionRepository, entidadRepository, donanteRepository);
+        gestorDeEventos = new GestorDeEventos(eventManager, donacionRepository, donanteRepository);
     }
 
     @Test
@@ -83,10 +78,6 @@ class GestorDeEventosTest {
         Long entidadId = 1L;
         Long donacionId = 100L;
 
-        EntidadBeneficiaria entidad = new EntidadBeneficiaria("Hogar", "Dir", "123",
-                new ArrayList<>(List.of(new MedioContacto("hogar@test.com", TipoContacto.EMAIL))));
-        entidad.setId(entidadId);
-
         PersonaHumana donante = new PersonaHumana();
         donante.setContactoPredeterminado(new MedioContacto("donante@test.com", TipoContacto.EMAIL));
 
@@ -97,7 +88,6 @@ class GestorDeEventosTest {
         donacion.setId(donacionId);
         donacion.setDonante(donante);
 
-        when(entidadRepository.findById(entidadId)).thenReturn(Optional.of(entidad));
         when(donacionRepository.findById(donacionId)).thenReturn(Optional.of(donacion));
 
         ParadaRequest parada = new ParadaRequest(entidadId, List.of(donacionId));
@@ -110,8 +100,8 @@ class GestorDeEventosTest {
     }
 
     @Test
-    @DisplayName("Debe procesar confirmación exitosa y emitir eventos")
-    void confirmarEntregaExitosa() {
+    @DisplayName("Debe emitir evento de entrega exitosa")
+    void emitirEntregaExitosa() {
         Long entidadId = 1L;
         Long donacionId = 100L;
 
@@ -129,15 +119,8 @@ class GestorDeEventosTest {
         donacion.setId(donacionId);
         donacion.setDonante(donante);
 
-        when(entidadRepository.findById(entidadId)).thenReturn(Optional.of(entidad));
-        when(donacionRepository.findById(donacionId)).thenReturn(Optional.of(donacion));
-
-        ConfirmacionEntregaExitosaRequest request = new ConfirmacionEntregaExitosaRequest(entidadId,
-                List.of(donacionId), "AB123CD", LocalDateTime.now());
-        gestorDeEventos.confirmarEntregaExitosa(request);
-
-        assertEquals(TipoEstadoDonacion.ENTREGADA, donacion.estadoActual());
-        verify(donacionRepository, times(1)).save(donacion);
+        LocalDateTime ahora = LocalDateTime.now();
+        gestorDeEventos.emitirEntregaExitosa(entidad, List.of(donacion), "AB123CD", ahora);
 
         verify(eventManager, times(1)).emitir(any(EventoEntregaExitosa.class));
     }

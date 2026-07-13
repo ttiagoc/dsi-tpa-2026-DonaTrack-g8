@@ -16,12 +16,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionResponse;
+import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaResponse;
 import ar.edu.utn.frba.ddsi.logistica.services.RutaService;
 
 @RestController
-@RequestMapping("/api/logistica-service/rutas")
+@RequestMapping("/api/rutas")
 public class RutaController {
 
     private final RutaService rutaService;
@@ -56,5 +58,28 @@ public class RutaController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminar(@PathVariable Long id) {
         rutaService.eliminar(id);
+    }
+
+    @PutMapping("/{id}/estado")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void actualizarEstado(@PathVariable Long id, @RequestBody String estado) {
+        rutaService.actualizarEstado(id, estado);
+    }
+
+    @PostMapping("/{rutaId}/paradas/{paradaId}/confirmaciones")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void recibirConfirmacionEntregaExitosa(@PathVariable Long rutaId, @PathVariable Long paradaId) {
+        rutaService.confirmarEntregaExitosa(rutaId, paradaId);
+    }
+
+    @GetMapping("/{id}/ubicacion")
+    public UbicacionResponse obtenerUbicacionActual(@PathVariable Long id) {
+        return rutaService.obtenerUbicacionActual(id);
+    }
+
+    @PostMapping("/planificaciones")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void ejecutarPlanificacion(@RequestBody EjecutarPlanificacionRequest request) {
+        rutaService.ejecutarPlanificacion(request);
     }
 }

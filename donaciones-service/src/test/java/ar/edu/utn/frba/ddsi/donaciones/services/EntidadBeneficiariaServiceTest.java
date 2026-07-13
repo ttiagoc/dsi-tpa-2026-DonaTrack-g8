@@ -12,23 +12,16 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
-import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
-import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
-import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.MedioContactoRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaResponse;
-import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.ReportarNoRecibidaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.GestorDeEventos;
-import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.services.impl.EntidadBeneficiariaServiceImpl;
 
@@ -36,17 +29,13 @@ import ar.edu.utn.frba.ddsi.donaciones.services.impl.EntidadBeneficiariaServiceI
 class EntidadBeneficiariaServiceTest {
 
     private EntidadBeneficiariaRepository entidadRepository;
-    private DonacionRepository donacionRepository;
-    private GestorDeEventos gestorDeEventos;
     private EntidadBeneficiariaServiceImpl entidadService;
 
     @BeforeEach
     void setUp() {
         entidadRepository = mock(EntidadBeneficiariaRepository.class);
-        donacionRepository = mock(DonacionRepository.class);
-        gestorDeEventos = mock(GestorDeEventos.class);
 
-        entidadService = new EntidadBeneficiariaServiceImpl(entidadRepository, donacionRepository, gestorDeEventos);
+        entidadService = new EntidadBeneficiariaServiceImpl(entidadRepository);
     }
 
     @Test
@@ -89,40 +78,5 @@ class EntidadBeneficiariaServiceTest {
         assertEquals("Medrano 951", response.direccion());
 
         verify(entidadRepository, times(1)).save(any(EntidadBeneficiaria.class));
-    }
-
-    @Test
-    @DisplayName("Al reportar donacion no recibida, debe disparar notificacion en EventoService")
-    void reportarNoRecibida() {
-        Long entidadId = 1L;
-        Long donacionId = 200L;
-        String motivo = "El camion nunca llegó";
-
-        EntidadBeneficiaria entidad = new EntidadBeneficiaria(
-                "Comedor", "Calle Falsa 123", "123",
-                new ArrayList<>(List.of(new MedioContacto("x@x.com", TipoContacto.EMAIL))));
-        entidad.setId(entidadId);
-
-        when(entidadRepository.findById(entidadId)).thenReturn(Optional.of(entidad));
-
-        ReportarNoRecibidaRequest request = new ReportarNoRecibidaRequest(motivo);
-        entidadService.reportarNoRecibida(entidadId, donacionId, request);
-
-        // Se debió llamar a EventoService
-        verify(gestorDeEventos, times(1)).notificarEntregaFallida(donacionId, motivo);
-    }
-
-    @Test
-    @DisplayName("Debe lanzar ResourceNotFound si la entidad no existe al reportar")
-    void reportarNoRecibidaEntidadNoExiste() {
-        when(entidadRepository.findById(99L)).thenReturn(Optional.empty());
-
-        ReportarNoRecibidaRequest request = new ReportarNoRecibidaRequest("Fallo");
-
-        Exception ex = assertThrows(ResourceNotFoundException.class, () -> {
-            entidadService.reportarNoRecibida(99L, 1L, request);
-        });
-
-        assertTrue(ex.getMessage().contains("No se encontro una entidad beneficiaria"));
     }
 }

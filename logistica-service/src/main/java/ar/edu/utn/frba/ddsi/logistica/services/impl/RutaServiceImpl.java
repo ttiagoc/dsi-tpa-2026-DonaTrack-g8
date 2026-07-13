@@ -12,9 +12,15 @@ import ar.edu.utn.frba.ddsi.logistica.dto.ruta.ParadaRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.ParadaResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaResponse;
+import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionResponse;
+import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Camion;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.GestorDeRutas;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.MonitorDeRutas;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Parada;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.PlanificadorDeRutas;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ruta;
+import ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoRuta;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
 import ar.edu.utn.frba.ddsi.logistica.services.RutaService;
@@ -24,10 +30,17 @@ public class RutaServiceImpl implements RutaService {
 
     private final RutaRepository rutaRepository;
     private final CamionRepository camionRepository;
+    private final GestorDeRutas gestorDeRutas;
+    private final MonitorDeRutas monitorDeRutas;
+    private final PlanificadorDeRutas planificadorDeRutas;
 
-    public RutaServiceImpl(RutaRepository rutaRepository, CamionRepository camionRepository) {
+    public RutaServiceImpl(RutaRepository rutaRepository, CamionRepository camionRepository,
+            GestorDeRutas gestorDeRutas, MonitorDeRutas monitorDeRutas, PlanificadorDeRutas planificadorDeRutas) {
         this.rutaRepository = rutaRepository;
         this.camionRepository = camionRepository;
+        this.gestorDeRutas = gestorDeRutas;
+        this.monitorDeRutas = monitorDeRutas;
+        this.planificadorDeRutas = planificadorDeRutas;
     }
 
     public List<RutaResponse> obtenerTodas(LocalDate fecha) {
@@ -139,5 +152,45 @@ public class RutaServiceImpl implements RutaService {
         parada.setEntidadId(request.entidad());
         parada.setDonacionIds(request.entregas());
         return parada;
+    }
+
+    public void actualizarEstado(Long id, String estado) {
+        Ruta ruta = rutaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro una ruta con el id: " + id));
+
+        if ("EN_TRASLADO".equalsIgnoreCase(estado)) {
+            ruta.iniciar();
+            rutaRepository.save(ruta);
+            gestorDeRutas.iniciarRuta(ruta);
+        } else if ("FINALIZADA".equalsIgnoreCase(estado)) {
+            ruta.finalizar();
+            rutaRepository.save(ruta);
+        } else if ("PLANIFICADA".equalsIgnoreCase(estado)) {
+            ruta.setEstado(EstadoRuta.PLANIFICADA);
+            rutaRepository.save(ruta);
+        } else {
+            throw new BusinessException("Estado no soportado: " + estado);
+        }
+    }
+
+    public void confirmarEntregaExitosa(Long rutaId, Long paradaId) {
+        Ruta ruta = rutaRepository.findById(rutaId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro una ruta con el id: " + rutaId));
+
+        Parada parada = ruta.getParadas().stream()
+                .filter(p -> p.getOrden() == paradaId.intValue())
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontro una parada con el id: " + paradaId + " en la ruta " + rutaId));
+
+        gestorDeRutas.confirmarEntregaExitosa(parada, ruta);
+    }
+
+    public UbicacionResponse obtenerUbicacionActual(Long id) {
+        return monitorDeRutas.obtenerUltimaUbicacionPorRuta(id);
+    }
+
+    public void ejecutarPlanificacion(EjecutarPlanificacionRequest request) {
+        planificadorDeRutas.ejecutarPlanificacion(request);
     }
 }

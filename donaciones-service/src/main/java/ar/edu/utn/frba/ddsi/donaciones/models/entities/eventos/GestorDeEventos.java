@@ -1,12 +1,12 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
-import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ConfirmacionEntregaExitosaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.InicioRutaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ParadaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
@@ -15,21 +15,18 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBenefici
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
-import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
 
 @Component
 public class GestorDeEventos {
 
     private final EventManagerDonaciones eventManager;
     private final DonacionRepository donacionRepository;
-    private final EntidadBeneficiariaRepository entidadBeneficiariaRepository;
     private final DonanteRepository donanteRepository;
 
     public GestorDeEventos(EventManagerDonaciones eventManager, DonacionRepository donacionRepository,
-            EntidadBeneficiariaRepository entidadBeneficiariaRepository, DonanteRepository donanteRepository) {
+            DonanteRepository donanteRepository) {
         this.eventManager = eventManager;
         this.donacionRepository = donacionRepository;
-        this.entidadBeneficiariaRepository = entidadBeneficiariaRepository;
         this.donanteRepository = donanteRepository;
     }
 
@@ -67,24 +64,9 @@ public class GestorDeEventos {
         }
     }
 
-    public void confirmarEntregaExitosa(ConfirmacionEntregaExitosaRequest request) {
-        EntidadBeneficiaria entidad = entidadBeneficiariaRepository.findById(request.entidadId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "No se encontro una entidad beneficiaria con el id: " + request.entidadId()));
-
-        ComprobanteEntrega comprobante = new ComprobanteEntrega(request.patenteCamion(), request.fechaHora());
-        List<Donacion> donaciones = new java.util.ArrayList<>();
-
-        for (Long donacionId : request.donacionIds()) {
-            Donacion donacion = donacionRepository.findById(donacionId)
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "No se encontro una donacion con el id: " + donacionId));
-
-            entidad.confirmarEntrega(donacion);
-            donacionRepository.save(donacion);
-            donaciones.add(donacion);
-        }
-
+    public void emitirEntregaExitosa(EntidadBeneficiaria entidad, List<Donacion> donaciones, String patente,
+            LocalDateTime fechaHora) {
+        ComprobanteEntrega comprobante = new ComprobanteEntrega(patente, fechaHora);
         eventManager.emitir(new EventoEntregaExitosa(entidad, donaciones, comprobante));
     }
 

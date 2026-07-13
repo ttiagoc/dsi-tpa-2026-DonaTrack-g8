@@ -19,10 +19,12 @@ import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EstadoDonacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EstadoDonacionResponse;
+import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.SubirFotosRecepcionRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ConfirmacionEntregaExitosaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.services.DonacionService;
 
 @RestController
-@RequestMapping("/api/donaciones-service/donacion")
+@RequestMapping("/api/donaciones")
 public class DonacionController {
 
     private final DonacionService donacionService;
@@ -53,28 +55,29 @@ public class DonacionController {
         donacionService.eliminar(id);
     }
 
-    @PutMapping("/estado/{id}")
+    @PutMapping("/{id}/estado")
     public EstadoDonacionResponse cambiarEstado(@PathVariable Long id,
             @RequestBody EstadoDonacionRequest request) {
         return donacionService.cambiarEstado(id, request);
     }
 
-    @GetMapping("/asignadas")
-    public List<DonacionAsignadaResponse> obtenerDonacionesAsignadas(
+    @GetMapping("/estado/{estado}")
+    public List<DonacionAsignadaResponse> obtenerDonacionesPorEstado(
+            @PathVariable String estado,
             @RequestParam(name = "limit") int limit) {
-        return donacionService.obtenerDonacionesAsignadas(limit);
+        return donacionService.obtenerDonacionesSegunEstado(estado, limit);
     }
 
-    @PostMapping("/lista-entrega")
+    @PostMapping("/{id}/fotos")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void donacionesEntregaLista(@RequestBody List<Long> donacionesIds) {
-        donacionService.donacionesEntregaLista(donacionesIds);
+    public void subirFotosRecepcion(@PathVariable Long id, @RequestBody SubirFotosRecepcionRequest request) {
+        donacionService.subirFotosRecepcion(id, request);
     }
 
-    @PutMapping("/{id}/replanificar")
+    @PostMapping("/recepciones")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void replanificar(@PathVariable Long id) {
-        donacionService.replanificar(id);
+    public void confirmarEntregaExitosa(@RequestBody ConfirmacionEntregaExitosaRequest request) {
+        donacionService.confirmarEntregaExitosa(request);
     }
 
 }

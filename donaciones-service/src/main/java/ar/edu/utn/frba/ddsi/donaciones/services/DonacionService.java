@@ -7,6 +7,8 @@ import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EstadoDonacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EstadoDonacionResponse;
+import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.SubirFotosRecepcionRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ConfirmacionEntregaExitosaRequest;
 
 public interface DonacionService {
 
@@ -20,9 +22,9 @@ public interface DonacionService {
 
     EstadoDonacionResponse cambiarEstado(Long id, EstadoDonacionRequest request);
 
-    List<DonacionAsignadaResponse> obtenerDonacionesAsignadas(int limit);
+    List<DonacionAsignadaResponse> obtenerDonacionesSegunEstado(String estado, int limit);
 
-    void donacionesEntregaLista(List<Long> donacionesIds);
+    void subirFotosRecepcion(Long id, SubirFotosRecepcionRequest request);
 
-    void replanificar(Long id);
+    void confirmarEntregaExitosa(ConfirmacionEntregaExitosaRequest request);
 }

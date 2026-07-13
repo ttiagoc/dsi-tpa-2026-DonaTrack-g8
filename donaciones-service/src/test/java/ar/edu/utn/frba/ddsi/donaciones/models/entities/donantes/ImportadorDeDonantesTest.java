@@ -46,7 +46,7 @@ class ImportadorDeDonantesTest {
         restTemplate = mock(RestTemplate.class);
         properties = mock(RestDonacionesConfig.class);
 
-        when(properties.getNotificacionesUrl()).thenReturn("http://localhost:8082/api/notificaciones-service");
+        when(properties.getNotificacionesUrl()).thenReturn("http://localhost:8082/api");
 
         importadorService = new ImportadorDeDonantes(donanteRepository, restTemplate, properties);
     }
@@ -81,7 +81,7 @@ class ImportadorDeDonantesTest {
         assertEquals("juridica@test.com", juridica.getContactos().get(0).getValor());
 
         verify(restTemplate, times(2)).postForObject(
-                eq("http://localhost:8082/api/notificaciones-service/notificar"),
+                eq("http://localhost:8082/api/notificar"),
                 any(NotificacionRequest.class),
                 eq(Void.class)
         );

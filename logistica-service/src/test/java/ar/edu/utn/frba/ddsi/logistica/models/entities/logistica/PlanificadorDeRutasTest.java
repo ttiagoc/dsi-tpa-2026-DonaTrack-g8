@@ -22,6 +22,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import ar.edu.utn.frba.ddsi.logistica.config.RestLogisticaConfig;
 import ar.edu.utn.frba.ddsi.logistica.dto.donacion.DonacionDTO;
+import ar.edu.utn.frba.ddsi.logistica.dto.donacion.EstadoDonacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.CamionPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.DireccionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
@@ -54,7 +55,7 @@ class PlanificadorDeRutasTest {
         @DisplayName("Debe delegar la planificacion al gestor cuando hay lote y camiones disponibles")
         void planificarRutasExitoso() {
                 URI urlGetLote = UriComponentsBuilder
-                                .fromUriString("http://localhost:8080/api/donaciones-service/donacion/asignadas")
+                                .fromUriString("http://localhost:8080/api/donaciones/estado/asignacion_realizada")
                                 .queryParam("limit", 100).build().toUri();
 
                 List<DonacionDTO> loteSimulado = List.of(new DonacionDTO(1L, 50.0, 2.0, "Calle 123"));
@@ -77,7 +78,7 @@ class PlanificadorDeRutasTest {
         @DisplayName("No debe solicitar planificacion si no hay camiones disponibles")
         void planificarRutasSinCamiones() {
                 URI urlGetLote = UriComponentsBuilder
-                                .fromUriString("http://localhost:8080/api/donaciones-service/donacion/asignadas")
+                                .fromUriString("http://localhost:8080/api/donaciones/estado/asignacion_realizada")
                                 .queryParam("limit", 100).build().toUri();
 
                 List<DonacionDTO> loteSimulado = List.of(new DonacionDTO(1L, 50.0, 2.0, "Calle 123"));
@@ -102,13 +103,16 @@ class PlanificadorDeRutasTest {
                 EjecutarPlanificacionRequest request = new EjecutarPlanificacionRequest(List.of(camionRequest),
                                 List.of());
 
-                URI urlPostLista = UriComponentsBuilder
-                                .fromUriString("http://localhost:8080/api/donaciones-service/donacion/lista-entrega")
-                                .build().toUri();
+                URI url1 = UriComponentsBuilder.fromUriString("http://localhost:8080/api/donaciones/10/estado").build().toUri();
+                URI url2 = UriComponentsBuilder.fromUriString("http://localhost:8080/api/donaciones/20/estado").build().toUri();
+                EstadoDonacionRequest payload = new EstadoDonacionRequest(
+                                "LISTA_PARA_ENTREGAR",
+                                "Donacion lista para entregar"
+                );
 
                 // Simular getLote() vacío para que termine rápido la cadena
                 URI urlGetLote = UriComponentsBuilder
-                                .fromUriString("http://localhost:8080/api/donaciones-service/donacion/asignadas")
+                                .fromUriString("http://localhost:8080/api/donaciones/estado/asignacion_realizada")
                                 .queryParam("limit", 100).build().toUri();
                 ResponseEntity<List<DonacionDTO>> responseMock = ResponseEntity.ok(List.of());
                 when(restTemplate.exchange(eq(urlGetLote), eq(HttpMethod.GET), eq(null),
@@ -117,7 +121,7 @@ class PlanificadorDeRutasTest {
 
                 planificadorDeRutas.ejecutarPlanificacion(request);
 
-                List<Long> expectedIdsPost = List.of(10L, 20L);
-                verify(restTemplate, times(1)).postForEntity(eq(urlPostLista), eq(expectedIdsPost), eq(Void.class));
+                verify(restTemplate, times(1)).put(eq(url1), eq(payload));
+                verify(restTemplate, times(1)).put(eq(url2), eq(payload));
         }
 }
