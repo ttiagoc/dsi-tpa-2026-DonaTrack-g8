@@ -81,7 +81,7 @@ class ImportadorDeDonantesTest {
         assertEquals("juridica@test.com", juridica.getContactos().get(0).getValor());
 
         verify(restTemplate, times(2)).postForObject(
-                eq("http://localhost:8082/api/notificar"),
+                eq("http://localhost:8082/api/notificaciones"),
                 any(NotificacionRequest.class),
                 eq(Void.class)
         );

@@ -165,7 +165,7 @@ public class ImportadorDeDonantes {
             String nombreAMostrar = humanaNueva.getNombre()
                     + (humanaNueva.getApellido().isEmpty() ? "" : " " + humanaNueva.getApellido());
             try {
-                String url = config.getNotificacionesUrl() + "/notificar";
+                String url = config.getNotificacionesUrl() + "/notificaciones";
                 NotificacionRequest request = new NotificacionRequest(
                         emailVal,
                         TipoContacto.EMAIL,
@@ -194,7 +194,7 @@ public class ImportadorDeDonantes {
         } else {
             donanteRepository.save(juridicaNueva);
             try {
-                String url = config.getNotificacionesUrl() + "/notificar";
+                String url = config.getNotificacionesUrl() + "/notificaciones";
                 NotificacionRequest request = new NotificacionRequest(
                         emailVal,
                         TipoContacto.EMAIL,

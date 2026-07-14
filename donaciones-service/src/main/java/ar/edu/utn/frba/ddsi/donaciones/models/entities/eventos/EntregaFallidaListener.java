@@ -53,7 +53,7 @@ public class EntregaFallidaListener implements ListenerDonaciones<EventoEntregaF
                 contacto.getValor(),
                 contacto.getTipoContacto(),
                 mensaje);
-        String url = config.getNotificacionesUrl() + "/notificar";
+        String url = config.getNotificacionesUrl() + "/notificaciones";
         CompletableFuture.runAsync(() -> {
             try {
                 restTemplate.postForObject(url, request, Void.class);

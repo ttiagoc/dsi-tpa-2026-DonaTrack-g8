@@ -1,27 +1,15 @@
 package ar.edu.utn.frba.ddsi.logistica.controllers;
 
-import java.util.List;
+import org.springframework.stereotype.Component;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import ar.edu.utn.frba.ddsi.common.controllers.JavalinController;
 import ar.edu.utn.frba.ddsi.logistica.dto.camion.CamionRequest;
-import ar.edu.utn.frba.ddsi.logistica.dto.camion.CamionResponse;
-import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.CamionActivoResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.services.CamionService;
+import io.javalin.Javalin;
 
-@RestController
-@RequestMapping("/api/camiones")
-public class CamionController {
+@Component
+public class CamionController implements JavalinController {
 
     private final CamionService camionService;
 
@@ -29,41 +17,43 @@ public class CamionController {
         this.camionService = camionService;
     }
 
-    @GetMapping
-    public List<CamionResponse> obtenerTodos() {
-        return camionService.obtenerTodos();
-    }
+    @Override
+    public void registerRoutes(Javalin app) {
+        app.get("/api/camiones", ctx -> {
+            ctx.json(camionService.obtenerTodos());
+        });
 
-    @GetMapping("/{id}")
-    public CamionResponse obtenerPorId(@PathVariable Long id) {
-        return camionService.obtenerPorId(id);
-    }
+        app.get("/api/camiones/{id}", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            ctx.json(camionService.obtenerPorId(id));
+        });
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public CamionResponse crear(@RequestBody CamionRequest request) {
-        return camionService.crear(request);
-    }
+        app.post("/api/camiones", ctx -> {
+            CamionRequest request = ctx.bodyAsClass(CamionRequest.class);
+            ctx.status(201).json(camionService.crear(request));
+        });
 
-    @PutMapping("/{id}")
-    public CamionResponse actualizar(@PathVariable Long id, @RequestBody CamionRequest request) {
-        return camionService.actualizar(id, request);
-    }
+        app.put("/api/camiones/{id}", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            CamionRequest request = ctx.bodyAsClass(CamionRequest.class);
+            ctx.json(camionService.actualizar(id, request));
+        });
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void eliminar(@PathVariable Long id) {
-        camionService.eliminar(id);
-    }
+        app.delete("/api/camiones/{id}", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            camionService.eliminar(id);
+            ctx.status(204);
+        });
 
-    @GetMapping("/activos")
-    public List<CamionActivoResponse> obtenerCamionesActivos() {
-        return camionService.obtenerCamionesActivos();
-    }
+        app.get("/api/camiones/activos", ctx -> {
+            ctx.json(camionService.obtenerCamionesActivos());
+        });
 
-    @PostMapping("/ubicacion/{patente}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void recibirTelemetria(@PathVariable String patente, @RequestBody UbicacionRequest request) {
-        camionService.recibirTelemetria(patente, request);
+        app.post("/api/camiones/ubicacion/{patente}", ctx -> {
+            String patente = ctx.pathParam("patente");
+            UbicacionRequest request = ctx.bodyAsClass(UbicacionRequest.class);
+            camionService.recibirTelemetria(patente, request);
+            ctx.status(204);
+        });
     }
 }

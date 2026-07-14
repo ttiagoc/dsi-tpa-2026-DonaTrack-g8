@@ -1,27 +1,27 @@
 package ar.edu.utn.frba.ddsi.notificaciones.controllers;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Component;
 
+import ar.edu.utn.frba.ddsi.common.controllers.JavalinController;
 import ar.edu.utn.frba.ddsi.notificaciones.dto.NotificacionRequest;
 import ar.edu.utn.frba.ddsi.notificaciones.models.entities.Notificador;
-import lombok.AllArgsConstructor;
+import io.javalin.Javalin;
 
-@RestController
-@RequestMapping("/api/notificar")
-@AllArgsConstructor
-public class NotificacionController {
+@Component
+public class NotificacionController implements JavalinController {
 
     private final Notificador notificador;
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.OK)
-    public void notificar(@RequestBody NotificacionRequest notificacionRequest) {
-        notificador.enviarNotificacion(notificacionRequest);
+    public NotificacionController(Notificador notificador) {
+        this.notificador = notificador;
+    }
+
+    @Override
+    public void registerRoutes(Javalin app) {
+        app.post("/api/notificaciones", ctx -> {
+            NotificacionRequest request = ctx.bodyAsClass(NotificacionRequest.class);
+            notificador.enviarNotificacion(request);
+            ctx.status(200);
+        });
     }
 }
-

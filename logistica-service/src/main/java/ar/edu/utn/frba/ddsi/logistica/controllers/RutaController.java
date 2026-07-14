@@ -1,31 +1,18 @@
 package ar.edu.utn.frba.ddsi.logistica.controllers;
 
 import java.time.LocalDate;
-import java.util.List;
 
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Component;
 
-import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionResponse;
-import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaRequest;
-import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaResponse;
+import ar.edu.utn.frba.ddsi.common.controllers.JavalinController;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
+import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaRequest;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.PlanificadorDeRutas;
 import ar.edu.utn.frba.ddsi.logistica.services.RutaService;
+import io.javalin.Javalin;
 
-@RestController
-@RequestMapping("/api/rutas")
-public class RutaController {
+@Component
+public class RutaController implements JavalinController {
 
     private final RutaService rutaService;
     private final PlanificadorDeRutas planificadorDeRutas;
@@ -35,60 +22,67 @@ public class RutaController {
         this.planificadorDeRutas = planificadorDeRutas;
     }
 
-    @GetMapping
-    public List<RutaResponse> obtenerTodas(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
-        return rutaService.obtenerTodas(fecha);
-    }
+    @Override
+    public void registerRoutes(Javalin app) {
+        app.get("/api/rutas", ctx -> {
+            String fechaStr = ctx.queryParam("fecha");
+            LocalDate fecha = (fechaStr != null && !fechaStr.isBlank()) ? LocalDate.parse(fechaStr) : null;
+            ctx.json(rutaService.obtenerTodas(fecha));
+        });
 
-    @GetMapping("/{id}")
-    public RutaResponse obtenerPorId(@PathVariable Long id) {
-        return rutaService.obtenerPorId(id);
-    }
+        app.get("/api/rutas/{id}", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            ctx.json(rutaService.obtenerPorId(id));
+        });
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public RutaResponse crear(@RequestBody RutaRequest request) {
-        return rutaService.crear(request);
-    }
+        app.post("/api/rutas", ctx -> {
+            RutaRequest request = ctx.bodyAsClass(RutaRequest.class);
+            ctx.status(201).json(rutaService.crear(request));
+        });
 
-    @PutMapping("/{id}")
-    public RutaResponse actualizar(@PathVariable Long id, @RequestBody RutaRequest request) {
-        return rutaService.actualizar(id, request);
-    }
+        app.put("/api/rutas/{id}", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            RutaRequest request = ctx.bodyAsClass(RutaRequest.class);
+            ctx.json(rutaService.actualizar(id, request));
+        });
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void eliminar(@PathVariable Long id) {
-        rutaService.eliminar(id);
-    }
+        app.delete("/api/rutas/{id}", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            rutaService.eliminar(id);
+            ctx.status(204);
+        });
 
-    @PutMapping("/{id}/estado")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void actualizarEstado(@PathVariable Long id, @RequestBody String estado) {
-        rutaService.actualizarEstado(id, estado);
-    }
+        app.put("/api/rutas/{id}/estado", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            String estado = ctx.body();
+            if (estado.startsWith("\"") && estado.endsWith("\"")) {
+                estado = estado.substring(1, estado.length() - 1);
+            }
+            rutaService.actualizarEstado(id, estado);
+            ctx.status(204);
+        });
 
-    @PostMapping("/{rutaId}/paradas/{paradaId}/confirmaciones")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void recibirConfirmacionEntregaExitosa(@PathVariable Long rutaId, @PathVariable Long paradaId) {
-        rutaService.confirmarEntregaExitosa(rutaId, paradaId);
-    }
+        app.post("/api/rutas/{rutaId}/paradas/{paradaId}/confirmaciones", ctx -> {
+            Long rutaId = Long.parseLong(ctx.pathParam("rutaId"));
+            Long paradaId = Long.parseLong(ctx.pathParam("paradaId"));
+            rutaService.confirmarEntregaExitosa(rutaId, paradaId);
+            ctx.status(204);
+        });
 
-    @GetMapping("/{id}/ubicacion")
-    public UbicacionResponse obtenerUbicacionActual(@PathVariable Long id) {
-        return rutaService.obtenerUbicacionActual(id);
-    }
+        app.get("/api/rutas/{id}/ubicacion", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            ctx.json(rutaService.obtenerUbicacionActual(id));
+        });
 
-    @PostMapping("/planificaciones")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void planificarRutas() {
-        planificadorDeRutas.planificarRutas();
-    }
+        app.post("/api/rutas/planificaciones", ctx -> {
+            planificadorDeRutas.planificarRutas();
+            ctx.status(204);
+        });
 
-    @PostMapping("/planificaciones/resultados")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void ejecutarPlanificacion(@RequestBody EjecutarPlanificacionRequest request) {
-        planificadorDeRutas.ejecutarPlanificacion(request);
+        app.post("/api/rutas/planificaciones/resultados", ctx -> {
+            EjecutarPlanificacionRequest request = ctx.bodyAsClass(EjecutarPlanificacionRequest.class);
+            planificadorDeRutas.ejecutarPlanificacion(request);
+            ctx.status(204);
+        });
     }
 }

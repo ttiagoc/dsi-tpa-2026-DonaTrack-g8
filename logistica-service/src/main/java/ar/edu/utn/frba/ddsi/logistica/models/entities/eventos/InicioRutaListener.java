@@ -103,7 +103,7 @@ public class InicioRutaListener implements ListenerLogistica<EventoInicioRuta> {
                 contacto.getValor(),
                 contacto.getTipoContacto(),
                 mensaje);
-        String notificacionesUrl = config.getNotificacionesUrl() + "/notificar";
+        String notificacionesUrl = config.getNotificacionesUrl() + "/notificaciones";
         CompletableFuture.runAsync(() -> {
             try {
                 restTemplate.postForObject(notificacionesUrl, request, Void.class);

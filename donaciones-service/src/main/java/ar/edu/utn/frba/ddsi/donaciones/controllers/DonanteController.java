@@ -1,28 +1,16 @@
 package ar.edu.utn.frba.ddsi.donaciones.controllers;
 
-import java.util.List;
+import org.springframework.stereotype.Component;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
-
-import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
-import ar.edu.utn.frba.ddsi.donaciones.dto.donante.DonanteResponse;
+import ar.edu.utn.frba.ddsi.common.controllers.JavalinController;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaHumanaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaJuridicaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.GestorDeEventos;
 import ar.edu.utn.frba.ddsi.donaciones.services.DonanteService;
+import io.javalin.Javalin;
 
-@RestController
-@RequestMapping("/api/donantes")
-public class DonanteController {
+@Component
+public class DonanteController implements JavalinController {
 
     private final DonanteService donanteService;
     private final GestorDeEventos gestorDeEventos;
@@ -32,56 +20,53 @@ public class DonanteController {
         this.gestorDeEventos = gestorDeEventos;
     }
 
-    @GetMapping
-    public List<DonanteResponse> obtenerTodos() {
-        return donanteService.obtenerTodos();
-    }
+    @Override
+    public void registerRoutes(Javalin app) {
+        app.get("/api/donantes", ctx -> {
+            ctx.json(donanteService.obtenerTodos());
+        });
 
-    @GetMapping("/{id}")
-    public DonanteResponse obtenerPorId(@PathVariable Long id) {
-        return donanteService.obtenerPorId(id);
-    }
+        app.get("/api/donantes/{id}", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            ctx.json(donanteService.obtenerPorId(id));
+        });
 
-    @PostMapping("/persona-humana")
-    @ResponseStatus(HttpStatus.CREATED)
-    public DonanteResponse crearPersonaHumana(
-            @RequestBody PersonaHumanaRequest request) {
-        return donanteService.crearPersonaHumana(request);
-    }
+        app.post("/api/donantes/persona-humana", ctx -> {
+            PersonaHumanaRequest request = ctx.bodyAsClass(PersonaHumanaRequest.class);
+            ctx.status(201).json(donanteService.crearPersonaHumana(request));
+        });
 
-    @PostMapping("/persona-juridica")
-    @ResponseStatus(HttpStatus.CREATED)
-    public DonanteResponse crearPersonaJuridica(
-            @RequestBody PersonaJuridicaRequest request) {
-        return donanteService.crearPersonaJuridica(request);
-    }
+        app.post("/api/donantes/persona-juridica", ctx -> {
+            PersonaJuridicaRequest request = ctx.bodyAsClass(PersonaJuridicaRequest.class);
+            ctx.status(201).json(donanteService.crearPersonaJuridica(request));
+        });
 
-    @PutMapping("/persona-humana/{id}")
-    public DonanteResponse actualizarPersonaHumana(@PathVariable Long id,
-            @RequestBody PersonaHumanaRequest request) {
-        return donanteService.actualizarPersonaHumana(id, request);
-    }
+        app.put("/api/donantes/persona-humana/{id}", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            PersonaHumanaRequest request = ctx.bodyAsClass(PersonaHumanaRequest.class);
+            ctx.json(donanteService.actualizarPersonaHumana(id, request));
+        });
 
-    @PutMapping("/persona-juridica/{id}")
-    public DonanteResponse actualizarPersonaJuridica(@PathVariable Long id,
-            @RequestBody PersonaJuridicaRequest request) {
-        return donanteService.actualizarPersonaJuridica(id, request);
-    }
+        app.put("/api/donantes/persona-juridica/{id}", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            PersonaJuridicaRequest request = ctx.bodyAsClass(PersonaJuridicaRequest.class);
+            ctx.json(donanteService.actualizarPersonaJuridica(id, request));
+        });
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void eliminar(@PathVariable Long id) {
-        donanteService.eliminar(id);
-    }
+        app.delete("/api/donantes/{id}", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            donanteService.eliminar(id);
+            ctx.status(204);
+        });
 
-    @GetMapping("/{id}/contacto")
-    public MedioContacto obtenerContactoPredeterminado(@PathVariable Long id) {
-        return donanteService.obtenerContactoPredeterminado(id);
-    }
+        app.get("/api/donantes/{id}/contacto", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            ctx.json(donanteService.obtenerContactoPredeterminado(id));
+        });
 
-    @PostMapping("/inactividad/verificaciones")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void verificarInactividad() {
-        gestorDeEventos.verificarInactividadDonantes();
+        app.post("/api/donantes/inactividad/verificaciones", ctx -> {
+            gestorDeEventos.verificarInactividadDonantes();
+            ctx.status(204);
+        });
     }
 }

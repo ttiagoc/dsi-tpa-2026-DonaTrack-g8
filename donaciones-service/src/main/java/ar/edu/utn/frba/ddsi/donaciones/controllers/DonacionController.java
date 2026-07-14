@@ -1,31 +1,17 @@
 package ar.edu.utn.frba.ddsi.donaciones.controllers;
 
-import java.util.List;
+import org.springframework.stereotype.Component;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionAsignadaResponse;
+import ar.edu.utn.frba.ddsi.common.controllers.JavalinController;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionRequest;
-import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EstadoDonacionRequest;
-import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EstadoDonacionResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.SubirFotosRecepcionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ConfirmacionEntregaExitosaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.services.DonacionService;
+import io.javalin.Javalin;
 
-@RestController
-@RequestMapping("/api/donaciones")
-public class DonacionController {
+@Component
+public class DonacionController implements JavalinController {
 
     private final DonacionService donacionService;
 
@@ -33,52 +19,53 @@ public class DonacionController {
         this.donacionService = donacionService;
     }
 
-    @GetMapping
-    public List<DonacionResponse> obtenerTodas() {
-        return donacionService.obtenerTodas();
-    }
+    @Override
+    public void registerRoutes(Javalin app) {
+        app.get("/api/donaciones", ctx -> {
+            ctx.json(donacionService.obtenerTodas());
+        });
 
-    @GetMapping("/{id}")
-    public DonacionResponse obtenerPorId(@PathVariable Long id) {
-        return donacionService.obtenerPorId(id);
-    }
+        app.get("/api/donaciones/{id}", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            ctx.json(donacionService.obtenerPorId(id));
+        });
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public List<DonacionResponse> crear(@RequestBody DonacionRequest request) {
-        return donacionService.crear(request);
-    }
+        app.post("/api/donaciones", ctx -> {
+            DonacionRequest request = ctx.bodyAsClass(DonacionRequest.class);
+            ctx.status(201).json(donacionService.crear(request));
+        });
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void eliminar(@PathVariable Long id) {
-        donacionService.eliminar(id);
-    }
+        app.delete("/api/donaciones/{id}", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            donacionService.eliminar(id);
+            ctx.status(204);
+        });
 
-    @PutMapping("/{id}/estado")
-    public EstadoDonacionResponse cambiarEstado(@PathVariable Long id,
-            @RequestBody EstadoDonacionRequest request) {
-        return donacionService.cambiarEstado(id, request);
-    }
+        app.put("/api/donaciones/{id}/estado", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            EstadoDonacionRequest request = ctx.bodyAsClass(EstadoDonacionRequest.class);
+            ctx.json(donacionService.cambiarEstado(id, request));
+        });
 
-    @GetMapping("/estado/{estado}")
-    public List<DonacionAsignadaResponse> obtenerDonacionesPorEstado(
-            @PathVariable String estado,
-            @RequestParam(name = "limit") int limit,
-            @RequestParam(name = "offset", required = false, defaultValue = "0") int offset) {
-        return donacionService.obtenerDonacionesSegunEstado(estado, limit, offset);
-    }
+        app.get("/api/donaciones/estado/{estado}", ctx -> {
+            String estado = ctx.pathParam("estado");
+            int limit = Integer.parseInt(ctx.queryParam("limit"));
+            String offsetStr = ctx.queryParam("offset");
+            int offset = (offsetStr != null && !offsetStr.isBlank()) ? Integer.parseInt(offsetStr) : 0;
+            ctx.json(donacionService.obtenerDonacionesSegunEstado(estado, limit, offset));
+        });
 
-    @PostMapping("/{id}/fotos")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void subirFotosRecepcion(@PathVariable Long id, @RequestBody SubirFotosRecepcionRequest request) {
-        donacionService.subirFotosRecepcion(id, request);
-    }
+        app.post("/api/donaciones/{id}/fotos", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            SubirFotosRecepcionRequest request = ctx.bodyAsClass(SubirFotosRecepcionRequest.class);
+            donacionService.subirFotosRecepcion(id, request);
+            ctx.status(204);
+        });
 
-    @PostMapping("/recepciones")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void confirmarEntregaExitosa(@RequestBody ConfirmacionEntregaExitosaRequest request) {
-        donacionService.confirmarEntregaExitosa(request);
+        app.post("/api/donaciones/recepciones", ctx -> {
+            ConfirmacionEntregaExitosaRequest request = ctx.bodyAsClass(ConfirmacionEntregaExitosaRequest.class);
+            donacionService.confirmarEntregaExitosa(request);
+            ctx.status(204);
+        });
     }
-
 }

@@ -1,17 +1,15 @@
 package ar.edu.utn.frba.ddsi.donaciones.controllers;
 
-import java.util.List;
+import org.springframework.stereotype.Component;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-
-import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
-import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.*;
+import ar.edu.utn.frba.ddsi.common.controllers.JavalinController;
+import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.NecesidadRequest;
 import ar.edu.utn.frba.ddsi.donaciones.services.EntidadBeneficiariaService;
+import io.javalin.Javalin;
 
-@RestController
-@RequestMapping("/api/entidad-beneficiaria")
-public class EntidadBeneficiariaController {
+@Component
+public class EntidadBeneficiariaController implements JavalinController {
 
     private final EntidadBeneficiariaService entidadBeneficiariaService;
 
@@ -19,56 +17,55 @@ public class EntidadBeneficiariaController {
         this.entidadBeneficiariaService = entidadBeneficiariaService;
     }
 
-    @GetMapping
-    public List<EntidadBeneficiariaResponse> obtenerTodas() {
-        return entidadBeneficiariaService.obtenerTodas();
-    }
+    @Override
+    public void registerRoutes(Javalin app) {
+        app.get("/api/entidad-beneficiaria", ctx -> {
+            ctx.json(entidadBeneficiariaService.obtenerTodas());
+        });
 
-    @GetMapping("/{id}")
-    public EntidadBeneficiariaResponse obtenerPorId(@PathVariable Long id) {
-        return entidadBeneficiariaService.obtenerPorId(id);
-    }
+        app.get("/api/entidad-beneficiaria/{id}", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            ctx.json(entidadBeneficiariaService.obtenerPorId(id));
+        });
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public EntidadBeneficiariaResponse crear(
-            @RequestBody EntidadBeneficiariaRequest request) {
-        return entidadBeneficiariaService.crear(request);
-    }
+        app.post("/api/entidad-beneficiaria", ctx -> {
+            EntidadBeneficiariaRequest request = ctx.bodyAsClass(EntidadBeneficiariaRequest.class);
+            ctx.status(201).json(entidadBeneficiariaService.crear(request));
+        });
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void eliminar(@PathVariable Long id) {
-        entidadBeneficiariaService.eliminar(id);
-    }
+        app.delete("/api/entidad-beneficiaria/{id}", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            entidadBeneficiariaService.eliminar(id);
+            ctx.status(204);
+        });
 
-    @PutMapping("/{id}")
-    public EntidadBeneficiariaResponse actualizar(@PathVariable Long id,
-            @RequestBody EntidadBeneficiariaRequest request) {
-        return entidadBeneficiariaService.actualizar(id, request);
-    }
+        app.put("/api/entidad-beneficiaria/{id}", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            EntidadBeneficiariaRequest request = ctx.bodyAsClass(EntidadBeneficiariaRequest.class);
+            ctx.json(entidadBeneficiariaService.actualizar(id, request));
+        });
 
-    @GetMapping("/{entidadId}/necesidades")
-    public List<NecesidadResponse> obtenerNecesidades(@PathVariable Long entidadId) {
-        return entidadBeneficiariaService.obtenerNecesidades(entidadId);
-    }
+        app.get("/api/entidad-beneficiaria/{entidadId}/necesidades", ctx -> {
+            Long entidadId = Long.parseLong(ctx.pathParam("entidadId"));
+            ctx.json(entidadBeneficiariaService.obtenerNecesidades(entidadId));
+        });
 
-    @PostMapping("/{entidadId}/necesidades")
-    @ResponseStatus(HttpStatus.CREATED)
-    public NecesidadResponse registrarNecesidad(@PathVariable Long entidadId,
-            @RequestBody NecesidadRequest request) {
-        return entidadBeneficiariaService.registrarNecesidad(entidadId, request);
-    }
+        app.post("/api/entidad-beneficiaria/{entidadId}/necesidades", ctx -> {
+            Long entidadId = Long.parseLong(ctx.pathParam("entidadId"));
+            NecesidadRequest request = ctx.bodyAsClass(NecesidadRequest.class);
+            ctx.status(201).json(entidadBeneficiariaService.registrarNecesidad(entidadId, request));
+        });
 
-    @DeleteMapping("/{entidadId}/necesidades/{necesidadId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void eliminarNecesidad(@PathVariable Long entidadId,
-            @PathVariable Long necesidadId) {
-        entidadBeneficiariaService.eliminarNecesidad(entidadId, necesidadId);
-    }
+        app.delete("/api/entidad-beneficiaria/{entidadId}/necesidades/{necesidadId}", ctx -> {
+            Long entidadId = Long.parseLong(ctx.pathParam("entidadId"));
+            Long necesidadId = Long.parseLong(ctx.pathParam("necesidadId"));
+            entidadBeneficiariaService.eliminarNecesidad(entidadId, necesidadId);
+            ctx.status(204);
+        });
 
-    @GetMapping("/{id}/contactos")
-    public List<MedioContacto> obtenerContactos(@PathVariable Long id) {
-        return entidadBeneficiariaService.obtenerContactos(id);
+        app.get("/api/entidad-beneficiaria/{id}/contactos", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            ctx.json(entidadBeneficiariaService.obtenerContactos(id));
+        });
     }
 }
