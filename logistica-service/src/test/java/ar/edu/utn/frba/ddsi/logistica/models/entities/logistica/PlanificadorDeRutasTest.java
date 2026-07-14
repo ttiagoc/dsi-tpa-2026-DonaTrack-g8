@@ -56,7 +56,8 @@ class PlanificadorDeRutasTest {
         void planificarRutasExitoso() {
                 URI urlGetLote = UriComponentsBuilder
                                 .fromUriString("http://localhost:8080/api/donaciones/estado/asignacion_realizada")
-                                .queryParam("limit", 100).build().toUri();
+                                .queryParam("limit", 100)
+                                .queryParam("offset", 0).build().toUri();
 
                 List<DonacionDTO> loteSimulado = List.of(new DonacionDTO(1L, 50.0, 2.0, "Calle 123"));
                 ResponseEntity<List<DonacionDTO>> responseMock = ResponseEntity.ok(loteSimulado);
@@ -79,7 +80,8 @@ class PlanificadorDeRutasTest {
         void planificarRutasSinCamiones() {
                 URI urlGetLote = UriComponentsBuilder
                                 .fromUriString("http://localhost:8080/api/donaciones/estado/asignacion_realizada")
-                                .queryParam("limit", 100).build().toUri();
+                                .queryParam("limit", 100)
+                                .queryParam("offset", 0).build().toUri();
 
                 List<DonacionDTO> loteSimulado = List.of(new DonacionDTO(1L, 50.0, 2.0, "Calle 123"));
                 ResponseEntity<List<DonacionDTO>> responseMock = ResponseEntity.ok(loteSimulado);
@@ -109,15 +111,6 @@ class PlanificadorDeRutasTest {
                                 "LISTA_PARA_ENTREGAR",
                                 "Donacion lista para entregar"
                 );
-
-                // Simular getLote() vacío para que termine rápido la cadena
-                URI urlGetLote = UriComponentsBuilder
-                                .fromUriString("http://localhost:8080/api/donaciones/estado/asignacion_realizada")
-                                .queryParam("limit", 100).build().toUri();
-                ResponseEntity<List<DonacionDTO>> responseMock = ResponseEntity.ok(List.of());
-                when(restTemplate.exchange(eq(urlGetLote), eq(HttpMethod.GET), eq(null),
-                                any(ParameterizedTypeReference.class)))
-                                .thenReturn(responseMock);
 
                 planificadorDeRutas.ejecutarPlanificacion(request);
 

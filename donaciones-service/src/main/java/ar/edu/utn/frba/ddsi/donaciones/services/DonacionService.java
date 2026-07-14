@@ -22,7 +22,7 @@ public interface DonacionService {
 
     EstadoDonacionResponse cambiarEstado(Long id, EstadoDonacionRequest request);
 
-    List<DonacionAsignadaResponse> obtenerDonacionesSegunEstado(String estado, int limit);
+    List<DonacionAsignadaResponse> obtenerDonacionesSegunEstado(String estado, int limit, int offset);
 
     void subirFotosRecepcion(Long id, SubirFotosRecepcionRequest request);
 

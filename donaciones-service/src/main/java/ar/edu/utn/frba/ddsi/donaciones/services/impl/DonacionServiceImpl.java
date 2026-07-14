@@ -41,7 +41,8 @@ public class DonacionServiceImpl implements DonacionService {
     private final GestorDeEventos gestorDeEventos;
     private final EntidadBeneficiariaRepository entidadBeneficiariaRepository;
 
-    public DonacionServiceImpl(DonacionRepository donacionRepository, SegmentadorDeDonacion segmentadorDeDonacion, GestorDeEventos gestorDeEventos, EntidadBeneficiariaRepository entidadBeneficiariaRepository) {
+    public DonacionServiceImpl(DonacionRepository donacionRepository, SegmentadorDeDonacion segmentadorDeDonacion,
+            GestorDeEventos gestorDeEventos, EntidadBeneficiariaRepository entidadBeneficiariaRepository) {
         this.donacionRepository = donacionRepository;
         this.segmentadorDeDonacion = segmentadorDeDonacion;
         this.gestorDeEventos = gestorDeEventos;
@@ -96,13 +97,13 @@ public class DonacionServiceImpl implements DonacionService {
                 donacion.getHistorialEstados().get(donacion.getHistorialEstados().size() - 1).getFecha());
     }
 
-    public List<DonacionAsignadaResponse> obtenerDonacionesSegunEstado(String estado, int limit) {
+    public List<DonacionAsignadaResponse> obtenerDonacionesSegunEstado(String estado, int limit, int offset) {
         TipoEstadoDonacion tipoEstado = toTipoEstadoDonacion(estado);
 
         List<Donacion> donaciones = donacionRepository.buscarPorEstado(tipoEstado);
-        if (donaciones.size() > limit) {
-            donaciones = donaciones.subList(0, limit);
-        }
+        int fromIndex = Math.min(offset, donaciones.size());
+        int toIndex = Math.min(offset + limit, donaciones.size());
+        donaciones = donaciones.subList(fromIndex, toIndex);
 
         List<DonacionAsignadaResponse> donacionesAsignadas = new ArrayList<>();
         for (Donacion donacion : donaciones) {
@@ -147,7 +148,6 @@ public class DonacionServiceImpl implements DonacionService {
 
         gestorDeEventos.emitirEntregaExitosa(entidad, donaciones, request.patenteCamion(), request.fechaHora());
     }
-
 
     private Donacion guardar(Donacion donacion) {
         return donacionRepository.save(donacion);

@@ -52,7 +52,7 @@ public class GestorPlanificacionRutas {
                 EjecutarPlanificacionRequest mockResponse = new EjecutarPlanificacionRequest(camionesProcesados,
                         donacionesSobrantes);
 
-                String urlCallback = "http://localhost:8081/api/rutas/planificaciones";
+                String urlCallback = "http://localhost:8081/api/rutas/planificaciones/resultados";
                 System.out.println("Cálculo terminado. Golpeando la URL de callback...");
 
                 restTemplate.postForObject(urlCallback, mockResponse, Void.class);

@@ -25,7 +25,8 @@ public class PlanificadorDeRutas {
     private final RestLogisticaConfig properties;
     private final GestorPlanificacionRutas gestorPlanificacionRutas;
     private final CamionRepository camionRepository;
-    private static final int TAMANO_LOTE = 100;
+    private static final int TAMANO_LOTE_DONACIONES = 100;
+    private static final int TAMANO_LOTE_CAMIONES = 5;
 
     public PlanificadorDeRutas(RestTemplate restTemplate, RestLogisticaConfig properties,
             GestorPlanificacionRutas gestorPlanificacionRutas, CamionRepository camionRepository) {
@@ -36,11 +37,31 @@ public class PlanificadorDeRutas {
     }
 
     public void planificarRutas() {
-        List<DonacionDTO> lote = getLote();
         List<Camion> camionesDisponibles = camionRepository.findAllDisponibles();
+        if (camionesDisponibles.isEmpty()) {
+            return;
+        }
 
-        if (!lote.isEmpty() && !camionesDisponibles.isEmpty()) {
-            gestorPlanificacionRutas.solicitarPlanificacion(lote, camionesDisponibles);
+        int offset = 0;
+        int camionIndex = 0;
+
+        while (true) {
+            if (camionIndex >= camionesDisponibles.size()) {
+                break;
+            }
+
+            List<DonacionDTO> loteDonaciones = getLote(offset);
+            if (loteDonaciones.isEmpty()) {
+                break;
+            }
+
+            int toIndex = Math.min(camionIndex + TAMANO_LOTE_CAMIONES, camionesDisponibles.size());
+            List<Camion> loteCamiones = camionesDisponibles.subList(camionIndex, toIndex);
+
+            gestorPlanificacionRutas.solicitarPlanificacion(loteDonaciones, loteCamiones);
+
+            offset += TAMANO_LOTE_DONACIONES;
+            camionIndex += TAMANO_LOTE_CAMIONES;
         }
     }
 
@@ -58,14 +79,13 @@ public class PlanificadorDeRutas {
 
             restTemplate.put(url, requestBody);
         }
-
-        planificarRutas();
     }
 
-    private List<DonacionDTO> getLote() {
+    private List<DonacionDTO> getLote(int offset) {
         URI url = UriComponentsBuilder.fromUriString(properties.getDonacionesUrl())
                 .path("/donaciones/estado/asignacion_realizada")
-                .queryParam("limit", TAMANO_LOTE)
+                .queryParam("limit", TAMANO_LOTE_DONACIONES)
+                .queryParam("offset", offset)
                 .build().toUri();
 
         ResponseEntity<List<DonacionDTO>> response = restTemplate.exchange(

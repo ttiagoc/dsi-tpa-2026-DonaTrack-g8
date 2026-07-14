@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaResponse;
+import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.PlanificadorDeRutas;
 import ar.edu.utn.frba.ddsi.logistica.services.RutaService;
 
@@ -83,5 +84,11 @@ public class RutaController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void planificarRutas() {
         planificadorDeRutas.planificarRutas();
+    }
+
+    @PostMapping("/planificaciones/resultados")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void ejecutarPlanificacion(@RequestBody EjecutarPlanificacionRequest request) {
+        planificadorDeRutas.ejecutarPlanificacion(request);
     }
 }

@@ -64,8 +64,9 @@ public class DonacionController {
     @GetMapping("/estado/{estado}")
     public List<DonacionAsignadaResponse> obtenerDonacionesPorEstado(
             @PathVariable String estado,
-            @RequestParam(name = "limit") int limit) {
-        return donacionService.obtenerDonacionesSegunEstado(estado, limit);
+            @RequestParam(name = "limit") int limit,
+            @RequestParam(name = "offset", required = false, defaultValue = "0") int offset) {
+        return donacionService.obtenerDonacionesSegunEstado(estado, limit, offset);
     }
 
     @PostMapping("/{id}/fotos")
