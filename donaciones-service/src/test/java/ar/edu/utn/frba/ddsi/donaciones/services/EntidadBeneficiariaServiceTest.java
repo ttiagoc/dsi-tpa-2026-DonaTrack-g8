@@ -22,7 +22,9 @@ import ar.edu.utn.frba.ddsi.donaciones.dto.donante.MedioContactoRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaResponse;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
+import ar.edu.utn.frba.ddsi.donaciones.models.repositories.CategoriaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
+import ar.edu.utn.frba.ddsi.donaciones.models.repositories.SubcategoriaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.services.impl.EntidadBeneficiariaServiceImpl;
 
 @DisplayName("Tests del EntidadBeneficiariaService")
@@ -34,8 +36,11 @@ class EntidadBeneficiariaServiceTest {
     @BeforeEach
     void setUp() {
         entidadRepository = mock(EntidadBeneficiariaRepository.class);
+        CategoriaRepository categoriaRepository = mock(CategoriaRepository.class);
+        SubcategoriaRepository subcategoriaRepository = mock(SubcategoriaRepository.class);
 
-        entidadService = new EntidadBeneficiariaServiceImpl(entidadRepository);
+        entidadService = new EntidadBeneficiariaServiceImpl(entidadRepository, categoriaRepository,
+                subcategoriaRepository);
     }
 
     @Test

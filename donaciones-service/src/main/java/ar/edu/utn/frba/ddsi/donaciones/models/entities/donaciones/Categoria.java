@@ -8,7 +8,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Categoria {
+  private Long id;
   private String nombre;
   private Boolean pideEstado;
   private Boolean esPerecedero;
+
+  public Categoria(String nombre, Boolean pideEstado, Boolean esPerecedero) {
+    this.nombre = nombre;
+    this.pideEstado = pideEstado;
+    this.esPerecedero = esPerecedero;
+  }
 }

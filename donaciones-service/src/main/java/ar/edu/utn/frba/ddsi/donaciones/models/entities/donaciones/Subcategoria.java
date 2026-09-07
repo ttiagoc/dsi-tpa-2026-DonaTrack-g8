@@ -8,8 +8,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Subcategoria {
+  private Long id;
   private String nombre;
   private Categoria categoria;
+
+  public Subcategoria(String nombre, Categoria categoria) {
+    this.nombre = nombre;
+    this.categoria = categoria;
+  }
 
   public Boolean esPerecedero() {
     return this.categoria != null && this.categoria.getEsPerecedero();

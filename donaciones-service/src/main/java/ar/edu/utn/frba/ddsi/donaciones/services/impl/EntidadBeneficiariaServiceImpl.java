@@ -23,16 +23,23 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.Necesidad;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.NecesidadExtraordinaria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.NecesidadRecurrente;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.TipoNecesidad;
+import ar.edu.utn.frba.ddsi.donaciones.models.repositories.CategoriaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
+import ar.edu.utn.frba.ddsi.donaciones.models.repositories.SubcategoriaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.services.EntidadBeneficiariaService;
 
 @Service
 public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaService {
 
     private final EntidadBeneficiariaRepository entidadBeneficiariaRepository;
+    private final CategoriaRepository categoriaRepository;
+    private final SubcategoriaRepository subcategoriaRepository;
 
-    public EntidadBeneficiariaServiceImpl(EntidadBeneficiariaRepository entidadBeneficiariaRepository) {
+    public EntidadBeneficiariaServiceImpl(EntidadBeneficiariaRepository entidadBeneficiariaRepository,
+            CategoriaRepository categoriaRepository, SubcategoriaRepository subcategoriaRepository) {
         this.entidadBeneficiariaRepository = entidadBeneficiariaRepository;
+        this.categoriaRepository = categoriaRepository;
+        this.subcategoriaRepository = subcategoriaRepository;
     }
 
     public List<EntidadBeneficiariaResponse> obtenerTodas() {
@@ -160,18 +167,24 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
                 request.descripcion(), request.cantidad());
     }
 
+    // Subcategoria/Categoria son un catalogo compartido con donaciones-service:
+    // se busca por nombre antes de crear (ver JustificacionesDisenoRelacional.md).
     private Subcategoria toSubcategoria(SubcategoriaRequest subcategoria) {
         if (subcategoria.nombre() == null || subcategoria.nombre().isBlank()) {
             throw new BusinessException("El nombre de la subcategoria no puede ser nulo ni estar vacio");
         }
-        return new Subcategoria(subcategoria.nombre(), toCategoria(subcategoria.categoria()));
+        return subcategoriaRepository.findByNombre(subcategoria.nombre())
+                .orElseGet(() -> subcategoriaRepository
+                        .save(new Subcategoria(subcategoria.nombre(), toCategoria(subcategoria.categoria()))));
     }
 
     private Categoria toCategoria(CategoriaRequest categoria) {
         if (categoria.nombre() == null || categoria.nombre().isBlank()) {
             throw new BusinessException("El nombre de la categoria no puede ser nulo ni estar vacio");
         }
-        return new Categoria(categoria.nombre(), categoria.pideEstado(), categoria.esPerecedero());
+        return categoriaRepository.findByNombre(categoria.nombre())
+                .orElseGet(() -> categoriaRepository
+                        .save(new Categoria(categoria.nombre(), categoria.pideEstado(), categoria.esPerecedero())));
     }
 
     private TipoNecesidad toTipoNecesidad(String tipo) {
