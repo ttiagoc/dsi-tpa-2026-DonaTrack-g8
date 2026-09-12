@@ -29,6 +29,16 @@
 
   <dependencyManagement>
     <dependencies>
+      <!-- Javalin 6 corre sobre Jetty 11, pero el BOM de Spring Boot 4 fija Jetty 12 y mezcla
+           versiones (NoSuchMethodError al iniciar Javalin). Se importa antes para que gane Jetty 11. -->
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-bom</artifactId>
+        <version>11.0.20</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>

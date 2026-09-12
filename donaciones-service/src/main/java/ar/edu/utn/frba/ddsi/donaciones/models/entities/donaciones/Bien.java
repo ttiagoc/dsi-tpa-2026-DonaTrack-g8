@@ -2,21 +2,45 @@ package ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones;
 
 import java.time.LocalDate;
 
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoBien;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Embeddable
 @Data
 @NoArgsConstructor
 public class Bien {
+  @Column(length = 500)
   private String descripcion;
+
+  @Column(length = 500)
   private String foto;
+
   private Long cantidad;
+
+  @Column(name = "peso_kg_por_unidad")
   private Double pesoKgPorUnidad;
+
+  @Column(name = "volumen_m3_por_unidad")
   private Double volumenM3PorUnidad;
+
+  @ManyToOne
+  @JoinColumn(name = "subcategoria_id")
   private Subcategoria subcategoria;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "estado_bien", length = 20)
   private EstadoBien estadoBien;
+
+  @Column(name = "fecha_vencimiento")
   private LocalDate fechaVencimiento;
 
   public Bien(String descripcion, Long cantidad, Double pesoKgPorUnidad, Double volumenM3PorUnidad,

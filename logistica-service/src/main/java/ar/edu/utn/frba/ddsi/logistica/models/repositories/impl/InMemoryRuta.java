@@ -16,8 +16,14 @@ public class InMemoryRuta implements RutaRepository {
     private List<Ruta> rutas = new ArrayList<>();
 
     private GeneradorIdSecuencial generadorId = new GeneradorIdSecuencial();
+    private GeneradorIdSecuencial generadorIdParadas = new GeneradorIdSecuencial();
 
     public Ruta save(Ruta ruta) {
+        if (ruta.getParadas() != null) {
+            ruta.getParadas().stream()
+                    .filter(p -> p.getId() == null)
+                    .forEach(p -> p.setId(generadorIdParadas.siguiente()));
+        }
         if (ruta.getId() == null) {
             ruta.setId(generadorId.siguiente());
             rutas.add(ruta);

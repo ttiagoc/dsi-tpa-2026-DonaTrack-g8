@@ -14,6 +14,7 @@ import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.donaciones.config.RestDonacionesConfig;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.NotificacionRequest;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoOrganizacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
 
 @Component
@@ -127,7 +128,7 @@ public class ImportadorDeDonantes {
         PersonaJuridica juridica = new PersonaJuridica();
         juridica.setRazonSocial(razonSocial);
         juridica.setCuit(documento);
-        juridica.setTipo("empresa");
+        juridica.setTipo(TipoOrganizacion.EMPRESA);
         juridica.setRepresentantes(new ArrayList<>());
 
         List<MedioContacto> contactos = new ArrayList<>();

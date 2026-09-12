@@ -42,6 +42,10 @@ public class GestorDeEventos {
         LocalDate limiteInactividad = LocalDate.now().minusDays(20);
 
         for (Donante donante : donantes) {
+            // un donante sin donaciones no tiene fecha de ultima donacion y cortaria el escaneo
+            if (donante.getDonaciones().isEmpty()) {
+                continue;
+            }
             if (donante.getFechaUltimaDonacion().isBefore(limiteInactividad)) {
                 System.out.println("Se detectó inactividad prolongada en Donante ID #" + donante.getId());
                 this.notificarAusenciaDonante(donante);

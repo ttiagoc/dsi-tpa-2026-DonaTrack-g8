@@ -123,20 +123,44 @@ package "donaciones" {
 
   subcategoria ||--o{ donacion_bienes
 
+  ' RegistroDonacion: la carga completa (no segmentada) que hace el
+  ' donante en el deposito. Se persiste para conservar la descripcion
+  ' general (Consigna 1), la trazabilidad de que Donaciones salieron
+  ' de la misma carga y la fecha de ultima donacion del donante (cron
+  ' de inactividad). Sus bienes NO se guardan aca (@Transient): ya
+  ' quedan en donacion_bienes tras la segmentacion.
+  entity registro_donacion {
+    * id : BIGINT <<PK, IDENTITY>>
+    --
+    donante_id : BIGINT <<FK -> donante.id, NOT NULL>>
+    descripcion : VARCHAR(500)
+    fecha : TIMESTAMP
+  }
+
+  donante ||--o{ registro_donacion
+
   ' Donacion: entidad real (tiene id, repositorio propio, endpoints
   ' propios en DonacionController). entidad_beneficiaria_asignada_id
   ' nace NULL hasta que el matchmaking asigna una entidad.
+  ' Cada Donacion sale de un unico RegistroDonacion (1 registro -> 1..N
+  ' donaciones). DESNORMALIZACION deliberada: donante_id y fecha se
+  ' repiten del registro (derivables por JOIN) para que las consultas
+  ' sobre donacion, la entidad mas consultada del sistema, no necesiten
+  ' JOIN a registro_donacion. Ver JustificacionesDisenoRelacional.md.
   entity donacion {
     * id : BIGINT <<PK, IDENTITY>>
     --
-    donante_id : BIGINT <<FK -> donante.id>>
+    registro_donacion_id : BIGINT <<FK -> registro_donacion.id, NOT NULL>>
+    donante_id : BIGINT <<FK -> donante.id>> <<desnormalizado>>
     entidad_beneficiaria_asignada_id : BIGINT <<FK -> entidad_beneficiaria.id>>
     subcategoria_id : BIGINT <<FK -> subcategoria.id>>
     estado_bienes : VARCHAR(20)
     fecha_vencimiento : DATE
-    fecha : TIMESTAMP
+    fecha : TIMESTAMP <<desnormalizado>>
   }
 
+  registro_donacion ||--|{ donacion
+  donante ||--o{ donacion
   subcategoria ||--o{ donacion
 
   donacion ||--o{ donacion_bienes
@@ -248,9 +272,8 @@ package "donaciones" {
 
   ' ComprobanteEntrega: NO se persiste. Solo existe dentro de
   ' EventoEntregaExitosa (evento transitorio, ver GestorDeEventos),
-  ' nunca se guarda en Donacion ni en ninguna tabla. Mismo criterio que
-  ' RegistroDonacion: sin repositorio, sin id, se descarta tras emitir
-  ' el evento.
+  ' nunca se guarda en Donacion ni en ninguna tabla: sin repositorio,
+  ' sin id, se descarta tras emitir el evento.
 }
 
 ' ============================================================
@@ -278,18 +301,15 @@ package "logistica" {
     ubicacion_velocidad : DOUBLE
   }
 
-  ' Ruta: entidad real (id, RutaRepository, CRUD completo). Ruta.chofer
-  ' se mapea igual (embebido) pero ver ErroresACorregir.md: nunca se
-  ' setea en ningun flujo real, duplica el chofer accesible via
-  ' camion_id -> chofer.
+  ' Ruta: entidad real (id, RutaRepository, CRUD completo). No guarda
+  ' chofer propio: el chofer se consulta siempre al camion asignado
+  ' (camion_id -> camion.chofer_*).
   entity ruta {
     * id : BIGINT <<PK, IDENTITY>>
     --
     fecha : DATE
     estado : VARCHAR(20)
     camion_id : BIGINT <<FK -> camion.id>>
-    chofer_nombre : VARCHAR(255)
-    chofer_apellido : VARCHAR(255)
   }
 
   camion ||--o{ ruta

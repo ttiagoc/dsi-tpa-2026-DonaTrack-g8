@@ -106,6 +106,7 @@ public class RutaServiceImpl implements RutaService {
 
     private ParadaResponse toParadaResponse(Parada parada) {
         return new ParadaResponse(
+                parada.getId(),
                 parada.getOrden(),
                 parada.getDestino(),
                 parada.getEntidadId(),
@@ -174,7 +175,7 @@ public class RutaServiceImpl implements RutaService {
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro una ruta con el id: " + rutaId));
 
         Parada parada = ruta.getParadas().stream()
-                .filter(p -> p.getOrden() == paradaId.intValue())
+                .filter(p -> paradaId.equals(p.getId()))
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontro una parada con el id: " + paradaId + " en la ruta " + rutaId));

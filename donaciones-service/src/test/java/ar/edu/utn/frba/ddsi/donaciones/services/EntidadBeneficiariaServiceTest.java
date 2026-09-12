@@ -12,17 +12,22 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
+import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.SubcategoriaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.MedioContactoRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaResponse;
+import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.NecesidadRequest;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
-import ar.edu.utn.frba.ddsi.donaciones.models.repositories.CategoriaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.SubcategoriaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.services.impl.EntidadBeneficiariaServiceImpl;
@@ -31,16 +36,15 @@ import ar.edu.utn.frba.ddsi.donaciones.services.impl.EntidadBeneficiariaServiceI
 class EntidadBeneficiariaServiceTest {
 
     private EntidadBeneficiariaRepository entidadRepository;
+    private SubcategoriaRepository subcategoriaRepository;
     private EntidadBeneficiariaServiceImpl entidadService;
 
     @BeforeEach
     void setUp() {
         entidadRepository = mock(EntidadBeneficiariaRepository.class);
-        CategoriaRepository categoriaRepository = mock(CategoriaRepository.class);
-        SubcategoriaRepository subcategoriaRepository = mock(SubcategoriaRepository.class);
+        subcategoriaRepository = mock(SubcategoriaRepository.class);
 
-        entidadService = new EntidadBeneficiariaServiceImpl(entidadRepository, categoriaRepository,
-                subcategoriaRepository);
+        entidadService = new EntidadBeneficiariaServiceImpl(entidadRepository, subcategoriaRepository);
     }
 
     @Test
@@ -83,5 +87,31 @@ class EntidadBeneficiariaServiceTest {
         assertEquals("Medrano 951", response.direccion());
 
         verify(entidadRepository, times(1)).save(any(EntidadBeneficiaria.class));
+    }
+
+    @Test
+    @DisplayName("Debe fallar al registrar una necesidad con una subcategoria que no esta en el catalogo")
+    void registrarNecesidadSubcategoriaInexistente() {
+        when(entidadRepository.findById(1L)).thenReturn(Optional.of(new EntidadBeneficiaria()));
+        when(subcategoriaRepository.findByNombre("Inexistente")).thenReturn(Optional.empty());
+
+        NecesidadRequest request = new NecesidadRequest(new SubcategoriaRequest("Inexistente"),
+                "extraordinaria", null, "Sillas para el aula", 30L);
+
+        assertThrows(ResourceNotFoundException.class, () -> entidadService.registrarNecesidad(1L, request));
+    }
+
+    @Test
+    @DisplayName("Debe fallar al registrar una necesidad recurrente sin periodo")
+    void registrarNecesidadRecurrenteSinPeriodo() {
+        when(entidadRepository.findById(1L)).thenReturn(Optional.of(new EntidadBeneficiaria()));
+        when(subcategoriaRepository.findByNombre("Fideos"))
+                .thenReturn(Optional.of(new Subcategoria("Fideos", new Categoria("Alimentos", false, true))));
+
+        NecesidadRequest request = new NecesidadRequest(new SubcategoriaRequest("Fideos"),
+                "recurrente", null, "Fideos para el comedor", 100L);
+
+        Exception ex = assertThrows(BusinessException.class, () -> entidadService.registrarNecesidad(1L, request));
+        assertTrue(ex.getMessage().contains("periodo"));
     }
 }

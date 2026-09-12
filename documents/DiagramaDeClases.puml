@@ -73,6 +73,7 @@ package "Microservicio Notificaciones" {
   }
 
   class Notificacion {
+    id : Long
     fechaDeEnvio : LocalDateTime
     mensaje : String
     contacto : MedioContacto
@@ -87,12 +88,13 @@ package "Microservicio Donaciones" {
     contactos: List<MedioContacto>
     contactoPredeterminado: MedioContacto
     agregarDonacion(donacion: RegistroDonacion) : void
+    getFechaUltimaDonacion() : LocalDate
   }
 
   class PersonaHumana extends Donante {
     nombre: String
     apellido: String
-    fechaNacimiento: LocalDateTime
+    fechaNacimiento: LocalDate
     dni : String
     genero: String
     direccion: String
@@ -113,6 +115,8 @@ package "Microservicio Donaciones" {
   }
 
   class RegistroDonacion {
+    id : Long
+    donante : Donante
     descripcion : String
     fecha : LocalDateTime
     bienes : List<Bien>
@@ -124,6 +128,7 @@ package "Microservicio Donaciones" {
 
   class Donacion {
     id : Long
+    registroDonacion : RegistroDonacion
     donante : Donante
     entidadBeneficiariaAsignada : EntidadBeneficiaria
     subcategoria : Subcategoria
@@ -134,9 +139,14 @@ package "Microservicio Donaciones" {
     historialEstados : List<CambioEstado>
     fotosRecepcion : List<String>
     agregarBien(bien : Bien) : void
-    cambiarEstado(nuevoEstado : TipoEstadoDonacion, justificacion : String)
+    estadoActual() : TipoEstadoDonacion
+    cambiarEstado(nuevoEstado : TipoEstadoDonacion, justificacion : String) : void
+    confirmarEntrega() : void
+    cantidadBienesRecibidos() : Double
+    estaDentroDelPeriodoActual(periodo : Periodo) : Boolean
     calcularPesoTotal() : Double
     calcularVolumenTotal() : Double
+    obtenerDireccion() : String
   }
 
   class CambioEstado {
@@ -146,14 +156,18 @@ package "Microservicio Donaciones" {
   }
 
   class Categoria {
+    id : Long
     nombre: String
     pideEstado: Boolean
     esPerecedero: Boolean
   }
 
   class Subcategoria {
+    id : Long
     nombre: String
     categoria : Categoria
+    esPerecedero() : Boolean
+    pideEstado() : Boolean
   }
 
   class Bien {
@@ -163,8 +177,11 @@ package "Microservicio Donaciones" {
     pesoKgPorUnidad : Double
     volumenM3PorUnidad : Double
     subcategoria : Subcategoria
-    estado : EstadoBien
+    estadoBien : EstadoBien
     fechaVencimiento : LocalDate
+    generarKey() : String
+    calcularPesoTotal() : Double
+    calcularVolumenTotal() : Double
   }
 
   class EntidadBeneficiaria {
@@ -214,7 +231,7 @@ package "Microservicio Donaciones" {
     notificarAusenciaDonante(donante: Donante): void
     verificarInactividadDonantes(): void
     iniciarRuta(request: InicioRutaRequest): void
-    confirmarEntregaExitosa(request: ConfirmacionEntregaExitosaRequest): void
+    emitirEntregaExitosa(entidad: EntidadBeneficiaria, donaciones: List<Donacion>, patente: String, fechaHora: LocalDateTime): void
     notificarEntregaFallida(donacionId: Long, motivo: String): void
   }
 
@@ -283,6 +300,7 @@ package "Microservicio Donaciones" {
     procesarMatchmaking(): void
     aceptarPropuesta(propuestaId: Long, entidadId: Long): void
     rechazarPropuesta(propuestaId: Long): void
+    actualizarEstadoPropuesta(id: Long, request: EstadoPropuestaRequest): void
   }
 
   class ResultadoMatchmaking {
@@ -310,6 +328,13 @@ package "Microservicio Donaciones" {
     ENTREGADA
     ENTREGA_FALLIDA
     VENCIDA
+  }
+
+  enum TipoOrganizacion {
+    GUBERNAMENTAL
+    ONG
+    EMPRESA
+    INSTITUCION
   }
 
   enum EstadoBien {
@@ -351,10 +376,9 @@ package "Microservicio Logistica" {
 
   class Ruta {
     id: Long
-    fecha: LocalDateTime
+    fecha: LocalDate
     estado: EstadoRuta
     camion: Camion
-    chofer: Chofer
     paradas: List<Parada>
     iniciar()
     finalizar()
@@ -364,23 +388,24 @@ package "Microservicio Logistica" {
     latitud: Double
     longitud: Double
     timestamp: LocalDateTime
+    velocidad: Double
   }
 
   class Parada {
+    id: Long
     orden: Integer
     destino: String
-    entidad: Long
-    entregas: List<Long> 
+    entidadId: Long
+    donacionIds: List<Long>
   }
 
   class GestorPlanificacionRutas {
-    planificarRutas(donacionesAsignadas : List<Long>, camiones : List<Camion>)
-    fraccionarEnLotes(donaciones : List<Long>) : List<List<Long>>
+    solicitarPlanificacion(donaciones : List<DonacionDTO>, camiones : List<Camion>) : void
   }
 
   class GestorDeRutas {
-    iniciarRuta(rutaId : Long) : void
-    confirmarEntregaExitosa(paradaId : Long, rutaId : Long) : void
+    iniciarRuta(ruta : Ruta) : void
+    confirmarEntregaExitosa(parada : Parada, ruta : Ruta) : void
   }
 
   class PlanificadorDeRutas {
@@ -433,14 +458,18 @@ Notificador ..> Notificacion
 Donante --> "*" RegistroDonacion
 Donante --> "*" MedioContacto
 PersonaJuridica --> "*" Representante
+PersonaJuridica --> TipoOrganizacion
 Representante --> MedioContacto
 
 RegistroDonacion --> "*" Bien
+RegistroDonacion --> Donante
+Donacion "1..*" --> "1" RegistroDonacion
 Donacion --> Donante
 Donacion --> EntidadBeneficiaria
 Donacion --> Subcategoria
 Donacion --> "*" CambioEstado
 Donacion --> "*" Bien
+Donacion --> EstadoBien
 CambioEstado --> TipoEstadoDonacion
 
 Subcategoria --> Categoria
@@ -467,7 +496,6 @@ ResultadoMatchmaking --> EstadoPropuesta
 Camion --> Chofer
 Ruta --> EstadoRuta
 Ruta --> Camion
-Ruta --> Chofer
 Ruta --> "*" Parada
 Camion --> Ubicacion
 

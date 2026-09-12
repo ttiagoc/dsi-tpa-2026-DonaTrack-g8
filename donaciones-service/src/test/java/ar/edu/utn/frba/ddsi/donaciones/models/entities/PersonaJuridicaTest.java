@@ -16,6 +16,7 @@ import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.RegistroDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaJuridica;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoOrganizacion;
 
 @DisplayName("Tests de Persona Juridica")
 class PersonaJuridicaTest {
@@ -31,7 +32,7 @@ class PersonaJuridicaTest {
                 email,
                 "Empresa S.A.",
                 "Tecnología",
-                "Sociedad Anónima",
+                TipoOrganizacion.EMPRESA,
                 "30-12345678-9",
                 new ArrayList<>());
 

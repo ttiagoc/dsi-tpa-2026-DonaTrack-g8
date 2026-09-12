@@ -11,6 +11,8 @@ public interface SubcategoriaRepository {
 
     Optional<Subcategoria> findById(Long id);
 
+    List<Subcategoria> findByCategoriaId(Long categoriaId);
+
     List<Subcategoria> findAll();
 
     Optional<Subcategoria> findByNombre(String nombre);

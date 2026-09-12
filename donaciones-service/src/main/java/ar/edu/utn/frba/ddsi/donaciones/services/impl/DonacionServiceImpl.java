@@ -12,7 +12,6 @@ import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoBien;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.BienRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.BienResponse;
-import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.CategoriaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionAsignadaResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionResponse;
@@ -25,13 +24,14 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBenefici
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.GestorDeEventos;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Bien;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.RegistroDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.SegmentadorDeDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
-import ar.edu.utn.frba.ddsi.donaciones.models.repositories.CategoriaRepository;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
+import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
+import ar.edu.utn.frba.ddsi.donaciones.models.repositories.RegistroDonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.SubcategoriaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.services.DonacionService;
 
@@ -42,18 +42,21 @@ public class DonacionServiceImpl implements DonacionService {
     private final SegmentadorDeDonacion segmentadorDeDonacion;
     private final GestorDeEventos gestorDeEventos;
     private final EntidadBeneficiariaRepository entidadBeneficiariaRepository;
-    private final CategoriaRepository categoriaRepository;
     private final SubcategoriaRepository subcategoriaRepository;
+    private final DonanteRepository donanteRepository;
+    private final RegistroDonacionRepository registroDonacionRepository;
 
     public DonacionServiceImpl(DonacionRepository donacionRepository, SegmentadorDeDonacion segmentadorDeDonacion,
             GestorDeEventos gestorDeEventos, EntidadBeneficiariaRepository entidadBeneficiariaRepository,
-            CategoriaRepository categoriaRepository, SubcategoriaRepository subcategoriaRepository) {
+            SubcategoriaRepository subcategoriaRepository, DonanteRepository donanteRepository,
+            RegistroDonacionRepository registroDonacionRepository) {
         this.donacionRepository = donacionRepository;
         this.segmentadorDeDonacion = segmentadorDeDonacion;
         this.gestorDeEventos = gestorDeEventos;
         this.entidadBeneficiariaRepository = entidadBeneficiariaRepository;
-        this.categoriaRepository = categoriaRepository;
         this.subcategoriaRepository = subcategoriaRepository;
+        this.donanteRepository = donanteRepository;
+        this.registroDonacionRepository = registroDonacionRepository;
     }
 
     public List<DonacionResponse> obtenerTodas() {
@@ -70,7 +73,11 @@ public class DonacionServiceImpl implements DonacionService {
     }
 
     public List<DonacionResponse> crear(DonacionRequest request) {
-        RegistroDonacion registro = toRegistroDonacion(request);
+        RegistroDonacion registro = registroDonacionRepository.save(toRegistroDonacion(request));
+        Donante donante = registro.getDonante();
+        donante.agregarDonacion(registro);
+        donanteRepository.save(donante);
+
         List<Donacion> donacionesCreadas = segmentadorDeDonacion.segmentarDonacion(registro);
         donacionesCreadas = donacionRepository.saveAll(donacionesCreadas);
 
@@ -164,18 +171,31 @@ public class DonacionServiceImpl implements DonacionService {
         if (donacionRequest.bienes() == null || donacionRequest.bienes().isEmpty()) {
             throw new BusinessException("La donacion debe tener al menos un bien");
         }
-        return new RegistroDonacion(donacionRequest.descripcion(),
+        if (donacionRequest.idDonante() == null) {
+            throw new BusinessException("La donacion debe indicar el id del donante");
+        }
+        Donante donante = donanteRepository.findById(donacionRequest.idDonante())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontro un donante con el id: " + donacionRequest.idDonante()));
+
+        return new RegistroDonacion(donante, donacionRequest.descripcion(),
                 donacionRequest.bienes().stream().map(this::toBien).collect(Collectors.toList()));
     }
 
     private DonacionResponse toDonacionResponse(Donacion d) {
+        // la entidad beneficiaria recien se asigna cuando corre el matchmaking
+        Long entidadAsignadaId = d.getEntidadBeneficiariaAsignada() != null
+                ? d.getEntidadBeneficiariaAsignada().getId()
+                : null;
+        Long donanteId = d.getDonante() != null ? d.getDonante().getId() : null;
+
         return new DonacionResponse(
                 d.getId(),
                 d.getBienes().stream().map(this::toBienResonse).collect(Collectors.toList()),
                 d.estadoActual().toString(),
                 d.getFecha(),
-                d.getDonante().getId(),
-                d.getEntidadBeneficiariaAsignada().getId());
+                donanteId,
+                entidadAsignadaId);
     }
 
     private Bien toBien(BienRequest bienRequest) {
@@ -220,26 +240,15 @@ public class DonacionServiceImpl implements DonacionService {
         }
     }
 
-    // Subcategoria/Categoria son un catalogo compartido: se busca por nombre
-    // antes de crear, para no terminar con filas duplicadas ni valores
-    // inconsistentes de pideEstado/esPerecedero para el mismo nombre
-    // (ver JustificacionesDisenoRelacional.md, decision de Categoria/Subcategoria).
+    // Las subcategorias se cargan previamente desde el catalogo (CategoriaController):
+    // un bien solo puede referenciar una subcategoria existente.
     private Subcategoria toSubcategoria(SubcategoriaRequest subcategoria) {
-        if (subcategoria.nombre() == null || subcategoria.nombre().isBlank()) {
+        if (subcategoria == null || subcategoria.nombre() == null || subcategoria.nombre().isBlank()) {
             throw new BusinessException("El nombre de la subcategoria no puede ser nulo ni estar vacio");
         }
         return subcategoriaRepository.findByNombre(subcategoria.nombre())
-                .orElseGet(() -> subcategoriaRepository
-                        .save(new Subcategoria(subcategoria.nombre(), toCategoria(subcategoria.categoria()))));
-    }
-
-    private Categoria toCategoria(CategoriaRequest categoria) {
-        if (categoria.nombre() == null || categoria.nombre().isBlank()) {
-            throw new BusinessException("El nombre de la categoria no puede ser nulo ni estar vacio");
-        }
-        return categoriaRepository.findByNombre(categoria.nombre())
-                .orElseGet(() -> categoriaRepository
-                        .save(new Categoria(categoria.nombre(), categoria.pideEstado(), categoria.esPerecedero())));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No existe la subcategoria '" + subcategoria.nombre() + "' en el catalogo"));
     }
 
 }

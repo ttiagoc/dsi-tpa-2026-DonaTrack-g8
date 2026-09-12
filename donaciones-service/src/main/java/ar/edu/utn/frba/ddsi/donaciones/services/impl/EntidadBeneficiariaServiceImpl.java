@@ -9,21 +9,19 @@ import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
-import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.CategoriaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.SubcategoriaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.MedioContactoRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.NecesidadRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.NecesidadResponse;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.Necesidad;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.NecesidadExtraordinaria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.NecesidadRecurrente;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.TipoNecesidad;
-import ar.edu.utn.frba.ddsi.donaciones.models.repositories.CategoriaRepository;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.Periodo;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.SubcategoriaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.services.EntidadBeneficiariaService;
@@ -32,13 +30,11 @@ import ar.edu.utn.frba.ddsi.donaciones.services.EntidadBeneficiariaService;
 public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaService {
 
     private final EntidadBeneficiariaRepository entidadBeneficiariaRepository;
-    private final CategoriaRepository categoriaRepository;
     private final SubcategoriaRepository subcategoriaRepository;
 
     public EntidadBeneficiariaServiceImpl(EntidadBeneficiariaRepository entidadBeneficiariaRepository,
-            CategoriaRepository categoriaRepository, SubcategoriaRepository subcategoriaRepository) {
+            SubcategoriaRepository subcategoriaRepository) {
         this.entidadBeneficiariaRepository = entidadBeneficiariaRepository;
-        this.categoriaRepository = categoriaRepository;
         this.subcategoriaRepository = subcategoriaRepository;
     }
 
@@ -67,8 +63,11 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
     }
 
     private NecesidadResponse toNecesidadResponse(Necesidad n) {
+        String periodo = n.getTipoNecesidad() instanceof NecesidadRecurrente recurrente
+                ? recurrente.getPeriodo().toString()
+                : null;
         return new NecesidadResponse(n.getId(), n.getSubcategoria().getNombre(),
-                n.getTipoNecesidad().getClass().getSimpleName(), n.getDescripcion(), n.getCantidad());
+                n.getTipoNecesidad().getClass().getSimpleName(), periodo, n.getDescripcion(), n.getCantidad());
     }
 
     public EntidadBeneficiariaResponse crear(EntidadBeneficiariaRequest request) {
@@ -163,41 +162,45 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
         if (request.cantidad() == null || request.cantidad() <= 0) {
             throw new BusinessException("La cantidad de la necesidad debe ser mayor a 0");
         }
-        return new Necesidad(toSubcategoria(request.subcategoria()), toTipoNecesidad(request.tipoNecesidad()),
+        return new Necesidad(toSubcategoria(request.subcategoria()),
+                toTipoNecesidad(request.tipoNecesidad(), request.periodo()),
                 request.descripcion(), request.cantidad());
     }
 
-    // Subcategoria/Categoria son un catalogo compartido con donaciones-service:
-    // se busca por nombre antes de crear (ver JustificacionesDisenoRelacional.md).
+    // Las subcategorias se cargan previamente desde el catalogo (CategoriaController):
+    // una necesidad solo puede referenciar una subcategoria existente.
     private Subcategoria toSubcategoria(SubcategoriaRequest subcategoria) {
-        if (subcategoria.nombre() == null || subcategoria.nombre().isBlank()) {
+        if (subcategoria == null || subcategoria.nombre() == null || subcategoria.nombre().isBlank()) {
             throw new BusinessException("El nombre de la subcategoria no puede ser nulo ni estar vacio");
         }
         return subcategoriaRepository.findByNombre(subcategoria.nombre())
-                .orElseGet(() -> subcategoriaRepository
-                        .save(new Subcategoria(subcategoria.nombre(), toCategoria(subcategoria.categoria()))));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No existe la subcategoria '" + subcategoria.nombre() + "' en el catalogo"));
     }
 
-    private Categoria toCategoria(CategoriaRequest categoria) {
-        if (categoria.nombre() == null || categoria.nombre().isBlank()) {
-            throw new BusinessException("El nombre de la categoria no puede ser nulo ni estar vacio");
-        }
-        return categoriaRepository.findByNombre(categoria.nombre())
-                .orElseGet(() -> categoriaRepository
-                        .save(new Categoria(categoria.nombre(), categoria.pideEstado(), categoria.esPerecedero())));
-    }
-
-    private TipoNecesidad toTipoNecesidad(String tipo) {
+    private TipoNecesidad toTipoNecesidad(String tipo, String periodo) {
         if (tipo == null || tipo.isBlank()) {
             throw new BusinessException("El tipo de necesidad no puede ser nulo ni estar vacio");
         }
         switch (tipo.toLowerCase()) {
             case "recurrente":
-                return new NecesidadRecurrente();
+                return new NecesidadRecurrente(toPeriodo(periodo));
             case "extraordinaria":
                 return new NecesidadExtraordinaria();
             default:
                 throw new BusinessException("Tipo de necesidad invalido");
+        }
+    }
+
+    private Periodo toPeriodo(String periodo) {
+        if (periodo == null || periodo.isBlank()) {
+            throw new BusinessException("Una necesidad recurrente debe indicar su periodo");
+        }
+        try {
+            return Periodo.valueOf(periodo.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException("Periodo '" + periodo
+                    + "' no valido. Valores posibles: DIARIO, SEMANAL, MENSUAL, ANUAL");
         }
     }
 

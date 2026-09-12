@@ -5,6 +5,20 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OrderBy;
+import javax.persistence.Table;
+
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoBien;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.Periodo;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoEstadoDonacion;
@@ -14,19 +28,55 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Entity
+@Table(name = "donacion")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class Donacion {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+
+  @ManyToOne(optional = false)
+  @JoinColumn(name = "registro_donacion_id", nullable = false)
+  private RegistroDonacion registroDonacion;
+
+  // donante y fecha se copian del registro (desnormalizados, ver DER)
+  @ManyToOne
+  @JoinColumn(name = "donante_id")
   private Donante donante;
+
+  @ManyToOne
+  @JoinColumn(name = "entidad_beneficiaria_asignada_id")
   private EntidadBeneficiaria entidadBeneficiariaAsignada;
+
+  @ManyToOne
+  @JoinColumn(name = "subcategoria_id")
   private Subcategoria subcategoria;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "estado_bienes", length = 20)
   private EstadoBien estadoBienes;
+
+  @Column(name = "fecha_vencimiento")
   private LocalDate fechaVencimiento;
+
+  @ElementCollection
+  @CollectionTable(name = "donacion_bienes", joinColumns = @JoinColumn(name = "donacion_id"))
   private List<Bien> bienes;
+
   private LocalDateTime fecha;
+
+  // el estado actual es el ultimo cambio: se ordena por fecha al leer
+  @ElementCollection
+  @CollectionTable(name = "donacion_historial_estados", joinColumns = @JoinColumn(name = "donacion_id"))
+  @OrderBy("fecha ASC")
   private List<CambioEstado> historialEstados;
+
+  @ElementCollection
+  @CollectionTable(name = "donacion_fotos_recepcion", joinColumns = @JoinColumn(name = "donacion_id"))
+  @Column(name = "foto_url", length = 500)
   private List<String> fotosRecepcion;
 
   public Donacion(Bien bienBase, LocalDateTime fecha) {
@@ -40,6 +90,12 @@ public class Donacion {
 
     this.agregarBien(bienBase);
     this.registrarEstadoInicial(fecha);
+  }
+
+  public Donacion(RegistroDonacion registroDonacion, Bien bienBase) {
+    this(bienBase, registroDonacion.getFecha());
+    this.registroDonacion = registroDonacion;
+    this.donante = registroDonacion.getDonante();
   }
 
   public void agregarBien(Bien bien) {

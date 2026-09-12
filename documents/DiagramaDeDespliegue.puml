@@ -66,19 +66,30 @@ rectangle "Capa de Dominio" {
 }
 
 ' --- 4. CAPA PERSISTENCIA Y EXTERNOS ---
+' Cada microservicio tiene su propia base de datos: ningun servicio accede
+' a los datos de otro, solo se comunican por API REST.
 rectangle "Capa de Persistencia" {
-    database "Servidor de Base de Datos" {
-        component "Motor de Base de Datos" as DB
+    database "Servidor BD Donaciones" as NodeDB1 {
+        component "PostgreSQL\nbase: donaciones" as DB1
+    }
+    database "Servidor BD Logística" as NodeDB2 {
+        component "PostgreSQL\nbase: logistica" as DB2
+    }
+    database "Servidor BD Notificaciones" as NodeDB3 {
+        component "PostgreSQL\nbase: notificaciones" as DB3
     }
 }
 
 node "Sistemas Externos" <<External System>> #ECEFF1 {
     component "APIs de Mensajería" as Ext
+    component "Componente de Planificación de Rutas" as Planif
 }
 
-' --- ALINEACIÓN VERTICAL INTERNA PARA LA CAPA DE DOMINIO ---
+' --- ALINEACIÓN VERTICAL INTERNA ---
 NodeS1 -[hidden]down-> NodeS2
 NodeS2 -[hidden]down-> NodeS3
+NodeDB1 -[hidden]down-> NodeDB2
+NodeDB2 -[hidden]down-> NodeDB3
 
 ' --- FLUJOS Y CONEXIONES (Izquierda a Derecha) ---
 
@@ -96,12 +107,13 @@ S1 <--> S2 : HTTP - API REST
 S2 <--> S3 : HTTP - API REST
 S1 <--> S3 : HTTP - API REST
 
-' Microservicios -> Base de Datos
-S1 --> DB : TCP/IP
-S2 --> DB : TCP/IP
-S3 --> DB : TCP/IP
+' Microservicios -> Base de Datos propia (JPA/Hibernate sobre JDBC)
+S1 --> DB1 : TCP/IP - JDBC
+S2 --> DB2 : TCP/IP - JDBC
+S3 --> DB3 : TCP/IP - JDBC
 
 ' Salida a Sistemas Externos
 S3 --> Ext : HTTPS
+S2 <--> Planif : HTTP - API REST
 
 @enduml

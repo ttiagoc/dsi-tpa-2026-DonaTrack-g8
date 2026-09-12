@@ -18,6 +18,7 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaJuridica;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Representante;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoOrganizacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
 import ar.edu.utn.frba.ddsi.donaciones.services.DonanteService;
 
@@ -105,8 +106,17 @@ public class DonanteServiceImpl implements DonanteService {
         return new PersonaJuridica(null,
                 request.contactos().stream().map(this::toMedioContacto).collect(Collectors.toList()),
                 toMedioContacto(request.contactoPredeterminado()), request.razonSocial(), request.rubro(),
-                request.tipo(), request.cuit(),
+                toTipoOrganizacion(request.tipo()), request.cuit(),
                 request.representantes().stream().map(this::toRepresentante).collect(Collectors.toList()));
+    }
+
+    private TipoOrganizacion toTipoOrganizacion(String tipo) {
+        try {
+            return TipoOrganizacion.valueOf(tipo.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException("Tipo de organizacion '" + tipo
+                    + "' no valido. Valores posibles: GUBERNAMENTAL, ONG, EMPRESA, INSTITUCION");
+        }
     }
 
     private Representante toRepresentante(RepresentanteRequest request) {

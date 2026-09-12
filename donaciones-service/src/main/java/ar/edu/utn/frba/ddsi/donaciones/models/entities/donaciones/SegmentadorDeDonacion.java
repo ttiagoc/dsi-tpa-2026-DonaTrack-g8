@@ -13,7 +13,7 @@ public class SegmentadorDeDonacion {
                 .collect(Collectors.groupingBy(Bien::generarKey))
                 .values().stream()
                 .map(bienesAgrupados -> {
-                    Donacion donacion = new Donacion(bienesAgrupados.getFirst(), registroDonacion.getFecha());
+                    Donacion donacion = new Donacion(registroDonacion, bienesAgrupados.getFirst());
                     bienesAgrupados.stream().skip(1).forEach(donacion::agregarBien);
                     return donacion;
                 })

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence
+    http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+             version="2.0">
+
+  <!-- Unidad de persistencia del esquema "donaciones".
+       La conexion (URL, usuario, dialecto) no se fija aca: la configura PersistenceConfig
+       a partir de application.properties (PostgreSQL) o los tests (HSQLDB en memoria). -->
+  <persistence-unit name="simple-persistence-unit" transaction-type="RESOURCE_LOCAL">
+    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+    <!-- Value object de common-lib, embebido en donante y entidad_beneficiaria -->
+    <class>ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto</class>
+
+    <!-- Donantes (herencia SINGLE_TABLE) -->
+    <class>ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante</class>
+    <class>ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana</class>
+    <class>ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaJuridica</class>
+    <class>ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Representante</class>
+
+    <!-- Catalogo -->
+    <class>ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria</class>
+    <class>ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria</class>
+
+    <!-- Donaciones -->
+    <class>ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.RegistroDonacion</class>
+    <class>ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion</class>
+    <class>ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Bien</class>
+    <class>ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.CambioEstado</class>
+    <class>ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.ResultadoMatchmaking</class>
+
+    <!-- Entidades beneficiarias -->
+    <class>ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria</class>
+    <class>ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.Necesidad</class>
+    <exclude-unlisted-classes>true</exclude-unlisted-classes>
+
+    <properties>
+      <property name="hibernate.show_sql" value="false"/>
+      <property name="hibernate.format_sql" value="true"/>
+      <property name="hibernate.hbm2ddl.auto" value="update"/>
+    </properties>
+  </persistence-unit>
+
+</persistence>

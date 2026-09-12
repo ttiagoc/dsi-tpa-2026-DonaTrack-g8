@@ -14,7 +14,6 @@ public class Ruta {
     private LocalDate fecha;
     private EstadoRuta estado;
     private Camion camion;
-    private Chofer chofer;
     private List<Parada> paradas;
 
     public Ruta(LocalDate fecha, Camion camion, List<Parada> paradas) {
