@@ -1,12 +1,17 @@
 package ar.edu.utn.frba.ddsi.logistica.models.entities.logistica;
 
+import java.time.LocalDateTime;
+
+import javax.persistence.Embeddable;
+
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
+@Embeddable
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class Ubicacion {
     private Double latitud;
     private Double longitud;

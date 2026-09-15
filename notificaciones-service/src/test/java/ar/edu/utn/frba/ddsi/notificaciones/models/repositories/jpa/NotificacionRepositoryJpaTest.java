@@ -29,7 +29,7 @@ class NotificacionRepositoryJpaTest extends PersistenciaTest {
     Notificacion notificacion =
         new Notificacion("Mensaje de prueba", contacto);
 
-    LocalDateTime fecha = LocalDateTime.now()
+    LocalDateTime fecha = LocalDateTime.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS);
     notificacion.setFechaDeEnvio(fecha);
 
     Notificacion guardada = notificaciones.save(notificacion);
