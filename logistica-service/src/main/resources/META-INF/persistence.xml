@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence
+    http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+             version="2.0">
+
+  <!-- Unidad de persistencia del esquema "logistica".
+       La conexion no se fija aca: la configura PersistenceConfig
+       a partir de application.properties (PostgreSQL) o los tests (HSQLDB en memoria). -->
+  <persistence-unit name="simple-persistence-unit" transaction-type="RESOURCE_LOCAL">
+    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+    <!-- Value objects embebidos -->
+    <class>ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Chofer</class>
+    <class>ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ubicacion</class>
+
+    <!-- Entidades -->
+    <class>ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Camion</class>
+    <class>ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ruta</class>
+    <class>ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Parada</class>
+
+    <exclude-unlisted-classes>true</exclude-unlisted-classes>
+
+    <properties>
+      <property name="hibernate.show_sql" value="false"/>
+      <property name="hibernate.format_sql" value="true"/>
+      <property name="hibernate.hbm2ddl.auto" value="update"/>
+    </properties>
+  </persistence-unit>
+
+</persistence>
