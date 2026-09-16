@@ -1,0 +1,84 @@
+name: donatrack
+
+# Dos modos de uso (ver Readme.md):
+#   docker compose up -d                     -> solo PostgreSQL, los servicios se corren con Maven
+#   docker compose --profile full up -d --build  -> PostgreSQL + los tres servicios en contenedores
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: donatrack-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: donaciones
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      # Solo se ejecuta la primera vez, cuando el volumen esta vacio
+      - ./docker/postgres/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d donaciones"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Los tres servicios usan el mismo Dockerfile multi-etapa, que compila desde la raiz
+  # del reactor (necesita el pom padre y common-lib), por eso el context es "."
+  donaciones-service:
+    profiles: ["full"]
+    build:
+      context: .
+      dockerfile: donaciones-service/Dockerfile
+    container_name: donatrack-donaciones
+    ports:
+      - "8080:8080"
+    environment:
+      DONACIONES_DB_URL: jdbc:postgresql://postgres:5432/donaciones
+      DONACIONES_DB_USERNAME: postgres
+      DONACIONES_DB_PASSWORD: postgres
+      # Dentro de la red de compose "localhost" es el propio contenedor: las llamadas
+      # entre servicios se resuelven por el nombre del servicio de compose.
+      REST_NOTIFICACIONES_URL: http://notificaciones-service:8082/api
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  logistica-service:
+    profiles: ["full"]
+    build:
+      context: .
+      dockerfile: logistica-service/Dockerfile
+    container_name: donatrack-logistica
+    ports:
+      - "8081:8081"
+    environment:
+      LOGISTICA_DB_URL: jdbc:postgresql://postgres:5432/logistica
+      LOGISTICA_DB_USERNAME: postgres
+      LOGISTICA_DB_PASSWORD: postgres
+      REST_DONACIONES_URL: http://donaciones-service:8080/api
+      REST_LOGISTICA_URL: http://logistica-service:8081/api
+      REST_NOTIFICACIONES_URL: http://notificaciones-service:8082/api
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  notificaciones-service:
+    profiles: ["full"]
+    build:
+      context: .
+      dockerfile: notificaciones-service/Dockerfile
+    container_name: donatrack-notificaciones
+    ports:
+      - "8082:8082"
+    environment:
+      NOTIFICACIONES_DB_URL: jdbc:postgresql://postgres:5432/notificaciones
+      NOTIFICACIONES_DB_USERNAME: postgres
+      NOTIFICACIONES_DB_PASSWORD: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:

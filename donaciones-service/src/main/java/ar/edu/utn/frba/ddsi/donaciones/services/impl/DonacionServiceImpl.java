@@ -224,7 +224,11 @@ public class DonacionServiceImpl implements DonacionService {
                 b.getVolumenM3PorUnidad());
     }
 
+    // Aca el estado si es obligatorio: cambiar de estado sin decir a cual no significa nada.
     private TipoEstadoDonacion toTipoEstadoDonacion(String estado) {
+        if (estado == null || estado.isBlank()) {
+            throw new BusinessException("El estado de la donacion no puede ser nulo ni estar vacio");
+        }
         try {
             return TipoEstadoDonacion.valueOf(estado.toUpperCase());
         } catch (IllegalArgumentException e) {
@@ -232,7 +236,12 @@ public class DonacionServiceImpl implements DonacionService {
         }
     }
 
+    // El estado del bien es opcional: solo lo exigen las categorias con pideEstado = true, y
+    // de eso se encarga el constructor de Bien. Aca se traduce lo que vino y nada mas.
     private EstadoBien toEstadoBien(String estado) {
+        if (estado == null || estado.isBlank()) {
+            return null;
+        }
         try {
             return EstadoBien.valueOf(estado.toUpperCase());
         } catch (IllegalArgumentException e) {

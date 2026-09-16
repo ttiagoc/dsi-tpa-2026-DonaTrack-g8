@@ -47,3 +47,12 @@ build/
 
 ### Env Vars ###
 **/src/main/resources/application.yaml
+
+### Herramientas locales (no forman parte de la entrega) ###
+# Lanzador de PostgreSQL + los servicios. Es PowerShell, solo sirve en Windows.
+# Todo lo que hace esta documentado como comandos de Maven y Docker en el Readme.
+run.ps1
+# Maven wrapper. Se decidio que cada integrante instale Maven 3.9+ por su cuenta.
+mvnw
+mvnw.cmd
+.mvn/

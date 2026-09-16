@@ -103,4 +103,19 @@ class DonacionRepositoryJpaTest extends PersistenciaTest {
         assertEquals(2, asignadas.get(0).getHistorialEstados().size());
         assertTrue(enDeposito.stream().noneMatch(d -> d.getId().equals(donacion.getId())));
     }
+
+    @Test
+    @DisplayName("Las fotos de recepcion se guardan como coleccion propia de la donacion")
+    void persisteFotosDeRecepcion() {
+        Donacion donacion = donaciones.findById(donacionesCreadas.get(0).getId()).orElseThrow();
+        assertTrue(donacion.getFotosRecepcion().isEmpty());
+
+        donacion.getFotosRecepcion().add("https://fotos/recepcion-1.jpg");
+        donacion.getFotosRecepcion().add("https://fotos/recepcion-2.jpg");
+        donaciones.save(donacion);
+        nuevoRequest();
+
+        assertEquals(List.of("https://fotos/recepcion-1.jpg", "https://fotos/recepcion-2.jpg"),
+                donaciones.findById(donacion.getId()).orElseThrow().getFotosRecepcion());
+    }
 }

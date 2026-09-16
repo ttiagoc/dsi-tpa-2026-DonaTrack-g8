@@ -16,7 +16,6 @@ import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Camion;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Chofer;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ruta;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ubicacion;
-import ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoRuta;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.impl.JpaCamion;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.impl.JpaRuta;
 
@@ -74,31 +73,48 @@ class CamionRepositoryJpaTest extends PersistenciaTest {
     @Test
     @DisplayName("Filtra camiones disponibles segun el estado de sus rutas")
     void camionesDisponibles() {
-        Camion camionDisponibleSinRuta = camionRepository.save(
-                new Camion("DISP01", 10.0, 2.5, 3000.0, new Chofer("Ana", "Lopez")));
+        // Disponible = sin ninguna ruta en un estado distinto de FINALIZADA (ver JpaCamion).
 
-        Camion camionOcupado = camionRepository.save(
-                new Camion("OCUP01", 15.0, 3.0, 4000.0, new Chofer("Pedro", "Rios")));
+        // Nunca tuvo rutas.
+        camionRepository.save(new Camion("DISP01", 10.0, 2.5, 3000.0, new Chofer("Ana", "Lopez")));
 
-        Camion camionConRutaFinalizada = camionRepository.save(
+        Camion conRutaFinalizada = camionRepository.save(
                 new Camion("FIN01", 20.0, 3.5, 6000.0, new Chofer("Martin", "Duran")));
+        Camion enTraslado = camionRepository.save(
+                new Camion("OCUP01", 15.0, 3.0, 4000.0, new Chofer("Pedro", "Rios")));
+        Camion conRutaPlanificada = camionRepository.save(
+                new Camion("PLAN01", 12.0, 2.8, 3500.0, new Chofer("Sofia", "Arce")));
+        Camion conRutaCerradaYEnCurso = camionRepository.save(
+                new Camion("MIX01", 18.0, 3.2, 5000.0, new Chofer("Nicolas", "Paz")));
 
-        Ruta rutaActiva = new Ruta(LocalDate.now(), camionOcupado, List.of());
+        Ruta rutaFinalizada = new Ruta(LocalDate.now(), conRutaFinalizada, List.of());
+        rutaFinalizada.finalizar(); // FINALIZADA -> vuelve a estar disponible
+        rutaRepository.save(rutaFinalizada);
+
+        Ruta rutaActiva = new Ruta(LocalDate.now(), enTraslado, List.of());
         rutaActiva.iniciar(); // EN_TRASLADO
         rutaRepository.save(rutaActiva);
 
-        Ruta rutaFinalizada = new Ruta(LocalDate.now(), camionConRutaFinalizada, List.of());
-        rutaFinalizada.finalizar(); // FINALIZADA
-        rutaRepository.save(rutaFinalizada);
+        // Recien planificada, todavia no arranco: igual deja de estar disponible.
+        rutaRepository.save(new Ruta(LocalDate.now(), conRutaPlanificada, List.of()));
+
+        // Tener una ruta ya cerrada no lo libera si arrastra otra en curso.
+        Ruta viejaDelMixto = new Ruta(LocalDate.now(), conRutaCerradaYEnCurso, List.of());
+        viejaDelMixto.finalizar();
+        rutaRepository.save(viejaDelMixto);
+        Ruta actualDelMixto = new Ruta(LocalDate.now(), conRutaCerradaYEnCurso, List.of());
+        actualDelMixto.iniciar();
+        rutaRepository.save(actualDelMixto);
 
         nuevoRequest();
 
-        List<Camion> disponibles = camionRepository.findAllDisponibles();
-        List<String> patentesDisponibles = disponibles.stream().map(Camion::getPatente).toList();
+        List<String> disponibles = camionRepository.findAllDisponibles().stream()
+                .map(Camion::getPatente)
+                .sorted()
+                .toList();
 
-        assertTrue(patentesDisponibles.contains("DISP01"));
-        assertTrue(patentesDisponibles.contains("FIN01"));
-        assertFalse(patentesDisponibles.contains("OCUP01"));
+        // Set exacto: asi tambien falla si la consulta se vuelve demasiado permisiva.
+        assertEquals(List.of("DISP01", "FIN01"), disponibles);
     }
 
     @Test
