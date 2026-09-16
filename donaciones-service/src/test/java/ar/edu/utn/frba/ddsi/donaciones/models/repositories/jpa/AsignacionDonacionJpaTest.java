@@ -62,9 +62,10 @@ class AsignacionDonacionJpaTest extends PersistenciaTest {
         Donante ana = donantes.save(new PersonaHumana(null, List.of(email), email,
                 "Ana", "Perez", null, "12345678", "F", "Medrano 951"));
 
-        RegistroDonacion registro = registros.save(new RegistroDonacion(ana, "Colecta de alimentos", List.of(
-                new Bien("Fideos secos", 100L, 0.5, 0.001, fideos, null, LocalDate.of(2027, 1, 1)))));
-        idDonacion = donaciones.saveAll(new SegmentadorDeDonacion().segmentarDonacion(registro)).get(0).getId();
+        RegistroDonacion registro = registros.save(new RegistroDonacion(ana, "Colecta de alimentos"));
+        List<Bien> bienes = List.of(
+                new Bien("Fideos secos", 100L, 0.5, 0.001, fideos, null, LocalDate.of(2027, 1, 1)));
+        idDonacion = donaciones.saveAll(new SegmentadorDeDonacion().segmentarDonacion(registro, bienes)).get(0).getId();
 
         idComedor = entidades.save(new EntidadBeneficiaria("Comedor Sonrisas", "Escobar 123", "1122334455",
                 List.of(new MedioContacto("comedor@org.com", TipoContacto.EMAIL)))).getId();

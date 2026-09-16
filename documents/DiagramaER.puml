@@ -127,8 +127,9 @@ package "donaciones" {
   ' donante en el deposito. Se persiste para conservar la descripcion
   ' general (Consigna 1), la trazabilidad de que Donaciones salieron
   ' de la misma carga y la fecha de ultima donacion del donante (cron
-  ' de inactividad). Sus bienes NO se guardan aca (@Transient): ya
-  ' quedan en donacion_bienes tras la segmentacion.
+  ' de inactividad). Sus bienes NO se guardan aca: quedan en
+  ' donacion_bienes tras la segmentacion y el registro los obtiene
+  ' a traves de sus donaciones (@OneToMany mappedBy, sin columna nueva).
   entity registro_donacion {
     * id : BIGINT <<PK, IDENTITY>>
     --

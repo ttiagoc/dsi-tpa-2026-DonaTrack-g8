@@ -42,7 +42,6 @@ public class Donacion {
   @JoinColumn(name = "registro_donacion_id", nullable = false)
   private RegistroDonacion registroDonacion;
 
-  // donante y fecha se copian del registro (desnormalizados, ver DER)
   @ManyToOne
   @JoinColumn(name = "donante_id")
   private Donante donante;
@@ -68,7 +67,6 @@ public class Donacion {
 
   private LocalDateTime fecha;
 
-  // el estado actual es el ultimo cambio: se ordena por fecha al leer
   @ElementCollection
   @CollectionTable(name = "donacion_historial_estados", joinColumns = @JoinColumn(name = "donacion_id"))
   @OrderBy("fecha ASC")
@@ -96,6 +94,7 @@ public class Donacion {
     this(bienBase, registroDonacion.getFecha());
     this.registroDonacion = registroDonacion;
     this.donante = registroDonacion.getDonante();
+    registroDonacion.agregarDonacion(this);
   }
 
   public void agregarBien(Bien bien) {

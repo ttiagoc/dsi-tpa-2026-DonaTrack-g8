@@ -22,11 +22,12 @@ class SegmentadorDeDonacionTest {
         PersonaHumana donante = new PersonaHumana();
         donante.setId(1L);
 
-        RegistroDonacion registro = new RegistroDonacion(donante, "Muebles de oficina", List.of(
+        RegistroDonacion registro = new RegistroDonacion(donante, "Muebles de oficina");
+        List<Bien> bienes = List.of(
                 new Bien("Silla", 6L, 5.0, 0.3, sillas, EstadoBien.USADO, null),
-                new Bien("Mesa", 1L, 30.0, 1.5, mesas, EstadoBien.USADO, null)));
+                new Bien("Mesa", 1L, 30.0, 1.5, mesas, EstadoBien.USADO, null));
 
-        List<Donacion> donaciones = new SegmentadorDeDonacion().segmentarDonacion(registro);
+        List<Donacion> donaciones = new SegmentadorDeDonacion().segmentarDonacion(registro, bienes);
 
         assertEquals(2, donaciones.size());
         for (Donacion donacion : donaciones) {

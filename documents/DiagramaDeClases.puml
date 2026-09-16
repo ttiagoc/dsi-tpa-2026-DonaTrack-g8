@@ -119,11 +119,13 @@ package "Microservicio Donaciones" {
     donante : Donante
     descripcion : String
     fecha : LocalDateTime
-    bienes : List<Bien>
+    donaciones : List<Donacion>
+    agregarDonacion(donacion : Donacion) : void
+    getBienes() : List<Bien>
   }
 
   class SegmentadorDeDonacion {
-    segmentarDonacion(registroDonacion : RegistroDonacion) : List<Donacion>
+    segmentarDonacion(registroDonacion : RegistroDonacion, bienes : List<Bien>) : List<Donacion>
   }
 
   class Donacion {
@@ -461,9 +463,9 @@ PersonaJuridica --> "*" Representante
 PersonaJuridica --> TipoOrganizacion
 Representante --> MedioContacto
 
-RegistroDonacion --> "*" Bien
 RegistroDonacion --> Donante
-Donacion "1..*" --> "1" RegistroDonacion
+RegistroDonacion --> "1..*" Donacion
+Donacion --> RegistroDonacion
 Donacion --> Donante
 Donacion --> EntidadBeneficiaria
 Donacion --> Subcategoria
@@ -556,6 +558,7 @@ GestorDeEventos ..> EventManagerDonaciones
 
 SegmentadorDeDonacion ..> Donacion
 SegmentadorDeDonacion ..> RegistroDonacion
+SegmentadorDeDonacion ..> Bien
 
 ImportadorDeDonantes ..> Donante
 

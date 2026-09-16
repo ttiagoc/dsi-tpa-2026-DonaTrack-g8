@@ -73,12 +73,14 @@ public class DonacionServiceImpl implements DonacionService {
     }
 
     public List<DonacionResponse> crear(DonacionRequest request) {
-        RegistroDonacion registro = registroDonacionRepository.save(toRegistroDonacion(request));
+        RegistroDonacion registro = toRegistroDonacion(request);
+        List<Bien> bienes = request.bienes().stream().map(this::toBien).collect(Collectors.toList());
+        registro = registroDonacionRepository.save(registro);
         Donante donante = registro.getDonante();
         donante.agregarDonacion(registro);
         donanteRepository.save(donante);
 
-        List<Donacion> donacionesCreadas = segmentadorDeDonacion.segmentarDonacion(registro);
+        List<Donacion> donacionesCreadas = segmentadorDeDonacion.segmentarDonacion(registro, bienes);
         donacionesCreadas = donacionRepository.saveAll(donacionesCreadas);
 
         List<DonacionResponse> donacionesResponses = donacionesCreadas.stream()
@@ -178,8 +180,7 @@ public class DonacionServiceImpl implements DonacionService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontro un donante con el id: " + donacionRequest.idDonante()));
 
-        return new RegistroDonacion(donante, donacionRequest.descripcion(),
-                donacionRequest.bienes().stream().map(this::toBien).collect(Collectors.toList()));
+        return new RegistroDonacion(donante, donacionRequest.descripcion());
     }
 
     private DonacionResponse toDonacionResponse(Donacion d) {

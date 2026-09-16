@@ -7,8 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class SegmentadorDeDonacion {
-    public List<Donacion> segmentarDonacion(RegistroDonacion registroDonacion) {
-        List<Bien> bienes = registroDonacion.getBienes();
+    public List<Donacion> segmentarDonacion(RegistroDonacion registroDonacion, List<Bien> bienes) {
         List<Donacion> nuevasDonaciones = bienes.stream()
                 .collect(Collectors.groupingBy(Bien::generarKey))
                 .values().stream()

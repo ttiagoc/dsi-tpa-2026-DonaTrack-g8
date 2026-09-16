@@ -52,13 +52,14 @@ class DonacionRepositoryJpaTest extends PersistenciaTest {
                 "Ana", "Perez", null, "12345678", "F", "Medrano 951"));
         idDonante = donante.getId();
 
-        RegistroDonacion registro = registros.save(new RegistroDonacion(donante, "Mudanza de oficina", List.of(
+        RegistroDonacion registro = registros.save(new RegistroDonacion(donante, "Mudanza de oficina"));
+        List<Bien> bienes = List.of(
                 new Bien("Silla", 6L, 5.0, 0.3, sillas, EstadoBien.USADO, null),
-                new Bien("Fideos secos", 100L, 0.5, 0.001, fideos, null, LocalDate.of(2027, 1, 1)))));
+                new Bien("Fideos secos", 100L, 0.5, 0.001, fideos, null, LocalDate.of(2027, 1, 1)));
         donante.agregarDonacion(registro);
         donantes.save(donante);
 
-        donacionesCreadas = donaciones.saveAll(new SegmentadorDeDonacion().segmentarDonacion(registro));
+        donacionesCreadas = donaciones.saveAll(new SegmentadorDeDonacion().segmentarDonacion(registro, bienes));
         nuevoRequest();
     }
 
