@@ -19,12 +19,14 @@ import javax.persistence.OrderBy;
 import javax.persistence.Table;
 
 import ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoRuta;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "ruta")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class Ruta {
 

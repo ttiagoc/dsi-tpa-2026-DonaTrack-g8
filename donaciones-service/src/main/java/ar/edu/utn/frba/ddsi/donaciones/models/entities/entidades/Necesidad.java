@@ -22,13 +22,14 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.Periodo;
 import lombok.AccessLevel;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Table(name = "necesidad")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class Necesidad {
   private static final String RECURRENTE = "RECURRENTE";

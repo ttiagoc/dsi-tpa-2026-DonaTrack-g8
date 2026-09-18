@@ -5,10 +5,12 @@ import java.util.List;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.Periodo;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class NecesidadRecurrente implements TipoNecesidad {

@@ -1,9 +1,11 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.repositories.jpa;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -118,5 +120,39 @@ class DonacionRepositoryJpaTest extends PersistenciaTest {
 
         assertEquals(List.of("https://fotos/recepcion-1.jpg", "https://fotos/recepcion-2.jpg"),
                 donaciones.findById(donacion.getId()).orElseThrow().getFotosRecepcion());
+    }
+
+    @Test
+    @DisplayName("La entrega deja registrado que camion la realizo (TPA2)")
+    void persistePatenteDelCamionQueEntrego() {
+        Donacion donacion = donaciones.findById(donacionesCreadas.get(0).getId()).orElseThrow();
+        donacion.confirmarEntrega("AB123CD", LocalDateTime.now());
+        donaciones.save(donacion);
+        nuevoRequest();
+
+        Donacion leida = donaciones.findById(donacion.getId()).orElseThrow();
+
+        assertEquals(TipoEstadoDonacion.ENTREGADA, leida.estadoActual());
+        assertEquals("AB123CD", leida.patenteCamionDeLaEntrega());
+        // el resto de las transiciones no lleva patente
+        assertNull(leida.getHistorialEstados().get(0).getPatenteCamion());
+    }
+
+    @Test
+    @DisplayName("Cada transicion agrega una fila sin reescribir las anteriores")
+    void elHistorialEsDeSoloAgregado() {
+        Donacion donacion = donaciones.findById(donacionesCreadas.get(0).getId()).orElseThrow();
+        Long idDelPrimerCambio = donacion.getHistorialEstados().get(0).getId();
+
+        donacion.cambiarEstado(TipoEstadoDonacion.ASIGNACION_REALIZADA, "Asignada");
+        donaciones.save(donacion);
+        nuevoRequest();
+
+        Donacion leida = donaciones.findById(donacion.getId()).orElseThrow();
+
+        assertEquals(2, leida.getHistorialEstados().size());
+        // la fila original conserva su id: no fue borrada y reinsertada
+        assertEquals(idDelPrimerCambio, leida.getHistorialEstados().get(0).getId());
+        assertEquals(TipoEstadoDonacion.EN_DEPOSITO, leida.getHistorialEstados().get(0).getEstado());
     }
 }

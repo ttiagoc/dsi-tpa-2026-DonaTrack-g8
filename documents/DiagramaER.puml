@@ -148,6 +148,12 @@ package "donaciones" {
   ' repiten del registro (derivables por JOIN) para que las consultas
   ' sobre donacion, la entidad mas consultada del sistema, no necesiten
   ' JOIN a registro_donacion. Ver JustificacionesDisenoRelacional.md.
+  ' estado_actual es la otra desnormalizacion: copia del estado de la
+  ' ultima fila de cambio_estado, mantenida por Donacion.registrarEstado().
+  ' Evita el subquery correlacionado que antes necesitaba buscarPorEstado
+  ' ("...where h.fecha = (select max(h2.fecha) ...)") y que estadoActual()
+  ' cargue el historial completo. La invariante "hay exactamente un estado
+  ' vigente" queda garantizada por ser una columna y no un flag por fila.
   entity donacion {
     * id : BIGINT <<PK, IDENTITY>>
     --
@@ -158,6 +164,7 @@ package "donaciones" {
     estado_bienes : VARCHAR(20)
     fecha_vencimiento : DATE
     fecha : TIMESTAMP <<desnormalizado>>
+    estado_actual : VARCHAR(20) <<desnormalizado>>
   }
 
   registro_donacion ||--|{ donacion
@@ -166,19 +173,34 @@ package "donaciones" {
 
   donacion ||--o{ donacion_bienes
 
-  ' CambioEstado: sin id propio, ningun endpoint devuelve el historial
-  ' completo (EstadoDonacionResponse solo usa el ultimo elemento), pero
-  ' es una lista append-only que crece con cada cambiarEstado() ->
-  ' @Embeddable + @ElementCollection, mismo patron que Bien.
-  entity donacion_historial_estados {
-    * donacion_id : BIGINT <<FK -> donacion.id>>
+  ' CambioEstado: entidad real con tabla propia (antes era @Embeddable +
+  ' @ElementCollection en donacion_historial_estados). Se cambio por dos
+  ' motivos, ninguno de performance:
+  '  1) Sin PK, Hibernate no puede direccionar una fila: ante cada
+  '     cambiarEstado() borraba TODAS las filas del historial de esa
+  '     donacion y las reinsertaba. Una tabla de auditoria que se
+  '     reescribe sola contradice el RNF 4 de TPA1 ("garantizar la
+  '     trazabilidad y auditoria de los estados de cada donacion").
+  '  2) Cada transicion lleva datos propios: TPA2 pide que la entrega
+  '     deje registrado que camion la realizo. Un @ElementCollection de
+  '     @Embeddable no admite polimorfismo, asi que no habia forma de
+  '     que una transicion tuviera atributos que las otras no tienen.
+  ' patente_camion queda NULL en toda transicion que no sea ENTREGADA.
+  ' Se modela por transicion y no como columna de donacion porque una
+  ' entrega fallida vuelve al deposito y se replanifica (TPA1 "Entrega
+  ' fallida" + TPA2 "nueva asignacion de ruta"): puede haber varios
+  ' intentos de entrega, cada uno con su camion.
+  entity cambio_estado {
+    * id : BIGINT <<PK, IDENTITY>>
     --
+    donacion_id : BIGINT <<FK -> donacion.id, NOT NULL>>
     fecha : TIMESTAMP
     estado : VARCHAR(20)
     justificacion : VARCHAR(500)
+    patente_camion : VARCHAR(20)
   }
 
-  donacion ||--o{ donacion_historial_estados
+  donacion ||--o{ cambio_estado
 
   ' fotosRecepcion: List<String> simple, sin identidad individual ->
   ' @ElementCollection de tipo basico (no hace falta @Embeddable).
@@ -271,10 +293,15 @@ package "donaciones" {
   resultado_matchmaking ||--o{ resultado_matchmaking_entidades_sugeridas
   entidad_beneficiaria ||--o{ resultado_matchmaking_entidades_sugeridas
 
-  ' ComprobanteEntrega: NO se persiste. Solo existe dentro de
-  ' EventoEntregaExitosa (evento transitorio, ver GestorDeEventos),
-  ' nunca se guarda en Donacion ni en ninguna tabla: sin repositorio,
-  ' sin id, se descarta tras emitir el evento.
+  ' ComprobanteEntrega: NO se persiste como tal. Solo existe dentro de
+  ' EventoEntregaExitosa (evento transitorio, ver GestorDeEventos): sin
+  ' repositorio, sin id, se descarta tras emitir el evento, y su unico
+  ' uso es armar el texto de la notificacion.
+  ' OJO: su patenteCamion SI se persiste, pero por otra via: viaja por
+  ' Donacion.confirmarEntrega(patente, fecha) y queda en la fila de
+  ' cambio_estado de la transicion a ENTREGADA. Es lo que satisface el
+  ' "quedara registrado que camion realizo la entrega" de TPA2; antes
+  ' la patente terminaba solo en el mensaje de la notificacion.
 }
 
 ' ============================================================

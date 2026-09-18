@@ -11,11 +11,13 @@ import javax.persistence.ManyToOne;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoBien;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Embeddable
-@Data
+@Getter 
+@Setter
 @NoArgsConstructor
 public class Bien {
   @Column(length = 500)

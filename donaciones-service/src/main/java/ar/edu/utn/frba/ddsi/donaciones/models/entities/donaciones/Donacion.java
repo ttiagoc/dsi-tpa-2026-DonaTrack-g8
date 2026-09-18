@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -16,21 +17,24 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
 
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoBien;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.Periodo;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoEstadoDonacion;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "donacion")
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class Donacion {
@@ -67,8 +71,11 @@ public class Donacion {
 
   private LocalDateTime fecha;
 
-  @ElementCollection
-  @CollectionTable(name = "donacion_historial_estados", joinColumns = @JoinColumn(name = "donacion_id"))
+  @Enumerated(EnumType.STRING)
+  @Column(name = "estado_actual", length = 20, nullable = false)
+  private TipoEstadoDonacion estadoActual;
+
+  @OneToMany(mappedBy = "donacion", cascade = CascadeType.ALL, orphanRemoval = true)
   @OrderBy("fecha ASC")
   private List<CambioEstado> historialEstados;
 
@@ -106,17 +113,31 @@ public class Donacion {
   }
 
   private void registrarEstado(LocalDateTime fecha, TipoEstadoDonacion estado, String justificacion) {
-    CambioEstado cambioEstado = new CambioEstado(fecha, estado, justificacion);
+    this.registrarEstado(fecha, estado, justificacion, null);
+  }
+
+  private void registrarEstado(LocalDateTime fecha, TipoEstadoDonacion estado, String justificacion,
+      String patenteCamion) {
+    CambioEstado cambioEstado = new CambioEstado(this, fecha, estado, justificacion, patenteCamion);
 
     this.historialEstados.add(cambioEstado);
+    this.estadoActual = estado;
   }
 
   public TipoEstadoDonacion estadoActual() {
-    return this.historialEstados.getLast().getEstado();
+    return this.estadoActual;
   }
 
-  public void confirmarEntrega() {
-    this.registrarEstado(LocalDateTime.now(), TipoEstadoDonacion.ENTREGADA, "Entregado");
+  public void confirmarEntrega(String patenteCamion, LocalDateTime fechaEntrega) {
+    this.registrarEstado(fechaEntrega, TipoEstadoDonacion.ENTREGADA, "Entregado", patenteCamion);
+  }
+
+  public String patenteCamionDeLaEntrega() {
+    return this.historialEstados.stream()
+        .filter(cambio -> cambio.getEstado() == TipoEstadoDonacion.ENTREGADA)
+        .map(CambioEstado::getPatenteCamion)
+        .reduce((primero, ultimo) -> ultimo)
+        .orElse(null);
   }
 
   public Double cantidadBienesRecibidos() {

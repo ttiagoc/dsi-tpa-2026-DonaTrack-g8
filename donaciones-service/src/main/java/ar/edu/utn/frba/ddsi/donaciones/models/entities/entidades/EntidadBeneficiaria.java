@@ -1,5 +1,6 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,12 +22,14 @@ import javax.persistence.Table;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "entidad_beneficiaria")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class EntidadBeneficiaria {
   @Id
@@ -68,8 +71,8 @@ public class EntidadBeneficiaria {
     this.necesidades.add(necesidad);
   }
 
-  public void confirmarEntrega(Donacion donacion) {
-    donacion.confirmarEntrega();
+  public void confirmarEntrega(Donacion donacion, String patenteCamion, LocalDateTime fechaEntrega) {
+    donacion.confirmarEntrega(patenteCamion, fechaEntrega);
   }
 
   public void eliminarNecesidad(Long necesidadId) {

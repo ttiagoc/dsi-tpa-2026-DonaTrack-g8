@@ -6,12 +6,14 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import org.springframework.stereotype.Component;
 
 @Component
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 public class EventManagerDonaciones {
     private Map<Class<? extends EventoDonaciones>, List<ListenerDonaciones<?>>> listeners;

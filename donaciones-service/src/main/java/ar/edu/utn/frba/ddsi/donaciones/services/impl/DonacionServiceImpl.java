@@ -157,7 +157,7 @@ public class DonacionServiceImpl implements DonacionService {
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "No se encontro una donacion con el id: " + donacionId));
 
-            entidad.confirmarEntrega(donacion);
+            entidad.confirmarEntrega(donacion, request.patenteCamion(), request.fechaHora());
             donacionRepository.save(donacion);
             donaciones.add(donacion);
         }

@@ -3,10 +3,12 @@ package ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades;
 import java.util.List;
 
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class NecesidadExtraordinaria implements TipoNecesidad {
 

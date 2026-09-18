@@ -75,9 +75,11 @@ class EntidadBeneficiariaTest {
         assertEquals(TipoEstadoDonacion.EN_DEPOSITO, donacion.estadoActual());
 
         // La entidad confirma entrega
-        entidad.confirmarEntrega(donacion);
+        entidad.confirmarEntrega(donacion, "AB123CD", LocalDateTime.now());
 
         assertEquals(TipoEstadoDonacion.ENTREGADA, donacion.estadoActual());
         assertEquals("Entregado", donacion.getHistorialEstados().getLast().getJustificacion());
+        // TPA2: queda registrado que camion realizo la entrega
+        assertEquals("AB123CD", donacion.patenteCamionDeLaEntrega());
     }
 }

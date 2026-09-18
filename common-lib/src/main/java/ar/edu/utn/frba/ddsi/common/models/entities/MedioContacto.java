@@ -7,11 +7,13 @@ import javax.persistence.Enumerated;
 
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Embeddable
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class MedioContacto {

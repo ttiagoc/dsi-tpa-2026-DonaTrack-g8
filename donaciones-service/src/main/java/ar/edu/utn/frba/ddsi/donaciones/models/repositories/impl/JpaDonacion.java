@@ -27,15 +27,12 @@ public class JpaDonacion extends RepositorioJpa<Donacion> implements DonacionRep
         });
     }
 
-    // El estado actual es el ultimo cambio del historial
     @Override
     public List<Donacion> buscarPorEstado(TipoEstadoDonacion estadoBuscado) {
         if (estadoBuscado == null) {
             return new ArrayList<>();
         }
-        return createQuery("select d from Donacion d join d.historialEstados h "
-                + "where h.estado = :estado and h.fecha = "
-                + "(select max(h2.fecha) from Donacion d2 join d2.historialEstados h2 where d2 = d)", Donacion.class)
+        return createQuery("select d from Donacion d where d.estadoActual = :estado", Donacion.class)
                 .setParameter("estado", estadoBuscado)
                 .getResultList();
     }

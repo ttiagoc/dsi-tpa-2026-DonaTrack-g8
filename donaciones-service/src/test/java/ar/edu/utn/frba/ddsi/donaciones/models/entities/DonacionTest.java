@@ -84,11 +84,12 @@ class DonacionTest {
         assertEquals(TipoEstadoDonacion.EN_TRASLADO, donacion.estadoActual());
         assertEquals("Inicia traslado a la entidad", donacion.getHistorialEstados().getLast().getJustificacion());
 
-        donacion.confirmarEntrega();
+        donacion.confirmarEntrega("AB123CD", LocalDateTime.now());
 
         assertEquals(3, donacion.getHistorialEstados().size());
         assertEquals(TipoEstadoDonacion.ENTREGADA, donacion.estadoActual());
         assertEquals("Entregado", donacion.getHistorialEstados().getLast().getJustificacion());
+        assertEquals("AB123CD", donacion.patenteCamionDeLaEntrega());
     }
 
     @Test

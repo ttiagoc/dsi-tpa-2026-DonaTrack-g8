@@ -13,12 +13,14 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "notificacion")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class Notificacion {
   @Id

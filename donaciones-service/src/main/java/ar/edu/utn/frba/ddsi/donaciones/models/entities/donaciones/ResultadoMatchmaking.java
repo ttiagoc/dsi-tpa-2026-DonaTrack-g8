@@ -19,12 +19,14 @@ import javax.persistence.Table;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoPropuesta;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "resultado_matchmaking")
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class ResultadoMatchmaking {

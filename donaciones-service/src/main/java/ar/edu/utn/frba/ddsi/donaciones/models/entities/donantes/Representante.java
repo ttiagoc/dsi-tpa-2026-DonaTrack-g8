@@ -8,11 +8,13 @@ import javax.persistence.Embedded;
 
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Embeddable
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class Representante {

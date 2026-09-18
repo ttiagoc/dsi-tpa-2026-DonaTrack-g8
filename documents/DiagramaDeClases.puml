@@ -138,12 +138,14 @@ package "Microservicio Donaciones" {
     fechaVencimiento : LocalDate
     bienes : List<Bien>
     fecha : LocalDateTime
+    estadoActual : TipoEstadoDonacion
     historialEstados : List<CambioEstado>
     fotosRecepcion : List<String>
     agregarBien(bien : Bien) : void
     estadoActual() : TipoEstadoDonacion
     cambiarEstado(nuevoEstado : TipoEstadoDonacion, justificacion : String) : void
-    confirmarEntrega() : void
+    confirmarEntrega(patenteCamion : String, fechaEntrega : LocalDateTime) : void
+    patenteCamionDeLaEntrega() : String
     cantidadBienesRecibidos() : Double
     estaDentroDelPeriodoActual(periodo : Periodo) : Boolean
     calcularPesoTotal() : Double
@@ -151,10 +153,16 @@ package "Microservicio Donaciones" {
     obtenerDireccion() : String
   }
 
+  ' Registro de auditoria de una transicion. Tiene id propio: el historial
+  ' es de solo agregado y cada transicion puede llevar datos que las otras
+  ' no tienen (patenteCamion solo en la transicion a ENTREGADA).
   class CambioEstado {
+    id : Long
+    donacion : Donacion
     fecha : LocalDateTime
     estado : TipoEstadoDonacion
     justificacion : String
+    patenteCamion : String
   }
 
   class Categoria {
@@ -194,7 +202,7 @@ package "Microservicio Donaciones" {
     correoRepresentantes : List<MedioContacto>
     necesidades : List<Necesidad>
     registrarNecesidad(necesidad : Necesidad) : void
-    confirmarEntrega(donacion : Donacion) : void
+    confirmarEntrega(donacion : Donacion, patenteCamion : String, fechaEntrega : LocalDateTime) : void
     eliminarNecesidad(necesidadId : Long) : void
   }
 
@@ -470,8 +478,10 @@ Donacion --> Donante
 Donacion --> EntidadBeneficiaria
 Donacion --> Subcategoria
 Donacion --> "*" CambioEstado
+CambioEstado --> Donacion
 Donacion --> "*" Bien
 Donacion --> EstadoBien
+Donacion --> TipoEstadoDonacion
 CambioEstado --> TipoEstadoDonacion
 
 Subcategoria --> Categoria
