@@ -1,0 +1,245 @@
+@startuml DER
+skinparam linetype ortho
+hide circle
+hide empty members
+
+package "notificaciones" {
+  entity notificacion {
+    * id : BIGINT <<PK, IDENTITY>>
+    --
+    fecha_de_envio : TIMESTAMP
+    mensaje : VARCHAR(500)
+    contacto_valor : VARCHAR(255)
+    contacto_tipo_contacto : VARCHAR(20)
+    completada : BOOLEAN
+  }
+}
+
+package "donaciones" {
+  entity donante {
+    * id : BIGINT <<PK, IDENTITY>>
+    --
+    tipo_donante : VARCHAR(20) <<discriminator>>
+    contacto_predeterminado_valor : VARCHAR(255)
+    contacto_predeterminado_tipo_contacto : VARCHAR(20)
+    ' -- PersonaHumana --
+    nombre : VARCHAR(255)
+    apellido : VARCHAR(255)
+    fecha_nacimiento : DATE
+    dni : VARCHAR(20)
+    genero : VARCHAR(50)
+    direccion : VARCHAR(255)
+    ' -- PersonaJuridica --
+    razon_social : VARCHAR(255)
+    rubro : VARCHAR(255)
+    tipo_organizacion : VARCHAR(50)
+    cuit : VARCHAR(20)
+  }
+
+  entity donante_contactos {
+    * donante_id : BIGINT <<FK -> donante.id>>
+    --
+    valor : VARCHAR(255)
+    tipo_contacto : VARCHAR(20)
+  }
+
+  donante ||--o{ donante_contactos
+
+  entity donante_representantes {
+    * donante_id : BIGINT <<FK -> donante.id>>
+    --
+    nombre : VARCHAR(255)
+    apellido : VARCHAR(255)
+    correo_valor : VARCHAR(255)
+    correo_tipo_contacto : VARCHAR(20)
+  }
+
+  donante ||--o{ donante_representantes
+
+  entity categoria {
+    * id : BIGINT <<PK, IDENTITY>>
+    --
+    nombre : VARCHAR(255) <<UNIQUE>>
+    pide_estado : BOOLEAN
+    es_perecedero : BOOLEAN
+  }
+
+  entity subcategoria {
+    * id : BIGINT <<PK, IDENTITY>>
+    --
+    nombre : VARCHAR(255) <<UNIQUE>>
+    categoria_id : BIGINT <<FK -> categoria.id>>
+  }
+
+  categoria ||--o{ subcategoria
+
+  entity donacion_bienes {
+    * donacion_id : BIGINT <<FK -> donacion.id>>
+    --
+    descripcion : VARCHAR(500)
+    foto : VARCHAR(500)
+    cantidad : BIGINT
+    peso_kg_por_unidad : DOUBLE
+    volumen_m3_por_unidad : DOUBLE
+    subcategoria_id : BIGINT <<FK -> subcategoria.id>>
+    estado_bien : VARCHAR(20)
+    fecha_vencimiento : DATE
+  }
+
+  subcategoria ||--o{ donacion_bienes
+
+  entity registro_donacion {
+    * id : BIGINT <<PK, IDENTITY>>
+    --
+    donante_id : BIGINT <<FK -> donante.id, NOT NULL>>
+    descripcion : VARCHAR(500)
+    fecha : TIMESTAMP
+  }
+
+  donante ||--o{ registro_donacion
+
+  entity donacion {
+    * id : BIGINT <<PK, IDENTITY>>
+    --
+    registro_donacion_id : BIGINT <<FK -> registro_donacion.id, NOT NULL>>
+    donante_id : BIGINT <<FK -> donante.id>> <<desnormalizado>>
+    entidad_beneficiaria_asignada_id : BIGINT <<FK -> entidad_beneficiaria.id>>
+    subcategoria_id : BIGINT <<FK -> subcategoria.id>>
+    estado_bienes : VARCHAR(20)
+    fecha_vencimiento : DATE
+    fecha : TIMESTAMP <<desnormalizado>>
+    estado_actual : VARCHAR(20) <<desnormalizado>>
+  }
+
+  registro_donacion ||--|{ donacion
+  donante ||--o{ donacion
+  subcategoria ||--o{ donacion
+
+  donacion ||--o{ donacion_bienes
+
+  entity cambio_estado {
+    * donacion_id : BIGINT <<PK, FK -> donacion.id>>
+    * orden : INTEGER <<PK>>
+    --
+    fecha : TIMESTAMP
+    estado : VARCHAR(20)
+    justificacion : VARCHAR(500)
+    patente_camion : VARCHAR(20)
+  }
+
+  donacion ||--o{ cambio_estado
+
+  entity donacion_fotos_recepcion {
+    * donacion_id : BIGINT <<FK -> donacion.id>>
+    --
+    foto_url : VARCHAR(500)
+  }
+
+  donacion ||--o{ donacion_fotos_recepcion
+
+  entity entidad_beneficiaria {
+    * id : BIGINT <<PK, IDENTITY>>
+    --
+    razon_social : VARCHAR(255)
+    direccion : VARCHAR(255)
+    telefono_valor : VARCHAR(255)
+    telefono_tipo_contacto : VARCHAR(20)
+  }
+
+  entity entidad_beneficiaria_correo_representantes {
+    * entidad_beneficiaria_id : BIGINT <<FK -> entidad_beneficiaria.id>>
+    --
+    valor : VARCHAR(255)
+    tipo_contacto : VARCHAR(20)
+  }
+
+  entidad_beneficiaria ||--o{ entidad_beneficiaria_correo_representantes
+
+  entity necesidad {
+    * id : BIGINT <<PK, IDENTITY>>
+    --
+    entidad_beneficiaria_id : BIGINT <<FK -> entidad_beneficiaria.id>>
+    subcategoria_id : BIGINT <<FK -> subcategoria.id>>
+    tipo_necesidad : VARCHAR(20)
+    periodo : VARCHAR(20)
+    descripcion : VARCHAR(500)
+    cantidad : BIGINT
+  }
+
+  entidad_beneficiaria ||--o{ necesidad
+  subcategoria ||--o{ necesidad
+
+  entity necesidad_donaciones_asignadas {
+    * necesidad_id : BIGINT <<FK -> necesidad.id>>
+    * donacion_id : BIGINT <<FK -> donacion.id>>
+  }
+
+  necesidad ||--o{ necesidad_donaciones_asignadas
+  donacion ||--o{ necesidad_donaciones_asignadas
+
+  entity resultado_matchmaking {
+    * id : BIGINT <<PK, IDENTITY>>
+    --
+    donacion_id : BIGINT <<FK -> donacion.id>>
+    fecha_ejecucion : TIMESTAMP
+    estado : VARCHAR(20)
+  }
+
+  donacion ||--o{ resultado_matchmaking
+
+  entity resultado_matchmaking_entidades_sugeridas {
+    * resultado_matchmaking_id : BIGINT <<FK -> resultado_matchmaking.id>>
+    * entidad_beneficiaria_id : BIGINT <<FK -> entidad_beneficiaria.id>>
+  }
+
+  resultado_matchmaking ||--o{ resultado_matchmaking_entidades_sugeridas
+  entidad_beneficiaria ||--o{ resultado_matchmaking_entidades_sugeridas
+}
+
+package "logistica" {
+  entity camion {
+    * id : BIGINT <<PK, IDENTITY>>
+    --
+    patente : VARCHAR(20)
+    capacidad_volumen : DOUBLE
+    altura : DOUBLE
+    capacidad_carga : DOUBLE
+    chofer_nombre : VARCHAR(255)
+    chofer_apellido : VARCHAR(255)
+    ubicacion_latitud : DOUBLE
+    ubicacion_longitud : DOUBLE
+    ubicacion_timestamp : TIMESTAMP
+    ubicacion_velocidad : DOUBLE
+  }
+
+  entity ruta {
+    * id : BIGINT <<PK, IDENTITY>>
+    --
+    fecha : DATE
+    estado : VARCHAR(20)
+    camion_id : BIGINT <<FK -> camion.id>>
+  }
+
+  camion ||--o{ ruta
+
+  entity parada {
+    * id : BIGINT <<PK, IDENTITY>>
+    --
+    ruta_id : BIGINT <<FK -> ruta.id>>
+    orden : INTEGER
+    destino : VARCHAR(255)
+    entidad_id : BIGINT <<referencia logica a donaciones.entidad_beneficiaria, sin FK>>
+  }
+
+  ruta ||--o{ parada
+
+  entity parada_donaciones {
+    * parada_id : BIGINT <<FK -> parada.id>>
+    --
+    donacion_id : BIGINT <<referencia logica a donaciones.donacion, sin FK>>
+  }
+
+  parada ||--o{ parada_donaciones
+}
+
+@enduml

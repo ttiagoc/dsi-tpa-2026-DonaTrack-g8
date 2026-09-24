@@ -1,4 +1,4 @@
-@startuml DonaTrack
+@startuml Clases
 skinparam classAttributeIconSize 0
 skinparam linetype ortho
 skinparam nodesep 60
@@ -153,12 +153,7 @@ package "Microservicio Donaciones" {
     obtenerDireccion() : String
   }
 
-  ' Registro de auditoria de una transicion. Tiene id propio: el historial
-  ' es de solo agregado y cada transicion puede llevar datos que las otras
-  ' no tienen (patenteCamion solo en la transicion a ENTREGADA).
   class CambioEstado {
-    id : Long
-    donacion : Donacion
     fecha : LocalDateTime
     estado : TipoEstadoDonacion
     justificacion : String
@@ -478,7 +473,6 @@ Donacion --> Donante
 Donacion --> EntidadBeneficiaria
 Donacion --> Subcategoria
 Donacion --> "*" CambioEstado
-CambioEstado --> Donacion
 Donacion --> "*" Bien
 Donacion --> EstadoBien
 Donacion --> TipoEstadoDonacion

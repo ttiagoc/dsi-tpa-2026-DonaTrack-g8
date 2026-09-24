@@ -1,12 +1,12 @@
 # Justificaciones de Diseño Relacional — DonaTrack
 
-Acompaña a [DiagramaER.puml](DiagramaER.puml). Para cada tabla se explica brevemente por qué se modeló de esa forma.
+Acompaña a [DER.puml](DER.puml). Para cada tabla se explica brevemente por qué se modeló de esa forma.
 
 ## Consideraciones generales
 
-- **Claves primarias**: `BIGINT` con `GenerationType.IDENTITY` en todas las tablas, soportado de forma nativa por HSQLDB (tests) y PostgreSQL/MariaDB (despliegue).
+- **Claves primarias**: `BIGINT` con `GenerationType.IDENTITY` en todas las entidades, soportado de forma nativa por HSQLDB (tests) y PostgreSQL/MariaDB (despliegue). La excepción es `cambio_estado`, que usa la clave natural `(donacion_id, orden)`.
 - **Un esquema por microservicio**: `notificaciones`, `donaciones` y `logistica` no comparten tablas. Las referencias a datos de otro servicio se guardan como un id simple, sin FK.
-- **Value objects embebidos**: `MedioContacto`, `Ubicacion`, `Chofer`, `Representante`, `Bien` y `CambioEstado` no tienen identidad propia ni se consultan por separado, por lo que no tienen tabla con PK. Si son un único valor se embeben como columnas en la tabla dueña (`@Embedded`); si son una lista van a una tabla auxiliar con FK al dueño (`@ElementCollection`).
+- **Value objects embebidos**: `MedioContacto`, `Ubicacion`, `Chofer`, `Representante` y `Bien` no tienen identidad propia ni se consultan por separado, por lo que no tienen tabla con PK. Si son un único valor se embeben como columnas en la tabla dueña (`@Embedded`); si son una lista van a una tabla auxiliar con FK al dueño (`@ElementCollection`).
 ## Esquema `notificaciones`
 
 ### `notificacion`
@@ -45,8 +45,14 @@ Entidad central del sistema, con id propio y su propio ABM. Cada registro genera
 ### `donacion_bienes`
 Bienes de cada donación. No tienen id ni se consultan por separado, siempre se leen junto a su donación, así que van en una tabla auxiliar con FK a `donacion`. La subcategoría sí es una FK real al catálogo.
 
-### `donacion_historial_estados`
-Historial de cambios de estado de la donación, para trazabilidad y auditoría. Es una lista de solo agregado que no se consulta por fuera de su donación, así que va en una tabla auxiliar con FK a `donacion`.
+### `cambio_estado`
+Historial de cambios de estado de la donación, para trazabilidad y auditoría. `CambioEstado` es un value object: no tiene identidad propia, no se consulta por fuera de su donación y no existe sin ella. Por eso va en un `@ElementCollection` de la donación, en vez de ser una entidad con id propio.
+
+Su PK es la clave natural `(donacion_id, orden)`, donde `orden` es la posición de la transición dentro del historial (`@OrderColumn`). Esta PK es necesaria: en una colección sin PK, Hibernate no puede identificar una fila y ante cada cambio de estado borra todo el historial de la donación y lo vuelve a insertar. Una tabla de auditoría no debería reescribirse. Con la PK, cada transición nueva es un único `INSERT` al final y las filas anteriores no se tocan.
+
+No se usa `(donacion_id, fecha)` como clave porque la fecha no es única por construcción: la fecha de entrega la informa el servicio de logística y puede repetirse (por ejemplo, si reenvía la misma confirmación), y dos transiciones encadenadas pueden caer en el mismo instante. `orden` sí es único dentro de cada donación.
+
+`patente_camion` solo se completa en la transición a `ENTREGADA`. Se guarda en la transición y no en `donacion` porque una entrega fallida se replanifica y puede haber varios intentos, cada uno con su camión.
 
 ### `donacion_fotos_recepcion`
 URLs de las fotos de recepción. Es una lista de valores simples (`String`) sin identidad, así que va en una tabla auxiliar con FK a `donacion`.

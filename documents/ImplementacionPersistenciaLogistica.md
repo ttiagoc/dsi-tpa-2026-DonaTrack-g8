@@ -1,6 +1,6 @@
 # Implementación de la Persistencia JPA en `logistica-service` (Entrega 3)
 
-Este documento detalla en profundidad la arquitectura, decisiones de diseño objeto-relacional, configuración y pruebas implementadas en el microservicio **`logistica-service`** para la **Entrega 3: Persistencia**, cumpliendo con la consigna de la cátedra, el [DiagramaER.puml](DiagramaER.puml), las [JustificacionesDisenoRelacional.md](JustificacionesDisenoRelacional.md) y la [GuiaPersistenciaJPA.md](GuiaPersistenciaJPA.md).
+Este documento detalla en profundidad la arquitectura, decisiones de diseño objeto-relacional, configuración y pruebas implementadas en el microservicio **`logistica-service`** para la **Entrega 3: Persistencia**, cumpliendo con la consigna de la cátedra, el [DER.puml](DER.puml), las [JustificacionesDisenoRelacional.md](JustificacionesDisenoRelacional.md) y la [GuiaPersistenciaJPA.md](GuiaPersistenciaJPA.md).
 
 ---
 
@@ -23,7 +23,7 @@ Tomando `donaciones-service` como referencia previa del proyecto:
 | **Base de datos propia** | `donaciones` (puerto 5432) | `logistica` (puerto 5432) |
 | **Herencia de Entidades** | `SINGLE_TABLE` en `Donante` (`PersonaHumana`, `PersonaJuridica`) con discriminador `tipo_donante`. | **Sin herencia**: modelo plano de entidades. |
 | **Value Objects (`@Embeddable`)** | `MedioContacto`, `Representante`, `Bien`, `CambioEstado`. | `Chofer` y `Ubicacion`. |
-| **Colección de datos externos** | Colecciones de entidades locales (`donacion_bienes`, `donacion_historial_estados`). | `Parada` almacena `donacionIds` (`parada_donaciones`), que son referencias numéricas a donaciones de otro servicio sin integridad referencial forzada por la BD. |
+| **Colección de datos externos** | Colecciones de entidades locales (`donacion_bienes`, `donacion_fotos_recepcion`, `cambio_estado`). El historial de estados usa `@OrderColumn`, con PK `(donacion_id, orden)`. | `Parada` almacena `donacionIds` (`parada_donaciones`), que son referencias numéricas a donaciones de otro servicio sin integridad referencial forzada por la BD. |
 | **Repositorios Base** | `RepositorioJpa<T>` que implementa `WithSimplePersistenceUnit`. | Misma clase base `RepositorioJpa<T>`, abstrayendo transacciones (`withTransaction`) y operaciones CRUD seguras (`save`, `findById`, `findAll`, `deleteById`). |
 | **Desacoplamiento JPA** | Repositorios aislados por tabla/entidad. | `JpaCamion` ya no requiere inyectar `RutaRepository` para calcular `findAllDisponibles()`, sino que lo resuelve directamente mediante subconsultas JPQL correlacionadas. |
 | **Manejo del ciclo de vida** | `PersistenceContextController` limpia el `EntityManager` ligado al hilo por cada request en Javalin. | Mismo patrón con `PersistenceContextController`. |

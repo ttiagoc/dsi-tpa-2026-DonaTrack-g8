@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -17,8 +16,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
+import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
@@ -75,8 +73,10 @@ public class Donacion {
   @Column(name = "estado_actual", length = 20, nullable = false)
   private TipoEstadoDonacion estadoActual;
 
-  @OneToMany(mappedBy = "donacion", cascade = CascadeType.ALL, orphanRemoval = true)
-  @OrderBy("fecha ASC")
+  // lista indexada: la PK de cambio_estado es (donacion_id, orden) y agregar un estado es un solo INSERT
+  @ElementCollection
+  @CollectionTable(name = "cambio_estado", joinColumns = @JoinColumn(name = "donacion_id"))
+  @OrderColumn(name = "orden")
   private List<CambioEstado> historialEstados;
 
   @ElementCollection
@@ -118,7 +118,7 @@ public class Donacion {
 
   private void registrarEstado(LocalDateTime fecha, TipoEstadoDonacion estado, String justificacion,
       String patenteCamion) {
-    CambioEstado cambioEstado = new CambioEstado(this, fecha, estado, justificacion, patenteCamion);
+    CambioEstado cambioEstado = new CambioEstado(fecha, estado, justificacion, patenteCamion);
 
     this.historialEstados.add(cambioEstado);
     this.estadoActual = estado;

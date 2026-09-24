@@ -146,7 +146,7 @@ docker exec donatrack-postgres psql -U postgres -d notificaciones -c "\dt"
 ```
 
 Tienen que dar **16**, **4** y **1** tablas respectivamente, 21 en total, que son exactamente
-las del diagrama entidad-relación (`DiagramaER.puml`).
+las del diagrama entidad-relación (`DER.puml`).
 
 ---
 

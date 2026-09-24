@@ -1,4 +1,4 @@
-@startuml
+@startuml CasosDeUso
 left to right direction
 
 ' Actores Principales

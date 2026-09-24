@@ -1,4 +1,4 @@
-@startuml DiagramaDespliegueDonaTrack
+@startuml Despliegue
 
 ' Forzar orientación horizontal y líneas limpias
 left to right direction

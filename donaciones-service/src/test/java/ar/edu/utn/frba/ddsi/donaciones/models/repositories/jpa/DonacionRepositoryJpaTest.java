@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Bien;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.CambioEstado;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.RegistroDonacion;
@@ -142,17 +143,34 @@ class DonacionRepositoryJpaTest extends PersistenciaTest {
     @DisplayName("Cada transicion agrega una fila sin reescribir las anteriores")
     void elHistorialEsDeSoloAgregado() {
         Donacion donacion = donaciones.findById(donacionesCreadas.get(0).getId()).orElseThrow();
-        Long idDelPrimerCambio = donacion.getHistorialEstados().get(0).getId();
+        assertEquals(1, donacion.getHistorialEstados().size());
+        // se marca la fila original directo en la base: si Hibernate reescribiera el historial, la marca se perderia
+        withTransaction(() -> entityManager()
+                .createNativeQuery("UPDATE cambio_estado SET justificacion = 'marca' WHERE donacion_id = ?1")
+                .setParameter(1, donacion.getId())
+                .executeUpdate());
 
         donacion.cambiarEstado(TipoEstadoDonacion.ASIGNACION_REALIZADA, "Asignada");
         donaciones.save(donacion);
         nuevoRequest();
 
-        Donacion leida = donaciones.findById(donacion.getId()).orElseThrow();
+        List<CambioEstado> historial = donaciones.findById(donacion.getId()).orElseThrow().getHistorialEstados();
 
-        assertEquals(2, leida.getHistorialEstados().size());
-        // la fila original conserva su id: no fue borrada y reinsertada
-        assertEquals(idDelPrimerCambio, leida.getHistorialEstados().get(0).getId());
-        assertEquals(TipoEstadoDonacion.EN_DEPOSITO, leida.getHistorialEstados().get(0).getEstado());
+        assertEquals(2, historial.size());
+        assertEquals("marca", historial.get(0).getJustificacion());
+        assertEquals(TipoEstadoDonacion.ASIGNACION_REALIZADA, historial.get(1).getEstado());
+    }
+
+    @Test
+    @DisplayName("La PK del historial es la clave natural (donacion_id, orden)")
+    void clavePrimariaDelHistorial() {
+        List<?> columnas = entityManager().createNativeQuery(
+                "SELECT k.column_name FROM information_schema.key_column_usage k "
+                        + "JOIN information_schema.table_constraints t ON k.constraint_name = t.constraint_name "
+                        + "WHERE t.constraint_type = 'PRIMARY KEY' AND t.table_name = 'CAMBIO_ESTADO' "
+                        + "ORDER BY k.ordinal_position")
+                .getResultList();
+
+        assertEquals(List.of("DONACION_ID", "ORDEN"), columnas);
     }
 }
