@@ -1,6 +1,7 @@
 package ar.edu.utn.frba.ddsi.donaciones.services.impl;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -57,15 +58,11 @@ public class DonanteServiceImpl implements DonanteService {
         return toDonanteResponse(d);
     }
 
+    // Nombre, DNI y medios de contacto los valida el constructor de PersonaHumana (valen también para el CSV).
+    // Acá se exigen los datos completos de registro que la importación masiva no trae.
     private PersonaHumana toPersonaHumana(PersonaHumanaRequest request) {
-        if (request.nombre() == null || request.nombre().isBlank()) {
-            throw new BusinessException("El nombre de la persona humana no puede ser nulo ni estar vacio");
-        }
         if (request.apellido() == null || request.apellido().isBlank()) {
             throw new BusinessException("El apellido de la persona humana no puede ser nulo ni estar vacio");
-        }
-        if (request.dni() == null || request.dni().isBlank()) {
-            throw new BusinessException("El DNI de la persona humana no puede ser nulo ni estar vacio");
         }
         if (request.fechaNacimiento() == null) {
             throw new BusinessException("La fecha de nacimiento de la persona humana no puede ser nula");
@@ -80,30 +77,28 @@ public class DonanteServiceImpl implements DonanteService {
             throw new BusinessException("Debe haber al menos un medio de contacto");
         }
 
-        return new PersonaHumana(null, request.contactos().stream().map(this::toMedioContacto)
+        return new PersonaHumana(request.contactos().stream().map(this::toMedioContacto)
                 .collect(Collectors.toList()), toMedioContacto(request.contactoPredeterminado()), request.nombre(),
                 request.apellido(), request.fechaNacimiento(), request.dni(), request.genero(),
                 request.direccion());
     }
 
+    // Razón social, CUIT y medios de contacto los valida el constructor de PersonaJuridica.
     private PersonaJuridica toPersonaJuridica(PersonaJuridicaRequest request) {
-        if (request.razonSocial() == null || request.razonSocial().isBlank()) {
-            throw new BusinessException("La razon social de la persona juridica no puede ser nula ni estar vacia");
-        }
         if (request.rubro() == null || request.rubro().isBlank()) {
             throw new BusinessException("El rubro de la persona juridica no puede ser nulo ni estar vacio");
         }
         if (request.tipo() == null || request.tipo().isBlank()) {
             throw new BusinessException("El tipo de la persona juridica no puede ser nulo ni estar vacio");
         }
-        if (request.cuit() == null || request.cuit().isBlank()) {
-            throw new BusinessException("El CUIT de la persona juridica no puede ser nulo ni estar vacio");
-        }
         if (request.representantes() == null || request.representantes().isEmpty()) {
             throw new BusinessException("Debe haber al menos un representante");
         }
+        if (request.contactos() == null || request.contactos().isEmpty()) {
+            throw new BusinessException("Debe haber al menos un medio de contacto");
+        }
 
-        return new PersonaJuridica(null,
+        return new PersonaJuridica(
                 request.contactos().stream().map(this::toMedioContacto).collect(Collectors.toList()),
                 toMedioContacto(request.contactoPredeterminado()), request.razonSocial(), request.rubro(),
                 toTipoOrganizacion(request.tipo()), request.cuit(),
@@ -134,15 +129,8 @@ public class DonanteServiceImpl implements DonanteService {
     }
 
     public DonanteResponse crearPersonaHumana(PersonaHumanaRequest request) {
-        if (request.contactos().stream().noneMatch(this::esEmail)) {
-            throw new BusinessException("Debe haber al menos un medio de contacto de tipo Email");
-        }
         PersonaHumana persona = (PersonaHumana) donanteRepository.save(toPersonaHumana(request));
         return toDonanteResponse(persona);
-    }
-
-    private Boolean esEmail(MedioContactoRequest contacto) {
-        return contacto.tipo().equalsIgnoreCase("email");
     }
 
     public DonanteResponse crearPersonaJuridica(PersonaJuridicaRequest request) {
@@ -151,7 +139,9 @@ public class DonanteServiceImpl implements DonanteService {
     }
 
     public DonanteResponse actualizarPersonaHumana(Long id, PersonaHumanaRequest request) {
-        PersonaHumana d = (PersonaHumana) donanteRepository.findById(id)
+        PersonaHumana d = donanteRepository.findById(id)
+                .filter(PersonaHumana.class::isInstance)
+                .map(PersonaHumana.class::cast)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontro un donante de tipo Persona Humana con id: " + id));
 
@@ -170,27 +160,57 @@ public class DonanteServiceImpl implements DonanteService {
         if (request.direccion() != null && !request.direccion().isBlank()) {
             d.setDireccion(request.direccion());
         }
-        if (request.contactos() != null && !request.contactos().isEmpty()) {
-            d.setContactos(request.contactos().stream().map(this::toMedioContacto).collect(Collectors.toList()));
-        }
-        if (request.contactoPredeterminado() != null) {
-            d.setContactoPredeterminado(toMedioContacto(request.contactoPredeterminado()));
-        }
+        actualizarContactos(d, request.contactos(), request.contactoPredeterminado());
 
         return toDonanteResponse(donanteRepository.save(d));
     }
 
     public DonanteResponse actualizarPersonaJuridica(Long id, PersonaJuridicaRequest request) {
-        return donanteRepository.findById(id)
-                .filter(d -> d instanceof PersonaJuridica)
-                .map(d -> toDonanteResponse(donanteRepository.save(toPersonaJuridica(request))))
+        PersonaJuridica d = donanteRepository.findById(id)
+                .filter(PersonaJuridica.class::isInstance)
+                .map(PersonaJuridica.class::cast)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontro un donante de tipo Persona Juridica con id: " + id));
+
+        if (request.razonSocial() != null && !request.razonSocial().isBlank()) {
+            d.setRazonSocial(request.razonSocial());
+        }
+        if (request.rubro() != null && !request.rubro().isBlank()) {
+            d.setRubro(request.rubro());
+        }
+        if (request.tipo() != null && !request.tipo().isBlank()) {
+            d.setTipo(toTipoOrganizacion(request.tipo()));
+        }
+        if (request.representantes() != null && !request.representantes().isEmpty()) {
+            d.setRepresentantes(
+                    request.representantes().stream().map(this::toRepresentante).collect(Collectors.toList()));
+        }
+        actualizarContactos(d, request.contactos(), request.contactoPredeterminado());
+
+        return toDonanteResponse(donanteRepository.save(d));
+    }
+
+    // Los campos que no vienen en el request conservan su valor; la entidad valida la combinación resultante.
+    private void actualizarContactos(Donante d, List<MedioContactoRequest> contactos,
+            MedioContactoRequest contactoPredeterminado) {
+        List<MedioContacto> nuevosContactos = contactos != null && !contactos.isEmpty()
+                ? contactos.stream().map(this::toMedioContacto).collect(Collectors.toList())
+                : d.getContactos();
+        MedioContacto nuevoPredeterminado = contactoPredeterminado != null
+                ? toMedioContacto(contactoPredeterminado)
+                : d.getContactoPredeterminado();
+        d.actualizarContactos(nuevosContactos, nuevoPredeterminado);
     }
 
     public boolean eliminar(Long id) {
-        if (!donanteRepository.existsById(id))
+        Optional<Donante> donante = donanteRepository.findById(id);
+        if (donante.isEmpty()) {
             return false;
+        }
+        // sus registros de donacion lo referencian y se conservan por trazabilidad
+        if (!donante.get().getDonaciones().isEmpty()) {
+            throw new BusinessException("No se puede eliminar un donante con donaciones registradas");
+        }
         donanteRepository.deleteById(id);
         return true;
     }

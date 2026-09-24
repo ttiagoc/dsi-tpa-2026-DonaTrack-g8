@@ -50,18 +50,23 @@ class GestorDeEventosTest {
         gestorDeEventos = new GestorDeEventos(eventManager, donacionRepository, donanteRepository);
     }
 
+    private PersonaHumana crearDonante(Long id, String valorEmail) {
+        MedioContacto email = new MedioContacto(valorEmail, TipoContacto.EMAIL);
+        PersonaHumana donante = new PersonaHumana(List.of(email), email, "Ana", "Perez", null, "12345678", null,
+                null);
+        donante.setId(id);
+        return donante;
+    }
+
     @Test
     @DisplayName("Debe detectar inactividad y enviar notificación si donó hace más de 20 días")
     void verificarInactividadDonantes() {
-        PersonaHumana donanteInactivo = new PersonaHumana();
-        donanteInactivo.setId(1L);
+        PersonaHumana donanteInactivo = crearDonante(1L, "inactivo@test.com");
         RegistroDonacion regInactivo = new RegistroDonacion();
         regInactivo.setFecha(LocalDateTime.now().minusDays(30)); // 30 días, debe notificar
         donanteInactivo.agregarDonacion(regInactivo);
-        donanteInactivo.setContactoPredeterminado(new MedioContacto("inactivo@test.com", TipoContacto.EMAIL));
 
-        PersonaHumana donanteActivo = new PersonaHumana();
-        donanteActivo.setId(2L);
+        PersonaHumana donanteActivo = crearDonante(2L, "activo@test.com");
         RegistroDonacion regActivo = new RegistroDonacion();
         regActivo.setFecha(LocalDateTime.now().minusDays(5)); // 5 días, NO debe notificar
         donanteActivo.agregarDonacion(regActivo);
@@ -79,8 +84,7 @@ class GestorDeEventosTest {
         Long entidadId = 1L;
         Long donacionId = 100L;
 
-        PersonaHumana donante = new PersonaHumana();
-        donante.setContactoPredeterminado(new MedioContacto("donante@test.com", TipoContacto.EMAIL));
+        PersonaHumana donante = crearDonante(null, "donante@test.com");
 
         Categoria cat = new Categoria("Muebles", true, false);
         Subcategoria sub = new Subcategoria("Sillas", cat);
@@ -110,8 +114,7 @@ class GestorDeEventosTest {
                 new ArrayList<>(List.of(new MedioContacto("hogar@test.com", TipoContacto.EMAIL))));
         entidad.setId(entidadId);
 
-        PersonaHumana donante = new PersonaHumana();
-        donante.setContactoPredeterminado(new MedioContacto("donante@test.com", TipoContacto.EMAIL));
+        PersonaHumana donante = crearDonante(null, "donante@test.com");
 
         Categoria cat = new Categoria("Muebles", true, false);
         Subcategoria sub = new Subcategoria("Sillas", cat);
@@ -133,8 +136,7 @@ class GestorDeEventosTest {
 
         EntidadBeneficiaria entidad = new EntidadBeneficiaria("Hogar", "Dir", "123",
                 new ArrayList<>(List.of(new MedioContacto("hogar@test.com", TipoContacto.EMAIL))));
-        PersonaHumana donante = new PersonaHumana();
-        donante.setContactoPredeterminado(new MedioContacto("donante@test.com", TipoContacto.EMAIL));
+        PersonaHumana donante = crearDonante(null, "donante@test.com");
 
         Categoria cat = new Categoria("Muebles", true, false);
         Subcategoria sub = new Subcategoria("Sillas", cat);

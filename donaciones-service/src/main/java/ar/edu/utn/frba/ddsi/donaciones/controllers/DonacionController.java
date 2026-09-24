@@ -3,6 +3,7 @@ package ar.edu.utn.frba.ddsi.donaciones.controllers;
 import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.common.controllers.JavalinController;
+import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EstadoDonacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.SubirFotosRecepcionRequest;
@@ -37,7 +38,9 @@ public class DonacionController implements JavalinController {
 
         app.delete("/api/donaciones/{id}", ctx -> {
             Long id = Long.parseLong(ctx.pathParam("id"));
-            donacionService.eliminar(id);
+            if (!donacionService.eliminar(id)) {
+                throw new ResourceNotFoundException("No se encontro una donacion con el id: " + id);
+            }
             ctx.status(204);
         });
 

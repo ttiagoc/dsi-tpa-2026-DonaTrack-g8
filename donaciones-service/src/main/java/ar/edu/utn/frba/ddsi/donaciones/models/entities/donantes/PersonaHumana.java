@@ -8,6 +8,7 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,7 +17,7 @@ import lombok.Setter;
 @DiscriminatorValue("PERSONA_HUMANA")
 @Getter
 @Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PersonaHumana extends Donante {
   private String nombre;
   private String apellido;
@@ -32,10 +33,12 @@ public class PersonaHumana extends Donante {
 
   private String direccion;
 
-  public PersonaHumana(Long id, List<MedioContacto> contactos,
+  public PersonaHumana(List<MedioContacto> contactos,
       MedioContacto contactoPredeterminado, String nombre, String apellido, LocalDate fechaNacimiento, String dni,
       String genero, String direccion) {
-    super(id, contactos, contactoPredeterminado);
+    super(contactos, contactoPredeterminado);
+    validarObligatorio(nombre, "El nombre de la persona humana no puede ser nulo ni estar vacio");
+    validarObligatorio(dni, "El DNI de la persona humana no puede ser nulo ni estar vacio");
     this.nombre = nombre;
     this.apellido = apellido;
     this.fechaNacimiento = fechaNacimiento;

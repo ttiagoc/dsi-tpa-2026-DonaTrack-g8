@@ -88,6 +88,25 @@ class ImportadorDeDonantesTest {
     }
 
     @Test
+    @DisplayName("Debe descartar las filas con datos obligatorios vacíos y seguir con las demás")
+    void descartarFilasInvalidas() throws IOException {
+        Path tempFile = tempDir.resolve("donantes_invalidos.csv");
+        String content = "TipoPersona,Documento,Nombre,Email,Telefono\n" +
+                "HUMANA,,,Sin Documento,sindni@test.com,\n" +
+                "JURIDICA,,30-11222333-4,Sin Email, ,\n" +
+                "HUMANA,,11222333,Ana Lopez,humana@test.com,";
+        Files.writeString(tempFile, content);
+
+        when(donanteRepository.buscarPorEmail(anyString())).thenReturn(Optional.empty());
+
+        importadorService.importarDonantes(tempFile.toString());
+
+        ArgumentCaptor<Donante> captor = ArgumentCaptor.forClass(Donante.class);
+        verify(donanteRepository, times(1)).save(captor.capture());
+        assertEquals("11222333", ((PersonaHumana) captor.getValue()).getDni());
+    }
+
+    @Test
     @DisplayName("Debe actualizar los datos de donantes si ya existen y no notificar")
     void actualizarDonantesExistentes() throws IOException {
         Path tempFile = tempDir.resolve("donantes_existentes.csv");
@@ -97,7 +116,6 @@ class ImportadorDeDonantesTest {
 
         MedioContacto emailHumana = new MedioContacto("humana@test.com", TipoContacto.EMAIL);
         PersonaHumana humanaExistente = new PersonaHumana(
-                1L,
                 new ArrayList<>(List.of(emailHumana)),
                 emailHumana,
                 "Ana",

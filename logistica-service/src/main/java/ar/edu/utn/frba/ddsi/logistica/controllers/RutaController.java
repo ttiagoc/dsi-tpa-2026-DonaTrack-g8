@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.common.controllers.JavalinController;
+import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaRequest;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.PlanificadorDeRutas;
@@ -48,7 +49,9 @@ public class RutaController implements JavalinController {
 
         app.delete("/api/rutas/{id}", ctx -> {
             Long id = Long.parseLong(ctx.pathParam("id"));
-            rutaService.eliminar(id);
+            if (!rutaService.eliminar(id)) {
+                throw new ResourceNotFoundException("No se encontro una ruta con el id: " + id);
+            }
             ctx.status(204);
         });
 

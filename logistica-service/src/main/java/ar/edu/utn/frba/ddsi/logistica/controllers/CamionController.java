@@ -3,6 +3,7 @@ package ar.edu.utn.frba.ddsi.logistica.controllers;
 import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.common.controllers.JavalinController;
+import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.logistica.dto.camion.CamionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.services.CamionService;
@@ -41,7 +42,9 @@ public class CamionController implements JavalinController {
 
         app.delete("/api/camiones/{id}", ctx -> {
             Long id = Long.parseLong(ctx.pathParam("id"));
-            camionService.eliminar(id);
+            if (!camionService.eliminar(id)) {
+                throw new ResourceNotFoundException("No se encontro un camion con el id: " + id);
+            }
             ctx.status(204);
         });
 

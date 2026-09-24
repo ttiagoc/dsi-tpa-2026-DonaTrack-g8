@@ -13,7 +13,7 @@ import javax.persistence.JoinColumn;
 
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoOrganizacion;
-import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -22,8 +22,7 @@ import lombok.Setter;
 @DiscriminatorValue("PERSONA_JURIDICA")
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PersonaJuridica extends Donante {
   @Column(name = "razon_social")
   private String razonSocial;
@@ -41,9 +40,11 @@ public class PersonaJuridica extends Donante {
   @CollectionTable(name = "donante_representantes", joinColumns = @JoinColumn(name = "donante_id"))
   private List<Representante> representantes;
 
-  public PersonaJuridica(Long id, List<MedioContacto> contactos, MedioContacto contactoPredeterminado,
+  public PersonaJuridica(List<MedioContacto> contactos, MedioContacto contactoPredeterminado,
       String razonSocial, String rubro, TipoOrganizacion tipo, String cuit, List<Representante> representantes) {
-    super(id, contactos, contactoPredeterminado);
+    super(contactos, contactoPredeterminado);
+    validarObligatorio(razonSocial, "La razon social de la persona juridica no puede ser nula ni estar vacia");
+    validarObligatorio(cuit, "El CUIT de la persona juridica no puede ser nulo ni estar vacio");
     this.razonSocial = razonSocial;
     this.rubro = rubro;
     this.tipo = tipo;

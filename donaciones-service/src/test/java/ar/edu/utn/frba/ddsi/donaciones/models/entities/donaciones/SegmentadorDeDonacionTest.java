@@ -8,6 +8,8 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoBien;
 
@@ -19,8 +21,9 @@ class SegmentadorDeDonacionTest {
     void segmentarPropagaRegistroDonanteYFecha() {
         Subcategoria sillas = new Subcategoria("Sillas", new Categoria("Mobiliario", true, false));
         Subcategoria mesas = new Subcategoria("Mesas", new Categoria("Mobiliario", true, false));
-        PersonaHumana donante = new PersonaHumana();
-        donante.setId(1L);
+        MedioContacto email = new MedioContacto("ana@mail.com", TipoContacto.EMAIL);
+        PersonaHumana donante = new PersonaHumana(List.of(email), email, "Ana", "Perez", null, "12345678",
+                null, null);
 
         RegistroDonacion registro = new RegistroDonacion(donante, "Muebles de oficina");
         List<Bien> bienes = List.of(

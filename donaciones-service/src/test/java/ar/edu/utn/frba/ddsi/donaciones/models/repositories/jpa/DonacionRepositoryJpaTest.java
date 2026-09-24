@@ -50,7 +50,7 @@ class DonacionRepositoryJpaTest extends PersistenciaTest {
         Subcategoria fideos = subcategorias.save(new Subcategoria("Fideos", alimentos));
 
         MedioContacto email = new MedioContacto("ana@mail.com", TipoContacto.EMAIL);
-        Donante donante = donantes.save(new PersonaHumana(null, List.of(email), email,
+        Donante donante = donantes.save(new PersonaHumana(List.of(email), email,
                 "Ana", "Perez", null, "12345678", "F", "Medrano 951"));
         idDonante = donante.getId();
 

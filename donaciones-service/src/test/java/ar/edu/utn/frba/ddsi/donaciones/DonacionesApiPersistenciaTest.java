@@ -122,6 +122,44 @@ class DonacionesApiPersistenciaTest {
         assertEquals("ASIGNACION_REALIZADA", get("/donaciones/" + idDonacion).get("estadoActual").asText());
     }
 
+    @Test
+    @DisplayName("Eliminar un donante: 204 si se borra, 404 si no existe y 400 si tiene donaciones")
+    void eliminarDonante() throws Exception {
+        String sufijo = String.valueOf(System.nanoTime());
+        String donanteJson = """
+                {"nombre":"Ana","apellido":"Perez","fechaNacimiento":"1990-05-01","dni":"12345678",
+                 "genero":"F","direccion":"Medrano 951",
+                 "contactos":[{"tipo":"EMAIL","valor":"%s@mail.com"}],
+                 "contactoPredeterminado":{"tipo":"EMAIL","valor":"%s@mail.com"}}
+                """;
+
+        long idSinDonaciones = post("/donantes/persona-humana",
+                donanteJson.formatted("sin" + sufijo, "sin" + sufijo), 201).get("id").asLong();
+        assertEquals(204, delete("/donantes/" + idSinDonaciones).statusCode());
+        assertEquals(404, delete("/donantes/" + idSinDonaciones).statusCode());
+
+        JsonNode categoria = post("/categorias",
+                "{\"nombre\":\"Ropa " + sufijo + "\",\"pideEstado\":false,\"esPerecedero\":false}", 201);
+        String subcategoria = "Abrigos " + sufijo;
+        post("/categorias/" + categoria.get("id").asLong() + "/subcategorias",
+                "{\"nombre\":\"" + subcategoria + "\"}", 201);
+        long idConDonaciones = post("/donantes/persona-humana",
+                donanteJson.formatted("con" + sufijo, "con" + sufijo), 201).get("id").asLong();
+        post("/donaciones", """
+                {"descripcion":"Donacion de abrigos","idDonante":%d,
+                 "bienes":[{"descripcion":"Campera","cantidad":3,"pesoKgPorUnidad":1.0,
+                            "volumenM3PorUnidad":0.01,"subcategoria":{"nombre":"%s"}}]}
+                """.formatted(idConDonaciones, subcategoria), 201);
+
+        HttpResponse<String> conDonaciones = delete("/donantes/" + idConDonaciones);
+        assertEquals(400, conDonaciones.statusCode());
+        assertTrue(conDonaciones.body().contains("donaciones registradas"), conDonaciones.body());
+    }
+
+    private HttpResponse<String> delete(String path) throws Exception {
+        return enviar(HttpRequest.newBuilder(URI.create(BASE + path)).DELETE().build());
+    }
+
     private JsonNode post(String path, String json, int statusEsperado) throws Exception {
         HttpResponse<String> response = enviar(HttpRequest.newBuilder(URI.create(BASE + path))
                 .header("Content-Type", "application/json")

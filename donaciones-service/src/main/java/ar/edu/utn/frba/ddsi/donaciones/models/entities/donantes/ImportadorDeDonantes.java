@@ -10,6 +10,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.donaciones.config.RestDonacionesConfig;
@@ -87,63 +88,49 @@ public class ImportadorDeDonantes {
         String emailVal = campos[4].trim();
         String telefonoVal = campos.length > 5 ? campos[5].trim() : "";
 
-        if (tipoPersona.equalsIgnoreCase("HUMANA")) {
-            return procesarHumana(documento, nombreORazonSocial, emailVal, telefonoVal);
-        } else if (tipoPersona.equalsIgnoreCase("JURIDICA")) {
-            return procesarJuridica(documento, nombreORazonSocial, emailVal, telefonoVal);
+        try {
+            if (tipoPersona.equalsIgnoreCase("HUMANA")) {
+                return procesarHumana(documento, nombreORazonSocial, emailVal, telefonoVal);
+            } else if (tipoPersona.equalsIgnoreCase("JURIDICA")) {
+                return procesarJuridica(documento, nombreORazonSocial, emailVal, telefonoVal);
+            }
+        } catch (BusinessException e) {
+            System.err.println("Fila de donante descartada (" + e.getMessage() + "): " + linea);
         }
 
         return null;
     }
 
     private PersonaHumana procesarHumana(String dni, String nombreCompleto, String emailVal, String telefonoVal) {
-        PersonaHumana humana = new PersonaHumana();
+        String nombre = nombreCompleto.trim();
+        String apellido = "";
         int primerEspacio = nombreCompleto.indexOf(' ');
         if (primerEspacio > 0) {
-            humana.setNombre(nombreCompleto.substring(0, primerEspacio).trim());
-            humana.setApellido(nombreCompleto.substring(primerEspacio).trim());
-        } else {
-            humana.setNombre(nombreCompleto.trim());
-            humana.setApellido("");
+            nombre = nombreCompleto.substring(0, primerEspacio).trim();
+            apellido = nombreCompleto.substring(primerEspacio).trim();
         }
-        humana.setDni(dni);
 
-        List<MedioContacto> contactos = new ArrayList<>();
         MedioContacto email = new MedioContacto(emailVal, TipoContacto.EMAIL);
-        contactos.add(email);
-
-        if (!telefonoVal.isEmpty()) {
-            MedioContacto tel = new MedioContacto(telefonoVal, TipoContacto.SMS);
-            contactos.add(tel);
-        }
-
-        humana.setContactos(contactos);
-        humana.setContactoPredeterminado(email);
-
-        return humana;
+        return new PersonaHumana(armarContactos(email, telefonoVal), email, nombre, apellido,
+                null, dni, null, null);
     }
 
     private PersonaJuridica procesarJuridica(String documento, String razonSocial, String emailVal,
             String telefonoVal) {
-        PersonaJuridica juridica = new PersonaJuridica();
-        juridica.setRazonSocial(razonSocial);
-        juridica.setCuit(documento);
-        juridica.setTipo(TipoOrganizacion.EMPRESA);
-        juridica.setRepresentantes(new ArrayList<>());
-
-        List<MedioContacto> contactos = new ArrayList<>();
         MedioContacto email = new MedioContacto(emailVal, TipoContacto.EMAIL);
+        return new PersonaJuridica(armarContactos(email, telefonoVal), email, razonSocial, null,
+                TipoOrganizacion.EMPRESA, documento, new ArrayList<>());
+    }
+
+    private List<MedioContacto> armarContactos(MedioContacto email, String telefonoVal) {
+        List<MedioContacto> contactos = new ArrayList<>();
         contactos.add(email);
 
         if (!telefonoVal.isEmpty()) {
             MedioContacto tel = new MedioContacto(telefonoVal, TipoContacto.SMS);
             contactos.add(tel);
         }
-
-        juridica.setContactos(contactos);
-        juridica.setContactoPredeterminado(email);
-
-        return juridica;
+        return contactos;
     }
 
     private void procesarHumana(PersonaHumana humanaNueva) {

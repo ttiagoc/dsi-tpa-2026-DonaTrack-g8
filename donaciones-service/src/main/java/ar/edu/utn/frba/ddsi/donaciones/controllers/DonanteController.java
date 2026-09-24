@@ -3,6 +3,7 @@ package ar.edu.utn.frba.ddsi.donaciones.controllers;
 import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.common.controllers.JavalinController;
+import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaHumanaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaJuridicaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.GestorDeEventos;
@@ -55,7 +56,9 @@ public class DonanteController implements JavalinController {
 
         app.delete("/api/donantes/{id}", ctx -> {
             Long id = Long.parseLong(ctx.pathParam("id"));
-            donanteService.eliminar(id);
+            if (!donanteService.eliminar(id)) {
+                throw new ResourceNotFoundException("No se encontro un donante con el id: " + id);
+            }
             ctx.status(204);
         });
 

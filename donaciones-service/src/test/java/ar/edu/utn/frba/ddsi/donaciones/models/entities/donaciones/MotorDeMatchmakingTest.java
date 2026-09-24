@@ -103,7 +103,7 @@ class MotorDeMatchmakingTest {
         entidad.registrarNecesidad(necesidad);
 
         MedioContacto emailDonante = new MedioContacto("donante@test.com", TipoContacto.EMAIL);
-        PersonaHumana donante = new PersonaHumana(10L, new ArrayList<>(List.of(emailDonante)), emailDonante, "Juan",
+        PersonaHumana donante = new PersonaHumana(new ArrayList<>(List.of(emailDonante)), emailDonante, "Juan",
                 "Perez", null, "111", null, null);
 
         Bien bienBase = new Bien("Fideos", 1L, 0.5, 0.5, sub, EstadoBien.NUEVO, LocalDate.now().plusDays(10));

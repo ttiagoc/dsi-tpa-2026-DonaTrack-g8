@@ -71,7 +71,7 @@ class DonacionServiceTest {
         when(subcategoriaRepository.findByNombre("Sillas")).thenReturn(Optional.of(sillas));
 
         MedioContacto email = new MedioContacto("ana@mail.com", TipoContacto.EMAIL);
-        Donante ana = new PersonaHumana(null, List.of(email), email,
+        Donante ana = new PersonaHumana(List.of(email), email,
                 "Ana", "Perez", null, "12345678", "F", "Medrano 951");
         when(donanteRepository.findById(anyLong())).thenReturn(Optional.of(ana));
 

@@ -3,6 +3,7 @@ package ar.edu.utn.frba.ddsi.donaciones.controllers;
 import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.common.controllers.JavalinController;
+import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.NecesidadRequest;
 import ar.edu.utn.frba.ddsi.donaciones.services.EntidadBeneficiariaService;
@@ -35,7 +36,9 @@ public class EntidadBeneficiariaController implements JavalinController {
 
         app.delete("/api/entidad-beneficiaria/{id}", ctx -> {
             Long id = Long.parseLong(ctx.pathParam("id"));
-            entidadBeneficiariaService.eliminar(id);
+            if (!entidadBeneficiariaService.eliminar(id)) {
+                throw new ResourceNotFoundException("No se encontro una entidad beneficiaria con el id: " + id);
+            }
             ctx.status(204);
         });
 

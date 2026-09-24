@@ -28,11 +28,11 @@ class DonanteRepositoryJpaTest extends PersistenciaTest {
     @DisplayName("Guarda personas humanas y juridicas en la misma tabla y las lee polimorficamente")
     void guardaYLeeAmbosSubtipos() {
         MedioContacto emailAna = new MedioContacto("ana@mail.com", TipoContacto.EMAIL);
-        PersonaHumana ana = new PersonaHumana(null, List.of(emailAna), emailAna,
+        PersonaHumana ana = new PersonaHumana(List.of(emailAna), emailAna,
                 "Ana", "Perez", LocalDate.of(1990, 5, 1), "12345678", "F", "Medrano 951");
 
         MedioContacto emailEmpresa = new MedioContacto("contacto@arcos.com", TipoContacto.EMAIL);
-        PersonaJuridica arcos = new PersonaJuridica(null, List.of(emailEmpresa), emailEmpresa,
+        PersonaJuridica arcos = new PersonaJuridica(List.of(emailEmpresa), emailEmpresa,
                 "Arcos Plateados S.A.", "Mobiliario", TipoOrganizacion.EMPRESA, "30-12345678-9",
                 List.of(new Representante("Juan", "Gomez", new MedioContacto("juan@arcos.com", TipoContacto.EMAIL))));
 
@@ -56,7 +56,7 @@ class DonanteRepositoryJpaTest extends PersistenciaTest {
     @DisplayName("Busca un donante por el email de sus contactos")
     void buscaPorEmail() {
         MedioContacto email = new MedioContacto("ana@mail.com", TipoContacto.EMAIL);
-        PersonaHumana ana = new PersonaHumana(null, List.of(email), email,
+        PersonaHumana ana = new PersonaHumana(List.of(email), email,
                 "Ana", "Perez", null, "12345678", "F", "Medrano 951");
         repositorio.save(ana);
         nuevoRequest();
