@@ -104,6 +104,7 @@ package "donaciones" {
     registro_donacion_id : BIGINT <<FK -> registro_donacion.id, NOT NULL>>
     donante_id : BIGINT <<FK -> donante.id>> <<desnormalizado>>
     entidad_beneficiaria_asignada_id : BIGINT <<FK -> entidad_beneficiaria.id>>
+    necesidad_id : BIGINT <<FK -> necesidad.id>>
     subcategoria_id : BIGINT <<FK -> subcategoria.id>>
     estado_bienes : VARCHAR(20)
     fecha_vencimiento : DATE
@@ -169,13 +170,7 @@ package "donaciones" {
   entidad_beneficiaria ||--o{ necesidad
   subcategoria ||--o{ necesidad
 
-  entity necesidad_donaciones_asignadas {
-    * necesidad_id : BIGINT <<FK -> necesidad.id>>
-    * donacion_id : BIGINT <<FK -> donacion.id>>
-  }
-
-  necesidad ||--o{ necesidad_donaciones_asignadas
-  donacion ||--o{ necesidad_donaciones_asignadas
+  necesidad |o--o{ donacion
 
   entity resultado_matchmaking {
     * id : BIGINT <<PK, IDENTITY>>

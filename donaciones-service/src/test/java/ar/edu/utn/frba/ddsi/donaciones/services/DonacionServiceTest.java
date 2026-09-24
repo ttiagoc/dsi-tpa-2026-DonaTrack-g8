@@ -38,6 +38,7 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.GestorDeEventos;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoBien;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoEstadoDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonacionRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
@@ -137,6 +138,18 @@ class DonacionServiceTest {
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> donacionService.cambiarEstado(1L, new EstadoDonacionRequest(null, "sin motivo")));
         assertTrue(ex.getMessage().contains("no puede ser nulo"));
+    }
+
+    @Test
+    @DisplayName("No se puede asignar una donacion cambiando su estado: se asigna aceptando una propuesta")
+    void cambiarEstadoAAsignadaFalla() {
+        Bien bien = new Bien("Fideos secos", 100L, 0.5, 0.001, fideos, null, LocalDate.of(2027, 1, 1));
+        Donacion donacion = new Donacion(bien, LocalDateTime.now());
+        when(donacionRepository.findById(1L)).thenReturn(Optional.of(donacion));
+
+        assertThrows(BusinessException.class, () -> donacionService.cambiarEstado(1L,
+                new EstadoDonacionRequest("ASIGNACION_REALIZADA", "a mano")));
+        assertEquals(TipoEstadoDonacion.EN_DEPOSITO, donacion.estadoActual());
     }
 
     /** La donacion que el service mando a guardar, para inspeccionar como quedo traducida. */

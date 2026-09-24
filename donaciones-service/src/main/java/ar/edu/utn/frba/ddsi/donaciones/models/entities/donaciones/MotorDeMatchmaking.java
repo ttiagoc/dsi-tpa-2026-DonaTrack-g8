@@ -2,6 +2,8 @@ package ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
@@ -10,6 +12,7 @@ import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.EstadoPropuestaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.matchmaking.PropuestaMatchmakingResponse;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.Necesidad;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventManagerDonaciones;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.EventoDonacionAsignada;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoPropuesta;
@@ -103,7 +106,15 @@ public class MotorDeMatchmaking {
             return;
         }
 
+        // una sola propuesta viva por donacion: si ya tiene una pendiente, se espera a que la resuelvan
+        Set<Long> conPropuestaPendiente = resultadoRepository.buscarPendientes().stream()
+                .map(propuesta -> propuesta.getDonacion().getId())
+                .collect(Collectors.toSet());
+
         for (Donacion donacion : donacionesEnDeposito) {
+            if (conPropuestaPendiente.contains(donacion.getId())) {
+                continue;
+            }
             ResultadoMatchmaking resultado = ejecutarMatchmaking(donacion, todasLasEntidades);
             resultadoRepository.save(resultado);
             System.out.println("Propuesta generada con éxito para la Donación ID: " + donacion.getId());
@@ -115,28 +126,26 @@ public class MotorDeMatchmaking {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontro una propuesta con el id: " + propuestaId));
 
+        validarPendiente(propuesta);
+
         EntidadBeneficiaria entidadElegida = propuesta.getEntidadesSugeridas().stream()
                 .filter(e -> e.getId().equals(entidadId))
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "La entidad elegida no forma parte de las sugerencias válidas"));
 
+        Donacion donacion = propuesta.getDonacion();
+        Necesidad necesidad = entidadElegida.getNecesidades().stream()
+                .filter(n -> n.getSubcategoria().equals(donacion.getSubcategoria()))
+                .findFirst()
+                .orElse(null);
+        donacion.asignarA(entidadElegida, necesidad);
+
         propuesta.setEstado(EstadoPropuesta.ACEPTADO);
         resultadoRepository.save(propuesta);
-
-        Donacion donacion = propuesta.getDonacion();
-        donacion.cambiarEstado(TipoEstadoDonacion.ASIGNACION_REALIZADA,
-                "Donación asignada a la entidad: " + entidadElegida.getId());
         donacionRepository.save(donacion);
 
         ejecutarNotificaciones(donacion, entidadElegida);
-
-        entidadElegida.getNecesidades().stream()
-                .filter(n -> n.getSubcategoria().equals(donacion.getSubcategoria()))
-                .findFirst()
-                .ifPresent(n -> n.asignarDonacion(donacion));
-
-        entidadRepository.save(entidadElegida);
         System.out.println(
                 "Propuesta " + propuestaId + " ACEPTADA. Donación asignada a la entidad: " + entidadElegida.getId());
     }
@@ -145,10 +154,18 @@ public class MotorDeMatchmaking {
         ResultadoMatchmaking propuesta = resultadoRepository.findById(propuestaId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontro una propuesta con el id: " + propuestaId));
+        validarPendiente(propuesta);
 
         propuesta.setEstado(EstadoPropuesta.RECHAZADO);
         resultadoRepository.save(propuesta);
         System.out.println("Propuesta " + propuestaId + " RECHAZADA por el administrador.");
+    }
+
+    private void validarPendiente(ResultadoMatchmaking propuesta) {
+        if (propuesta.getEstado() != EstadoPropuesta.PENDIENTE) {
+            throw new BusinessException("La propuesta " + propuesta.getId() + " ya fue resuelta: "
+                    + propuesta.getEstado());
+        }
     }
 
     public void actualizarEstadoPropuesta(Long id, EstadoPropuestaRequest request) {

@@ -99,9 +99,16 @@ public class DonacionServiceImpl implements DonacionService {
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro una donacion con el id: " + id));
 
         TipoEstadoDonacion nuevoEstado = toTipoEstadoDonacion(request.estado());
+        if (nuevoEstado == TipoEstadoDonacion.ASIGNACION_REALIZADA) {
+            throw new BusinessException(
+                    "Una donacion se asigna aceptando una propuesta de matchmaking, no cambiando su estado");
+        }
         if (nuevoEstado == TipoEstadoDonacion.ENTREGA_FALLIDA) {
             gestorDeEventos.notificarEntregaFallida(id, request.justificacion());
             donacion = donacionRepository.findById(id).orElseThrow();
+        } else if (nuevoEstado == TipoEstadoDonacion.EN_DEPOSITO) {
+            donacion.volverADeposito(request.justificacion());
+            donacion = this.guardar(donacion);
         } else {
             donacion.cambiarEstado(nuevoEstado, request.justificacion());
             donacion = this.guardar(donacion);

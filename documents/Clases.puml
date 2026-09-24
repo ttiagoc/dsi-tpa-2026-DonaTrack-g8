@@ -133,6 +133,7 @@ package "Microservicio Donaciones" {
     registroDonacion : RegistroDonacion
     donante : Donante
     entidadBeneficiariaAsignada : EntidadBeneficiaria
+    necesidad : Necesidad
     subcategoria : Subcategoria
     estadoBienes : EstadoBien
     fechaVencimiento : LocalDate
@@ -144,6 +145,8 @@ package "Microservicio Donaciones" {
     agregarBien(bien : Bien) : void
     estadoActual() : TipoEstadoDonacion
     cambiarEstado(nuevoEstado : TipoEstadoDonacion, justificacion : String) : void
+    asignarA(entidad : EntidadBeneficiaria, necesidad : Necesidad) : void
+    volverADeposito(justificacion : String) : void
     confirmarEntrega(patenteCamion : String, fechaEntrega : LocalDateTime) : void
     patenteCamionDeLaEntrega() : String
     cantidadBienesRecibidos() : Double
@@ -210,6 +213,8 @@ package "Microservicio Donaciones" {
     donacionesAsignadas : List<Donacion>
     estaSatisfecha() : Boolean
     asignarDonacion(donacion : Donacion) : void
+    liberarDonacion(donacion : Donacion) : void
+    liberarDonaciones() : void
   }
 
   interface TipoNecesidad {
@@ -471,6 +476,7 @@ RegistroDonacion --> "1..*" Donacion
 Donacion --> RegistroDonacion
 Donacion --> Donante
 Donacion --> EntidadBeneficiaria
+Donacion --> Necesidad
 Donacion --> Subcategoria
 Donacion --> "*" CambioEstado
 Donacion --> "*" Bien

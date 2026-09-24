@@ -40,6 +40,8 @@ Sus bienes no se guardan acá: después de segmentar quedan en `donacion_bienes`
 ### `donacion`
 Entidad central del sistema, con id propio y su propio ABM. Cada registro genera una o más donaciones y cada donación pertenece a un único registro (`registro_donacion_id`, FK `NOT NULL`), por lo que no hace falta tabla intermedia. `entidad_beneficiaria_asignada_id` es `NULL` hasta que el matchmaking asigna una entidad.
 
+`necesidad_id` indica qué necesidad cubre la donación. La relación es uno a muchos: una necesidad junta varias donaciones, pero cada donación es la unidad mínima de asignación y cubre como mucho una necesidad. Por eso es una FK en `donacion` y no una tabla de unión, que permitiría asignar la misma donación a varias necesidades. Es `NULL` mientras la donación no esté asignada, o si se elimina la necesidad; en ese caso la donación se conserva.
+
 **Desnormalización deliberada**: `donante_id` y `fecha` se podrían obtener del registro por JOIN, pero se mantienen en `donacion`. Es la tabla más consultada del sistema (listados, matchmaking, notificaciones, planificación de rutas) y así esas consultas tienen toda la información sin JOIN adicional. El riesgo de inconsistencia es bajo porque ambos valores se copian del registro una única vez, al segmentar, y nunca se modifican.
 
 ### `donacion_bienes`
@@ -64,10 +66,7 @@ Entidad con id propio y su propio ABM. El teléfono (`MedioContacto`) se embebe 
 Lista de correos de los representantes. Mismo criterio que `donante_contactos`: tabla auxiliar con FK a la entidad.
 
 ### `necesidad`
-Entidad propia, a diferencia de `Bien`, porque se consulta y se elimina individualmente por su id. El tipo de necesidad es un Strategy (`NecesidadExtraordinaria` / `NecesidadRecurrente`), no herencia de entidades, por lo que se aplana en dos columnas: `tipo_necesidad`, que indica cuál corresponde, y `periodo`, que solo se usa si es recurrente.
-
-### `necesidad_donaciones_asignadas`
-Relación muchos a muchos entre necesidades y donaciones asignadas. Ambas son entidades con id propio, así que se resuelve con una tabla de unión.
+Entidad propia, a diferencia de `Bien`, porque se consulta y se elimina individualmente por su id. El tipo de necesidad es un Strategy (`NecesidadExtraordinaria` / `NecesidadRecurrente`), no herencia de entidades, por lo que se aplana en dos columnas: `tipo_necesidad`, que indica cuál corresponde, y `periodo`, que solo se usa si es recurrente. Sus donaciones asignadas se vinculan con la FK `donacion.necesidad_id` (ver `donacion`).
 
 ### `resultado_matchmaking`
 Entidad propia: cada propuesta del matchmaking se consulta y se acepta o rechaza por su id. Tiene FK a la donación evaluada.

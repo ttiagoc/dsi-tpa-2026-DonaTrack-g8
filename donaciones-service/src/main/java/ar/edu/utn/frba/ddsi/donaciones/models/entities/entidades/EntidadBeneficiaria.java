@@ -75,7 +75,11 @@ public class EntidadBeneficiaria {
     donacion.confirmarEntrega(patenteCamion, fechaEntrega);
   }
 
+  // las donaciones asignadas se conservan: solo se desvinculan de la necesidad eliminada
   public void eliminarNecesidad(Long necesidadId) {
+    this.necesidades.stream()
+        .filter(n -> n.getId().equals(necesidadId))
+        .forEach(Necesidad::liberarDonaciones);
     this.necesidades.removeIf(n -> n.getId().equals(necesidadId));
   }
 }

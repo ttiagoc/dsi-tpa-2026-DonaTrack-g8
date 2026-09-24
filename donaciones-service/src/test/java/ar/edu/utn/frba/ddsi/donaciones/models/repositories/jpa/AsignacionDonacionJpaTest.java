@@ -117,25 +117,59 @@ class AsignacionDonacionJpaTest extends PersistenciaTest {
     }
 
     @Test
-    @DisplayName("La entidad asignada a la donacion nace nula y sobrevive al guardado")
+    @DisplayName("Asignar la donacion persiste su entidad y su necesidad")
     void asignaEntidadBeneficiariaALaDonacion() {
+        Long idNecesidad = registrarNecesidadDeFideosEnElComedor();
         Donacion recienCreada = donaciones.findById(idDonacion).orElseThrow();
         assertNull(recienCreada.getEntidadBeneficiariaAsignada());
 
-        recienCreada.setEntidadBeneficiariaAsignada(entidades.findById(idComedor).orElseThrow());
-        recienCreada.cambiarEstado(TipoEstadoDonacion.ASIGNACION_REALIZADA, "Asignada al comedor");
+        EntidadBeneficiaria comedor = entidades.findById(idComedor).orElseThrow();
+        recienCreada.asignarA(comedor, comedor.getNecesidades().get(0));
         donaciones.save(recienCreada);
         nuevoRequest();
 
         Donacion leida = donaciones.findById(idDonacion).orElseThrow();
 
         assertEquals(idComedor, leida.getEntidadBeneficiariaAsignada().getId());
+        assertEquals(idNecesidad, leida.getNecesidad().getId());
         assertEquals(TipoEstadoDonacion.ASIGNACION_REALIZADA, leida.estadoActual());
         assertEquals("Escobar 123", leida.obtenerDireccion());
     }
 
     @Test
-    @DisplayName("Las donaciones asignadas a una necesidad quedan en su tabla de union")
+    @DisplayName("Volver al deposito deja la donacion sin entidad ni necesidad en la base")
+    void volverADepositoPersisteLaLiberacion() {
+        registrarNecesidadDeFideosEnElComedor();
+        EntidadBeneficiaria comedor = entidades.findById(idComedor).orElseThrow();
+        Donacion donacion = donaciones.findById(idDonacion).orElseThrow();
+        donacion.asignarA(comedor, comedor.getNecesidades().get(0));
+        donaciones.save(donacion);
+        nuevoRequest();
+
+        Donacion asignada = donaciones.findById(idDonacion).orElseThrow();
+        asignada.volverADeposito("La entidad no puede recibirla");
+        donaciones.save(asignada);
+        nuevoRequest();
+
+        Donacion leida = donaciones.findById(idDonacion).orElseThrow();
+        assertEquals(TipoEstadoDonacion.EN_DEPOSITO, leida.estadoActual());
+        assertNull(leida.getEntidadBeneficiariaAsignada());
+        assertNull(leida.getNecesidad());
+        assertTrue(entidades.findById(idComedor).orElseThrow().getNecesidades().get(0)
+                .getDonacionesAsignadas().isEmpty());
+    }
+
+    private Long registrarNecesidadDeFideosEnElComedor() {
+        Subcategoria fideos = subcategorias.findByNombre("Fideos").orElseThrow();
+        EntidadBeneficiaria comedor = entidades.findById(idComedor).orElseThrow();
+        comedor.registrarNecesidad(new Necesidad(fideos, new NecesidadRecurrente(Periodo.SEMANAL), "Fideos", 100L));
+        Long idNecesidad = entidades.save(comedor).getNecesidades().get(0).getId();
+        nuevoRequest();
+        return idNecesidad;
+    }
+
+    @Test
+    @DisplayName("Las donaciones asignadas a una necesidad quedan vinculadas por la FK necesidad_id")
     void persisteDonacionesAsignadasALaNecesidad() {
         Subcategoria fideos = subcategorias.findByNombre("Fideos").orElseThrow();
         EntidadBeneficiaria comedor = entidades.findById(idComedor).orElseThrow();
@@ -157,5 +191,35 @@ class AsignacionDonacionJpaTest extends PersistenciaTest {
         assertEquals(idDonacion, leida.getDonacionesAsignadas().get(0).getId());
         // 100 unidades de fideos cubren las 100 pedidas dentro del periodo semanal
         assertTrue(leida.estaSatisfecha());
+        assertEquals(leida.getId(), necesidadDeLaDonacion());
+    }
+
+    @Test
+    @DisplayName("Eliminar la necesidad desvincula sus donaciones sin borrarlas")
+    void eliminarNecesidadConservaLasDonaciones() {
+        Subcategoria fideos = subcategorias.findByNombre("Fideos").orElseThrow();
+        EntidadBeneficiaria comedor = entidades.findById(idComedor).orElseThrow();
+        Necesidad necesidad = new Necesidad(fideos, new NecesidadRecurrente(Periodo.SEMANAL), "Fideos", 100L);
+        necesidad.asignarDonacion(donaciones.findById(idDonacion).orElseThrow());
+        comedor.registrarNecesidad(necesidad);
+        entidades.save(comedor);
+        nuevoRequest();
+
+        EntidadBeneficiaria leido = entidades.findById(idComedor).orElseThrow();
+        leido.eliminarNecesidad(leido.getNecesidades().get(0).getId());
+        entidades.save(leido);
+        nuevoRequest();
+
+        assertTrue(entidades.findById(idComedor).orElseThrow().getNecesidades().isEmpty());
+        assertTrue(donaciones.findById(idDonacion).isPresent());
+        assertNull(necesidadDeLaDonacion());
+    }
+
+    private Long necesidadDeLaDonacion() {
+        Object necesidadId = entityManager()
+                .createNativeQuery("SELECT necesidad_id FROM donacion WHERE id = ?1")
+                .setParameter(1, idDonacion)
+                .getSingleResult();
+        return necesidadId == null ? null : ((Number) necesidadId).longValue();
     }
 }

@@ -19,8 +19,10 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
+import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.Necesidad;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoBien;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.Periodo;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoEstadoDonacion;
@@ -51,6 +53,10 @@ public class Donacion {
   @ManyToOne
   @JoinColumn(name = "entidad_beneficiaria_asignada_id")
   private EntidadBeneficiaria entidadBeneficiariaAsignada;
+
+  @ManyToOne
+  @JoinColumn(name = "necesidad_id")
+  private Necesidad necesidad;
 
   @ManyToOne
   @JoinColumn(name = "subcategoria_id")
@@ -155,6 +161,27 @@ public class Donacion {
 
   public void cambiarEstado(TipoEstadoDonacion nuevoEstado, String justificacion) {
     this.registrarEstado(LocalDateTime.now(), nuevoEstado, justificacion);
+  }
+
+  // la entidad, la necesidad y el estado cambian juntos: no hay donacion asignada sin entidad
+  public void asignarA(EntidadBeneficiaria entidad, Necesidad necesidad) {
+    if (this.estadoActual != TipoEstadoDonacion.EN_DEPOSITO) {
+      throw new BusinessException("Solo se puede asignar una donacion que esta en deposito");
+    }
+    this.entidadBeneficiariaAsignada = entidad;
+    if (necesidad != null) {
+      necesidad.asignarDonacion(this);
+    }
+    this.registrarEstado(LocalDateTime.now(), TipoEstadoDonacion.ASIGNACION_REALIZADA,
+        "Donación asignada a la entidad: " + entidad.getId());
+  }
+
+  public void volverADeposito(String justificacion) {
+    if (this.necesidad != null) {
+      this.necesidad.liberarDonacion(this);
+    }
+    this.entidadBeneficiariaAsignada = null;
+    this.registrarEstado(LocalDateTime.now(), TipoEstadoDonacion.EN_DEPOSITO, justificacion);
   }
 
   public Double calcularPesoTotal() {

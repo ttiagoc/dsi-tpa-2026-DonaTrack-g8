@@ -11,9 +11,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.PostLoad;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -61,10 +60,8 @@ public class Necesidad {
 
   private Long cantidad;
 
-  @ManyToMany
-  @JoinTable(name = "necesidad_donaciones_asignadas",
-      joinColumns = @JoinColumn(name = "necesidad_id"),
-      inverseJoinColumns = @JoinColumn(name = "donacion_id"))
+  // una donacion cubre como mucho una necesidad: la FK necesidad_id vive en la tabla donacion
+  @OneToMany(mappedBy = "necesidad")
   private List<Donacion> donacionesAsignadas;
 
   public Necesidad(Subcategoria subcategoria, TipoNecesidad tipoNecesidad, String descripcion, Long cantidad) {
@@ -105,7 +102,19 @@ public class Necesidad {
     return this.tipoNecesidad.estaSatisfecha(this.donacionesAsignadas, this.cantidad);
   }
 
+  // la FK la mapea Donacion.necesidad: los dos lados se actualizan juntos
   public void asignarDonacion(Donacion donacion) {
     this.donacionesAsignadas.add(donacion);
+    donacion.setNecesidad(this);
+  }
+
+  public void liberarDonacion(Donacion donacion) {
+    this.donacionesAsignadas.remove(donacion);
+    donacion.setNecesidad(null);
+  }
+
+  public void liberarDonaciones() {
+    this.donacionesAsignadas.forEach(donacion -> donacion.setNecesidad(null));
+    this.donacionesAsignadas.clear();
   }
 }

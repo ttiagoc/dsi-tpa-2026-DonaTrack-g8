@@ -2,14 +2,22 @@ package ar.edu.utn.frba.ddsi.donaciones.models.entities;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.Necesidad;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.NecesidadExtraordinaria;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoBien;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.Periodo;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoEstadoDonacion;
@@ -90,6 +98,49 @@ class DonacionTest {
         assertEquals(TipoEstadoDonacion.ENTREGADA, donacion.estadoActual());
         assertEquals("Entregado", donacion.getHistorialEstados().getLast().getJustificacion());
         assertEquals("AB123CD", donacion.patenteCamionDeLaEntrega());
+    }
+
+    @Test
+    @DisplayName("Asignar la donacion registra la entidad, la necesidad y el estado juntos")
+    void asignarDonacion() {
+        Donacion donacion = new Donacion(bienBase, fechaCreacion);
+        EntidadBeneficiaria comedor = new EntidadBeneficiaria("Comedor", "Escobar 123", "123", new ArrayList<>());
+        Necesidad sillas = new Necesidad(bienBase.getSubcategoria(), new NecesidadExtraordinaria(), "Sillas", 4L);
+
+        donacion.asignarA(comedor, sillas);
+
+        assertEquals(TipoEstadoDonacion.ASIGNACION_REALIZADA, donacion.estadoActual());
+        assertSame(comedor, donacion.getEntidadBeneficiariaAsignada());
+        assertSame(sillas, donacion.getNecesidad());
+        assertTrue(sillas.getDonacionesAsignadas().contains(donacion));
+        assertEquals("Escobar 123", donacion.obtenerDireccion());
+    }
+
+    @Test
+    @DisplayName("Solo se puede asignar una donacion que esta en deposito")
+    void asignarDonacionFueraDeDeposito() {
+        Donacion donacion = new Donacion(bienBase, fechaCreacion);
+        EntidadBeneficiaria comedor = new EntidadBeneficiaria("Comedor", "Escobar 123", "123", new ArrayList<>());
+        donacion.asignarA(comedor, null);
+
+        assertThrows(BusinessException.class, () -> donacion.asignarA(comedor, null));
+        assertEquals(2, donacion.getHistorialEstados().size());
+    }
+
+    @Test
+    @DisplayName("Volver al deposito libera la entidad y la necesidad asignadas")
+    void volverADepositoLiberaLaAsignacion() {
+        Donacion donacion = new Donacion(bienBase, fechaCreacion);
+        EntidadBeneficiaria comedor = new EntidadBeneficiaria("Comedor", "Escobar 123", "123", new ArrayList<>());
+        Necesidad sillas = new Necesidad(bienBase.getSubcategoria(), new NecesidadExtraordinaria(), "Sillas", 4L);
+        donacion.asignarA(comedor, sillas);
+
+        donacion.volverADeposito("La entidad no puede recibirla");
+
+        assertEquals(TipoEstadoDonacion.EN_DEPOSITO, donacion.estadoActual());
+        assertNull(donacion.getEntidadBeneficiariaAsignada());
+        assertNull(donacion.getNecesidad());
+        assertFalse(sillas.getDonacionesAsignadas().contains(donacion));
     }
 
     @Test
