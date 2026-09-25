@@ -12,6 +12,9 @@ package "notificaciones" {
     contacto_valor : VARCHAR(255)
     contacto_tipo_contacto : VARCHAR(20)
     completada : BOOLEAN
+    tipo_evento : VARCHAR(50)
+    destinatario_id : BIGINT <<referencia logica>>
+    donacion_id : BIGINT <<referencia logica>>
   }
 }
 
@@ -213,6 +216,8 @@ package "logistica" {
     fecha : DATE
     estado : VARCHAR(20)
     camion_id : BIGINT <<FK -> camion.id>>
+    chofer_nombre : VARCHAR(255)
+    chofer_apellido : VARCHAR(255)
   }
 
   camion ||--o{ ruta
@@ -224,6 +229,7 @@ package "logistica" {
     orden : INTEGER
     destino : VARCHAR(255)
     entidad_id : BIGINT <<referencia logica a donaciones.entidad_beneficiaria, sin FK>>
+    estado : VARCHAR(20)
   }
 
   ruta ||--o{ parada

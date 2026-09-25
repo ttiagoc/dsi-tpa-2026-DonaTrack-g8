@@ -52,6 +52,37 @@ class NotificacionRepositoryJpaTest extends PersistenciaTest {
   }
 
   @Test
+  @DisplayName("Persiste y recupera una notificacion con contexto de negocio (evento, destinatario, donacion)")
+  void persisteYRecuperaNotificacionConContextoDeNegocio() {
+    MedioContacto contacto =
+        new MedioContacto("1198765432", TipoContacto.WHATSAPP);
+
+    Notificacion notificacion =
+        new Notificacion(
+            "Tu donacion fue entregada",
+            contacto,
+            "DONACION_ENTREGADA",
+            101L,
+            505L
+        );
+    notificacion.setFechaDeEnvio(LocalDateTime.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS));
+    notificacion.setCompletada(true);
+
+    Notificacion guardada = notificaciones.save(notificacion);
+
+    nuevoRequest();
+
+    Notificacion recuperada =
+        notificaciones.findById(guardada.getId()).orElseThrow();
+
+    assertEquals("Tu donacion fue entregada", recuperada.getMensaje());
+    assertEquals("DONACION_ENTREGADA", recuperada.getTipoEvento());
+    assertEquals(101L, recuperada.getDestinatarioId());
+    assertEquals(505L, recuperada.getDonacionId());
+    assertTrue(recuperada.getCompletada());
+  }
+
+  @Test
   @DisplayName("findAll recupera todas las notificaciones")
   void recuperaTodasLasNotificaciones() {
     MedioContacto email =

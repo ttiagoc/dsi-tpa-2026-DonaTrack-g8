@@ -211,6 +211,9 @@ Este documento contiene la auditoría completa del proyecto **DonaTrack** frente
 A medida que se aborde cada tarea, se marcará su casilla para mantener visible el estado del proyecto:
 
 - [x] **Tarea 1 (H-01):** Persistir `Ruta` y `Parada` en `logistica-service` tras el callback del planificador y gestionar donaciones no asignadas.
+- [x] **Refactor Logística (Persistencia & Dominio):** Snapshot histórico de `Chofer` en `Ruta`, estados individuales en `Parada` (`PENDIENTE`, `ENTREGADA`, `NO_RECIBIDA`) y endpoints de seguimiento/fallo de entrega sin FKs entre microservicios.
+- [x] **Refactor Notificaciones (Persistencia & Dominio):** Contexto de negocio y trazabilidad (`tipo_evento`, `destinatario_id`, `donacion_id`) en `Notificacion` y `NotificacionRequest`.
+- [x] **Actualización DER & Justificaciones:** Reflejo de atributos y decisiones en `DER.puml` y `JustificacionesDisenoRelacional.md`.
 - [ ] **Tarea 2 (H-02):** Configurar propiedades de red `rest.*` en `application.properties` de `donaciones-service` y `logistica-service`.
 - [ ] **Tarea 3 (H-03):** Exponer endpoint REST para la importación masiva de donantes CSV en `DonanteController`.
 - [ ] **Tarea 4 (H-04):** Implementar calendarización nocturna con `@Scheduled` para matchmaking, detección de inactividad y planificación logística.

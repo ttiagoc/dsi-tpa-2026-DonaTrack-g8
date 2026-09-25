@@ -72,6 +72,13 @@ public class RutaController implements JavalinController {
             ctx.status(204);
         });
 
+        app.post("/api/rutas/{rutaId}/paradas/{paradaId}/fallos", ctx -> {
+            Long rutaId = Long.parseLong(ctx.pathParam("rutaId"));
+            Long paradaId = Long.parseLong(ctx.pathParam("paradaId"));
+            rutaService.registrarEntregaNoRecibida(rutaId, paradaId);
+            ctx.status(204);
+        });
+
         app.get("/api/rutas/{id}/ubicacion", ctx -> {
             Long id = Long.parseLong(ctx.pathParam("id"));
             ctx.json(rutaService.obtenerUbicacionActual(id));

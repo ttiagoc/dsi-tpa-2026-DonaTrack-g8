@@ -9,5 +9,11 @@ public record RutaResponse(
     LocalDate fecha,
     EstadoRuta estado,
     String patenteCamion,
-    List<ParadaResponse> paradas
-) {}
+    List<ParadaResponse> paradas,
+    String choferNombre,
+    String choferApellido
+) {
+    public RutaResponse(Long id, LocalDate fecha, EstadoRuta estado, String patenteCamion, List<ParadaResponse> paradas) {
+        this(id, fecha, estado, patenteCamion, paradas, null, null);
+    }
+}

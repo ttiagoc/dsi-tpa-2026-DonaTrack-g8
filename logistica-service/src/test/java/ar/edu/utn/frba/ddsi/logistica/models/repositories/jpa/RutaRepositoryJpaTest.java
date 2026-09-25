@@ -49,17 +49,22 @@ class RutaRepositoryJpaTest extends PersistenciaTest {
         assertEquals(LocalDate.of(2026, 9, 20), r.getFecha());
         assertEquals(EstadoRuta.PLANIFICADA, r.getEstado());
         assertEquals("RT123AB", r.getCamion().getPatente());
+        assertNotNull(r.getChofer());
+        assertEquals("Esteban", r.getChofer().getNombre());
+        assertEquals("Quito", r.getChofer().getApellido());
 
         // Verificamos que las paradas se persisten y se ordenan por 'orden ASC'
         assertEquals(2, r.getParadas().size());
         assertEquals(1, r.getParadas().get(0).getOrden());
         assertEquals("Av. Corrientes 1234", r.getParadas().get(0).getDestino());
         assertEquals(List.of(201L, 202L), r.getParadas().get(0).getDonacionIds());
+        assertEquals(ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoParada.PENDIENTE, r.getParadas().get(0).getEstado());
         assertNotNull(r.getParadas().get(0).getId());
 
         assertEquals(2, r.getParadas().get(1).getOrden());
         assertEquals("Av. Rivadavia 5678", r.getParadas().get(1).getDestino());
         assertEquals(List.of(301L), r.getParadas().get(1).getDonacionIds());
+        assertEquals(ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoParada.PENDIENTE, r.getParadas().get(1).getEstado());
         assertNotNull(r.getParadas().get(1).getId());
     }
 

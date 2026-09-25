@@ -23,5 +23,7 @@ public interface RutaService {
 
     void confirmarEntregaExitosa(Long rutaId, Long paradaId);
 
+    void registrarEntregaNoRecibida(Long rutaId, Long paradaId);
+
     UbicacionResponse obtenerUbicacionActual(Long id);
 }

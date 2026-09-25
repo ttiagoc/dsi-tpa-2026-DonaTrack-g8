@@ -91,6 +91,8 @@ public class RutaServiceImpl implements RutaService {
 
     private RutaResponse toRutaResponse(Ruta ruta) {
         String patenteCamion = ruta.getCamion() != null ? ruta.getCamion().getPatente() : null;
+        String choferNombre = ruta.getChofer() != null ? ruta.getChofer().getNombre() : null;
+        String choferApellido = ruta.getChofer() != null ? ruta.getChofer().getApellido() : null;
 
         List<ParadaResponse> paradas = ruta.getParadas() != null
                 ? ruta.getParadas().stream().map(this::toParadaResponse).collect(Collectors.toList())
@@ -101,7 +103,9 @@ public class RutaServiceImpl implements RutaService {
                 ruta.getFecha(),
                 ruta.getEstado(),
                 patenteCamion,
-                paradas);
+                paradas,
+                choferNombre,
+                choferApellido);
     }
 
     private ParadaResponse toParadaResponse(Parada parada) {
@@ -110,7 +114,8 @@ public class RutaServiceImpl implements RutaService {
                 parada.getOrden(),
                 parada.getDestino(),
                 parada.getEntidadId(),
-                parada.getDonacionIds());
+                parada.getDonacionIds(),
+                parada.getEstado());
     }
 
     private Ruta toRuta(RutaRequest request) {
@@ -180,7 +185,24 @@ public class RutaServiceImpl implements RutaService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontro una parada con el id: " + paradaId + " en la ruta " + rutaId));
 
+        parada.marcarEntregada();
+        rutaRepository.save(ruta);
+
         gestorDeRutas.confirmarEntregaExitosa(parada, ruta);
+    }
+
+    public void registrarEntregaNoRecibida(Long rutaId, Long paradaId) {
+        Ruta ruta = rutaRepository.findById(rutaId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro una ruta con el id: " + rutaId));
+
+        Parada parada = ruta.getParadas().stream()
+                .filter(p -> paradaId.equals(p.getId()))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontro una parada con el id: " + paradaId + " en la ruta " + rutaId));
+
+        parada.marcarNoRecibida();
+        rutaRepository.save(ruta);
     }
 
     public UbicacionResponse obtenerUbicacionActual(Long id) {

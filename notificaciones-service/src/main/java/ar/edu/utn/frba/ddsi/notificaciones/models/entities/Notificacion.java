@@ -52,12 +52,28 @@ public class Notificacion {
 
   private Boolean completada;
 
+  @Column(name = "tipo_evento", length = 50)
+  private String tipoEvento;
+
+  @Column(name = "destinatario_id")
+  private Long destinatarioId;
+
+  @Column(name = "donacion_id")
+  private Long donacionId;
+
   public Notificacion(String mensaje, MedioContacto contacto) {
+    this(mensaje, contacto, null, null, null);
+  }
+
+  public Notificacion(String mensaje, MedioContacto contacto, String tipoEvento, Long destinatarioId, Long donacionId) {
     this.id = null;
     this.fechaDeEnvio = null;
     this.mensaje = mensaje;
     this.contacto = contacto;
     this.completada = false;
+    this.tipoEvento = tipoEvento;
+    this.destinatarioId = destinatarioId;
+    this.donacionId = donacionId;
   }
 }
 

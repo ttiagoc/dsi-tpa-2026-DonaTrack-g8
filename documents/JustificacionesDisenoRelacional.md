@@ -11,6 +11,10 @@ Acompaña a [DER.puml](DER.puml). Para cada tabla se explica brevemente por qué
 
 ### `notificacion`
 Entidad con identidad propia, se guarda cada notificación enviada. El `MedioContacto` de destino se embebe (`contacto_valor`, `contacto_tipo_contacto`) porque es un value object sin identidad.
+Además, almacena atributos de contexto de negocio y auditoría:
+- `tipo_evento`: el tipo o motivo de la notificación (por ejemplo `DONACION_RECIBIDA`, `ENTREGA_EXITOSA`, `RECORDATORIO_INACTIVIDAD`).
+- `destinatario_id`: identificador lógico del destinatario (donante o entidad beneficiaria), sin FK externa para mantener el aislamiento entre microservicios.
+- `donacion_id`: identificador lógico de la donación asociada si aplica, sin FK externa.
 
 ## Esquema `donaciones`
 
@@ -83,10 +87,12 @@ Relación muchos a muchos entre el resultado y las entidades sugeridas. Ambas so
 Entidad con id propio y su propio ABM. El `Chofer` se embebe porque no tiene id ni se gestiona por separado, siempre está asignado a un camión. La `Ubicacion` también se embebe, porque solo interesa la última posición conocida y no el historial del recorrido.
 
 ### `ruta`
-Entidad con id propio y su propio ABM, con FK al camión. No guarda chofer propio: el chofer está asignado al camión y la ruta lo consulta a través de él, así hay una única fuente de verdad.
+Entidad con id propio y su propio ABM, con FK al camión asignado.
+Adicionalmente, guarda un snapshot histórico embebido del chofer (`chofer_nombre`, `chofer_apellido`) al momento de planificarse o iniciarse el recorrido. Esto resuelve el problema de rotación de choferes en el camión: si un camión cambia de chofer asignado en el futuro, las rutas ejecutadas en el pasado preservan la identidad fidedigna de la persona que condujo el vehículo en esa fecha.
 
 ### `parada`
-Se modela como entidad con id propio: la API confirma la entrega de una parada puntual por su id, y además cada parada tiene su propia lista de ids de donaciones, algo que JPA no permite de forma portable si la parada fuera un elemento embebido dentro de la colección de la ruta. `entidad_id` referencia a una entidad beneficiaria de otro microservicio, así que es un id simple sin FK.
+Se modela como entidad con id propio: la API confirma o reporta fallas de entrega de una parada puntual por su id, y además cada parada tiene su propia lista de ids de donaciones, algo que JPA no permite de forma portable si la parada fuera un elemento embebido dentro de la colección de la ruta. `entidad_id` referencia a una entidad beneficiaria de otro microservicio, así que es un id simple sin FK.
+Dispone de una columna `estado` (`PENDIENTE`, `ENTREGADA`, `NO_RECIBIDA`) que permite conocer el progreso y resultado de cada parada individualmente a lo largo de la ruta, sin depender únicamente del estado global de la `ruta`.
 
 ### `parada_donaciones`
 Ids de las donaciones a entregar en cada parada, en una tabla auxiliar con FK a `parada`. `donacion_id` pertenece al esquema `donaciones`, así que no tiene FK real.

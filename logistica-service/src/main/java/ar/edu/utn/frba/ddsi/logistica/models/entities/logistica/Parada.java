@@ -7,12 +7,15 @@ import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Table;
 
+import ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoParada;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -39,8 +42,24 @@ public class Parada {
     @Column(name = "entidad_id")
     private Long entidadId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado", length = 20)
+    private EstadoParada estado = EstadoParada.PENDIENTE;
+
     @ElementCollection
     @CollectionTable(name = "parada_donaciones", joinColumns = @JoinColumn(name = "parada_id"))
     @Column(name = "donacion_id")
     private List<Long> donacionIds = new ArrayList<>();
+
+    public Parada(Long id, Integer orden, String destino, Long entidadId, List<Long> donacionIds) {
+        this(id, orden, destino, entidadId, EstadoParada.PENDIENTE, donacionIds != null ? donacionIds : new ArrayList<>());
+    }
+
+    public void marcarEntregada() {
+        this.estado = EstadoParada.ENTREGADA;
+    }
+
+    public void marcarNoRecibida() {
+        this.estado = EstadoParada.NO_RECIBIDA;
+    }
 }

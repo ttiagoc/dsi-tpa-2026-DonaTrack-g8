@@ -39,7 +39,13 @@ public class Notificador {
             throw new BusinessException("El valor del medio de contacto no puede ser nulo ni estar vacío");
         }
         MedioContacto contacto = new MedioContacto(notificacionRequest.getValor(), notificacionRequest.getTipoContacto());
-        Notificacion notificacion = new Notificacion(notificacionRequest.getMensaje(), contacto);
+        Notificacion notificacion = new Notificacion(
+            notificacionRequest.getMensaje(),
+            contacto,
+            notificacionRequest.getTipoEvento(),
+            notificacionRequest.getDestinatarioId(),
+            notificacionRequest.getDonacionId()
+        );
         notificacion.setFechaDeEnvio(LocalDateTime.now());
         notificar(notificacion);
         notificacion.setCompletada(true);
