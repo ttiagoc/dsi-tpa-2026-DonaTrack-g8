@@ -210,7 +210,7 @@ Este documento contiene la auditoría completa del proyecto **DonaTrack** frente
 
 A medida que se aborde cada tarea, se marcará su casilla para mantener visible el estado del proyecto:
 
-- [ ] **Tarea 1 (H-01):** Persistir `Ruta` y `Parada` en `logistica-service` tras el callback del planificador y gestionar donaciones no asignadas.
+- [x] **Tarea 1 (H-01):** Persistir `Ruta` y `Parada` en `logistica-service` tras el callback del planificador y gestionar donaciones no asignadas.
 - [ ] **Tarea 2 (H-02):** Configurar propiedades de red `rest.*` en `application.properties` de `donaciones-service` y `logistica-service`.
 - [ ] **Tarea 3 (H-03):** Exponer endpoint REST para la importación masiva de donantes CSV en `DonanteController`.
 - [ ] **Tarea 4 (H-04):** Implementar calendarización nocturna con `@Scheduled` para matchmaking, detección de inactividad y planificación logística.

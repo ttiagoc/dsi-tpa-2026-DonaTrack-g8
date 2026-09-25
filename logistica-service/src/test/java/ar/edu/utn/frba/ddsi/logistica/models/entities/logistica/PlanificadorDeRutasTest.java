@@ -36,6 +36,7 @@ class PlanificadorDeRutasTest {
         private RestLogisticaConfig properties;
         private GestorPlanificacionRutas gestorPlanificacionRutas;
         private CamionRepository camionRepository;
+        private ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository rutaRepository;
         private PlanificadorDeRutas planificadorDeRutas;
 
         @BeforeEach
@@ -44,11 +45,12 @@ class PlanificadorDeRutasTest {
                 properties = mock(RestLogisticaConfig.class);
                 gestorPlanificacionRutas = mock(GestorPlanificacionRutas.class);
                 camionRepository = mock(CamionRepository.class);
+                rutaRepository = mock(ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository.class);
 
                 when(properties.getDonacionesUrl()).thenReturn("http://localhost:8080/api");
 
                 planificadorDeRutas = new PlanificadorDeRutas(restTemplate, properties,
-                                gestorPlanificacionRutas, camionRepository);
+                                gestorPlanificacionRutas, camionRepository, rutaRepository);
         }
 
         @Test
@@ -98,12 +100,17 @@ class PlanificadorDeRutasTest {
         }
 
         @Test
-        @DisplayName("Debe notificar donaciones planificadas y desencadenar nueva planificacion")
+        @DisplayName("Debe persistir rutas/paradas y notificar donaciones planificadas")
         void ejecutarPlanificacion() {
-                DireccionRequest dir1 = new DireccionRequest("Calle 1", List.of(10L, 20L));
+                Camion camion = new Camion("ABC123D", 20.0, 3.0, 1000.0, null);
+                camion.setId(1L);
+                when(camionRepository.findById(1L)).thenReturn(java.util.Optional.of(camion));
+
+                DireccionRequest dir1 = new DireccionRequest("Calle 1", List.of(10L, 20L), 99L);
                 CamionPlanificacionRequest camionRequest = new CamionPlanificacionRequest(1L, List.of(dir1));
-                EjecutarPlanificacionRequest request = new EjecutarPlanificacionRequest(List.of(camionRequest),
-                                List.of());
+                EjecutarPlanificacionRequest request = new EjecutarPlanificacionRequest(
+                                List.of(camionRequest),
+                                List.of(30L, 40L));
 
                 URI url1 = UriComponentsBuilder.fromUriString("http://localhost:8080/api/donaciones/10/estado").build().toUri();
                 URI url2 = UriComponentsBuilder.fromUriString("http://localhost:8080/api/donaciones/20/estado").build().toUri();
@@ -114,6 +121,7 @@ class PlanificadorDeRutasTest {
 
                 planificadorDeRutas.ejecutarPlanificacion(request);
 
+                verify(rutaRepository, times(1)).save(any(Ruta.class));
                 verify(restTemplate, times(1)).put(eq(url1), eq(payload));
                 verify(restTemplate, times(1)).put(eq(url2), eq(payload));
         }
