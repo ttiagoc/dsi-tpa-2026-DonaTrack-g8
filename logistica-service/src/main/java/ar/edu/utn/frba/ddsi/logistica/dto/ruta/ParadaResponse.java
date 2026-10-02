@@ -1,6 +1,7 @@
 package ar.edu.utn.frba.ddsi.logistica.dto.ruta;
 
 import ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoParada;
+import java.util.List;
 
 public record ParadaResponse(
     Long id,
