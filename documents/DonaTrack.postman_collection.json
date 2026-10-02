@@ -1,0 +1,373 @@
+{
+  "info": {
+    "name": "DonaTrack — Suite de APIs (UTN FRBA - DSI)",
+    "description": "Colección completa de endpoints para los tres microservicios de DonaTrack: donaciones-service (8080), logistica-service (8081) y notificaciones-service (8082).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "donaciones_url",
+      "value": "http://localhost:8080/api",
+      "type": "string"
+    },
+    {
+      "key": "logistica_url",
+      "value": "http://localhost:8081/api",
+      "type": "string"
+    },
+    {
+      "key": "notificaciones_url",
+      "value": "http://localhost:8082/api",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Catálogo",
+      "item": [
+        {
+          "name": "Crear Categoría (Alimentos)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Alimentos Perecederos\",\n  \"pideEstado\": false,\n  \"esPerecedero\": true\n}"
+            },
+            "url": {
+              "raw": "{{donaciones_url}}/categorias",
+              "host": ["{{donaciones_url}}"],
+              "path": ["categorias"]
+            }
+          }
+        },
+        {
+          "name": "Crear Subcategoría (Fideos)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Fideos Secos\"\n}"
+            },
+            "url": {
+              "raw": "{{donaciones_url}}/categorias/1/subcategorias",
+              "host": ["{{donaciones_url}}"],
+              "path": ["categorias", "1", "subcategorias"]
+            }
+          }
+        },
+        {
+          "name": "Listar Categorías y Subcategorías",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{donaciones_url}}/categorias",
+              "host": ["{{donaciones_url}}"],
+              "path": ["categorias"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Donantes",
+      "item": [
+        {
+          "name": "Registrar Persona Humana (TPA 1)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Ana\",\n  \"apellido\": \"Perez\",\n  \"fechaNacimiento\": \"1992-04-15\",\n  \"dni\": \"36123456\",\n  \"genero\": \"F\",\n  \"direccion\": \"Av. Medrano 951, CABA\",\n  \"contactos\": [\n    {\"tipo\": \"EMAIL\", \"valor\": \"ana.perez@mail.com\"},\n    {\"tipo\": \"WHATSAPP\", \"valor\": \"+541155555555\"}\n  ],\n  \"contactoPredeterminado\": {\"tipo\": \"EMAIL\", \"valor\": \"ana.perez@mail.com\"}\n}"
+            },
+            "url": {
+              "raw": "{{donaciones_url}}/donantes/persona-humana",
+              "host": ["{{donaciones_url}}"],
+              "path": ["donantes", "persona-humana"]
+            }
+          }
+        },
+        {
+          "name": "Registrar Persona Jurídica (TPA 1)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"razonSocial\": \"Arcos Plateados S.A.\",\n  \"rubro\": \"Gastronomia\",\n  \"tipo\": \"EMPRESA\",\n  \"cuit\": \"30-12345678-9\",\n  \"representantes\": [\n    {\"nombre\": \"Carlos\", \"apellido\": \"Gomez\", \"correo\": \"carlos@arcos.com\"}\n  ],\n  \"contactos\": [\n    {\"tipo\": \"EMAIL\", \"valor\": \"contacto@empresa.com\"}\n  ],\n  \"contactoPredeterminado\": {\"tipo\": \"EMAIL\", \"valor\": \"contacto@empresa.com\"}\n}"
+            },
+            "url": {
+              "raw": "{{donaciones_url}}/donantes/persona-juridica",
+              "host": ["{{donaciones_url}}"],
+              "path": ["donantes", "persona-juridica"]
+            }
+          }
+        },
+        {
+          "name": "Listar Donantes",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{donaciones_url}}/donantes",
+              "host": ["{{donaciones_url}}"],
+              "path": ["donantes"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Donaciones y Segmentación",
+      "item": [
+        {
+          "name": "Carga Múltiple con Segmentación Automática (TPA 1)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descripcion\": \"Donacion Comunitaria de Alimentos\",\n  \"idDonante\": 1,\n  \"bienes\": [\n    {\n      \"descripcion\": \"Fideos tallarines secos 500g\",\n      \"cantidad\": 100,\n      \"pesoKgPorUnidad\": 0.5,\n      \"volumenM3PorUnidad\": 0.001,\n      \"estado\": \"NUEVO\",\n      \"fechaVencimiento\": \"2027-01-01\",\n      \"subcategoria\": {\"nombre\": \"Fideos Secos\"}\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{donaciones_url}}/donaciones",
+              "host": ["{{donaciones_url}}"],
+              "path": ["donaciones"]
+            }
+          }
+        },
+        {
+          "name": "Listar Todas las Donaciones Segmentadas",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{donaciones_url}}/donaciones",
+              "host": ["{{donaciones_url}}"],
+              "path": ["donaciones"]
+            }
+          }
+        },
+        {
+          "name": "Consultar Donación por ID (Trazabilidad)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{donaciones_url}}/donaciones/1",
+              "host": ["{{donaciones_url}}"],
+              "path": ["donaciones", "1"]
+            }
+          }
+        },
+        {
+          "name": "Cargar Fotos de Recepción (Remito)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fotos\": [\n    \"https://s3.amazonaws.com/donatrack/fotos/remito_comedor_1.jpg\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{donaciones_url}}/donaciones/1/fotos",
+              "host": ["{{donaciones_url}}"],
+              "path": ["donaciones", "1", "fotos"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Entidades Beneficiarias y Necesidades",
+      "item": [
+        {
+          "name": "Registrar Entidad Beneficiaria (TPA 1)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"razonSocial\": \"Comedor Escobar Sonrisas\",\n  \"direccion\": \"Calle Falsa 123, Escobar\",\n  \"telefono\": \"1122334455\",\n  \"correoRepresentantes\": [\n    {\"tipo\": \"EMAIL\", \"valor\": \"comedor@org.com\"}\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{donaciones_url}}/entidad-beneficiaria",
+              "host": ["{{donaciones_url}}"],
+              "path": ["entidad-beneficiaria"]
+            }
+          }
+        },
+        {
+          "name": "Registrar Necesidad Recurrente (TPA 1)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subcategoria\": {\"nombre\": \"Fideos Secos\"},\n  \"tipoNecesidad\": \"recurrente\",\n  \"periodo\": \"SEMANAL\",\n  \"descripcion\": \"Fideos para 150 viandas semanales\",\n  \"cantidad\": 80\n}"
+            },
+            "url": {
+              "raw": "{{donaciones_url}}/entidad-beneficiaria/1/necesidades",
+              "host": ["{{donaciones_url}}"],
+              "path": ["entidad-beneficiaria", "1", "necesidades"]
+            }
+          }
+        },
+        {
+          "name": "Consultar Necesidades de la Entidad",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{donaciones_url}}/entidad-beneficiaria/1/necesidades",
+              "host": ["{{donaciones_url}}"],
+              "path": ["entidad-beneficiaria", "1", "necesidades"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Matchmaking (TPA 2)",
+      "item": [
+        {
+          "name": "Disparar Algoritmos de Matchmaking",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{donaciones_url}}/matchmaking/ejecuciones",
+              "host": ["{{donaciones_url}}"],
+              "path": ["matchmaking", "ejecuciones"]
+            }
+          }
+        },
+        {
+          "name": "Ver Propuestas de Asignación Pendientes",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{donaciones_url}}/matchmaking/pendientes",
+              "host": ["{{donaciones_url}}"],
+              "path": ["matchmaking", "pendientes"]
+            }
+          }
+        },
+        {
+          "name": "Aceptar Propuesta (Donación -> ASIGNACION_REALIZADA)",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"ACEPTADO\",\n  \"entidadId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{donaciones_url}}/matchmaking/propuestas/1/estado",
+              "host": ["{{donaciones_url}}"],
+              "path": ["matchmaking", "propuestas", "1", "estado"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Logística (TPA 2)",
+      "item": [
+        {
+          "name": "Registrar Camión en la Flota",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patente\": \"AB123CD\",\n  \"capacidadVolumen\": 30.0,\n  \"altura\": 3.8,\n  \"capacidadCarga\": 8000.0,\n  \"chofer\": {\n    \"nombre\": \"Esteban\",\n    \"apellido\": \"Quito\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{logistica_url}}/camiones",
+              "host": ["{{logistica_url}}"],
+              "path": ["camiones"]
+            }
+          }
+        },
+        {
+          "name": "Planificar Ruta con Parada",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"2026-10-02\",\n  \"idCamion\": 1,\n  \"paradas\": [\n    {\n      \"orden\": 1,\n      \"destino\": \"Calle Falsa 123, Escobar\",\n      \"entidad\": 1,\n      \"entregas\": [1]\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{logistica_url}}/rutas",
+              "host": ["{{logistica_url}}"],
+              "path": ["rutas"]
+            }
+          }
+        },
+        {
+          "name": "Iniciar Recorrido de Ruta (EN_TRASLADO)",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "\"EN_TRASLADO\""
+            },
+            "url": {
+              "raw": "{{logistica_url}}/rutas/1/estado",
+              "host": ["{{logistica_url}}"],
+              "path": ["rutas", "1", "estado"]
+            }
+          }
+        },
+        {
+          "name": "Telemetría GPS en Tiempo Real",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitud\": -34.6037,\n  \"longitud\": -58.3816,\n  \"velocidad\": 45.5\n}"
+            },
+            "url": {
+              "raw": "{{logistica_url}}/camiones/ubicacion/AB123CD",
+              "host": ["{{logistica_url}}"],
+              "path": ["camiones", "ubicacion", "AB123CD"]
+            }
+          }
+        },
+        {
+          "name": "Confirmar Entrega de Parada (ENTREGADA)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{logistica_url}}/rutas/1/paradas/1/confirmaciones",
+              "host": ["{{logistica_url}}"],
+              "path": ["rutas", "1", "paradas", "1", "confirmaciones"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Notificaciones (TPA 2)",
+      "item": [
+        {
+          "name": "Enviar Notificación",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contacto\": {\n    \"tipoContacto\": \"EMAIL\",\n    \"direccion\": \"ana.perez@mail.com\"\n  },\n  \"mensaje\": \"¡Tu donación de Fideos Secos ha sido entregada exitosamente al Comedor Escobar!\"\n}"
+            },
+            "url": {
+              "raw": "{{notificaciones_url}}/notificaciones",
+              "host": ["{{notificaciones_url}}"],
+              "path": ["notificaciones"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
