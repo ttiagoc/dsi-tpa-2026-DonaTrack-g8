@@ -1,0 +1,22 @@
+{{!-- Layout comun. Cada pagina define sus bloques y termina con {{> layouts/base}}:
+      {{#partial "titulo"}}...{{/partial}}  {{#partial "contenido"}}...{{/partial}}  (opcionales: "head", "scripts") --}}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{#block "titulo"}}DonaTrack{{/block}}</title>
+  <link rel="icon" href="/img/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/styles.css">
+  {{#block "head"}}{{/block}}
+</head>
+<body>
+  {{> partials/navbar}}
+  <main class="contenedor" id="contenido">
+    {{> partials/alertas}}
+    {{#block "contenido"}}{{/block}}
+  </main>
+  {{> partials/footer}}
+  {{#block "scripts"}}{{/block}}
+</body>
+</html>

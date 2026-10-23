@@ -2,7 +2,7 @@ name: donatrack
 
 # Dos modos de uso (ver Readme.md):
 #   docker compose up -d                     -> solo PostgreSQL, los servicios se corren con Maven
-#   docker compose --profile full up -d --build  -> PostgreSQL + los tres servicios en contenedores
+#   docker compose --profile full up -d --build  -> PostgreSQL + los tres servicios + el web-service (http://localhost:7070)
 
 services:
   postgres:
@@ -86,6 +86,24 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+
+  # Cliente liviano (HTML con Handlebars). Solo habla HTTP con las APIs: no usa la base.
+  web-service:
+    profiles: ["full"]
+    build:
+      context: .
+      dockerfile: web-service/Dockerfile
+    container_name: donatrack-web
+    ports:
+      - "7070:7070"
+    environment:
+      DONACIONES_API_URL: http://donaciones-service:8080/api
+      LOGISTICA_API_URL: http://logistica-service:8081/api
+      NOTIFICACIONES_API_URL: http://notificaciones-service:8082/api
+      # En la nube (HTTPS) va en true para que la cookie de sesion lleve el atributo Secure
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+    depends_on:
+      - donaciones-service
 
 volumes:
   postgres-data:

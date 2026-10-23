@@ -62,7 +62,7 @@ Hoy **no existe nada** de misiones, insignias ni categorías de donante en el c�
 ### 3.5 Catálogo de entidades (req. 6)
 - [ ] Ya existe `GET /api/entidad-beneficiaria` (incluye necesidades). Probablemente no haga falta backend nuevo.
 
-## 4. Pantallas (`web-service`, después de mergeada la Tarea 0)
+## 4. Pantallas (`web-service`, después de pusheada la Tarea 0 a `entrega-4`)
 
 | Req | Ruta sugerida | Plantilla |
 |---|---|---|
@@ -77,7 +77,7 @@ Hoy **no existe nada** de misiones, insignias ni categorías de donante en el c�
 - **[COMPLETAR]** Mapa: ¿se refresca solo (JS con `fetch` cada N segundos a un endpoint JSON del web) o recargando la página? Si es con JS, el endpoint JSON también tiene que pasar por el middleware de sesión.
 
 ## 5. Dependencias con el resto
-- **Recibe de A:** la Tarea 0 (layout, navbar, sesión, middleware) y la convención de plantillas. Para la parte de pantallas, partir de `main` una vez mergeada.
+- **Recibe de A:** la Tarea 0 (layout, navbar, sesión, middleware) y la convención de plantillas. Para la parte de pantallas, tomarla de `entrega-4` una vez pusheada.
 - **Comparte con A:** las pantallas 13 y 14 se cuelgan del menú de la entidad (A agrega los links o B los agrega en el navbar).
 - **Comparte con C:** si C cambia los DTOs de donaciones al pasar a gRPC, avisar; los endpoints REST que usa el web no deberían cambiar.
 - **Archivos compartidos:** `persistence.xml` (donaciones), `Clases.puml`, `navbar.hbs`, `styles.css`. Regla: agregar al final, en una sección propia.
@@ -90,4 +90,4 @@ Hoy **no existe nada** de misiones, insignias ni categorías de donante en el c�
 ## 7. Cronograma
 **[COMPLETAR]** Fechas por bloque. Sugerido: días 1–2 gamificación + bocetos; días 3–4 endpoints de notificaciones, seguimiento y filtros; después las pantallas.
 
-Ramas sugeridas: `feat/donante-backend` y `feat/donante-web`.
+Rama: todo en `entrega-4` hasta que esté terminado el trabajo de todo el equipo.

@@ -1,0 +1,10 @@
+{{!-- Uso: {{> partials/campo nombre="email" etiqueta="Email" tipo="email" valor=form.email errorCampo=errores.email requerido=true}}
+      Opcionales: tipo (text por defecto), ayuda, autocomplete, requerido --}}
+<div class="campo{{#if errorCampo}} campo--error{{/if}}">
+  <label for="{{nombre}}">{{etiqueta}}{{#if requerido}} <span class="campo__requerido" aria-hidden="true">*</span>{{/if}}</label>
+  <input id="{{nombre}}" name="{{nombre}}" type="{{#if tipo}}{{tipo}}{{else}}text{{/if}}" value="{{valor}}"
+         {{#if requerido}}required{{/if}} {{#if autocomplete}}autocomplete="{{autocomplete}}"{{/if}}
+         {{#if errorCampo}}aria-invalid="true" aria-describedby="{{nombre}}-error"{{/if}}>
+  {{#if ayuda}}<small class="campo__ayuda">{{ayuda}}</small>{{/if}}
+  {{#if errorCampo}}<small class="campo__error" id="{{nombre}}-error">{{errorCampo}}</small>{{/if}}
+</div>

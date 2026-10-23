@@ -1,0 +1,36 @@
+{{!-- A es duenio del navbar. B y C agregan sus links solo dentro de su bloque. --}}
+<header class="navbar">
+  <div class="navbar__contenido">
+    <a class="navbar__marca" href="/">
+      <img src="/img/logo.svg" alt="" width="28" height="28"> DonaTrack
+    </a>
+    <input type="checkbox" id="navbar-toggle" class="navbar__toggle">
+    <label for="navbar-toggle" class="navbar__hamburguesa" aria-label="Abrir o cerrar el menú">
+      <span></span><span></span><span></span>
+    </label>
+    <nav class="navbar__links" aria-label="Principal">
+      {{#if usuario}}
+        {{#if usuario.esDonante}}
+          {{!-- --- Donante (B) --- --}}
+          <a href="/donante">Mi panel</a>
+        {{/if}}
+        {{#if usuario.esEntidad}}
+          {{!-- --- Entidad beneficiaria (A) --- --}}
+          <a href="/entidad">Mi panel</a>
+        {{/if}}
+        {{#if usuario.esAdmin}}
+          {{!-- --- Administrador (C) --- --}}
+          <a href="/admin">Administración</a>
+        {{/if}}
+        <span class="navbar__usuario" title="Sesión iniciada">{{usuario.username}}</span>
+        <form method="post" action="/logout" class="navbar__logout">
+          <button type="submit" class="boton boton--secundario boton--chico">Salir</button>
+        </form>
+      {{else}}
+        <a href="/#como-funciona">Cómo funciona</a>
+        <a href="/login">Ingresar</a>
+        <a class="boton boton--chico" href="/registro">Registrarme</a>
+      {{/if}}
+    </nav>
+  </div>
+</header>

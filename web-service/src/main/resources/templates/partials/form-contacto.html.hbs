@@ -1,0 +1,24 @@
+<fieldset class="formulario__grupo">
+  <legend>Contacto</legend>
+  <p class="texto-suave">Te avisamos por este medio cuando cambie el estado de tus donaciones.</p>
+  <div class="grilla grilla--2">
+    {{> partials/campo nombre="email" etiqueta="Email" tipo="email" valor=form.email errorCampo=errores.email requerido=true autocomplete="email"}}
+    {{> partials/campo nombre="telefono" etiqueta="Teléfono (opcional)" tipo="tel" valor=form.telefono errorCampo=errores.telefono autocomplete="tel"}}
+  </div>
+  <div class="grilla grilla--2">
+    <div class="campo">
+      <label for="tipoTelefono">El teléfono es de</label>
+      <select id="tipoTelefono" name="tipoTelefono">
+        <option value="WHATSAPP" {{#if (eq form.tipoTelefono "WHATSAPP")}}selected{{/if}}>WhatsApp</option>
+        <option value="SMS" {{#if (eq form.tipoTelefono "SMS")}}selected{{/if}}>SMS</option>
+      </select>
+    </div>
+    <div class="campo">
+      <label for="contactoPredeterminado">Preferimos avisarte por</label>
+      <select id="contactoPredeterminado" name="contactoPredeterminado">
+        <option value="EMAIL" {{#if (eq form.contactoPredeterminado "EMAIL")}}selected{{/if}}>Email</option>
+        <option value="TELEFONO" {{#if (eq form.contactoPredeterminado "TELEFONO")}}selected{{/if}}>Teléfono</option>
+      </select>
+    </div>
+  </div>
+</fieldset>

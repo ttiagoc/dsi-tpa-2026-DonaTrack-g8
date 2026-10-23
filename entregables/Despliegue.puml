@@ -46,9 +46,13 @@ node "Computadora Personal" <<Device>> {
 cloud "Internet" as Net
 
 ' --- 2. CAPA FRONTEND ---
+' Cliente liviano con MVC del lado del servidor: arma el HTML y solo habla HTTP con las APIs
+' (sin base de datos propia). La sesion vive en memoria del servidor; el navegador solo
+' guarda la cookie donatrack_session (HttpOnly, SameSite=Lax, Secure en la nube).
 rectangle "Capa de Presentación" {
-    node "Servidor Frontend" {
-        component "App Frontend" as Front
+    node "Servidor Web" as NodeWeb {
+        component "web-service\n(Javalin + Handlebars)\npuerto 7070" as Front
+        component "Sesiones en memoria\n(tokens JWT por usuario)" as Sesiones
     }
 }
 
@@ -94,13 +98,15 @@ NodeDB2 -[hidden]down-> NodeDB3
 ' --- FLUJOS Y CONEXIONES (Izquierda a Derecha) ---
 
 ' Cliente -> Internet -> Frontend
-Nav --> Net : HTTPS
+Nav --> Net : HTTPS (HTML + cookie de sesión)
 Net --> Front : HTTPS
 
-' Frontend -> Microservicios
-Front --> S1 : HTTP - API REST
-Front --> S2 : HTTP - API REST
-Front --> S3 : HTTP - API REST
+Front -- Sesiones
+
+' Frontend -> Microservicios (Authorization: Bearer <JWT>; login y registro en /api/auth de Donaciones)
+Front --> S1 : HTTP - API REST + JWT
+Front --> S2 : HTTP - API REST + JWT
+Front --> S3 : HTTP - API REST + JWT
 
 ' Conexiones cruzadas entre Microservicios
 S1 <--> S2 : HTTP - API REST

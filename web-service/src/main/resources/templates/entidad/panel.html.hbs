@@ -1,0 +1,13 @@
+{{#partial "titulo"}}Mi panel · DonaTrack{{/partial}}
+{{#partial "contenido"}}
+<section class="seccion">
+  <h1>Hola, {{usuario.username}}</h1>
+  <p class="texto-suave">Panel de la entidad beneficiaria.</p>
+  {{!-- Persona A: necesidades (req. 10), donaciones asignadas (req. 11), confirmar recepción (req. 12) --}}
+  {{!-- Persona B: notificaciones y seguimiento (req. 13 y 14) --}}
+  <div class="tarjeta tarjeta--vacia">
+    <p>Próximamente: cargar necesidades y ver las donaciones asignadas.</p>
+  </div>
+</section>
+{{/partial}}
+{{> layouts/base}}

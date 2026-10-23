@@ -61,7 +61,7 @@ La Persona A protege la API REST de donaciones con JWT y roles (contrato, matriz
 - [ ] **[COMPLETAR]** Decidir si `notificaciones-service` también exige `SERVICE_API_KEY` o si alcanza con la red privada (hoy lo llaman donaciones y logística sin autenticación).
 - [ ] Probar el flujo completo planificación → inicio de ruta → entrega con docker compose.
 
-## 4. Pantallas de administración (`web-service`, después de mergeada la Tarea 0)
+## 4. Pantallas de administración (`web-service`, después de pusheada la Tarea 0 a `entrega-4`)
 
 | Req | Ruta sugerida | Backend existente | Backend a agregar |
 |---|---|---|---|
@@ -88,7 +88,7 @@ La Persona A protege la API REST de donaciones con JWT y roles (contrato, matriz
 
 ### 5.2 Tareas
 - [ ] Base de datos administrada con las bases `donaciones`, `logistica` y `notificaciones` (`docker/postgres/init-databases.sql`).
-- [ ] `web-service/Dockerfile` (copiar el patrón multi-etapa de `donaciones-service/Dockerfile`) y agregar `web-service` al `docker-compose.yml` (perfil `full`).
+- [x] `web-service/Dockerfile` y `web-service` en `docker-compose.yml` (perfil `full`): los hizo A junto con la Tarea 0. Falta definir las variables en la nube (`DONACIONES_API_URL`, `COOKIE_SECURE=true`).
 - [ ] **Sacar URLs fijas a localhost**:
   - `GestorPlanificacionRutas.java` arma el callback con `http://localhost:8081/...`;
   - `common-lib/src/main/resources/application.yml` tiene las URLs por defecto.
@@ -114,4 +114,4 @@ La Persona A protege la API REST de donaciones con JWT y roles (contrato, matriz
 ## 8. Cronograma
 **[COMPLETAR]** Fechas por bloque. Sugerido: días 1–2 despliegue de prueba + elección del proveedor; días 2–4 gRPC; después el CSV y las pantallas de admin; al final, el despliegue definitivo y la prueba de humo.
 
-Ramas sugeridas: `feat/grpc`, `feat/deploy`, `feat/admin-web`.
+Rama: todo en `entrega-4` hasta que esté terminado el trabajo de todo el equipo.

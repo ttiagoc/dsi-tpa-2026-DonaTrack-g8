@@ -1,0 +1,22 @@
+{{#partial "titulo"}}Registro de entidad beneficiaria · DonaTrack{{/partial}}
+{{#partial "contenido"}}
+<section class="tarjeta formulario">
+  <p><a href="/registro">← Elegir otro tipo de cuenta</a></p>
+  <h1>Registro de entidad beneficiaria</h1>
+  <p class="texto-suave">Después de registrarte vas a poder cargar las necesidades de tu entidad.</p>
+  <form method="post" action="/registro/entidad" accept-charset="UTF-8" novalidate>
+    <fieldset class="formulario__grupo">
+      <legend>Datos de la entidad</legend>
+      {{> partials/campo nombre="razonSocial" etiqueta="Nombre o razón social" valor=form.razonSocial errorCampo=errores.razonSocial requerido=true autocomplete="organization"}}
+      {{> partials/campo nombre="direccion" etiqueta="Dirección" valor=form.direccion errorCampo=errores.direccion requerido=true autocomplete="street-address" ayuda="Es donde se entregan las donaciones."}}
+      <div class="grilla grilla--2">
+        {{> partials/campo nombre="telefono" etiqueta="Teléfono" tipo="tel" valor=form.telefono errorCampo=errores.telefono requerido=true autocomplete="tel"}}
+        {{> partials/campo nombre="correoRepresentante" etiqueta="Email del representante" tipo="email" valor=form.correoRepresentante errorCampo=errores.correoRepresentante requerido=true autocomplete="email"}}
+      </div>
+    </fieldset>
+    {{> partials/form-cuenta}}
+    <button type="submit" class="boton boton--ancho">Registrar entidad</button>
+  </form>
+</section>
+{{/partial}}
+{{> layouts/base}}

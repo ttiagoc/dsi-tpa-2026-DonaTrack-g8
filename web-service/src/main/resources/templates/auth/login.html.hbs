@@ -1,0 +1,13 @@
+{{#partial "titulo"}}Ingresar · DonaTrack{{/partial}}
+{{#partial "contenido"}}
+<section class="tarjeta formulario formulario--angosto">
+  <h1>Ingresar</h1>
+  <form method="post" action="/login" accept-charset="UTF-8" novalidate>
+    {{> partials/campo nombre="username" etiqueta="Nombre de usuario" valor=form.username errorCampo=errores.username requerido=true autocomplete="username"}}
+    {{> partials/campo nombre="password" etiqueta="Contraseña" tipo="password" errorCampo=errores.password requerido=true autocomplete="current-password"}}
+    <button type="submit" class="boton boton--ancho">Ingresar</button>
+  </form>
+  <p class="formulario__pie">¿No tenés cuenta? <a href="/registro">Registrate</a></p>
+</section>
+{{/partial}}
+{{> layouts/base}}

@@ -1,0 +1,40 @@
+{{#partial "titulo"}}Registro de empresa u organización · DonaTrack{{/partial}}
+{{#partial "contenido"}}
+<section class="tarjeta formulario">
+  <p><a href="/registro">← Elegir otro tipo de cuenta</a></p>
+  <h1>Registro de empresa u organización</h1>
+  <form method="post" action="/registro/persona-juridica" accept-charset="UTF-8" novalidate>
+    <fieldset class="formulario__grupo">
+      <legend>Datos de la organización</legend>
+      {{> partials/campo nombre="razonSocial" etiqueta="Razón social" valor=form.razonSocial errorCampo=errores.razonSocial requerido=true autocomplete="organization"}}
+      <div class="grilla grilla--3">
+        {{> partials/campo nombre="cuit" etiqueta="CUIT" valor=form.cuit errorCampo=errores.cuit requerido=true ayuda="Sin guiones, 11 dígitos."}}
+        {{> partials/campo nombre="rubro" etiqueta="Rubro" valor=form.rubro errorCampo=errores.rubro requerido=true}}
+        <div class="campo{{#if errores.tipo}} campo--error{{/if}}">
+          <label for="tipo">Tipo <span class="campo__requerido" aria-hidden="true">*</span></label>
+          <select id="tipo" name="tipo" required>
+            <option value="">Elegí una opción</option>
+            <option value="EMPRESA" {{#if (eq form.tipo "EMPRESA")}}selected{{/if}}>Empresa</option>
+            <option value="ONG" {{#if (eq form.tipo "ONG")}}selected{{/if}}>ONG</option>
+            <option value="INSTITUCION" {{#if (eq form.tipo "INSTITUCION")}}selected{{/if}}>Institución</option>
+            <option value="GUBERNAMENTAL" {{#if (eq form.tipo "GUBERNAMENTAL")}}selected{{/if}}>Gubernamental</option>
+          </select>
+          {{#if errores.tipo}}<small class="campo__error">{{errores.tipo}}</small>{{/if}}
+        </div>
+      </div>
+    </fieldset>
+    <fieldset class="formulario__grupo">
+      <legend>Representante</legend>
+      <div class="grilla grilla--3">
+        {{> partials/campo nombre="representanteNombre" etiqueta="Nombre" valor=form.representanteNombre errorCampo=errores.representanteNombre requerido=true}}
+        {{> partials/campo nombre="representanteApellido" etiqueta="Apellido" valor=form.representanteApellido errorCampo=errores.representanteApellido requerido=true}}
+        {{> partials/campo nombre="representanteCorreo" etiqueta="Email" tipo="email" valor=form.representanteCorreo errorCampo=errores.representanteCorreo requerido=true}}
+      </div>
+    </fieldset>
+    {{> partials/form-contacto}}
+    {{> partials/form-cuenta}}
+    <button type="submit" class="boton boton--ancho">Crear cuenta</button>
+  </form>
+</section>
+{{/partial}}
+{{> layouts/base}}

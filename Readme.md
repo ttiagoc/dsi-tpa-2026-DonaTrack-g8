@@ -38,10 +38,11 @@ dsi-tpa-2026-DonaTrack-g8/
 ├── common-lib/                # Librería compartida (JAR), importada por los servicios
 ├── donaciones-service/        # Servicio de donaciones — puerto 8080
 ├── logistica-service/         # Servicio de logística — puerto 8081
-└── notificaciones-service/    # Servicio de notificaciones — puerto 8082
+├── notificaciones-service/    # Servicio de notificaciones — puerto 8082
+└── web-service/               # Sitio web (cliente liviano, Javalin + Handlebars) — puerto 7070
 ```
 
-Cada servicio es una aplicación Spring Boot independiente que declara `common-lib` como dependencia local del reactor.
+Cada servicio es una aplicación Spring Boot independiente que declara `common-lib` como dependencia local del reactor. El `web-service` es la excepción: no depende de `common-lib` y solo habla HTTP con las APIs (ver [`web-service/README.md`](web-service/README.md)).
 
 ---
 
@@ -95,6 +96,9 @@ mvn spring-boot:run -pl logistica-service
 
 # Servicio de notificaciones (puerto 8082)
 mvn spring-boot:run -pl notificaciones-service
+
+# Sitio web (puerto 7070): necesita donaciones-service arriba
+mvn spring-boot:run -pl web-service
 ```
 
 Maven resuelve `common-lib` directamente desde el reactor, por lo que no hace falta instalarla por separado si se ejecuta desde la raíz.

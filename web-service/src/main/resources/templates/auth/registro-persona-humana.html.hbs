@@ -1,0 +1,37 @@
+{{#partial "titulo"}}Registro de persona · DonaTrack{{/partial}}
+{{#partial "contenido"}}
+<section class="tarjeta formulario">
+  <p><a href="/registro">← Elegir otro tipo de cuenta</a></p>
+  <h1>Registro de persona</h1>
+  <form method="post" action="/registro/persona-humana" accept-charset="UTF-8" novalidate>
+    <fieldset class="formulario__grupo">
+      <legend>Tus datos</legend>
+      <div class="grilla grilla--2">
+        {{> partials/campo nombre="nombre" etiqueta="Nombre" valor=form.nombre errorCampo=errores.nombre requerido=true autocomplete="given-name"}}
+        {{> partials/campo nombre="apellido" etiqueta="Apellido" valor=form.apellido errorCampo=errores.apellido requerido=true autocomplete="family-name"}}
+      </div>
+      <div class="grilla grilla--3">
+        {{> partials/campo nombre="dni" etiqueta="DNI" valor=form.dni errorCampo=errores.dni requerido=true}}
+        {{> partials/campo nombre="fechaNacimiento" etiqueta="Fecha de nacimiento" tipo="date" valor=form.fechaNacimiento errorCampo=errores.fechaNacimiento requerido=true autocomplete="bday"}}
+        <div class="campo{{#if errores.genero}} campo--error{{/if}}">
+          <label for="genero">Género <span class="campo__requerido" aria-hidden="true">*</span></label>
+          <select id="genero" name="genero" required>
+            <option value="">Elegí una opción</option>
+            <option {{#if (eq form.genero "Femenino")}}selected{{/if}}>Femenino</option>
+            <option {{#if (eq form.genero "Masculino")}}selected{{/if}}>Masculino</option>
+            <option {{#if (eq form.genero "No binario")}}selected{{/if}}>No binario</option>
+            <option {{#if (eq form.genero "Otro")}}selected{{/if}}>Otro</option>
+            <option {{#if (eq form.genero "Prefiero no decirlo")}}selected{{/if}}>Prefiero no decirlo</option>
+          </select>
+          {{#if errores.genero}}<small class="campo__error">{{errores.genero}}</small>{{/if}}
+        </div>
+      </div>
+      {{> partials/campo nombre="direccion" etiqueta="Dirección" valor=form.direccion errorCampo=errores.direccion requerido=true autocomplete="street-address"}}
+    </fieldset>
+    {{> partials/form-contacto}}
+    {{> partials/form-cuenta}}
+    <button type="submit" class="boton boton--ancho">Crear cuenta</button>
+  </form>
+</section>
+{{/partial}}
+{{> layouts/base}}

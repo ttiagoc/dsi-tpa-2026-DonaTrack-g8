@@ -1,0 +1,10 @@
+{{#partial "titulo"}}Error · DonaTrack{{/partial}}
+{{#partial "contenido"}}
+<section class="tarjeta pagina-error">
+  <p class="pagina-error__codigo">500</p>
+  <h1>Algo salió mal</h1>
+  <p>Ocurrió un error inesperado. Probá de nuevo en unos minutos.</p>
+  <a class="boton" href="{{#if usuario}}{{usuario.panel}}{{else}}/{{/if}}">Volver al inicio</a>
+</section>
+{{/partial}}
+{{> layouts/base}}

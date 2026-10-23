@@ -1,0 +1,10 @@
+{{#partial "titulo"}}Acceso denegado · DonaTrack{{/partial}}
+{{#partial "contenido"}}
+<section class="tarjeta pagina-error">
+  <p class="pagina-error__codigo">403</p>
+  <h1>No tenés acceso a esta página</h1>
+  <p>{{#if mensaje}}{{mensaje}}{{else}}Tu usuario no tiene permiso para ver esta sección.{{/if}}</p>
+  <a class="boton" href="{{#if usuario}}{{usuario.panel}}{{else}}/{{/if}}">Volver al inicio</a>
+</section>
+{{/partial}}
+{{> layouts/base}}

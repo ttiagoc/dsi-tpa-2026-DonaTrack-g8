@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="DonaTrack">
+  <rect x="8" y="22" width="48" height="34" rx="6" fill="#1f7a5a"/>
+  <path d="M8 30h48" stroke="#16573f" stroke-width="3"/>
+  <rect x="28" y="22" width="8" height="34" fill="#f2b84b"/>
+  <path d="M32 20c-4-8-14-9-14-2 0 5 8 5 14 2zm0 0c4-8 14-9 14-2 0 5-8 5-14 2z" fill="#f2b84b"/>
+</svg>

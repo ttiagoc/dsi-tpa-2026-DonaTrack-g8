@@ -1,0 +1,8 @@
+<fieldset class="formulario__grupo">
+  <legend>Tu cuenta</legend>
+  {{> partials/campo nombre="username" etiqueta="Nombre de usuario" valor=form.username errorCampo=errores.username requerido=true autocomplete="username"}}
+  <div class="grilla grilla--2">
+    {{> partials/campo nombre="password" etiqueta="Contraseña" tipo="password" errorCampo=errores.password requerido=true autocomplete="new-password" ayuda="Al menos 8 caracteres."}}
+    {{> partials/campo nombre="password2" etiqueta="Repetir contraseña" tipo="password" errorCampo=errores.password2 requerido=true autocomplete="new-password"}}
+  </div>
+</fieldset>

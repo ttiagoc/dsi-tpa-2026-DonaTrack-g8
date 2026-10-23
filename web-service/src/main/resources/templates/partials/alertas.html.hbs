@@ -1,0 +1,6 @@
+{{#each alertas}}
+  <div class="alerta alerta--{{tipo}}" role="status">{{mensaje}}</div>
+{{/each}}
+{{#if error}}
+  <div class="alerta alerta--error" role="alert">{{error}}</div>
+{{/if}}

@@ -1,0 +1,10 @@
+{{#partial "titulo"}}Página no encontrada · DonaTrack{{/partial}}
+{{#partial "contenido"}}
+<section class="tarjeta pagina-error">
+  <p class="pagina-error__codigo">404</p>
+  <h1>No encontramos esta página</h1>
+  <p>{{#if mensaje}}{{mensaje}}{{else}}Puede que la dirección esté mal escrita o que la página ya no exista.{{/if}}</p>
+  <a class="boton" href="{{#if usuario}}{{usuario.panel}}{{else}}/{{/if}}">Volver al inicio</a>
+</section>
+{{/partial}}
+{{> layouts/base}}

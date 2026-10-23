@@ -1,0 +1,59 @@
+{{#partial "titulo"}}DonaTrack · Donaciones que llegan a quien las necesita{{/partial}}
+{{#partial "contenido"}}
+<section class="hero">
+  <div class="hero__texto">
+    <p class="hero__etiqueta">Plataforma de gestión de donaciones</p>
+    <h1>Tus donaciones, del depósito a la entidad que las necesita</h1>
+    <p class="hero__bajada">
+      DonaTrack conecta a personas y empresas que quieren donar con comedores, escuelas y organizaciones
+      sociales. Cada donación se asigna según las necesidades reales y podés seguirla hasta que se entrega.
+    </p>
+    <div class="acciones">
+      {{#if usuario}}
+        <a class="boton" href="{{usuario.panel}}">Ir a mi panel</a>
+      {{else}}
+        <a class="boton" href="/registro">Quiero donar</a>
+        <a class="boton boton--secundario" href="/registro/entidad">Registrar mi entidad</a>
+      {{/if}}
+    </div>
+  </div>
+  <div class="hero__ilustracion" aria-hidden="true">
+    <img src="/img/logo.svg" alt="" width="180" height="180">
+  </div>
+</section>
+
+<section id="como-funciona" class="seccion">
+  <h2>Cómo funciona</h2>
+  <ol class="pasos">
+    <li class="tarjeta">
+      <span class="pasos__numero">1</span>
+      <h3>Registrás tu donación</h3>
+      <p>Indicás qué bienes donás, en qué estado están y cuándo se pueden retirar.</p>
+    </li>
+    <li class="tarjeta">
+      <span class="pasos__numero">2</span>
+      <h3>La asignamos</h3>
+      <p>El sistema la cruza con las necesidades que cargaron las entidades y propone a quién llevarla.</p>
+    </li>
+    <li class="tarjeta">
+      <span class="pasos__numero">3</span>
+      <h3>Seguís la entrega</h3>
+      <p>Te avisamos cuando sale el camión y cuando la entidad confirma que la recibió, con fotos.</p>
+    </li>
+  </ol>
+</section>
+
+<section class="seccion grilla grilla--2">
+  <article class="tarjeta">
+    <h2>Para quienes donan</h2>
+    <p>Personas y empresas pueden registrar donaciones, ver su estado y recibir avisos por email, SMS o WhatsApp.</p>
+    <a href="/registro">Crear una cuenta de donante →</a>
+  </article>
+  <article class="tarjeta">
+    <h2>Para las entidades</h2>
+    <p>Comedores, escuelas y organizaciones cargan sus necesidades, reciben donaciones y confirman la recepción.</p>
+    <a href="/registro/entidad">Registrar una entidad beneficiaria →</a>
+  </article>
+</section>
+{{/partial}}
+{{> layouts/base}}
