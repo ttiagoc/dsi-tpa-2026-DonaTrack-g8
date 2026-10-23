@@ -41,6 +41,11 @@ services:
       # Dentro de la red de compose "localhost" es el propio contenedor: las llamadas
       # entre servicios se resuelven por el nombre del servicio de compose.
       REST_NOTIFICACIONES_URL: http://notificaciones-service:8082/api
+      # Seguridad: mismo JWT_SECRET y SERVICE_API_KEY en donaciones y logistica (ver common-lib/application.yml)
+      JWT_SECRET: ${JWT_SECRET:-donatrack-secreto-solo-para-desarrollo-local-0123456789}
+      SERVICE_API_KEY: ${SERVICE_API_KEY:-donatrack-clave-servicios-local}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin1234}
     depends_on:
       postgres:
         condition: service_healthy
@@ -60,6 +65,8 @@ services:
       REST_DONACIONES_URL: http://donaciones-service:8080/api
       REST_LOGISTICA_URL: http://logistica-service:8081/api
       REST_NOTIFICACIONES_URL: http://notificaciones-service:8082/api
+      JWT_SECRET: ${JWT_SECRET:-donatrack-secreto-solo-para-desarrollo-local-0123456789}
+      SERVICE_API_KEY: ${SERVICE_API_KEY:-donatrack-clave-servicios-local}
     depends_on:
       postgres:
         condition: service_healthy

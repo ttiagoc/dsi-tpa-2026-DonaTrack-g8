@@ -1,5 +1,7 @@
 package ar.edu.utn.frba.ddsi.donaciones.controllers;
 
+import static ar.edu.utn.frba.ddsi.common.security.Rol.ADMINISTRADOR;
+
 import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.common.controllers.JavalinController;
@@ -20,18 +22,18 @@ public class MatchmakingController implements JavalinController {
     public void registerRoutes(Javalin app) {
         app.get("/api/matchmaking/pendientes", ctx -> {
             ctx.json(motorDeMatchmaking.obtenerPropuestasPendientes());
-        });
+        }, ADMINISTRADOR);
 
         app.put("/api/matchmaking/propuestas/{id}/estado", ctx -> {
             Long id = Long.parseLong(ctx.pathParam("id"));
             EstadoPropuestaRequest request = ctx.bodyAsClass(EstadoPropuestaRequest.class);
             motorDeMatchmaking.actualizarEstadoPropuesta(id, request);
             ctx.status(204);
-        });
+        }, ADMINISTRADOR);
 
         app.post("/api/matchmaking/ejecuciones", ctx -> {
             motorDeMatchmaking.procesarMatchmaking();
             ctx.status(204);
-        });
+        }, ADMINISTRADOR);
     }
 }

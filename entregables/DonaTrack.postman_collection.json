@@ -19,9 +19,208 @@
       "key": "notificaciones_url",
       "value": "http://localhost:8082/api",
       "type": "string"
+    },
+    {
+      "key": "admin_username",
+      "value": "admin",
+      "type": "string"
+    },
+    {
+      "key": "admin_password",
+      "value": "admin1234",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
     }
   ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]
+  },
   "item": [
+    {
+      "name": "00 - Autenticación (correr primero el login)",
+      "description": "Toda la colección usa el token guardado en {{access_token}}. 'Login Administrador' lo completa; los registros y el login de otros usuarios lo reemplazan por el de ese usuario.",
+      "item": [
+        {
+          "name": "Login Administrador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const sesion = pm.response.json();",
+                  "  pm.collectionVariables.set('access_token', sesion.accessToken);",
+                  "  pm.collectionVariables.set('refresh_token', sesion.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "noauth"},
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{admin_username}}\",\n  \"password\": \"{{admin_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{donaciones_url}}/auth/login",
+              "host": ["{{donaciones_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Renovar Access Token (Refresh)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  pm.collectionVariables.set('access_token', pm.response.json().accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "noauth"},
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{donaciones_url}}/auth/refresh",
+              "host": ["{{donaciones_url}}"],
+              "path": ["auth", "refresh"]
+            }
+          }
+        },
+        {
+          "name": "Usuario Actual (me)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{donaciones_url}}/auth/me",
+              "host": ["{{donaciones_url}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "Registro Donante Persona Humana (queda logueado)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const sesion = pm.response.json();",
+                  "  pm.collectionVariables.set('access_token', sesion.accessToken);",
+                  "  pm.collectionVariables.set('refresh_token', sesion.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "noauth"},
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"ana.perez\",\n  \"password\": \"clave-segura\",\n  \"donante\": {\n    \"nombre\": \"Ana\",\n    \"apellido\": \"Perez\",\n    \"fechaNacimiento\": \"1990-05-01\",\n    \"dni\": \"12345678\",\n    \"genero\": \"F\",\n    \"direccion\": \"Av. Medrano 951\",\n    \"contactos\": [{\"tipo\": \"EMAIL\", \"valor\": \"ana.perez@mail.com\"}],\n    \"contactoPredeterminado\": {\"tipo\": \"EMAIL\", \"valor\": \"ana.perez@mail.com\"}\n  }\n}"
+            },
+            "url": {
+              "raw": "{{donaciones_url}}/auth/registro/persona-humana",
+              "host": ["{{donaciones_url}}"],
+              "path": ["auth", "registro", "persona-humana"]
+            }
+          }
+        },
+        {
+          "name": "Registro Donante Persona Jurídica (queda logueado)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const sesion = pm.response.json();",
+                  "  pm.collectionVariables.set('access_token', sesion.accessToken);",
+                  "  pm.collectionVariables.set('refresh_token', sesion.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "noauth"},
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"arcos.plateados\",\n  \"password\": \"clave-segura\",\n  \"donante\": {\n    \"razonSocial\": \"Arcos Plateados S.A.\",\n    \"rubro\": \"Gastronomia\",\n    \"tipo\": \"EMPRESA\",\n    \"cuit\": \"30-12345678-9\",\n    \"representantes\": [{\"nombre\": \"Carlos\", \"apellido\": \"Gomez\", \"correo\": \"rep@arcos.com\"}],\n    \"contactos\": [{\"tipo\": \"EMAIL\", \"valor\": \"contacto@arcos.com\"}],\n    \"contactoPredeterminado\": {\"tipo\": \"EMAIL\", \"valor\": \"contacto@arcos.com\"}\n  }\n}"
+            },
+            "url": {
+              "raw": "{{donaciones_url}}/auth/registro/persona-juridica",
+              "host": ["{{donaciones_url}}"],
+              "path": ["auth", "registro", "persona-juridica"]
+            }
+          }
+        },
+        {
+          "name": "Registro Entidad Beneficiaria (queda logueada)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const sesion = pm.response.json();",
+                  "  pm.collectionVariables.set('access_token', sesion.accessToken);",
+                  "  pm.collectionVariables.set('refresh_token', sesion.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "noauth"},
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"comedor.escobar\",\n  \"password\": \"clave-segura\",\n  \"entidad\": {\n    \"razonSocial\": \"Comedor Escobar Sonrisas\",\n    \"direccion\": \"Escobar 123\",\n    \"telefono\": \"1122334455\",\n    \"correoRepresentantes\": [{\"tipo\": \"EMAIL\", \"valor\": \"comedor@org.com\"}]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{donaciones_url}}/auth/registro/entidad-beneficiaria",
+              "host": ["{{donaciones_url}}"],
+              "path": ["auth", "registro", "entidad-beneficiaria"]
+            }
+          }
+        }
+      ]
+    },
     {
       "name": "01 - Catálogo",
       "item": [

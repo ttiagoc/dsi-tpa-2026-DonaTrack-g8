@@ -20,6 +20,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import ar.edu.utn.frba.ddsi.common.controllers.JavalinController;
 import ar.edu.utn.frba.ddsi.common.controllers.JavalinWebServer;
+import ar.edu.utn.frba.ddsi.donaciones.services.AuthService;
+import io.github.flbulgarelli.jpa.extras.simple.WithSimplePersistenceUnit;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,14 +43,29 @@ class DonacionesApiPersistenciaTest {
     @Autowired
     private List<JavalinController> controllers;
 
+    @Autowired
+    private AuthService authService;
+
     private JavalinWebServer servidor;
+    private String tokenAdmin;
 
     // JavalinWebServer no se levanta con el perfil "test": se inicia a mano con los controllers del contexto
     @BeforeEach
-    void levantarServidor() {
+    void levantarServidor() throws Exception {
         servidor = new JavalinWebServer(controllers);
         ReflectionTestUtils.setField(servidor, "port", PUERTO);
         servidor.start();
+
+        // otros tests de la misma JVM vacian la base: se asegura que el administrador exista
+        authService.crearAdministradorSiNoExiste("admin", "admin1234");
+        WithSimplePersistenceUnit.dispose();
+
+        HttpResponse<String> login = http.send(HttpRequest.newBuilder(URI.create(BASE + "/auth/login"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString("{\"username\":\"admin\",\"password\":\"admin1234\"}"))
+                .build(), HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, login.statusCode(), "Login del administrador -> " + login.body());
+        tokenAdmin = mapper.readTree(login.body()).get("accessToken").asText();
     }
 
     @AfterEach
@@ -175,7 +192,11 @@ class DonacionesApiPersistenciaTest {
         return mapper.readTree(response.body());
     }
 
+    // todos los requests van como el administrador inicial (lo crea InicializadorAdmin al levantar el contexto)
     private HttpResponse<String> enviar(HttpRequest request) throws Exception {
-        return http.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpRequest conToken = HttpRequest.newBuilder(request, (nombre, valor) -> true)
+                .header("Authorization", "Bearer " + tokenAdmin)
+                .build();
+        return http.send(conToken, HttpResponse.BodyHandlers.ofString());
     }
 }

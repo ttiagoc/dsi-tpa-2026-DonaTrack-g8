@@ -34,6 +34,9 @@
     <!-- Entidades beneficiarias -->
     <class>ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria</class>
     <class>ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.Necesidad</class>
+
+    <!-- Usuarios de la plataforma web -->
+    <class>ar.edu.utn.frba.ddsi.donaciones.models.entities.usuarios.Usuario</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
 
     <properties>

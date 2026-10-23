@@ -29,6 +29,7 @@ public class PostgresE2EVerificationTest {
 
     private final HttpClient http = HttpClient.newHttpClient();
     private final ObjectMapper mapper = new ObjectMapper();
+    private String tokenAdmin;
 
     @Test
     @DisplayName("Crea objetos reales en PostgreSQL a traves de los microservicios y valida su persistencia")
@@ -227,7 +228,7 @@ public class PostgresE2EVerificationTest {
     }
 
     private JsonNode post(String url, String json, int expectedStatus) throws Exception {
-        HttpRequest req = HttpRequest.newBuilder(URI.create(url))
+        HttpRequest req = request(url)
                 .header("Content-Type", "application/json")
                 .POST(json.isBlank() ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(json))
                 .build();
@@ -237,7 +238,7 @@ public class PostgresE2EVerificationTest {
     }
 
     private void put(String url, String json, int expectedStatus) throws Exception {
-        HttpRequest req = HttpRequest.newBuilder(URI.create(url))
+        HttpRequest req = request(url)
                 .header("Content-Type", "application/json")
                 .PUT(HttpRequest.BodyPublishers.ofString(json))
                 .build();
@@ -246,18 +247,43 @@ public class PostgresE2EVerificationTest {
     }
 
     private JsonNode get(String url) throws Exception {
-        HttpRequest req = HttpRequest.newBuilder(URI.create(url)).GET().build();
+        HttpRequest req = request(url).GET().build();
         HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
         assertEquals(200, res.statusCode(), "GET " + url + " devolvio: " + res.body());
         return mapper.readTree(res.body());
     }
 
     private void enviarVacio(String url) throws Exception {
-        HttpRequest req = HttpRequest.newBuilder(URI.create(url))
+        HttpRequest req = request(url)
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
         HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
         assertTrue(res.statusCode() < 300, "Request a " + url + " devolvio " + res.statusCode());
+    }
+
+    // La API de donaciones exige un usuario: el test entra como el administrador inicial
+    private HttpRequest.Builder request(String url) throws Exception {
+        HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(url));
+        if (url.startsWith(DONACIONES_URL)) {
+            builder.header("Authorization", "Bearer " + tokenAdmin());
+        }
+        return builder;
+    }
+
+    private String tokenAdmin() throws Exception {
+        if (tokenAdmin == null) {
+            String credenciales = "{\"username\":\"%s\",\"password\":\"%s\"}".formatted(
+                    System.getenv().getOrDefault("ADMIN_USERNAME", "admin"),
+                    System.getenv().getOrDefault("ADMIN_PASSWORD", "admin1234"));
+            HttpRequest login = HttpRequest.newBuilder(URI.create(DONACIONES_URL + "/auth/login"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(credenciales))
+                    .build();
+            HttpResponse<String> res = http.send(login, HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, res.statusCode(), "Login del administrador devolvio: " + res.body());
+            tokenAdmin = mapper.readTree(res.body()).get("accessToken").asText();
+        }
+        return tokenAdmin;
     }
 
     private boolean serviciosDisponibles() {

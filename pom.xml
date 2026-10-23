@@ -25,6 +25,7 @@
     <spring.cloud-version>2025.1.1</spring.cloud-version>
     <lombok.version>1.18.34</lombok.version>
     <javalin.version>6.1.3</javalin.version>
+    <jjwt.version>0.12.6</jjwt.version>
   </properties>
 
   <dependencyManagement>
@@ -59,6 +60,23 @@
         <groupId>io.javalin</groupId>
         <artifactId>javalin</artifactId>
         <version>${javalin.version}</version>
+      </dependency>
+
+      <!-- JWT para la autenticacion entre el web-service y las APIs -->
+      <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-api</artifactId>
+        <version>${jjwt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-impl</artifactId>
+        <version>${jjwt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-jackson</artifactId>
+        <version>${jjwt.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

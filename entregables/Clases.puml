@@ -16,6 +16,13 @@ package "Common Lib" {
     SMS
     WHATSAPP
   }
+
+  enum Rol {
+    DONANTE
+    ENTIDAD_BENEFICIARIA
+    ADMINISTRADOR
+    SISTEMA
+  }
 }
 
 package "Microservicio Notificaciones" {
@@ -364,6 +371,15 @@ package "Microservicio Donaciones" {
     ACEPTADO
     RECHAZADO
   }
+
+  ' Credenciales de la plataforma web. El perfil se referencia por id: Donante o EntidadBeneficiaria segun el rol
+  class Usuario {
+    username : String
+    passwordHash : String
+    rol : Rol
+    perfilId : Long
+    activo : boolean
+  }
 }
 
 package "Microservicio Logistica" {
@@ -571,6 +587,10 @@ SegmentadorDeDonacion ..> RegistroDonacion
 SegmentadorDeDonacion ..> Bien
 
 ImportadorDeDonantes ..> Donante
+
+Usuario --> Rol
+Usuario ..> Donante : perfilId
+Usuario ..> EntidadBeneficiaria : perfilId
 
 Email --> ProveedorEmail
 SMS --> ProveedorSMS

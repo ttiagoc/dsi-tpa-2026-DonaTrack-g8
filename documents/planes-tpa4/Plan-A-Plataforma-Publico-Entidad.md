@@ -17,19 +17,57 @@
 
 Mergear a `main` lo antes posible: B y C la necesitan para crear sus pantallas.
 
-### 2.1 Backend: usuarios en `donaciones-service`
-Seguir el patrón existente: entidad → `XRepository` + `JpaX extends RepositorioJpa` → `XService` + `XServiceImpl` → controller que implementa `JavalinController`.
+### 2.1 Backend: autenticación en `donaciones-service` — ✅ hecho (rama `entrega-4`)
+Sigue el ejemplo de clase `gestion-alumnos-server` (JWT + BCrypt + roles), adaptado a Javalin: Spring Security no intercepta el Jetty de Javalin, así que se usan roles por ruta (`app.get(ruta, handler, Rol.X)`) y un `beforeMatched`. Justificación completa en [`entregables/JustificacionAutenticacion.md`](../../entregables/JustificacionAutenticacion.md).
 
-- [ ] Entidad `Usuario` (`id`, `username` único, `passwordHash`, `rol`, `perfilId`) + enum `Rol` (`DONANTE`, `ENTIDAD_BENEFICIARIA`, `ADMINISTRADOR`). Registrarla en `META-INF/persistence.xml`.
-- [ ] Hash BCrypt (`spring-security-crypto`, ya viene en el BOM de Spring Boot).
-- [ ] `POST /api/auth/login` `{username, password}` → `{usuarioId, username, rol, perfilId}` o 401.
-- [ ] `POST /api/auth/registro/persona-humana` `{username, password, donante: PersonaHumanaRequest}`.
-- [ ] `POST /api/auth/registro/persona-juridica` `{username, password, donante: PersonaJuridicaRequest}`.
-- [ ] `POST /api/auth/registro/entidad-beneficiaria` `{username, password, entidad: EntidadBeneficiariaRequest}`.
-- [ ] Orden del registro: validar username libre → crear perfil (services existentes) → crear `Usuario` (evita perfiles huérfanos).
-- [ ] Admin inicial creado al arrancar desde `ADMIN_USERNAME` / `ADMIN_PASSWORD` (con valores por defecto solo para local).
-- [ ] Exponer un método de servicio para crear un usuario para un donante ya existente, que la Persona C usa en la importación CSV.
-- [ ] Tests con HSQLDB (como los actuales en `donaciones-service/src/test`).
+- [x] `Usuario` (JPA, `username` único, `passwordHash` BCrypt, `rol`, `perfilId`, `activo`) + `UsuarioRepository`/`JpaUsuario`.
+- [x] En `common-lib/security`: `Rol` (`DONANTE`, `ENTIDAD_BENEFICIARIA`, `ADMINISTRADOR`, `SISTEMA`), `JwtUtil` (access 15 min, refresh 7 días), `AutenticacionHandler` (401/403) y `Autorizacion.exigirPropietario` (un donante solo ve lo suyo; ADMINISTRADOR y SISTEMA pasan siempre).
+- [x] `AuthService`/`AuthServiceImpl`: login, refresh, registro de los 3 tipos (perfil primero; si falla el usuario se borra el perfil), `crearUsuarioParaDonante` para el CSV de la Persona C, admin inicial con `ADMIN_USERNAME` / `ADMIN_PASSWORD`.
+- [x] Todos los endpoints de donaciones protegidos según la matriz de abajo.
+- [x] Logística manda `X-Api-Key` (`SERVICE_API_KEY`) en sus llamadas a donaciones → rol `SISTEMA`. Coordinado con la Persona C (su plan, sección 3.3).
+- [x] Tests: `JwtUtilTest`, `UsuarioRepositoryJpaTest`, `AuthServiceTest`, `AuthApiTest`, `RestTemplateConfigTest`; `DonacionesApiPersistenciaTest` y el E2E entran como admin.
+- [x] Postman (carpeta "00 - Autenticación", el login guarda `{{access_token}}`), `demo_presentacion.sh`, `docker-compose.yml` y `Clases.puml` actualizados.
+- [ ] **Falta:** probar el flujo de rutas con los servicios levantados (`docker compose --profile full up -d --build` + `demo_presentacion.sh`).
+
+#### Contrato de `/api/auth` (lo consume el `web-service`)
+| Método y ruta | Body | Respuesta |
+|---|---|---|
+| `POST /api/auth/login` | `{username, password}` | `200 {accessToken, refreshToken, usuario: {usuarioId, username, rol, perfilId}}` · `401` |
+| `POST /api/auth/refresh` | `{refreshToken}` | `200 {accessToken, refreshToken}` · `401` |
+| `POST /api/auth/registro/persona-humana` | `{username, password, donante: PersonaHumanaRequest}` | `201` igual que el login (queda logueado) · `400` |
+| `POST /api/auth/registro/persona-juridica` | `{username, password, donante: PersonaJuridicaRequest}` | ídem |
+| `POST /api/auth/registro/entidad-beneficiaria` | `{username, password, entidad: EntidadBeneficiariaRequest}` | ídem |
+| `GET /api/auth/me` | — (`Authorization: Bearer`) | `200 usuario` |
+
+El `web-service` manda `Authorization: Bearer <accessToken>` en cada llamada; si recibe 401, pide `/api/auth/refresh` y reintenta una vez. Errores: sin token o token inválido → `401`; rol equivocado o recurso ajeno → `403`.
+
+#### Matriz de roles (`propietario` = además `Autorizacion.exigirPropietario`)
+| Endpoint | Público | DONANTE | ENTIDAD | ADMIN | SISTEMA |
+|---|---|---|---|---|---|
+| `/api/auth/*` (salvo `me`), `GET /api/categorias`, `.../subcategorias` | ✓ | | | | |
+| `POST /api/categorias`, `.../subcategorias`, `/api/matchmaking/*` | | | | ✓ | |
+| `POST /api/donaciones` | | propietario | | ✓ | |
+| `GET /api/donaciones` | | | | ✓ | ✓ |
+| `GET /api/donaciones/{id}` | | propietario | propietario | ✓ | ✓ |
+| `DELETE /api/donaciones/{id}` | | | | ✓ | |
+| `PUT /api/donaciones/{id}/estado`, `GET /api/donaciones/estado/{estado}` | | | | ✓ | ✓ |
+| `POST /api/donaciones/{id}/fotos` | | | propietario | ✓ | |
+| `POST /api/donaciones/recepciones` | | | propietario | ✓ | ✓ |
+| `GET/PUT /api/donantes/{id}`, `PUT .../persona-*/{id}` | | propietario | | ✓ | |
+| `GET /api/donantes/{id}/contacto` | | propietario | | ✓ | ✓ |
+| `GET /api/donantes`, `DELETE`, `POST /api/donantes/persona-*`, inactividad | | | | ✓ | |
+| `GET/PUT /api/entidad-beneficiaria/{id}`, necesidades | | | propietario | ✓ | |
+| `GET /api/entidad-beneficiaria`, `POST`, `DELETE` | | | | ✓ | |
+| `GET /api/entidad-beneficiaria/{id}/contactos` | | | | ✓ | ✓ |
+
+**Regla para B y C:** todo endpoint nuevo declara sus roles al crearlo (sin roles = público) y, si es "solo lo mío", llama a `exigirPropietario`.
+
+#### Pendientes y riesgos
+- `POST /api/donaciones/recepciones` lo usan logística (entrega del camión) y la entidad (req. 12): separar la confirmación de la entidad en `POST /api/donaciones/{id}/recepcion` al hacer el req. 12.
+- Cuando la Persona C pase logística → donaciones a gRPC, el canal gRPC se protege con la misma `SERVICE_API_KEY` (interceptores) y los endpoints REST que solo usaba logística pierden el rol `SISTEMA`.
+- `notificaciones-service` sigue sin proteger (decisión de C: red privada o la misma clave).
+- Logout: con JWT el logout es borrar la sesión del `web-service`; el refresh token sigue válido hasta que vence (alcanza para el TP).
+- En la nube, `JWT_SECRET` (≥ 32 bytes, igual en todos los servicios), `SERVICE_API_KEY` y `ADMIN_PASSWORD` tienen que tener valores propios.
 
 ### 2.2 Módulo `web-service`
 - [ ] Agregar `<module>web-service</module>` al `pom.xml` raíz.
@@ -84,10 +122,10 @@ Seguir el patrón existente: entidad → `XRepository` + `JpaX extends Repositor
 
 ## 5. Entregables de documentación
 - [ ] Bocetos de las pantallas 1–4 y 10–12 en `documents/bocetos/`, **antes** de implementarlas.
-- [ ] Justificación: cliente liviano desacoplado, Handlebars, sesión por cookies (por qué en memoria, defensa contra CSRF con `SameSite`, `HttpOnly`/`Secure`).
-- [ ] `Usuario` y `Rol` en `Clases.puml`.
+- [ ] Justificación: cliente liviano desacoplado, Handlebars, sesión por cookies (por qué en memoria, defensa contra CSRF con `SameSite`, `HttpOnly`/`Secure`). La parte de JWT, BCrypt y roles ya está en `entregables/JustificacionAutenticacion.md`; falta sumar la del `web-service`.
+- [x] `Usuario` y `Rol` en `Clases.puml`.
 
 ## 6. Cronograma
 **[COMPLETAR]** Fechas por bloque. Sugerido: la Tarea 0 en los primeros 1–2 días; después bocetos → landing/login/registro → mapa → pantallas de entidad.
 
-Rama sugerida: `feat/web-base` (Tarea 0) y después `feat/publico-entidad`.
+Rama: `entrega-4` (autenticación del backend, ya hecha; el `web-service` sigue en la misma rama o en `feat/web-base`) y después `feat/publico-entidad`.

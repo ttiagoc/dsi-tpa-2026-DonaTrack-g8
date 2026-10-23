@@ -11,7 +11,9 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.common.dtos.error.ErrorResponse;
+import ar.edu.utn.frba.ddsi.common.exceptions.AccesoDenegadoException;
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
+import ar.edu.utn.frba.ddsi.common.exceptions.NoAutenticadoException;
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 
 import io.javalin.Javalin;
@@ -45,6 +47,16 @@ public class JavalinWebServer {
 
         app.exception(ResourceNotFoundException.class, (e, ctx) -> {
             ctx.status(404).json(new ErrorResponse("not_found", e.getMessage(), Instant.now()));
+        });
+
+        // Excepciones propias en lugar de UnauthorizedResponse/ForbiddenResponse de Javalin: el handler de
+        // Exception.class de abajo tambien atraparia esas y las devolveria como 500
+        app.exception(NoAutenticadoException.class, (e, ctx) -> {
+            ctx.status(401).json(new ErrorResponse("unauthorized", e.getMessage(), Instant.now()));
+        });
+
+        app.exception(AccesoDenegadoException.class, (e, ctx) -> {
+            ctx.status(403).json(new ErrorResponse("forbidden", e.getMessage(), Instant.now()));
         });
 
         app.exception(BusinessException.class, (e, ctx) -> {

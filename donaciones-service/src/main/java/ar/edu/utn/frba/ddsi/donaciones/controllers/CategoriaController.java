@@ -1,5 +1,7 @@
 package ar.edu.utn.frba.ddsi.donaciones.controllers;
 
+import static ar.edu.utn.frba.ddsi.common.security.Rol.ADMINISTRADOR;
+
 import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.common.controllers.JavalinController;
@@ -26,7 +28,7 @@ public class CategoriaController implements JavalinController {
         app.post("/api/categorias", ctx -> {
             CategoriaRequest request = ctx.bodyAsClass(CategoriaRequest.class);
             ctx.status(201).json(categoriaService.crear(request));
-        });
+        }, ADMINISTRADOR);
 
         app.get("/api/categorias/{categoriaId}/subcategorias", ctx -> {
             Long categoriaId = Long.parseLong(ctx.pathParam("categoriaId"));
@@ -37,6 +39,6 @@ public class CategoriaController implements JavalinController {
             Long categoriaId = Long.parseLong(ctx.pathParam("categoriaId"));
             SubcategoriaRequest request = ctx.bodyAsClass(SubcategoriaRequest.class);
             ctx.status(201).json(categoriaService.crearSubcategoria(categoriaId, request));
-        });
+        }, ADMINISTRADOR);
     }
 }

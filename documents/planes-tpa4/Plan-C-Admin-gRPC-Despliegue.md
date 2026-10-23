@@ -47,6 +47,18 @@ Por lo tanto: **servidor gRPC en `donaciones-service`, cliente gRPC en `logistic
 - [ ] Servidor gRPC en donaciones, en un puerto propio (`GRPC_PORT`, por ejemplo 9090), que reutilice los `Service` existentes (no duplicar lógica).
 - [ ] Cliente en logística con `ManagedChannel` configurable por variable de entorno (`DONACIONES_GRPC_HOST` / `DONACIONES_GRPC_PORT`) que reemplace las llamadas con `RestTemplate` de la tabla.
 - [ ] Mantener los endpoints REST de donaciones: los sigue usando el `web-service`.
+- [ ] **Autenticación del canal gRPC** (ver 3.3): `ServerInterceptor` en donaciones y `ClientInterceptor` en logística con `SERVICE_API_KEY`.
+
+### 3.3 Coordinación con la autenticación de la Persona A
+La Persona A protege la API REST de donaciones con JWT y roles (contrato, matriz de roles y pendientes en [Plan-A-Plataforma-Publico-Entidad.md](Plan-A-Plataforma-Publico-Entidad.md), sección 2.1). Las llamadas de logística de la tabla 3.1 no tienen usuario, así que se resuelven así:
+
+- **Mientras siguen por REST** (lo hace A): logística manda el header `X-Api-Key` con el valor de la variable `SERVICE_API_KEY`, agregado por un interceptor del `RestTemplate`. Donaciones lo trata como rol `SISTEMA`. Al tomar la rama de gRPC, partir de esa versión para no pisar el interceptor.
+- **Al pasar a gRPC** (lo hace C): el servidor gRPC no pasa por Javalin, así que no lo cubre la autenticación de A. Hay que agregar:
+  - [ ] `ServerInterceptor` en donaciones que valide `x-api-key` en los metadata contra `SERVICE_API_KEY` (si no coincide, `Status.UNAUTHENTICATED`).
+  - [ ] `ClientInterceptor` en logística que agregue `x-api-key` a cada llamada.
+  - [ ] Avisar a A cuando se mergee, para quitar el rol `SISTEMA` de los endpoints REST que solo usaba logística.
+- **Despliegue:** definir `SERVICE_API_KEY` (y `JWT_SECRET`, el mismo en todos los servicios que validen tokens) como variables de entorno en donaciones y logística. Si el proveedor tiene red privada, no exponer el puerto gRPC; la clave se mantiene igual.
+- [ ] **[COMPLETAR]** Decidir si `notificaciones-service` también exige `SERVICE_API_KEY` o si alcanza con la red privada (hoy lo llaman donaciones y logística sin autenticación).
 - [ ] Probar el flujo completo planificación → inicio de ruta → entrega con docker compose.
 
 ## 4. Pantallas de administración (`web-service`, después de mergeada la Tarea 0)
@@ -88,7 +100,7 @@ Por lo tanto: **servidor gRPC en `donaciones-service`, cliente gRPC en `logistic
 - [ ] Documentar en el README cómo desplegar y las variables de entorno.
 
 ## 6. Dependencias con el resto
-- **Recibe de A:** la Tarea 0 (para las pantallas) y el servicio para crear usuarios (para el CSV).
+- **Recibe de A:** la Tarea 0 (para las pantallas), el servicio para crear usuarios (para el CSV) y la autenticación con `X-Api-Key` entre logística y donaciones (sección 3.3).
 - **Entrega a A y B:** las variables de entorno y las URLs del despliegue; el despliegue de prueba temprano.
 - **Avisar a B** si cambian los DTOs de donaciones al pasar a gRPC (los endpoints REST que usa el web no deberían cambiar).
 - **Archivos compartidos:** `pom.xml` raíz (módulo gRPC), `docker-compose.yml`, `navbar.hbs` (links de admin), `styles.css`.

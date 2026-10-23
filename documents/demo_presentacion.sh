@@ -34,19 +34,31 @@ sleep 1
 
 TS=$(date +%s)
 
+# La API de donaciones exige un usuario: la demo entra como el administrador inicial
+LOGIN_RESP=$(curl -s -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d "{\"username\":\"${ADMIN_USERNAME:-admin}\",\"password\":\"${ADMIN_PASSWORD:-admin1234}\"}")
+TOKEN=$(echo $LOGIN_RESP | grep -o '"accessToken":"[^"]*' | cut -d'"' -f4)
+if [ -z "$TOKEN" ]; then
+    echo -e "${RED}Error: no se pudo iniciar sesión como administrador. Respuesta: $LOGIN_RESP${NC}"
+    exit 1
+fi
+AUTH="Authorization: Bearer $TOKEN"
+echo -e "${GREEN}✔ Sesión iniciada como administrador.${NC}\n"
+
 # Paso 1: Catálogo
 echo -e "${BLUE}------------------------------------------------------------------------------${NC}"
 echo -e "${BOLD}${MAGENTA}[Paso 1 - TPA 1] Catálogo de Categorías y Subcategorías${NC}"
 echo -e "Definiendo unidad mínima de asignación: Alimentos Perecederos -> Fideos Secos"
 echo -e "${BLUE}------------------------------------------------------------------------------${NC}"
 
-CAT_RESP=$(curl -s -X POST http://localhost:8080/api/categorias \
+CAT_RESP=$(curl -s -X POST -H "$AUTH" http://localhost:8080/api/categorias \
   -H "Content-Type: application/json" \
   -d "{\"nombre\":\"Alimentos Perecederos $TS\",\"pideEstado\":false,\"esPerecedero\":true}")
 CAT_ID=$(echo $CAT_RESP | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
 echo -e "✔ Categoría creada con ID: ${GREEN}$CAT_ID${NC}"
 
-SUBCAT_RESP=$(curl -s -X POST "http://localhost:8080/api/categorias/$CAT_ID/subcategorias" \
+SUBCAT_RESP=$(curl -s -X POST -H "$AUTH" "http://localhost:8080/api/categorias/$CAT_ID/subcategorias" \
   -H "Content-Type: application/json" \
   -d "{\"nombre\":\"Fideos Tallarines $TS\"}")
 SUBCAT_ID=$(echo $SUBCAT_RESP | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
@@ -61,7 +73,7 @@ echo -e "${BOLD}${MAGENTA}[Paso 2 - TPA 1] Registro Polimórfico de Donantes${NC
 echo -e "Registrando Persona Humana y Persona Jurídica (con CUIT y representantes)"
 echo -e "${BLUE}------------------------------------------------------------------------------${NC}"
 
-DONANTE_RESP=$(curl -s -X POST http://localhost:8080/api/donantes/persona-humana \
+DONANTE_RESP=$(curl -s -X POST -H "$AUTH" http://localhost:8080/api/donantes/persona-humana \
   -H "Content-Type: application/json" \
   -d "{
     \"nombre\":\"Ana\",
@@ -79,7 +91,7 @@ DONANTE_RESP=$(curl -s -X POST http://localhost:8080/api/donantes/persona-humana
 DONANTE_ID=$(echo $DONANTE_RESP | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
 echo -e "✔ Donante Humana registrada: ${GREEN}Ana Pérez (ID: $DONANTE_ID)${NC}"
 
-EMPRESA_RESP=$(curl -s -X POST http://localhost:8080/api/donantes/persona-juridica \
+EMPRESA_RESP=$(curl -s -X POST -H "$AUTH" http://localhost:8080/api/donantes/persona-juridica \
   -H "Content-Type: application/json" \
   -d "{
     \"razonSocial\":\"Arcos Plateados $TS S.A.\",
@@ -101,7 +113,7 @@ echo -e "${BOLD}${MAGENTA}[Paso 3 - TPA 1] Carga Única y Segmentación Automát
 echo -e "La carga de bienes heterogéneos se divide automáticamente en donaciones independientes"
 echo -e "${BLUE}------------------------------------------------------------------------------${NC}"
 
-DONACION_RESP=$(curl -s -X POST http://localhost:8080/api/donaciones \
+DONACION_RESP=$(curl -s -X POST -H "$AUTH" http://localhost:8080/api/donaciones \
   -H "Content-Type: application/json" \
   -d "{
     \"descripcion\":\"Colecta de Pastas y Víveres\",
@@ -120,7 +132,7 @@ DONACION_RESP=$(curl -s -X POST http://localhost:8080/api/donaciones \
   }")
 
 DONACION_ID=$(echo $DONACION_RESP | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
-ESTADO_INICIAL=$(curl -s http://localhost:8080/api/donaciones/$DONACION_ID | grep -o '"estadoActual":"[^"]*' | cut -d'"' -f4)
+ESTADO_INICIAL=$(curl -s -H "$AUTH" http://localhost:8080/api/donaciones/$DONACION_ID | grep -o '"estadoActual":"[^"]*' | cut -d'"' -f4)
 echo -e "✔ Donación segmentada creada con ID: ${GREEN}$DONACION_ID${NC}"
 echo -e "✔ Estado inicial en depósito: ${YELLOW}$ESTADO_INICIAL${NC}"
 echo ""
@@ -131,7 +143,7 @@ echo -e "${BLUE}----------------------------------------------------------------
 echo -e "${BOLD}${MAGENTA}[Paso 4 - TPA 1] Entidad Beneficiaria y Necesidades Recurrentes${NC}"
 echo -e "${BLUE}------------------------------------------------------------------------------${NC}"
 
-ENTIDAD_RESP=$(curl -s -X POST http://localhost:8080/api/entidad-beneficiaria \
+ENTIDAD_RESP=$(curl -s -X POST -H "$AUTH" http://localhost:8080/api/entidad-beneficiaria \
   -H "Content-Type: application/json" \
   -d "{
     \"razonSocial\":\"Comedor Infantil Escobar Sonrisas $TS\",
@@ -142,7 +154,7 @@ ENTIDAD_RESP=$(curl -s -X POST http://localhost:8080/api/entidad-beneficiaria \
 ENTIDAD_ID=$(echo $ENTIDAD_RESP | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
 echo -e "✔ Entidad Beneficiaria creada: ${GREEN}Comedor Infantil Escobar (ID: $ENTIDAD_ID)${NC}"
 
-curl -s -X POST "http://localhost:8080/api/entidad-beneficiaria/$ENTIDAD_ID/necesidades" \
+curl -s -X POST -H "$AUTH" "http://localhost:8080/api/entidad-beneficiaria/$ENTIDAD_ID/necesidades" \
   -H "Content-Type: application/json" \
   -d "{
     \"subcategoria\":{\"nombre\":\"$SUBCAT_NOMBRE\"},
@@ -161,19 +173,19 @@ echo -e "${BOLD}${MAGENTA}[Paso 5 - TPA 2] Algoritmo de Matchmaking y Asignació
 echo -e "Evaluación de compatibilidad semántica y ranking de entidades candidatas"
 echo -e "${BLUE}------------------------------------------------------------------------------${NC}"
 
-curl -s -X POST http://localhost:8080/api/matchmaking/ejecuciones > /dev/null
+curl -s -X POST -H "$AUTH" http://localhost:8080/api/matchmaking/ejecuciones > /dev/null
 echo -e "✔ Algoritmos de Matchmaking ejecutados con éxito."
 
-PROPUESTAS=$(curl -s http://localhost:8080/api/matchmaking/pendientes)
+PROPUESTAS=$(curl -s -H "$AUTH" http://localhost:8080/api/matchmaking/pendientes)
 PROPUESTA_ID=$(echo $PROPUESTAS | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
 
 if [ -n "$PROPUESTA_ID" ]; then
     echo -e "✔ Propuesta de asignación generada: ${GREEN}Propuesta ID $PROPUESTA_ID${NC}"
-    curl -s -X PUT "http://localhost:8080/api/matchmaking/propuestas/$PROPUESTA_ID/estado" \
+    curl -s -X PUT -H "$AUTH" "http://localhost:8080/api/matchmaking/propuestas/$PROPUESTA_ID/estado" \
       -H "Content-Type: application/json" \
       -d "{\"estado\":\"ACEPTADO\",\"entidadId\":$ENTIDAD_ID}" > /dev/null
     
-    ESTADO_ASIGNADA=$(curl -s http://localhost:8080/api/donaciones/$DONACION_ID | grep -o '"estadoActual":"[^"]*' | cut -d'"' -f4)
+    ESTADO_ASIGNADA=$(curl -s -H "$AUTH" http://localhost:8080/api/donaciones/$DONACION_ID | grep -o '"estadoActual":"[^"]*' | cut -d'"' -f4)
     echo -e "✔ Propuesta aprobada por el administrador."
     echo -e "✔ Donación transicionó a: ${GREEN}$ESTADO_ASIGNADA${NC}"
 fi
