@@ -58,7 +58,7 @@ La Persona A protege la API REST de donaciones con JWT y roles (contrato, matriz
   - [ ] `ClientInterceptor` en logística que agregue `x-api-key` a cada llamada.
   - [ ] Avisar a A cuando se mergee, para quitar el rol `SISTEMA` de los endpoints REST que solo usaba logística.
 - **Despliegue:** definir `SERVICE_API_KEY` (y `JWT_SECRET`, el mismo en todos los servicios que validen tokens) como variables de entorno en donaciones y logística. Si el proveedor tiene red privada, no exponer el puerto gRPC; la clave se mantiene igual.
-- [ ] **[COMPLETAR]** Decidir si `notificaciones-service` también exige `SERVICE_API_KEY` o si alcanza con la red privada (hoy lo llaman donaciones y logística sin autenticación).
+- [ ] **[COMPLETAR]** Decidir con B si `notificaciones-service` exige `SERVICE_API_KEY` en el `POST /api/notificaciones` (hoy lo llaman donaciones y logística sin autenticación) o si alcanza con la red privada. La protección de los endpoints que consume el web la hace B (su plan, 3.2).
 - [ ] Probar el flujo completo planificación → inicio de ruta → entrega con docker compose.
 
 ## 4. Pantallas de administración (`web-service`, después de pusheada la Tarea 0 a `entrega-4`)
@@ -70,6 +70,14 @@ La Persona A protege la API REST de donaciones con JWT y roles (contrato, matriz
 | 17 | `/admin/matchmaking` | `POST /api/matchmaking/ejecuciones`, `GET /api/matchmaking/pendientes`, `PUT /api/matchmaking/propuestas/{id}/estado` | — (verificar que la respuesta traiga el ranking de cada algoritmo) |
 | 18 | `/admin/camiones` | `GET/POST/PUT/DELETE /api/camiones` (logística) | — |
 | 19 | `/admin/importaciones` | `ImportadorDeDonantes` (clase de dominio, sin endpoint) | Endpoint + procesamiento asíncrono |
+
+### 4.0 Proteger la API de logística
+Hoy **ningún endpoint de `logistica-service` declara roles**, así que son públicos (cualquiera puede crear o borrar camiones). Logística ya usa `common-lib`, así que tiene el mismo `AutenticacionHandler` que donaciones: alcanza con declarar los roles en cada ruta (`app.get(ruta, handler, ADMINISTRADOR)`, ver la matriz de roles en el Plan A, 2.1).
+- [ ] `/api/camiones/*` y la planificación de rutas → `ADMINISTRADOR`. Lo llama el `web-service` con el JWT del admin.
+- [ ] Endpoints que llaman otros servicios (no el web) → `SISTEMA`: el que llama manda `X-Api-Key` con `SERVICE_API_KEY`, igual que logística → donaciones.
+- [ ] Los endpoints de seguimiento para donante y entidad (`/api/rutas/activas?...`) los protege la Persona B (su plan, 3.3).
+- [ ] Verificar que `JWT_SECRET` y `SERVICE_API_KEY` lleguen a logística en local, en Docker y en la nube (en `docker-compose.yml` ya están).
+- [ ] Tests: sin token → 401; donante → 403; admin → 200.
 
 ### 4.1 Importación CSV (req. 19)
 - [ ] `POST /api/donantes/importaciones` (multipart) → responde 202 con el id de la importación; el archivo se procesa en segundo plano.

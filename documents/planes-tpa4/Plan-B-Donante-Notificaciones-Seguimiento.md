@@ -45,6 +45,11 @@ Hoy **no existe nada** de misiones, insignias ni categorías de donante en el c�
 - [ ] **[COMPLETAR]** Verificar que el `destinatarioId` distinga donante de entidad (si no, agregar un `tipoDestinatario`, porque los ids pueden coincidir).
 - [ ] Verificar que se emitan los 4 casos del donante: donación asignada, misión cumplida, subida de categoría y donación recibida por la entidad. Y los 2 de la entidad: asignación y confirmación de recepción.
 - [ ] (Opcional) marcar como leída.
+- [ ] **Proteger la API:** hoy `notificaciones-service` no exige autenticación. Ya usa `common-lib`, así que tiene el mismo `AutenticacionHandler` que donaciones: declarar roles en cada ruta (matriz del Plan A, 2.1).
+  - `GET /api/notificaciones?...` → `DONANTE` y `ENTIDAD_BENEFICIARIA`, con `Autorizacion.exigirPropietario` (cada uno ve solo las suyas), más `ADMINISTRADOR`.
+  - `POST /api/notificaciones` → lo llaman donaciones y logística: `SISTEMA` con `X-Api-Key`, o sin roles si se decide confiar en la red privada (decisión compartida con C, su plan 3.3). Si se protege, los dos servicios tienen que mandar el header.
+  - Agregar `JWT_SECRET` (y `SERVICE_API_KEY` si aplica) a notificaciones en `docker-compose.yml` y en la nube: hoy no los tiene.
+  - Tests: sin token → 401; el donante pidiendo notificaciones de otro → 403.
 
 ### 3.3 Seguimiento (req. 9 y 14) — `logistica-service`
 - [ ] Hoy existen `GET /api/camiones/activos` y `GET /api/rutas/{id}/ubicacion`.
@@ -53,6 +58,7 @@ Hoy **no existe nada** de misiones, insignias ni categorías de donante en el c�
   - `GET /api/rutas/activas?donacionIds=1,2,3` → para el donante (el web primero pide los ids de sus donaciones a donaciones-service).
 - [ ] Respuesta: camión (patente), última ubicación (lat/lng), fecha y hora de la última actualización, paradas.
 - [ ] Ojo: el canal donaciones ↔ logística lo pasa a gRPC la Persona C, pero **web → logística sigue siendo HTTP/REST**, así que no hay dependencia.
+- [ ] **Roles** (hoy los endpoints de logística son públicos; C protege los de administración): `/api/rutas/activas?entidadId=X` → `ENTIDAD_BENEFICIARIA` (solo su propio `entidadId`, con `exigirPropietario`) y `ADMINISTRADOR`. `?donacionIds=...` → `DONANTE`: logística no sabe de quién es cada donación, así que hay que validar que los ids sean del donante (por ejemplo, que logística acepte el `donanteId` y le pregunte a donaciones, o que el web pase solo los ids que ya obtuvo de `/api/donaciones` del propio donante y logística devuelva datos no sensibles). **[COMPLETAR]** elegir una.
 
 ### 3.4 Filtros de donaciones (req. 5) — `donaciones-service`
 - [ ] Hoy `GET /api/donaciones` devuelve todas y `GET /api/donaciones/estado/{estado}` filtra solo por estado.
