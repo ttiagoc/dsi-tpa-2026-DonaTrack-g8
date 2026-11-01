@@ -114,7 +114,7 @@ Hoy **ningún endpoint de `logistica-service` declara roles**, así que son púb
 - **Archivos compartidos:** `pom.xml` raíz (módulo gRPC), `docker-compose.yml`, `navbar.hbs` (links de admin), `styles.css`.
 
 ## 7. Entregables de documentación
-- [ ] Bocetos de las pantallas 15–19 en `documents/bocetos/`, **antes** de implementarlas.
+- [ ] Bocetos de las pantallas 15–19 en `documents/bocetos/`, **antes** de implementarlas. Seguir el flujo de [`AGENTS.md`](../../AGENTS.md#flujo-para-cada-pantalla-nueva): boceto (en lo posible en Figma), PNG con formato `punto-nombre.png` y después el código.
 - [ ] `Despliegue.puml` actualizado: nodos cloud, web-service, canal gRPC, base administrada.
 - [ ] Justificación: gRPC vs GraphQL (por qué gRPC para comunicación entre servicios), comparación de proveedores cloud y topología elegida.
 - [ ] Diagrama de arquitectura actualizado (el del plan original tiene la flecha gRPC al revés y le falta web → notificaciones).

@@ -89,7 +89,7 @@ Hoy **no existe nada** de misiones, insignias ni categorías de donante en el c�
 - **Archivos compartidos:** `persistence.xml` (donaciones), `Clases.puml`, `navbar.hbs`, `styles.css`. Regla: agregar al final, en una sección propia.
 
 ## 6. Entregables de documentación
-- [ ] Bocetos de las pantallas 5–9, 13 y 14 en `documents/bocetos/`, **antes** de implementarlas.
+- [ ] Bocetos de las pantallas 5–9, 13 y 14 en `documents/bocetos/`, **antes** de implementarlas. Seguir el flujo de [`AGENTS.md`](../../AGENTS.md#flujo-para-cada-pantalla-nueva): boceto (en lo posible en Figma), PNG con formato `punto-nombre.png` y después el código.
 - [ ] Clases de gamificación en `Clases.puml` (paquete propio).
 - [ ] Justificación del modelo de incentivos (por qué estrategia o evento, cómo se extiende con nuevas misiones).
 

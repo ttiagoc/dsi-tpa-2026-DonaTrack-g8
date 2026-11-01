@@ -15,7 +15,7 @@
 
 ## 2. Tarea 0 — base del `web-service` (prioridad máxima)
 
-✅ Hecha (backend y `web-service`), junto con los req. 1, 3 y 4. Falta pushearla a `entrega-4` y avisar a B y C. Cómo se usa: [`web-service/README.md`](../../web-service/README.md).
+✅ Hecha (backend y `web-service`), junto con los req. 1, 3 y 4. Pusheada a `entrega-4` y avisada a B y C. Cómo se usa: [`web-service/README.md`](../../web-service/README.md).
 
 ### 2.1 Backend: autenticación en `donaciones-service` — ✅ hecho (rama `entrega-4`)
 Sigue el ejemplo de clase `gestion-alumnos-server` (JWT + BCrypt + roles), adaptado a Javalin: Spring Security no intercepta el Jetty de Javalin, así que se usan roles por ruta (`app.get(ruta, handler, Rol.X)`) y un `beforeMatched`. Justificación completa en [`entregables/JustificacionAutenticacion.md`](../../entregables/JustificacionAutenticacion.md).
@@ -108,7 +108,7 @@ Tests: `WebFlujoTest` (13) levanta la web contra una API falsa y recorre landing
 - [x] `mvn package` compila todo el reactor.
 - [x] Registro + login funcionan y cada rol cae en su panel (probado con el backend real: entidad y admin; donante con la API falsa de `WebFlujoTest`).
 - [x] El rol equivocado da 403; sin sesión, redirige a `/login`; el logout borra la cookie.
-- [ ] Pusheado a `entrega-4` y aviso a B y C.
+- [x] Pusheado a `entrega-4` y aviso a B y C.
 
 ## 3. Pantallas propias (después de la Tarea 0)
 
@@ -133,7 +133,7 @@ Tests: `WebFlujoTest` (13) levanta la web contra una API falsa y recorre landing
 - **Archivos compartidos** (riesgo de conflictos): `Router.java`, `styles.css`, `navbar.html.hbs`, `persistence.xml`, `pom.xml` raíz, `docker-compose.yml`, `Clases.puml`. Regla: A es dueño del layout, del navbar y del `Server`; los demás solo agregan sus rutas, links o estilos en su bloque comentado (`--- Donante (B) ---`, `--- Administrador (C) ---`). `git pull --rebase` antes de cada push.
 
 ## 5. Entregables de documentación
-- [ ] Bocetos de las pantallas 1–4 y 10–12 en `documents/bocetos/`, **antes** de implementarlas.
+- [ ] Bocetos de las pantallas 1–4 y 10–12 en `documents/bocetos/`, **antes** de implementarlas. Hechos los de 1, 3 y 4 ([`bocetos/README.md`](../bocetos/README.md), fuente en Figma); faltan 2, 10, 11 y 12. Flujo en [`AGENTS.md`](../../AGENTS.md#flujo-para-cada-pantalla-nueva).
 - [x] Justificación: cliente liviano desacoplado, Handlebars, sesión por cookies (por qué en memoria, defensa contra CSRF con `SameSite`, `HttpOnly`/`Secure`) en [`entregables/JustificacionWebService.md`](../../entregables/JustificacionWebService.md). La parte de JWT, BCrypt y roles está en `entregables/JustificacionAutenticacion.md`.
 - [x] `Usuario` y `Rol` en `Clases.puml`.
 
