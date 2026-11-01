@@ -14,7 +14,8 @@ import io.javalin.http.Context;
 /**
  * Todo controller arranca el modelo de su vista desde aca, asi el layout siempre tiene:
  * - usuario: el usuario logueado (UsuarioVista) o nada si es un visitante;
- * - alertas: los mensajes pendientes (ver Alertas).
+ * - alertas: los mensajes pendientes (ver Alertas);
+ * - rutaActual: para marcar la pagina abierta en el menu lateral.
  */
 public final class Modelo {
 
@@ -25,6 +26,7 @@ public final class Modelo {
         Map<String, Object> modelo = new HashMap<>();
         SesionUsuario.actual(ctx).ifPresent(sesion -> modelo.put("usuario", UsuarioVista.de(sesion.getUsuario())));
         modelo.put("alertas", new ArrayList<>(Alertas.consumir(ctx)));
+        modelo.put("rutaActual", ctx.path());
         return modelo;
     }
 

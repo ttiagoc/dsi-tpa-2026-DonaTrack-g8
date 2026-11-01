@@ -1,17 +1,18 @@
 # Bocetos de interfaz
 
-Fuente editable en Figma: [DonaTrack - Bocetos](https://www.figma.com/design/1tzIHQUO6aSwCbdgtPuXgj). Los PNG de esta carpeta son exportaciones de ese archivo.
+Todos los PNG están en el mismo formato: 1280 px de ancho, con el `styles.css` real y la fuente del sitio.
+- **Pantallas ya implementadas (1, 3 y 4):** capturas de la aplicación levantada (Chrome en modo headless).
+- **Pantallas nuevas (10 en adelante):** maqueta HTML con el `styles.css` real, exportada a PNG antes de implementarla.
 
-El archivo usa los colores de `web-service/.../public/css/styles.css` como variables y tiene una sección "Componentes" (`Botón`, `Campo`, `Navbar / Público`, `Footer`) para reutilizar en las pantallas nuevas. Tipografía: Roboto (de la pila de `--fuente`; Segoe UI no está en Figma).
-
-Los bocetos de la pantalla 10 se hicieron como maqueta HTML con el `styles.css` real y se exportaron a PNG (el plan gratuito de Figma limita las llamadas del MCP). En Figma, la página "Bocetos — nuevas" quedó con una primera versión de la pantalla 10 que ya no vale: los vigentes son estos PNG.
+En [Figma](https://www.figma.com/design/1tzIHQUO6aSwCbdgtPuXgj) quedó una primera versión de las pantallas 1, 3, 4 y 10 que ya no está al día: los bocetos vigentes son estos PNG.
 
 ## Persona A: público y entidad beneficiaria
 
 | Req | Pantalla | Ruta | Boceto |
 |---|---|---|---|
 | 1 | Landing | `/` | [01-landing.png](01-landing.png) |
-| 1 | Términos y privacidad | `/legal` | [01b-terminos.png](01b-terminos.png) |
+| 1 | Términos y privacidad (sin sesión) | `/legal` | [01b-terminos.png](01b-terminos.png) |
+| 1 | Términos y privacidad (con sesión: misma página, layout con menú lateral) | `/legal` | [01c-terminos-con-sesion.png](01c-terminos-con-sesion.png) |
 | 2 | Mapa de donaciones entregadas | `/mapa` | Pendiente |
 | 3 | Registro: elegir tipo de cuenta | `/registro` | [03-registro-selector.png](03-registro-selector.png) |
 | 3 | Registro de persona | `/registro/persona-humana` | [03a-registro-persona-humana.png](03a-registro-persona-humana.png) |

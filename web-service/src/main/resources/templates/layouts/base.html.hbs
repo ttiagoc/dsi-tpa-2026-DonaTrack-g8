@@ -1,5 +1,8 @@
 {{!-- Layout comun. Cada pagina define sus bloques y termina con {{> layouts/base}}:
-      {{#partial "titulo"}}...{{/partial}}  {{#partial "contenido"}}...{{/partial}}  (opcionales: "head", "scripts") --}}
+      {{#partial "titulo"}}...{{/partial}}  {{#partial "contenido"}}...{{/partial}}  (opcionales: "head", "scripts")
+      La pagina solo pone el contenido; el layout agrega las partes segun haya sesion o no:
+      - sin sesion: navbar publico arriba y footer abajo;
+      - con sesion: menu lateral (paginas del rol) y barra superior (titulo y perfil). --}}
 <!doctype html>
 <html lang="es">
 <head>
@@ -11,12 +14,36 @@
   {{#block "head"}}{{/block}}
 </head>
 <body>
+{{#if usuario}}
+  {{> partials/iconos}}
+  <input type="checkbox" id="menu-toggle" class="app__toggle">
+  <input type="checkbox" id="menu-plegado" class="app__toggle">
+  <script>
+    // Recuerda si el menu lateral quedo achicado (solo en este navegador). Sin JS, se achica igual pero no se recuerda.
+    (function () {
+      var plegado = document.getElementById('menu-plegado');
+      try { plegado.checked = localStorage.getItem('donatrack.menuPlegado') === '1'; } catch (e) {}
+      plegado.addEventListener('change', function () {
+        try { localStorage.setItem('donatrack.menuPlegado', plegado.checked ? '1' : '0'); } catch (e) {}
+      });
+    })();
+  </script>
+  <div class="app">
+    {{> partials/menu-lateral}}
+    {{> partials/barra}}
+    <main class="app__principal contenedor" id="contenido">
+      {{> partials/alertas}}
+      {{#block "contenido"}}{{/block}}
+    </main>
+  </div>
+{{else}}
   {{> partials/navbar}}
   <main class="contenedor" id="contenido">
     {{> partials/alertas}}
     {{#block "contenido"}}{{/block}}
   </main>
   {{> partials/footer}}
+{{/if}}
   {{#block "scripts"}}{{/block}}
 </body>
 </html>

@@ -1,0 +1,38 @@
+{{!-- Menu lateral (con sesion): las paginas de cada rol, agrupadas en secciones.
+      Cada persona agrega sus links solo dentro del bloque de su rol, con este formato
+      (el texto va en un <span> para que se oculte cuando el menu esta achicado):
+        <a href="/rol/pagina" title="Texto" {{#if (eq rutaActual "/rol/pagina")}}aria-current="page"{{/if}}>
+          <svg class="icono"><use href="#i-nombre"/></svg> <span>Texto</span></a>
+      Los iconos estan en partials/iconos. --}}
+<aside class="menu-lateral" aria-label="Menú">
+  <div class="menu-lateral__cabecera">
+    <a class="navbar__marca" href="{{usuario.panel}}">
+      <img src="/img/logo.svg" alt="" width="28" height="28"> <span>DonaTrack</span>
+    </a>
+  </div>
+  <nav class="menu-lateral__links">
+    {{#if usuario.esEntidad}}
+      {{!-- --- Entidad beneficiaria (A) --- --}}
+      <p class="menu-lateral__seccion">Mi entidad</p>
+      <a href="/entidad" title="Inicio" {{#if (eq rutaActual "/entidad")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-inicio"/></svg> <span>Inicio</span></a>
+    {{/if}}
+    {{#if usuario.esDonante}}
+      {{!-- --- Donante (B) --- --}}
+      <p class="menu-lateral__seccion">Mis donaciones</p>
+      <a href="/donante" title="Inicio" {{#if (eq rutaActual "/donante")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-inicio"/></svg> <span>Inicio</span></a>
+    {{/if}}
+    {{#if usuario.esAdmin}}
+      {{!-- --- Administrador (C) --- --}}
+      <p class="menu-lateral__seccion">Administración</p>
+      <a href="/admin" title="Inicio" {{#if (eq rutaActual "/admin")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-inicio"/></svg> <span>Inicio</span></a>
+    {{/if}}
+  </nav>
+  <div class="menu-lateral__pie">
+    <span class="menu-lateral__legal">DSI UTN FRBA 2026 · <a href="/legal">Términos y privacidad</a></span>
+    <label for="menu-plegado" class="menu-lateral__plegar" title="Achicar o agrandar el menú">
+      <svg class="icono"><use href="#i-plegar"/></svg>
+      <span class="sr-only">Achicar o agrandar el menú</span>
+    </label>
+  </div>
+</aside>
+<label for="menu-toggle" class="app__velo" aria-hidden="true"></label>

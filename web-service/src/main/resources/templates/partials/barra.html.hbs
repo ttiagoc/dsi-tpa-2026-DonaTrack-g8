@@ -1,0 +1,24 @@
+{{!-- Barra superior (con sesion): titulo del panel y perfil.
+      El menu del perfil es un <details>: se abre y se cierra sin JavaScript. --}}
+<header class="barra">
+  <label for="menu-toggle" class="barra__boton barra__hamburguesa" aria-label="Abrir o cerrar el menú">
+    <svg class="icono"><use href="#i-menu"/></svg>
+  </label>
+  <p class="barra__titulo">{{usuario.tituloPanel}}</p>
+  <details class="perfil">
+    <summary class="perfil__boton">
+      <span class="perfil__avatar" aria-hidden="true">{{usuario.iniciales}}</span>
+      <span class="perfil__datos">
+        <span class="perfil__nombre">{{usuario.username}}</span>
+        <span class="perfil__rol">{{usuario.rolEtiqueta}}</span>
+      </span>
+      <svg class="icono"><use href="#i-abajo"/></svg>
+    </summary>
+    <div class="perfil__menu">
+      {{!-- Cada rol puede sumar aca "Datos de ..." cuando exista esa pantalla. --}}
+      <form method="post" action="/logout">
+        <button type="submit">Salir</button>
+      </form>
+    </div>
+  </details>
+</header>

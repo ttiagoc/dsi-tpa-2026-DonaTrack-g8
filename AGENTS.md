@@ -27,7 +27,8 @@ Al terminar, tildar el boceto y la pantalla en el plan que corresponda.
 ## Convenciones de pantallas
 - **Navegación con sesión** (ver `documents/bocetos/10-necesidades.png` y `10e-menu-perfil.png`):
   - **Menú lateral fijo** a la izquierda con las páginas del rol, agrupadas en secciones y con ícono. Cada rol tiene su bloque (A: entidad, B: donante, C: administrador).
-  - **Barra superior** con el nombre del panel, la campana de notificaciones con la cantidad sin leer y el perfil (avatar, nombre y rol), que despliega un menú con "Datos de ..." y "Salir".
+  - **Barra superior** con el nombre del panel y el perfil (avatar, nombre y rol), que despliega un menú con "Salir" (y "Datos de ..." cuando exista esa pantalla).
+  - Al pie del menú lateral, junto a "Términos y privacidad", un botón para achicarlo y dejar solo los íconos (el navegador recuerda la preferencia).
   - En celular el menú lateral se oculta y se abre desde la barra. Sin sesión se usa el navbar superior de siempre.
 - **ABM:** cada pantalla es un listado con el botón "+ Nuevo/a ..." arriba a la derecha. El alta y la edición se hacen en un modal (`<dialog>`). Si el servidor rechaza los datos, la página vuelve a cargarse con el modal abierto, los errores marcados y lo que se había escrito.
 - **Eliminar siempre pide confirmación** en un modal que nombra el registro y dice qué pasa al borrarlo. El borrado es un `POST` (los formularios HTML no mandan `DELETE`).

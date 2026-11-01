@@ -1,7 +1,6 @@
 package ar.edu.utn.frba.ddsi.web.controllers;
 
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
@@ -24,11 +23,6 @@ public class SesionController {
     }
 
     public void mostrarLogin(Context ctx) {
-        Optional<SesionUsuario> sesion = SesionUsuario.actual(ctx);
-        if (sesion.isPresent()) {
-            ctx.redirect(sesion.get().getUsuario().rol().panel());
-            return;
-        }
         Map<String, Object> modelo = Modelo.base(ctx);
         if (ctx.queryParam("vencida") != null) {
             Modelo.conAlerta(modelo, "info", "Tu sesión venció. Volvé a ingresar.");

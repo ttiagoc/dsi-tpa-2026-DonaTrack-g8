@@ -40,6 +40,10 @@ public class Router {
         autorizacion.registrar(app);
 
         // --- Publico (A) ---
+        // con sesion, landing, login y registro llevan al panel; /legal se ve con o sin sesion
+        for (String ruta : new String[] {"/", "/login", "/registro", "/registro/*"}) {
+            app.before(ruta, autorizacion::soloVisitantes);
+        }
         app.get("/", home::index);
         app.get("/legal", home::legal);
         app.get("/login", sesion::mostrarLogin);

@@ -123,10 +123,9 @@ Tests: `WebFlujoTest` (13) levanta la web contra una API falsa y recorre landing
 | 12 | `/entidad/donaciones/{id}/recepcion` (confirmar + fotos) | `POST /api/donaciones/{id}/fotos` (recibe URLs), `POST /api/donaciones/recepciones` | Subir el archivo a un storage externo y mandar las URLs |
 
 ### Cambios que salieron de los bocetos (pantalla 10)
-- [ ] **Layout con sesión:** reemplazar el navbar por menú lateral + barra superior (campana con contador y perfil con "Datos de ..." y "Salir"). Agregar a `styles.css` las clases del boceto (menú lateral, barra, modal, resumen, progreso y etiquetas de estado). Afecta a B y C: avisado en sus planes (sección de dependencias).
+- [x] **Layout con sesión:** `layouts/base` agrega navbar + footer sin sesión, o menú lateral + barra superior (perfil con "Salir") con sesión; la misma página (por ejemplo `/legal`) sirve para los dos casos. Landing, login y registro redirigen al panel si hay sesión. El menú se puede achicar desde su pie. Las clases del modal, resumen, progreso y etiquetas de estado se agregan a `styles.css` con la pantalla 10. Afecta a B y C: avisado en sus planes (sección de dependencias).
 - [ ] **Req. 10:** listado + modal de alta + confirmación al eliminar. "¿Cada cuánto la necesitan?" es un solo campo que el web traduce a `tipoNecesidad` + `periodo`.
 - [ ] **Backend:** sumar a `NecesidadResponse` `satisfecha` y `cantidadAsignada` (extraer la suma de `TipoNecesidad.estaSatisfecha` a un método reutilizable), con test.
-- La campana necesita el contador de no leídas de `notificaciones-service`: lo hace B (su plan, 3.2). Mientras no exista, se muestra sin número.
 
 ### Decisiones a tomar
 - **[COMPLETAR]** Coordenadas de las entidades: ¿se cargan en el registro o se geocodifica la dirección (Nominatim)? Hoy el registro de entidad no las pide; si se cargan a mano, sumar `latitud`/`longitud` al formulario (`registro-entidad.html.hbs`, `RegistroController`) y a `EntidadBeneficiariaRequest`.

@@ -156,6 +156,51 @@ class WebFlujoTest {
     }
 
     @Test
+    @DisplayName("Con sesion, el panel usa el menu lateral y la barra superior en lugar del navbar")
+    void layoutConSesion() throws Exception {
+        String cookie = cookie(login("entidad", "clave-segura"));
+        String panel = get("/entidad", cookie).body();
+        assertTrue(panel.contains("class=\"menu-lateral\""));
+        assertTrue(panel.contains("Panel de la entidad"), "titulo de la barra");
+        assertTrue(panel.contains("Entidad beneficiaria"), "rol en el perfil");
+        assertTrue(panel.contains("href=\"/entidad\" title=\"Inicio\" aria-current=\"page\""), "marca la pagina abierta");
+        assertTrue(panel.contains("for=\"menu-plegado\""), "boton para achicar el menu");
+        assertFalse(panel.contains("Notificaciones"), "la campana no es de este plan");
+        assertTrue(panel.contains("action=\"/logout\""));
+        assertFalse(panel.contains("class=\"navbar\""));
+    }
+
+    @Test
+    @DisplayName("Los terminos son la misma pagina con o sin sesion: solo cambia el layout")
+    void terminosConYSinSesion() throws Exception {
+        HttpResponse<String> visitante = get("/legal", null);
+        assertEquals(200, visitante.statusCode());
+        assertTrue(visitante.body().contains("Términos de uso y privacidad"));
+        assertTrue(visitante.body().contains("class=\"navbar\""));
+        assertFalse(visitante.body().contains("class=\"menu-lateral\""));
+
+        HttpResponse<String> logueado = get("/legal", cookie(login("donante", "clave-segura")));
+        assertEquals(200, logueado.statusCode());
+        assertTrue(logueado.body().contains("Términos de uso y privacidad"));
+        assertTrue(logueado.body().contains("class=\"menu-lateral\""));
+        assertFalse(logueado.body().contains("class=\"navbar\""));
+    }
+
+    @Test
+    @DisplayName("Con sesion, la landing, el login y el registro llevan al panel")
+    void paginasDeVisitanteRedirigenAlPanel() throws Exception {
+        String cookie = cookie(login("donante", "clave-segura"));
+        for (String ruta : new String[] {"/", "/login", "/registro", "/registro/entidad"}) {
+            HttpResponse<String> respuesta = get(ruta, cookie);
+            assertEquals(302, respuesta.statusCode(), ruta);
+            assertEquals("/donante", respuesta.headers().firstValue("Location").orElse(null), ruta);
+        }
+        HttpResponse<String> registro = post("/registro/persona-humana", formularioPersona("otra"), cookie);
+        assertEquals(302, registro.statusCode());
+        assertEquals(null, ultimoRegistro.get(), "con sesion no se registra otra cuenta");
+    }
+
+    @Test
     @DisplayName("Con el rol equivocado se muestra la pagina 403")
     void rolEquivocado() throws Exception {
         String cookie = cookie(login("donante", "clave-segura"));

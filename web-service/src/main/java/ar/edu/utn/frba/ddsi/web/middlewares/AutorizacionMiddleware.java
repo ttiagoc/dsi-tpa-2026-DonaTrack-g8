@@ -23,6 +23,14 @@ public class AutorizacionMiddleware {
         app.beforeMatched(this::autorizar);
     }
 
+    /** Para paginas que solo tienen sentido sin sesion (landing, login, registro): con sesion, al panel. */
+    public void soloVisitantes(Context ctx) {
+        SesionUsuario.actual(ctx).ifPresent(sesion -> {
+            ctx.redirect(sesion.getUsuario().rol().panel());
+            ctx.skipRemainingHandlers();
+        });
+    }
+
     private void autorizar(Context ctx) {
         Set<RouteRole> roles = ctx.routeRoles();
         if (roles.isEmpty()) {

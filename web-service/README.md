@@ -61,7 +61,14 @@ src/main/resources/
    {{/partial}}
    {{> layouts/base}}
    ```
-4. **Link:** en `partials/navbar.html.hbs`, dentro del `{{#if usuario.esDonante}}` (o el de tu rol).
+4. **Link:** en `partials/menu-lateral.html.hbs`, dentro del bloque de tu rol (`{{#if usuario.esDonante}}`, etc.),
+   con un ícono de `partials/iconos.html.hbs` y `aria-current` para marcar la página abierta (hay un ejemplo arriba
+   del archivo).
+
+La vista solo pone el contenido: `layouts/base` agrega el resto según haya sesión o no. Sin sesión, el navbar
+público y el footer; con sesión, el menú lateral (`partials/menu-lateral`) y la barra superior con el perfil y
+"Salir" (`partials/barra`). Así una misma página, como `/legal` o los errores, se ve bien en los dos casos.
+La landing, el login y el registro redirigen al panel si ya hay sesión (`AutorizacionMiddleware.soloVisitantes`).
 
 ```java
 public void listar(Context ctx) {
@@ -75,8 +82,9 @@ public void listar(Context ctx) {
 
 | Variable | Contenido |
 |---|---|
-| `usuario` | `null` si es un visitante. Si no: `username`, `rol`, `perfilId` (id del donante o de la entidad), `usuarioId`, `panel`, `esDonante`, `esEntidad`, `esAdmin` |
+| `usuario` | `null` si es un visitante. Si no: `username`, `rol`, `perfilId` (id del donante o de la entidad), `usuarioId`, `panel`, `rolEtiqueta`, `tituloPanel`, `iniciales`, `esDonante`, `esEntidad`, `esAdmin` |
 | `alertas` | mensajes pendientes (los muestra el layout) |
+| `rutaActual` | la ruta pedida (`ctx.path()`), para marcar el link activo del menú lateral |
 
 `perfilId` es el id que hay que mandar a la API para "lo mío" (`/donantes/{perfilId}`, `/entidad-beneficiaria/{perfilId}`).
 
