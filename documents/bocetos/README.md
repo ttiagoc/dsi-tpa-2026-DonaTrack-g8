@@ -4,6 +4,8 @@ Fuente editable en Figma: [DonaTrack - Bocetos](https://www.figma.com/design/1tz
 
 El archivo usa los colores de `web-service/.../public/css/styles.css` como variables y tiene una sección "Componentes" (`Botón`, `Campo`, `Navbar / Público`, `Footer`) para reutilizar en las pantallas nuevas. Tipografía: Roboto (de la pila de `--fuente`; Segoe UI no está en Figma).
 
+Los bocetos de la pantalla 10 se hicieron como maqueta HTML con el `styles.css` real y se exportaron a PNG (el plan gratuito de Figma limita las llamadas del MCP). En Figma, la página "Bocetos — nuevas" quedó con una primera versión de la pantalla 10 que ya no vale: los vigentes son estos PNG.
+
 ## Persona A: público y entidad beneficiaria
 
 | Req | Pantalla | Ruta | Boceto |
@@ -16,7 +18,11 @@ El archivo usa los colores de `web-service/.../public/css/styles.css` como varia
 | 3 | Registro de empresa u organización | `/registro/persona-juridica` | [03b-registro-persona-juridica.png](03b-registro-persona-juridica.png) |
 | 3 | Registro de entidad beneficiaria | `/registro/entidad` | [03c-registro-entidad.png](03c-registro-entidad.png) |
 | 4 | Ingresar | `/login` | [04-login.png](04-login.png) |
-| 10 | Necesidades de la entidad | `/entidad/necesidades` | Pendiente |
+| 10 | Necesidades: listado | `/entidad/necesidades` | [10-necesidades.png](10-necesidades.png) |
+| 10 | Necesidades: modal de alta con errores | `/entidad/necesidades` | [10b-necesidades-alta.png](10b-necesidades-alta.png) |
+| 10 | Necesidades: confirmar eliminación | `/entidad/necesidades` | [10c-necesidades-eliminar.png](10c-necesidades-eliminar.png) |
+| 10 | Necesidades: lista vacía | `/entidad/necesidades` | [10d-necesidades-vacia.png](10d-necesidades-vacia.png) |
+| — | Layout con sesión: menú del perfil abierto (vale para todos los roles) | — | [10e-menu-perfil.png](10e-menu-perfil.png) |
 | 11 | Donaciones asignadas | `/entidad/donaciones` | Pendiente |
 | 12 | Confirmar recepción con fotos | `/entidad/donaciones/{id}/recepcion` | Pendiente |
 

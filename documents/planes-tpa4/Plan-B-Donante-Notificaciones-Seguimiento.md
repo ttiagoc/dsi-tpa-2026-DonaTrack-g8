@@ -44,7 +44,8 @@ Hoy **no existe nada** de misiones, insignias ni categorías de donante en el c�
 - [ ] Agregar `GET /api/notificaciones?destinatarioId=X&tipoDestinatario=DONANTE|ENTIDAD`, ordenado por fecha descendente.
 - [ ] **[COMPLETAR]** Verificar que el `destinatarioId` distinga donante de entidad (si no, agregar un `tipoDestinatario`, porque los ids pueden coincidir).
 - [ ] Verificar que se emitan los 4 casos del donante: donación asignada, misión cumplida, subida de categoría y donación recibida por la entidad. Y los 2 de la entidad: asignación y confirmación de recepción.
-- [ ] (Opcional) marcar como leída.
+- [ ] Marcar como leída (ya no es opcional): agregar `leida` (o `fechaDeLectura`) a `Notificacion` y `PUT /api/notificaciones/{id}/leida`. Al abrir la bandeja se marcan como leídas las que se muestran.
+- [ ] **Contador para la barra superior:** `GET /api/notificaciones/no-leidas/cantidad?destinatarioId=X&tipoDestinatario=...` → `{cantidad}`, con los mismos roles que el `GET` de abajo. El layout con sesión muestra ese número en la campana de todas las pantallas (boceto `documents/bocetos/10-necesidades.png`). En el web, un método en `NotificacionesApiClient` que el layout llame en cada página; si el servicio no responde, la campana se muestra sin número (no rompe la página).
 - [ ] **Proteger la API:** hoy `notificaciones-service` no exige autenticación. Ya usa `common-lib`, así que tiene el mismo `AutenticacionHandler` que donaciones: declarar roles en cada ruta (matriz del Plan A, 2.1).
   - `GET /api/notificaciones?...` → `DONANTE` y `ENTIDAD_BENEFICIARIA`, con `Autorizacion.exigirPropietario` (cada uno ve solo las suyas), más `ADMINISTRADOR`.
   - `POST /api/notificaciones` → lo llaman donaciones y logística: `SISTEMA` con `X-Api-Key`, o sin roles si se decide confiar en la red privada (decisión compartida con C, su plan 3.3). Si se protege, los dos servicios tienen que mandar el header.
@@ -84,7 +85,7 @@ Hoy **no existe nada** de misiones, insignias ni categorías de donante en el c�
 
 ## 5. Dependencias con el resto
 - **Recibe de A:** la Tarea 0 (layout, navbar, sesión, middleware) y la convención de plantillas. Para la parte de pantallas, tomarla de `entrega-4` una vez pusheada.
-- **Comparte con A:** las pantallas 13 y 14 se cuelgan del menú de la entidad (A agrega los links o B los agrega en el navbar).
+- **Comparte con A:** el layout con sesión cambió a **menú lateral + barra superior** (ver "Convenciones de pantallas" en [`AGENTS.md`](../../AGENTS.md#convenciones-de-pantallas) y el boceto `10-necesidades.png`). A es dueño del layout, de la barra y del bloque de la entidad en el menú (ya tiene el link "Seguimiento" → pantalla 14). La pantalla 13 se abre desde la **campana** de la barra, no desde el menú. B arma el bloque del donante en el menú lateral y provee el contador de no leídas (3.2).
 - **Comparte con C:** si C cambia los DTOs de donaciones al pasar a gRPC, avisar; los endpoints REST que usa el web no deberían cambiar.
 - **Archivos compartidos:** `persistence.xml` (donaciones), `Clases.puml`, `navbar.hbs`, `styles.css`. Regla: agregar al final, en una sección propia.
 

@@ -112,6 +112,7 @@ Hoy **ningún endpoint de `logistica-service` declara roles**, así que son púb
 - **Entrega a A y B:** las variables de entorno y las URLs del despliegue; el despliegue de prueba temprano.
 - **Avisar a B** si cambian los DTOs de donaciones al pasar a gRPC (los endpoints REST que usa el web no deberían cambiar).
 - **Archivos compartidos:** `pom.xml` raíz (módulo gRPC), `docker-compose.yml`, `navbar.hbs` (links de admin), `styles.css`.
+- **Layout con sesión:** cambió a **menú lateral + barra superior** (ver "Convenciones de pantallas" en [`AGENTS.md`](../../AGENTS.md#convenciones-de-pantallas) y el boceto `documents/bocetos/10-necesidades.png`). A es dueño del layout; C arma el bloque del administrador en el menú lateral (secciones e íconos para las pantallas 15–19). Las pantallas de admin siguen la convención de listado + modal y confirmación al eliminar.
 
 ## 7. Entregables de documentación
 - [ ] Bocetos de las pantallas 15–19 en `documents/bocetos/`, **antes** de implementarlas. Seguir el flujo de [`AGENTS.md`](../../AGENTS.md#flujo-para-cada-pantalla-nueva): boceto (en lo posible en Figma), PNG con formato `punto-nombre.png` y después el código.
