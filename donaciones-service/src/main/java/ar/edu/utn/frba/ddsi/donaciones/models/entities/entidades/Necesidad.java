@@ -95,6 +95,13 @@ public class Necesidad {
     }
   }
 
+  public Double cantidadAsignada() {
+    if (this.tipoNecesidad == null) {
+      return 0.0;
+    }
+    return this.tipoNecesidad.cantidadAsignada(this.donacionesAsignadas);
+  }
+
   public Boolean estaSatisfecha() {
     if (this.tipoNecesidad == null) {
       return false;

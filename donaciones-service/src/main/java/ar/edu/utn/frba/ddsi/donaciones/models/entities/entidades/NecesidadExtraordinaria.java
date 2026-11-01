@@ -13,9 +13,12 @@ import lombok.Setter;
 public class NecesidadExtraordinaria implements TipoNecesidad {
 
   @Override
-  public Boolean estaSatisfecha(List<Donacion> donaciones, Long cantidadRequerida) {
+  public Double cantidadAsignada(List<Donacion> donaciones) {
+    if (donaciones == null)
+      return 0.0;
+
     return donaciones.stream()
         .mapToDouble(Donacion::cantidadBienesRecibidos)
-        .sum() >= cantidadRequerida;
+        .sum();
   }
 }

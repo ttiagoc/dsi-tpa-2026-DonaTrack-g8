@@ -1,10 +1,14 @@
 package ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria;
 
+// cantidadAsignada: bienes de las donaciones ya asignadas (en las recurrentes, solo del periodo actual)
 public record NecesidadResponse(
         Long id,
         String subcategoria,
         String tipoNecesidad,
         String periodo,
         String descripcion,
-        Long cantidad) {
+        Long cantidad,
+        String categoria,
+        Long cantidadAsignada,
+        Boolean satisfecha) {
 }

@@ -1,6 +1,7 @@
 package ar.edu.utn.frba.ddsi.donaciones.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -25,6 +26,7 @@ import ar.edu.utn.frba.ddsi.donaciones.dto.donante.MedioContactoRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.NecesidadRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.NecesidadResponse;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
@@ -99,6 +101,23 @@ class EntidadBeneficiariaServiceTest {
                 "extraordinaria", null, "Sillas para el aula", 30L);
 
         assertThrows(ResourceNotFoundException.class, () -> entidadService.registrarNecesidad(1L, request));
+    }
+
+    @Test
+    @DisplayName("La necesidad registrada informa su categoria, lo asignado y si esta cubierta")
+    void registrarNecesidadDevuelveAvance() {
+        when(entidadRepository.findById(1L)).thenReturn(Optional.of(
+                new EntidadBeneficiaria("Comedor", "Calle 123", "1145678901", List.of())));
+        when(subcategoriaRepository.findByNombre("Frazadas"))
+                .thenReturn(Optional.of(new Subcategoria("Frazadas", new Categoria("Ropa y abrigo", true, false))));
+
+        NecesidadResponse respuesta = entidadService.registrarNecesidad(1L, new NecesidadRequest(
+                new SubcategoriaRequest("Frazadas"), "extraordinaria", null, "Para el invierno", 30L));
+
+        assertEquals("Frazadas", respuesta.subcategoria());
+        assertEquals("Ropa y abrigo", respuesta.categoria());
+        assertEquals(0L, respuesta.cantidadAsignada());
+        assertFalse(respuesta.satisfecha());
     }
 
     @Test

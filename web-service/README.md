@@ -105,6 +105,13 @@ public void listar(Context ctx) {
 - Los mensajes de error del backend llegan como `ApiException` con el texto listo para mostrar
   (`e.getMessage()`); `e.esErrorDelUsuario()` distingue un 4xx (mostrarlo en el form) de un 5xx (dejarlo subir).
 - Los formularios HTML solo mandan **GET y POST**: borrar o editar es `POST /x/{id}/eliminar`, `POST /x/{id}/editar`.
+- **Validación en el navegador:** todo `<form novalidate>` la tiene sola (`public/js/formularios.js`, lo carga el
+  layout). Toma las reglas de los atributos: `required`, `type="email"`, `type="tel"`, `type="number"` + `min`,
+  `minlength` y `data-igual-a`. El partial `campo` acepta `min`, `minlength` e `igualA`. El servidor valida lo mismo:
+  `form.email(campo, etiqueta, obligatorio)` y `form.telefono(...)` usan las mismas reglas y mensajes.
+- **Select con buscador:** `<select ... data-buscador="Buscá una subcategoría">` se convierte en un campo donde se
+  escribe para filtrar (respeta los `<optgroup>`, ignora tildes). El `<select>` sigue siendo el que se envía, así que
+  el controller no cambia. Ejemplo en `entidad/necesidades.html.hbs`.
   Nada que modifique datos va por GET.
 
 ## Llamar a una API

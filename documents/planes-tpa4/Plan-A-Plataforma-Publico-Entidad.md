@@ -118,14 +118,14 @@ Tests: `WebFlujoTest` (13) levanta la web contra una API falsa y recorre landing
 | 2 | Mapa público `/mapa` (Leaflet + OSM, popup con detalle y fotos) | `GET /api/donaciones`, `GET /api/entidad-beneficiaria` | `latitud`/`longitud` en `EntidadBeneficiaria` (hoy no existen); `GET /api/donaciones/entregadas` con entidad, ubicación, bienes y fotos |
 | 3 | ✅ Registro `/registro` (persona, empresa u organización, entidad) | (Tarea 0) | — |
 | 4 | ✅ Login `/login` | (Tarea 0) | — |
-| 10 | `/entidad/necesidades` (alta + listado, recurrente vs extraordinaria) | `GET/POST/DELETE /api/entidad-beneficiaria/{id}/necesidades` | — |
+| 10 | ✅ `/entidad/necesidades` (alta + listado, recurrente vs extraordinaria) | `GET/POST/DELETE /api/entidad-beneficiaria/{id}/necesidades` | — |
 | 11 | `/entidad/donaciones` (estado de las asignadas) | `GET /api/donaciones` (sin filtros) | `GET /api/donaciones?entidadId=X` (`Donacion` ya tiene `entidadBeneficiariaAsignada`). Coordinar con B, que agrega filtros al mismo endpoint |
 | 12 | `/entidad/donaciones/{id}/recepcion` (confirmar + fotos) | `POST /api/donaciones/{id}/fotos` (recibe URLs), `POST /api/donaciones/recepciones` | Subir el archivo a un storage externo y mandar las URLs |
 
 ### Cambios que salieron de los bocetos (pantalla 10)
 - [x] **Layout con sesión:** `layouts/base` agrega navbar + footer sin sesión, o menú lateral + barra superior (perfil con "Salir") con sesión; la misma página (por ejemplo `/legal`) sirve para los dos casos. Landing, login y registro redirigen al panel si hay sesión. El menú se puede achicar desde su pie. Las clases del modal, resumen, progreso y etiquetas de estado se agregan a `styles.css` con la pantalla 10. Afecta a B y C: avisado en sus planes (sección de dependencias).
-- [ ] **Req. 10:** listado + modal de alta + confirmación al eliminar. "¿Cada cuánto la necesitan?" es un solo campo que el web traduce a `tipoNecesidad` + `periodo`.
-- [ ] **Backend:** sumar a `NecesidadResponse` `satisfecha` y `cantidadAsignada` (extraer la suma de `TipoNecesidad.estaSatisfecha` a un método reutilizable), con test.
+- [x] **Req. 10:** listado + modal de alta + confirmación al eliminar (`NecesidadesController`, `entidad/necesidades.html.hbs`). "¿Cada cuánto la necesitan?" es un solo campo (`Frecuencia`) que el web traduce a `tipoNecesidad` + `periodo`. Sin JavaScript también funciona (`?nueva` abre el alta; eliminar no pide confirmación). Probado contra el backend real.
+- [x] **Backend:** `NecesidadResponse` suma `categoria`, `cantidadAsignada` y `satisfecha`; la suma quedó en `TipoNecesidad.cantidadAsignada` y `estaSatisfecha` la reutiliza. Tests en `EntidadBeneficiariaServiceTest` y `AsignacionDonacionJpaTest`.
 
 ### Decisiones a tomar
 - **[COMPLETAR]** Coordenadas de las entidades: ¿se cargan en el registro o se geocodifica la dirección (Nominatim)? Hoy el registro de entidad no las pide; si se cargan a mano, sumar `latitud`/`longitud` al formulario (`registro-entidad.html.hbs`, `RegistroController`) y a `EntidadBeneficiariaRequest`.

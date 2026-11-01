@@ -15,6 +15,7 @@
       {{!-- --- Entidad beneficiaria (A) --- --}}
       <p class="menu-lateral__seccion">Mi entidad</p>
       <a href="/entidad" title="Inicio" {{#if (eq rutaActual "/entidad")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-inicio"/></svg> <span>Inicio</span></a>
+      <a href="/entidad/necesidades" title="Necesidades" {{#if (eq rutaActual "/entidad/necesidades")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-lista"/></svg> <span>Necesidades</span></a>
     {{/if}}
     {{#if usuario.esDonante}}
       {{!-- --- Donante (B) --- --}}

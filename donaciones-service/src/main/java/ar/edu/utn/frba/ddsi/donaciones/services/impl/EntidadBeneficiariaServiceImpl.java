@@ -66,8 +66,10 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
         String periodo = n.getTipoNecesidad() instanceof NecesidadRecurrente recurrente
                 ? recurrente.getPeriodo().toString()
                 : null;
+        String categoria = n.getSubcategoria().getCategoria() != null ? n.getSubcategoria().getCategoria().getNombre() : null;
         return new NecesidadResponse(n.getId(), n.getSubcategoria().getNombre(),
-                n.getTipoNecesidad().getClass().getSimpleName(), periodo, n.getDescripcion(), n.getCantidad());
+                n.getTipoNecesidad().getClass().getSimpleName(), periodo, n.getDescripcion(), n.getCantidad(),
+                categoria, Math.round(n.cantidadAsignada()), n.estaSatisfecha());
     }
 
     public EntidadBeneficiariaResponse crear(EntidadBeneficiariaRequest request) {

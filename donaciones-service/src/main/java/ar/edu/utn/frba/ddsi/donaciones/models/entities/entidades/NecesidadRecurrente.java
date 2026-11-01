@@ -17,15 +17,13 @@ public class NecesidadRecurrente implements TipoNecesidad {
   private Periodo periodo;
 
   @Override
-  public Boolean estaSatisfecha(List<Donacion> donaciones, Long cantidadRequerida) {
-    if (donaciones == null || donaciones.isEmpty())
-      return false;
+  public Double cantidadAsignada(List<Donacion> donaciones) {
+    if (donaciones == null)
+      return 0.0;
 
-    Double totalEnElPeriodo = donaciones.stream()
+    return donaciones.stream()
         .filter(donacion -> donacion.estaDentroDelPeriodoActual(this.periodo))
         .mapToDouble(Donacion::cantidadBienesRecibidos)
         .sum();
-
-    return totalEnElPeriodo >= cantidadRequerida;
   }
 }

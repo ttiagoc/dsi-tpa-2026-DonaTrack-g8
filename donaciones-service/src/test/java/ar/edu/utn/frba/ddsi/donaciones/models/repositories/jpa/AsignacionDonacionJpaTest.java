@@ -180,6 +180,7 @@ class AsignacionDonacionJpaTest extends PersistenciaTest {
         Necesidad sinAsignar = entidades.findById(idComedor).orElseThrow().getNecesidades().get(0);
         assertTrue(sinAsignar.getDonacionesAsignadas().isEmpty());
         assertFalse(sinAsignar.estaSatisfecha());
+        assertEquals(0.0, sinAsignar.cantidadAsignada());
 
         sinAsignar.asignarDonacion(donaciones.findById(idDonacion).orElseThrow());
         entidades.save(entidades.findById(idComedor).orElseThrow());
@@ -191,6 +192,7 @@ class AsignacionDonacionJpaTest extends PersistenciaTest {
         assertEquals(idDonacion, leida.getDonacionesAsignadas().get(0).getId());
         // 100 unidades de fideos cubren las 100 pedidas dentro del periodo semanal
         assertTrue(leida.estaSatisfecha());
+        assertEquals(100.0, leida.cantidadAsignada());
         assertEquals(leida.getId(), necesidadDeLaDonacion());
     }
 

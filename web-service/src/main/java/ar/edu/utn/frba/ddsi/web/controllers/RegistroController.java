@@ -82,7 +82,7 @@ public class RegistroController {
         RepresentanteRequest representante = new RepresentanteRequest(
                 form.requerido("representanteNombre", "El nombre del representante"),
                 form.requerido("representanteApellido", "El apellido del representante"),
-                form.requerido("representanteCorreo", "El correo del representante"));
+                form.email("representanteCorreo", "El correo del representante", true));
         Contactos contactos = leerContactos(form);
         String username = form.requerido("username", "El usuario");
         String password = leerPassword(form);
@@ -97,8 +97,8 @@ public class RegistroController {
         Formulario form = new Formulario(ctx);
         String razonSocial = form.requerido("razonSocial", "La razón social");
         String direccion = form.requerido("direccion", "La dirección");
-        String telefono = form.requerido("telefono", "El teléfono");
-        String correo = form.requerido("correoRepresentante", "El correo del representante");
+        String telefono = form.telefono("telefono", "El teléfono", true);
+        String correo = form.email("correoRepresentante", "El correo del representante", true);
         String username = form.requerido("username", "El usuario");
         String password = leerPassword(form);
 
@@ -130,6 +130,9 @@ public class RegistroController {
     private String leerPassword(Formulario form) {
         String password = form.requerido("password", "La contraseña");
         String repetida = form.requerido("password2", "Repetir la contraseña");
+        if (password != null && password.length() < 8) {
+            form.error("password", "Tiene que tener al menos 8 caracteres");
+        }
         if (password != null && repetida != null && !password.equals(repetida)) {
             form.error("password2", "Las contraseñas no coinciden");
         }
@@ -145,13 +148,13 @@ public class RegistroController {
         MedioContactoRequest email = null;
         MedioContactoRequest telefono = null;
 
-        String correo = form.requerido("email", "El email");
+        String correo = form.email("email", "El email", true);
         if (correo != null) {
             email = new MedioContactoRequest("EMAIL", correo);
             contactos.add(email);
         }
 
-        String numero = form.valor("telefono");
+        String numero = form.telefono("telefono", "El teléfono", false);
         if (numero != null) {
             String tipo = "SMS".equals(form.valor("tipoTelefono")) ? "SMS" : "WHATSAPP";
             telefono = new MedioContactoRequest(tipo, numero);

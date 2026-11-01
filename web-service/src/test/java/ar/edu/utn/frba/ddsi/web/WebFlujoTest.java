@@ -11,7 +11,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -23,8 +25,10 @@ import org.junit.jupiter.api.Test;
 
 import ar.edu.utn.frba.ddsi.web.clients.ApiClient;
 import ar.edu.utn.frba.ddsi.web.clients.AuthApiClient;
+import ar.edu.utn.frba.ddsi.web.clients.DonacionesApiClient;
 import ar.edu.utn.frba.ddsi.web.config.WebConfig;
 import ar.edu.utn.frba.ddsi.web.controllers.HomeController;
+import ar.edu.utn.frba.ddsi.web.controllers.NecesidadesController;
 import ar.edu.utn.frba.ddsi.web.controllers.PanelController;
 import ar.edu.utn.frba.ddsi.web.controllers.RegistroController;
 import ar.edu.utn.frba.ddsi.web.controllers.SesionController;
@@ -51,6 +55,10 @@ class WebFlujoTest {
     private final HttpClient navegador = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build();
     private final ObjectMapper mapper = new ObjectMapper();
     private final AtomicReference<JsonNode> ultimoRegistro = new AtomicReference<>();
+    // estado de la API falsa de necesidades (entidad con perfilId 10)
+    private final List<Map<String, Object>> necesidades = new ArrayList<>();
+    private final AtomicReference<JsonNode> ultimaNecesidad = new AtomicReference<>();
+    private final AtomicReference<String> necesidadEliminada = new AtomicReference<>();
 
     private Javalin apiFalsa;
     private Javalin web;
@@ -63,8 +71,10 @@ class WebFlujoTest {
         config.getSesion().setMinutosInactividad(30);
         AuthApiClient auth = new AuthApiClient("http://localhost:" + PUERTO_API + "/api",
                 HttpClient.newHttpClient(), ApiClient.crearObjectMapper());
+        DonacionesApiClient donaciones = new DonacionesApiClient("http://localhost:" + PUERTO_API + "/api",
+                HttpClient.newHttpClient(), ApiClient.crearObjectMapper(), auth);
         Router router = new Router(new AutorizacionMiddleware(), new HomeController(), new SesionController(auth),
-                new RegistroController(auth), new PanelController());
+                new RegistroController(auth), new PanelController(), new NecesidadesController(donaciones));
 
         web = new Server(router, config).crear();
         // ruta solo para el test: una llamada autenticada a la API, para probar el refresh del token
@@ -201,6 +211,81 @@ class WebFlujoTest {
     }
 
     @Test
+    @DisplayName("Necesidades: sin datos muestra la lista vacia y marca la pagina en el menu")
+    void necesidadesVacias() throws Exception {
+        HttpResponse<String> respuesta = get("/entidad/necesidades", cookie(login("entidad", "clave-segura")));
+        assertEquals(200, respuesta.statusCode());
+        assertTrue(respuesta.body().contains("Todavía no cargaste necesidades"));
+        assertTrue(respuesta.body().contains("href=\"/entidad/necesidades\" title=\"Necesidades\" aria-current=\"page\""));
+        assertTrue(respuesta.body().contains("<optgroup label=\"Ropa y abrigo\">"), "select agrupado por categoria");
+        assertFalse(respuesta.body().contains("<dialog class=\"modal\" id=\"modal-alta\" aria-labelledby=\"titulo-alta\" open"));
+    }
+
+    @Test
+    @DisplayName("Necesidades: el alta traduce la frecuencia a tipo + periodo y vuelve al listado")
+    void necesidadAlta() throws Exception {
+        String cookie = cookie(login("entidad", "clave-segura"));
+        HttpResponse<String> alta = post("/entidad/necesidades", Map.of("subcategoria", "Frazadas",
+                "frecuencia", "SEMANAL", "cantidad", "30", "descripcion", "Para el refugio"), cookie);
+        assertEquals(302, alta.statusCode(), alta.body());
+        assertEquals("/entidad/necesidades", alta.headers().firstValue("Location").orElse(null));
+
+        JsonNode enviado = ultimaNecesidad.get();
+        assertEquals("Frazadas", enviado.get("subcategoria").get("nombre").asText());
+        assertEquals("recurrente", enviado.get("tipoNecesidad").asText());
+        assertEquals("SEMANAL", enviado.get("periodo").asText());
+        assertEquals(30, enviado.get("cantidad").asLong());
+
+        String listado = get("/entidad/necesidades", cookie).body();
+        assertTrue(listado.contains("Necesidad agregada."));
+        assertTrue(listado.contains("Todas las semanas"));
+        assertTrue(listado.contains("12 de 30"));
+        assertTrue(listado.contains("width: 40%"), "barra de progreso");
+        assertTrue(listado.contains("Pendiente"));
+    }
+
+    @Test
+    @DisplayName("Necesidades: con datos invalidos vuelve con el modal abierto, los errores y lo cargado")
+    void necesidadInvalida() throws Exception {
+        HttpResponse<String> respuesta = post("/entidad/necesidades", Map.of("subcategoria", "Arroz",
+                "frecuencia", "", "cantidad", "0", "descripcion", "Almuerzos"), cookie(login("entidad", "clave-segura")));
+        assertEquals(400, respuesta.statusCode());
+        assertTrue(respuesta.body().contains("id=\"modal-alta\" aria-labelledby=\"titulo-alta\" open"));
+        assertTrue(respuesta.body().contains("Elegí cada cuánto la necesitan"));
+        assertTrue(respuesta.body().contains("Tiene que ser un número mayor a 0"));
+        assertTrue(respuesta.body().contains("<option selected>Arroz</option>"), "conserva la subcategoria");
+        assertTrue(respuesta.body().contains(">Almuerzos</textarea>"), "conserva la descripcion");
+        assertEquals(null, ultimaNecesidad.get(), "no deberia haber llamado a la API");
+    }
+
+    @Test
+    @DisplayName("Necesidades: el error de la API se muestra dentro del modal")
+    void necesidadErrorDeLaApi() throws Exception {
+        HttpResponse<String> respuesta = post("/entidad/necesidades", Map.of("subcategoria", "Inexistente",
+                "frecuencia", "UNA_VEZ", "cantidad", "5", "descripcion", "x"), cookie(login("entidad", "clave-segura")));
+        assertEquals(400, respuesta.statusCode());
+        assertTrue(respuesta.body().contains("No existe la subcategoria"));
+        assertEquals("extraordinaria", ultimaNecesidad.get().get("tipoNecesidad").asText());
+        assertTrue(ultimaNecesidad.get().get("periodo").isNull());
+    }
+
+    @Test
+    @DisplayName("Necesidades: eliminar llama a la API y vuelve al listado con un aviso")
+    void necesidadEliminar() throws Exception {
+        String cookie = cookie(login("entidad", "clave-segura"));
+        HttpResponse<String> respuesta = post("/entidad/necesidades/5/eliminar", Map.of(), cookie);
+        assertEquals(302, respuesta.statusCode());
+        assertEquals("5", necesidadEliminada.get());
+        assertTrue(get("/entidad/necesidades", cookie).body().contains("Necesidad eliminada."));
+    }
+
+    @Test
+    @DisplayName("Necesidades: un donante no puede entrar")
+    void necesidadesSoloEntidad() throws Exception {
+        assertEquals(403, get("/entidad/necesidades", cookie(login("donante", "clave-segura"))).statusCode());
+    }
+
+    @Test
     @DisplayName("Con el rol equivocado se muestra la pagina 403")
     void rolEquivocado() throws Exception {
         String cookie = cookie(login("donante", "clave-segura"));
@@ -273,6 +358,39 @@ class WebFlujoTest {
     }
 
     @Test
+    @DisplayName("Registro: valida el formato del email, del telefono y el largo de la contrasenia")
+    void registroValidaFormatos() throws Exception {
+        Map<String, String> form = formularioPersona("ana");
+        form.put("email", "ana-sin-arroba");
+        form.put("telefono", "hola");
+        form.put("password", "corta");
+        form.put("password2", "corta");
+        HttpResponse<String> respuesta = post("/registro/persona-humana", form, null);
+        assertEquals(400, respuesta.statusCode());
+        assertTrue(respuesta.body().contains("Ingresá un email válido"));
+        assertTrue(respuesta.body().contains("Ingresá un teléfono válido"));
+        assertTrue(respuesta.body().contains("Tiene que tener al menos 8 caracteres"));
+        assertEquals(null, ultimoRegistro.get(), "no deberia haber llamado a la API");
+
+        form = formularioPersona("ana");
+        form.put("telefono", "+54 (11) 5555-6666");
+        assertEquals(302, post("/registro/persona-humana", form, null).statusCode(), "formatos validos");
+    }
+
+    @Test
+    @DisplayName("Los formularios cargan la validacion del navegador y el selector con buscador")
+    void scriptsDeFormularios() throws Exception {
+        String login = get("/login", null).body();
+        assertTrue(login.contains("/js/formularios.js"));
+        assertTrue(login.contains("/js/selector-buscador.js"));
+        assertEquals(200, get("/js/formularios.js", null).statusCode());
+        assertEquals(200, get("/js/selector-buscador.js", null).statusCode());
+        String necesidades = get("/entidad/necesidades", cookie(login("entidad", "clave-segura"))).body();
+        assertTrue(necesidades.contains("data-buscador="));
+        assertTrue(necesidades.contains("min=\"1\""));
+    }
+
+    @Test
     @DisplayName("Registro de persona: muestra el error de negocio que devuelve la API")
     void registroErrorDeNegocio() throws Exception {
         HttpResponse<String> respuesta = post("/registro/persona-humana", formularioPersona("repetido"), null);
@@ -327,6 +445,39 @@ class WebFlujoTest {
                 return;
             }
             ctx.status(201).json(sesion(username, "DONANTE", "access-viejo", "refresh-ok"));
+        });
+
+        api.get("/api/categorias", ctx -> ctx.json(List.of(
+                Map.of("id", 1, "nombre", "Alimentos"), Map.of("id", 2, "nombre", "Ropa y abrigo"))));
+        api.get("/api/categorias/1/subcategorias", ctx -> ctx.json(List.of(
+                Map.of("id", 1, "nombre", "Leche larga vida"), Map.of("id", 2, "nombre", "Arroz"))));
+        api.get("/api/categorias/2/subcategorias", ctx -> ctx.json(List.of(Map.of("id", 3, "nombre", "Frazadas"))));
+
+        api.get("/api/entidad-beneficiaria/10/necesidades", ctx -> ctx.json(necesidades));
+        api.post("/api/entidad-beneficiaria/10/necesidades", ctx -> {
+            JsonNode body = mapper.readTree(ctx.body());
+            ultimaNecesidad.set(body);
+            if ("Inexistente".equals(body.get("subcategoria").get("nombre").asText())) {
+                ctx.status(404).json(Map.of("error", "not_found",
+                        "message", "No existe la subcategoria 'Inexistente' en el catalogo"));
+                return;
+            }
+            Map<String, Object> necesidad = new LinkedHashMap<>();
+            necesidad.put("id", necesidades.size() + 1);
+            necesidad.put("subcategoria", body.get("subcategoria").get("nombre").asText());
+            necesidad.put("categoria", "Ropa y abrigo");
+            necesidad.put("tipoNecesidad", "NecesidadRecurrente");
+            necesidad.put("periodo", body.get("periodo").asText());
+            necesidad.put("descripcion", body.get("descripcion").asText());
+            necesidad.put("cantidad", body.get("cantidad").asLong());
+            necesidad.put("cantidadAsignada", 12);
+            necesidad.put("satisfecha", false);
+            necesidades.add(necesidad);
+            ctx.status(201).json(necesidad);
+        });
+        api.delete("/api/entidad-beneficiaria/10/necesidades/{id}", ctx -> {
+            necesidadEliminada.set(ctx.pathParam("id"));
+            ctx.status(204);
         });
 
         return api;

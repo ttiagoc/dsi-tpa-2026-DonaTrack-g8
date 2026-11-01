@@ -1,0 +1,154 @@
+{{#partial "titulo"}}Necesidades · DonaTrack{{/partial}}
+{{#partial "contenido"}}
+<header class="encabezado-pagina">
+  <div>
+    <h1>Necesidades</h1>
+    <p class="texto-suave">Lo que necesita tu entidad. Las donaciones se asignan según estas necesidades.</p>
+  </div>
+  <a class="boton" href="/entidad/necesidades?nueva" data-abre="modal-alta">+ Nueva necesidad</a>
+</header>
+
+{{#if necesidades}}
+  <div class="resumen">
+    <div class="resumen__item"><strong>{{resumen.total}}</strong>Necesidades</div>
+    <div class="resumen__item resumen__item--pendiente"><strong>{{resumen.pendientes}}</strong>Pendientes</div>
+    <div class="resumen__item resumen__item--ok"><strong>{{resumen.cubiertas}}</strong>Cubiertas</div>
+  </div>
+
+  <section class="tarjeta tarjeta--tabla">
+    <div class="tabla-contenedor">
+      <table class="tabla">
+        <thead>
+          <tr><th>Subcategoría</th><th>Descripción</th><th>Frecuencia</th><th>Asignado</th><th>Estado</th><th><span class="sr-only">Acciones</span></th></tr>
+        </thead>
+        <tbody>
+          {{#each necesidades}}
+            <tr>
+              <td class="tabla__corta">{{subcategoria}}{{#if categoria}}<span class="tabla__secundario">{{categoria}}</span>{{/if}}</td>
+              <td>{{descripcion}}</td>
+              <td class="tabla__corta">{{frecuencia}}</td>
+              <td>
+                <div class="progreso">
+                  <span>{{cantidadAsignada}} de {{cantidad}}</span>
+                  <div class="progreso__barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{porcentaje}}"><span style="width: {{porcentaje}}%"></span></div>
+                </div>
+              </td>
+              <td>
+                {{#if satisfecha}}<span class="etiqueta">Cubierta</span>{{else}}<span class="etiqueta etiqueta--pendiente">Pendiente</span>{{/if}}
+              </td>
+              <td class="tabla__accion">
+                <form method="post" action="/entidad/necesidades/{{id}}/eliminar" data-confirmar
+                      data-nombre="{{subcategoria}}" data-detalle="{{frecuencia}} · {{cantidad}} unidades">
+                  <button type="submit" class="boton boton--secundario boton--peligro boton--chico">Eliminar</button>
+                </form>
+              </td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <p class="nota">"Asignado" suma las donaciones ya asignadas a la necesidad (en las que se repiten, solo las del período actual).</p>
+{{else}}
+  <section class="tarjeta vacio">
+    <strong>Todavía no cargaste necesidades.</strong>
+    Con el botón “Nueva necesidad” contás qué le hace falta a tu entidad.
+  </section>
+{{/if}}
+
+{{!-- Alta. Si el servidor rechaza los datos, la pagina vuelve con el modal abierto ("open"), los errores y lo cargado --}}
+<dialog class="modal" id="modal-alta" aria-labelledby="titulo-alta" {{#if abrirAlta}}open{{/if}}>
+  <form method="post" action="/entidad/necesidades" accept-charset="UTF-8" novalidate>
+    <div class="modal__encabezado"><h2 id="titulo-alta">Nueva necesidad</h2></div>
+    <div class="modal__cuerpo">
+      {{#if errorAlta}}<div class="alerta alerta--error" role="alert">{{errorAlta}}</div>{{/if}}
+      <div class="campo{{#if errores.subcategoria}} campo--error{{/if}}">
+        <label for="subcategoria">Subcategoría <span class="campo__requerido" aria-hidden="true">*</span></label>
+        <select id="subcategoria" name="subcategoria" required data-buscador="Buscá o elegí una subcategoría">
+          <option value="">Elegí una subcategoría</option>
+          {{#each rubros}}
+            <optgroup label="{{categoria}}">
+              {{#each subcategorias}}
+                <option {{#if (eq this @root.form.subcategoria)}}selected{{/if}}>{{this}}</option>
+              {{/each}}
+            </optgroup>
+          {{/each}}
+        </select>
+        {{#if errores.subcategoria}}<small class="campo__error">{{errores.subcategoria}}</small>{{/if}}
+      </div>
+      <div class="grilla grilla--2">
+        <div class="campo{{#if errores.frecuencia}} campo--error{{/if}}">
+          <label for="frecuencia">¿Cada cuánto la necesitan? <span class="campo__requerido" aria-hidden="true">*</span></label>
+          <select id="frecuencia" name="frecuencia" required>
+            <option value="">Elegí una opción</option>
+            {{#each frecuencias}}
+              <option value="{{valor}}" {{#if (eq valor @root.form.frecuencia)}}selected{{/if}}>{{etiqueta}}</option>
+            {{/each}}
+          </select>
+          {{#if errores.frecuencia}}<small class="campo__error">{{errores.frecuencia}}</small>{{/if}}
+        </div>
+        {{> partials/campo nombre="cantidad" etiqueta="Cantidad" tipo="number" valor=form.cantidad errorCampo=errores.cantidad requerido=true min="1"}}
+      </div>
+      <div class="campo{{#if errores.descripcion}} campo--error{{/if}}">
+        <label for="descripcion">Descripción <span class="campo__requerido" aria-hidden="true">*</span></label>
+        <textarea id="descripcion" name="descripcion" maxlength="500" required>{{form.descripcion}}</textarea>
+        {{#if errores.descripcion}}<small class="campo__error">{{errores.descripcion}}</small>{{/if}}
+      </div>
+    </div>
+    <div class="modal__acciones">
+      <a class="boton boton--secundario" href="/entidad/necesidades" data-cierra>Cancelar</a>
+      <button type="submit" class="boton">Guardar necesidad</button>
+    </div>
+  </form>
+</dialog>
+
+{{!-- Confirmacion antes de eliminar: la arma el script con los datos de la fila --}}
+<dialog class="modal modal--chico" id="modal-eliminar" aria-labelledby="titulo-eliminar">
+  <form method="post">
+    <div class="modal__encabezado"><h2 id="titulo-eliminar">¿Eliminar la necesidad?</h2></div>
+    <div class="modal__cuerpo">
+      <p><strong data-nombre></strong> · <span data-detalle></span></p>
+      <p class="texto-suave">Las donaciones que ya tenía asignadas quedan disponibles para otras necesidades. Esta acción no se puede deshacer.</p>
+    </div>
+    <div class="modal__acciones">
+      <button type="button" class="boton boton--secundario" data-cierra>Cancelar</button>
+      <button type="submit" class="boton boton--peligro">Eliminar</button>
+    </div>
+  </form>
+</dialog>
+{{/partial}}
+{{#partial "scripts"}}
+<script>
+  // Sin JavaScript igual funciona: "Nueva" abre el modal con ?nueva y "Eliminar" borra sin confirmar.
+  (function () {
+    var alta = document.getElementById('modal-alta');
+    var eliminar = document.getElementById('modal-eliminar');
+    if (!alta.showModal) return;
+
+    if (alta.hasAttribute('open')) { alta.close(); alta.showModal(); }
+
+    document.querySelectorAll('[data-abre]').forEach(function (boton) {
+      boton.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.getElementById(boton.dataset.abre).showModal();
+      });
+    });
+    document.querySelectorAll('[data-cierra]').forEach(function (boton) {
+      boton.addEventListener('click', function (e) {
+        e.preventDefault();
+        boton.closest('dialog').close();
+      });
+    });
+    document.querySelectorAll('form[data-confirmar]').forEach(function (form) {
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        eliminar.querySelector('form').action = form.action;
+        eliminar.querySelector('[data-nombre]').textContent = form.dataset.nombre;
+        eliminar.querySelector('[data-detalle]').textContent = form.dataset.detalle;
+        eliminar.showModal();
+      });
+    });
+  })();
+</script>
+{{/partial}}
+{{> layouts/base}}

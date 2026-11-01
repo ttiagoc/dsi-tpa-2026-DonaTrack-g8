@@ -33,4 +33,6 @@ Al terminar, tildar el boceto y la pantalla en el plan que corresponda.
 - **ABM:** cada pantalla es un listado con el botón "+ Nuevo/a ..." arriba a la derecha. El alta y la edición se hacen en un modal (`<dialog>`). Si el servidor rechaza los datos, la página vuelve a cargarse con el modal abierto, los errores marcados y lo que se había escrito.
 - **Eliminar siempre pide confirmación** en un modal que nombra el registro y dice qué pasa al borrarlo. El borrado es un `POST` (los formularios HTML no mandan `DELETE`).
 - **Lista vacía:** un mensaje que explica cómo cargar el primer registro, nunca una tabla vacía.
+- **Validaciones en los dos lados:** cada formulario valida en el navegador (`public/js/formularios.js`, se activa solo con `novalidate`) y otra vez en el servidor (`Formulario`). Usar `tipo="email"` / `tipo="tel"` del partial `campo` y `form.email(...)` / `form.telefono(...)` en el controller, así las reglas y los mensajes son los mismos.
+- **Selects con muchas opciones** (subcategorías, entidades, donantes): agregar `data-buscador="Buscá ..."` al `<select>` y se convierte en un campo con buscador (`public/js/selector-buscador.js`).
 - **Campos que dependen entre sí:** si se pueden unir en uno solo, se unen (por ejemplo, tipo + período de una necesidad = "¿Cada cuánto la necesitan?").

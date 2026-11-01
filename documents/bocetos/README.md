@@ -24,6 +24,7 @@ En [Figma](https://www.figma.com/design/1tzIHQUO6aSwCbdgtPuXgj) quedó una prime
 | 10 | Necesidades: confirmar eliminación | `/entidad/necesidades` | [10c-necesidades-eliminar.png](10c-necesidades-eliminar.png) |
 | 10 | Necesidades: lista vacía | `/entidad/necesidades` | [10d-necesidades-vacia.png](10d-necesidades-vacia.png) |
 | — | Layout con sesión: menú del perfil abierto (vale para todos los roles) | — | [10e-menu-perfil.png](10e-menu-perfil.png) |
+| 10 | Necesidades: selector de subcategoría con buscador | `/entidad/necesidades` | [10f-necesidades-buscador.png](10f-necesidades-buscador.png) |
 | 11 | Donaciones asignadas | `/entidad/donaciones` | Pendiente |
 | 12 | Confirmar recepción con fotos | `/entidad/donaciones/{id}/recepcion` | Pendiente |
 
