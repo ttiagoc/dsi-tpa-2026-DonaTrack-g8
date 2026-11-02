@@ -1,10 +1,10 @@
-{{!-- Barra superior (con sesion): titulo del panel y perfil.
+{{!-- Barra superior (con sesion): la hamburguesa del menu (solo en celular) y el perfil a la derecha.
+      Sin titulo: el de cada pagina ya esta en su <h1>.
       El menu del perfil es un <details>: se abre y se cierra sin JavaScript. --}}
 <header class="barra">
   <label for="menu-toggle" class="barra__boton barra__hamburguesa" aria-label="Abrir o cerrar el menú">
     <svg class="icono"><use href="#i-menu"/></svg>
   </label>
-  <p class="barra__titulo">{{usuario.tituloPanel}}</p>
   <details class="perfil">
     <summary class="perfil__boton">
       <span class="perfil__avatar" aria-hidden="true">{{usuario.iniciales}}</span>

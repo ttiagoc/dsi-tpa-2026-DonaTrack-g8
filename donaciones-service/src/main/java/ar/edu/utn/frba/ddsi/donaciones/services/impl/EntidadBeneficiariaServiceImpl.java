@@ -22,6 +22,7 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.NecesidadExtrao
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.NecesidadRecurrente;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.TipoNecesidad;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.Periodo;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.UnidadDeMedida;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.SubcategoriaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.services.EntidadBeneficiariaService;
@@ -69,7 +70,8 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
         String categoria = n.getSubcategoria().getCategoria() != null ? n.getSubcategoria().getCategoria().getNombre() : null;
         return new NecesidadResponse(n.getId(), n.getSubcategoria().getNombre(),
                 n.getTipoNecesidad().getClass().getSimpleName(), periodo, n.getDescripcion(), n.getCantidad(),
-                categoria, Math.round(n.cantidadAsignada()), n.estaSatisfecha(), n.donacionesEnCurso());
+                categoria, Math.round(n.cantidadAsignada()), n.estaSatisfecha(), n.donacionesEnCurso(),
+                n.getUnidad().name());
     }
 
     public EntidadBeneficiariaResponse crear(EntidadBeneficiariaRequest request) {
@@ -166,7 +168,19 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
         }
         return new Necesidad(toSubcategoria(request.subcategoria()),
                 toTipoNecesidad(request.tipoNecesidad(), request.periodo()),
-                request.descripcion(), request.cantidad());
+                request.descripcion(), request.cantidad(), toUnidad(request.unidad()));
+    }
+
+    private UnidadDeMedida toUnidad(String unidad) {
+        if (unidad == null || unidad.isBlank()) {
+            return UnidadDeMedida.UNIDADES;
+        }
+        try {
+            return UnidadDeMedida.valueOf(unidad.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException("Unidad '" + unidad
+                    + "' no valida. Valores posibles: UNIDADES, KILOGRAMOS, LITROS");
+        }
     }
 
     // Las subcategorias se cargan previamente desde el catalogo (CategoriaController):

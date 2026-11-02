@@ -6,7 +6,8 @@ public record NecesidadRequest(
         String tipoNecesidad,
         String periodo,
         String descripcion,
-        Long cantidad) {
+        Long cantidad,
+        String unidad) {
 
     public record Subcategoria(String nombre) {
     }

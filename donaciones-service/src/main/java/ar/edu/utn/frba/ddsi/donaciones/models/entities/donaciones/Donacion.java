@@ -26,6 +26,7 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.Necesidad;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoBien;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.Periodo;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoEstadoDonacion;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.UnidadDeMedida;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -187,11 +188,16 @@ public class Donacion {
   }
 
   public Double cantidadBienesRecibidos() {
+    return this.cantidadBienesRecibidos(UnidadDeMedida.UNIDADES);
+  }
+
+  // cuanto aportan los bienes medidos en la unidad de la necesidad (unidades, kilogramos o litros)
+  public Double cantidadBienesRecibidos(UnidadDeMedida unidad) {
     if (this.bienes == null)
       return 0.0;
 
     return this.bienes.stream()
-        .mapToDouble(bien -> bien.getCantidad() != null ? bien.getCantidad() : 0)
+        .mapToDouble(unidad::cantidadDe)
         .sum();
   }
 

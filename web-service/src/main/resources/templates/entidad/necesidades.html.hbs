@@ -29,7 +29,7 @@
               <td class="tabla__corta">{{frecuencia}}</td>
               <td>
                 <div class="progreso">
-                  <span>{{cantidadAsignada}} de {{cantidad}}</span>
+                  <span>{{cantidadAsignada}} de {{cantidad}} {{unidad}}</span>
                   <div class="progreso__barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{porcentaje}}"><span style="width: {{porcentaje}}%"></span></div>
                 </div>
               </td>
@@ -38,7 +38,7 @@
               </td>
               <td class="tabla__accion">
                 <form method="post" action="/entidad/necesidades/{{id}}/eliminar" data-confirmar
-                      data-nombre="{{subcategoria}}" data-detalle="{{frecuencia}} · {{cantidad}} unidades"
+                      data-nombre="{{subcategoria}}" data-detalle="{{frecuencia}} · {{cantidad}} {{unidad}}"
                       data-en-curso="{{donacionesEnCurso}}">
                   <button type="submit" class="boton boton--secundario boton--peligro boton--chico">Eliminar</button>
                 </form>
@@ -49,7 +49,7 @@
       </table>
     </div>
   </section>
-  <p class="nota">"Asignado" suma las donaciones ya asignadas a la necesidad (en las que se repiten, solo las del período actual).</p>
+  <p class="nota">"Asignado" suma las donaciones ya asignadas a la necesidad (en las que se repiten, solo las del período actual). En kilogramos o litros se usa el peso o el volumen de cada bien; si un bien no lo tiene cargado, no suma.</p>
 {{else}}
   <section class="tarjeta vacio">
     <strong>Todavía no cargaste necesidades.</strong>
@@ -60,12 +60,15 @@
 {{!-- Alta. Si el servidor rechaza los datos, la pagina vuelve con el modal abierto ("open"), los errores y lo cargado --}}
 <dialog class="modal" id="modal-alta" aria-labelledby="titulo-alta" {{#if abrirAlta}}open{{/if}}>
   <form method="post" action="/entidad/necesidades" accept-charset="UTF-8" novalidate>
-    <div class="modal__encabezado"><h2 id="titulo-alta">Nueva necesidad</h2></div>
+    <div class="modal__encabezado">
+      <h2 id="titulo-alta">Nueva necesidad</h2>
+      <a class="modal__cerrar" href="/entidad/necesidades" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></a>
+    </div>
     <div class="modal__cuerpo">
       {{#if errorAlta}}<div class="alerta alerta--error" role="alert">{{errorAlta}}</div>{{/if}}
       <div class="campo{{#if errores.subcategoria}} campo--error{{/if}}">
         <label for="subcategoria">Subcategoría <span class="campo__requerido" aria-hidden="true">*</span></label>
-        <select id="subcategoria" name="subcategoria" required data-buscador="Buscá o elegí una subcategoría">
+        <select id="subcategoria" name="subcategoria" required autofocus data-buscador="Buscá o elegí una subcategoría">
           <option value="">Elegí una subcategoría</option>
           {{#each rubros}}
             <optgroup label="{{categoria}}">
@@ -77,8 +80,7 @@
         </select>
         {{#if errores.subcategoria}}<small class="campo__error">{{errores.subcategoria}}</small>{{/if}}
       </div>
-      <div class="grilla grilla--2">
-        <div class="campo{{#if errores.frecuencia}} campo--error{{/if}}">
+      <div class="campo{{#if errores.frecuencia}} campo--error{{/if}}">
           <label for="frecuencia">¿Cada cuánto la necesitan? <span class="campo__requerido" aria-hidden="true">*</span></label>
           <select id="frecuencia" name="frecuencia" required>
             <option value="">Elegí una opción</option>
@@ -87,9 +89,21 @@
             {{/each}}
           </select>
           {{#if errores.frecuencia}}<small class="campo__error">{{errores.frecuencia}}</small>{{/if}}
-        </div>
-        {{> partials/campo nombre="cantidad" etiqueta="Cantidad" tipo="number" valor=form.cantidad errorCampo=errores.cantidad requerido=true min="1"}}
       </div>
+      {{!-- cantidad y su unidad van juntas: "50" + "kilogramos" --}}
+      <div class="grilla grilla--2">
+        {{> partials/campo nombre="cantidad" etiqueta="Cantidad" tipo="number" valor=form.cantidad errorCampo=errores.cantidad requerido=true min="1"}}
+        <div class="campo{{#if errores.unidad}} campo--error{{/if}}">
+          <label for="unidad">¿En qué se mide? <span class="campo__requerido" aria-hidden="true">*</span></label>
+          <select id="unidad" name="unidad" required>
+            {{#each unidades}}
+              <option value="{{valor}}" {{#if (eq valor @root.form.unidad)}}selected{{/if}}>{{etiqueta}}</option>
+            {{/each}}
+          </select>
+          {{#if errores.unidad}}<small class="campo__error">{{errores.unidad}}</small>{{/if}}
+        </div>
+      </div>
+      <p class="nota">Las donaciones se cuentan por unidad. Si pedís kilogramos o litros, se suman con el peso o el volumen de cada bien donado (por ejemplo, 20 paquetes de 500 g son 10 kg).</p>
       <div class="campo{{#if errores.descripcion}} campo--error{{/if}}">
         <label for="descripcion">Descripción <span class="campo__requerido" aria-hidden="true">*</span></label>
         <textarea id="descripcion" name="descripcion" maxlength="500" required>{{form.descripcion}}</textarea>
@@ -106,13 +120,16 @@
 {{!-- Confirmacion antes de eliminar: la arma el script con los datos de la fila --}}
 <dialog class="modal modal--chico" id="modal-eliminar" aria-labelledby="titulo-eliminar">
   <form method="post">
-    <div class="modal__encabezado"><h2 id="titulo-eliminar">¿Eliminar la necesidad?</h2></div>
+    <div class="modal__encabezado">
+      <h2 id="titulo-eliminar">¿Eliminar la necesidad?</h2>
+      <button type="button" class="modal__cerrar" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></button>
+    </div>
     <div class="modal__cuerpo">
       <p><strong data-nombre></strong> · <span data-detalle></span></p>
       <p class="texto-suave">Las donaciones que ya llegaron siguen apareciendo en Donaciones asignadas. Esta acción no se puede deshacer.</p>
     </div>
     <div class="modal__acciones">
-      <button type="button" class="boton boton--secundario" data-cierra>Cancelar</button>
+      <button type="button" class="boton boton--secundario" data-cierra autofocus>Cancelar</button>
       <button type="submit" class="boton boton--peligro">Eliminar</button>
     </div>
   </form>
@@ -120,13 +137,16 @@
 
 {{!-- En lugar de la confirmacion, si la necesidad tiene donaciones en camino (la API tambien lo rechaza) --}}
 <dialog class="modal modal--chico" id="modal-no-eliminar" aria-labelledby="titulo-no-eliminar">
-  <div class="modal__encabezado"><h2 id="titulo-no-eliminar">No se puede eliminar la necesidad</h2></div>
+  <div class="modal__encabezado">
+    <h2 id="titulo-no-eliminar">No se puede eliminar la necesidad</h2>
+    <button type="button" class="modal__cerrar" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></button>
+  </div>
   <div class="modal__cuerpo">
     <p><strong data-nombre></strong> · <span data-detalle></span></p>
     <p class="texto-suave">Tiene <span data-en-curso></span> que todavía no <span data-llegaron></span>. Vas a poder eliminarla cuando se entreguen. Podés ver su estado en <a href="/entidad/donaciones">Donaciones asignadas</a>.</p>
   </div>
   <div class="modal__acciones">
-    <button type="button" class="boton" data-cierra>Entendido</button>
+    <button type="button" class="boton" data-cierra autofocus>Entendido</button>
   </div>
 </dialog>
 {{/partial}}

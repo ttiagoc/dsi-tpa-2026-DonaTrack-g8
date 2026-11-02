@@ -2,7 +2,7 @@
       {{#partial "titulo"}}...{{/partial}}  {{#partial "contenido"}}...{{/partial}}  (opcionales: "head", "scripts")
       La pagina solo pone el contenido; el layout agrega las partes segun haya sesion o no:
       - sin sesion: navbar publico arriba y footer abajo;
-      - con sesion: menu lateral (paginas del rol) y barra superior (titulo y perfil). --}}
+      - con sesion: menu lateral (paginas del rol), barra superior (perfil) y el mismo footer al pie del contenido. --}}
 <!doctype html>
 <html lang="es">
 <head>
@@ -35,6 +35,7 @@
       {{> partials/alertas}}
       {{#block "contenido"}}{{/block}}
     </main>
+    {{> partials/footer}}
   </div>
 {{else}}
   {{> partials/navbar}}

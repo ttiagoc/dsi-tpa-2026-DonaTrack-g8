@@ -67,8 +67,8 @@ src/main/resources/
    del archivo).
 
 La vista solo pone el contenido: `layouts/base` agrega el resto según haya sesión o no. Sin sesión, el navbar
-público y el footer; con sesión, el menú lateral (`partials/menu-lateral`) y la barra superior con el perfil y
-"Salir" (`partials/barra`). Así una misma página, como `/legal` o los errores, se ve bien en los dos casos.
+público y el footer; con sesión, el menú lateral (`partials/menu-lateral`), la barra superior con el perfil y
+"Salir" (`partials/barra`, sin título: el de la página va en su `<h1>`) y el mismo footer al pie del contenido. Así una misma página, como `/legal` o los errores, se ve bien en los dos casos.
 La landing, el login y el registro redirigen al panel si ya hay sesión (`AutorizacionMiddleware.soloVisitantes`).
 
 ```java
@@ -83,9 +83,10 @@ public void listar(Context ctx) {
 
 | Variable | Contenido |
 |---|---|
-| `usuario` | `null` si es un visitante. Si no: `username`, `rol`, `perfilId` (id del donante o de la entidad), `usuarioId`, `panel`, `rolEtiqueta`, `tituloPanel`, `iniciales`, `esDonante`, `esEntidad`, `esAdmin` |
+| `usuario` | `null` si es un visitante. Si no: `username`, `rol`, `perfilId` (id del donante o de la entidad), `usuarioId`, `panel`, `rolEtiqueta`, `iniciales`, `esDonante`, `esEntidad`, `esAdmin` |
 | `alertas` | mensajes pendientes (los muestra el layout) |
-| `rutaActual` | la ruta pedida (`ctx.path()`), para marcar el link activo del menú lateral |
+| `rutaActual` | la ruta pedida (`ctx.path()`), para marcar el link activo del menú lateral y del navbar |
+| `enRegistro` | `true` en `/registro` y sus formularios (marca "Registrarme" en el navbar) |
 
 `perfilId` es el id que hay que mandar a la API para "lo mío" (`/donantes/{perfilId}`, `/entidad-beneficiaria/{perfilId}`).
 
@@ -112,8 +113,12 @@ public void listar(Context ctx) {
   `form.email(campo, etiqueta, obligatorio)` y `form.telefono(...)` usan las mismas reglas y mensajes.
 - **Select con buscador:** `<select ... data-buscador="Buscá una subcategoría">` se convierte en un campo donde se
   escribe para filtrar (respeta los `<optgroup>`, ignora tildes). El `<select>` sigue siendo el que se envía, así que
-  el controller no cambia. Ejemplo en `entidad/necesidades.html.hbs`.
+  el controller no cambia. Si el `<select>` tiene `autofocus`, el foco pasa a la caja de texto.
+  Ejemplo en `entidad/necesidades.html.hbs`.
   Nada que modifique datos va por GET.
+- **Modales:** `<dialog class="modal">` con `.modal__encabezado` (título + cruz `.modal__cerrar` con `data-cierra`),
+  `.modal__cuerpo` y `.modal__acciones`. Poner `autofocus` en la acción segura (Cancelar, Entendido o el primer
+  campo) para que el foco no caiga en la cruz. Ejemplo en `entidad/necesidades.html.hbs`.
 
 ## Llamar a una API
 

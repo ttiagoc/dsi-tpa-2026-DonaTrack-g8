@@ -1,4 +1,5 @@
-{{!-- Navbar de los visitantes (sin sesion). Con sesion se usan partials/menu-lateral y partials/barra. --}}
+{{!-- Navbar de los visitantes (sin sesion). Con sesion se usan partials/menu-lateral y partials/barra.
+      A la izquierda las paginas publicas; a la derecha, separado, lo de la cuenta (ingresar y registrarse). --}}
 <header class="navbar">
   <div class="navbar__contenido">
     <a class="navbar__marca" href="/">
@@ -9,10 +10,11 @@
       <span></span><span></span><span></span>
     </label>
     <nav class="navbar__links" aria-label="Principal">
-      <a href="/#como-funciona">Cómo funciona</a>
       <a href="/mapa" {{#if (eq rutaActual "/mapa")}}aria-current="page"{{/if}}>Mapa de entregas</a>
-      <a href="/login">Ingresar</a>
-      <a class="boton boton--chico" href="/registro">Registrarme</a>
     </nav>
+    <div class="navbar__cuenta">
+      <a href="/login" {{#if (eq rutaActual "/login")}}aria-current="page"{{/if}}>Ingresar</a>
+      <a class="boton boton--chico" href="/registro" {{#if enRegistro}}aria-current="page"{{/if}}>Registrarme</a>
+    </div>
   </div>
 </header>

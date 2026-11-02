@@ -20,6 +20,7 @@ import javax.persistence.Transient;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.Periodo;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.UnidadDeMedida;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -60,16 +61,31 @@ public class Necesidad {
 
   private Long cantidad;
 
+  // en que se mide la cantidad; las filas anteriores a este campo quedan en null y cuentan como unidades
+  @Enumerated(EnumType.STRING)
+  @Column(length = 20)
+  private UnidadDeMedida unidad;
+
   // una donacion cubre como mucho una necesidad: la FK necesidad_id vive en la tabla donacion
   @OneToMany(mappedBy = "necesidad")
   private List<Donacion> donacionesAsignadas;
 
   public Necesidad(Subcategoria subcategoria, TipoNecesidad tipoNecesidad, String descripcion, Long cantidad) {
+    this(subcategoria, tipoNecesidad, descripcion, cantidad, UnidadDeMedida.UNIDADES);
+  }
+
+  public Necesidad(Subcategoria subcategoria, TipoNecesidad tipoNecesidad, String descripcion, Long cantidad,
+      UnidadDeMedida unidad) {
     this.subcategoria = subcategoria;
     this.setTipoNecesidad(tipoNecesidad);
     this.descripcion = descripcion;
     this.cantidad = cantidad;
+    this.unidad = unidad;
     this.donacionesAsignadas = new ArrayList<>();
+  }
+
+  public UnidadDeMedida getUnidad() {
+    return this.unidad != null ? this.unidad : UnidadDeMedida.UNIDADES;
   }
 
   public void setTipoNecesidad(TipoNecesidad tipoNecesidad) {
@@ -99,14 +115,14 @@ public class Necesidad {
     if (this.tipoNecesidad == null) {
       return 0.0;
     }
-    return this.tipoNecesidad.cantidadAsignada(this.donacionesAsignadas);
+    return this.tipoNecesidad.cantidadAsignada(this.donacionesAsignadas, this.getUnidad());
   }
 
   public Boolean estaSatisfecha() {
     if (this.tipoNecesidad == null) {
       return false;
     }
-    return this.tipoNecesidad.estaSatisfecha(this.donacionesAsignadas, this.cantidad);
+    return this.tipoNecesidad.estaSatisfecha(this.donacionesAsignadas, this.cantidad, this.getUnidad());
   }
 
   // asignadas y todavia sin entregar: mientras haya alguna, la necesidad no se puede eliminar

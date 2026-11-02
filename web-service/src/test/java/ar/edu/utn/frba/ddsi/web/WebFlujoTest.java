@@ -192,7 +192,9 @@ class WebFlujoTest {
         String cookie = cookie(login("entidad", "clave-segura"));
         String panel = get("/entidad", cookie).body();
         assertTrue(panel.contains("class=\"menu-lateral\""));
-        assertTrue(panel.contains("Panel de la entidad"), "titulo de la barra");
+        assertFalse(panel.contains("barra__titulo"), "la barra no repite el titulo de la pagina");
+        assertTrue(panel.contains("href=\"/mapa\" title=\"Mapa de entregas\""), "el mapa publico esta en el menu");
+        assertTrue(panel.contains("class=\"footer\""), "footer al pie del contenido");
         assertTrue(panel.contains("Entidad beneficiaria"), "rol en el perfil");
         assertTrue(panel.contains("href=\"/entidad\" title=\"Inicio\" aria-current=\"page\""), "marca la pagina abierta");
         assertTrue(panel.contains("for=\"menu-plegado\""), "boton para achicar el menu");
@@ -247,7 +249,7 @@ class WebFlujoTest {
     void necesidadAlta() throws Exception {
         String cookie = cookie(login("entidad", "clave-segura"));
         HttpResponse<String> alta = post("/entidad/necesidades", Map.of("subcategoria", "Frazadas",
-                "frecuencia", "SEMANAL", "cantidad", "30", "descripcion", "Para el refugio"), cookie);
+                "frecuencia", "SEMANAL", "cantidad", "30", "unidad", "KILOGRAMOS", "descripcion", "Para el refugio"), cookie);
         assertEquals(302, alta.statusCode(), alta.body());
         assertEquals("/entidad/necesidades", alta.headers().firstValue("Location").orElse(null));
 
@@ -256,11 +258,12 @@ class WebFlujoTest {
         assertEquals("recurrente", enviado.get("tipoNecesidad").asText());
         assertEquals("SEMANAL", enviado.get("periodo").asText());
         assertEquals(30, enviado.get("cantidad").asLong());
+        assertEquals("KILOGRAMOS", enviado.get("unidad").asText());
 
         String listado = get("/entidad/necesidades", cookie).body();
         assertTrue(listado.contains("Necesidad agregada."));
         assertTrue(listado.contains("Todas las semanas"));
-        assertTrue(listado.contains("12 de 30"));
+        assertTrue(listado.contains("12 de 30 kg"), "cantidad con su unidad");
         assertTrue(listado.contains("width: 40%"), "barra de progreso");
         assertTrue(listado.contains("Pendiente"));
     }
@@ -269,11 +272,12 @@ class WebFlujoTest {
     @DisplayName("Necesidades: con datos invalidos vuelve con el modal abierto, los errores y lo cargado")
     void necesidadInvalida() throws Exception {
         HttpResponse<String> respuesta = post("/entidad/necesidades", Map.of("subcategoria", "Arroz",
-                "frecuencia", "", "cantidad", "0", "descripcion", "Almuerzos"), cookie(login("entidad", "clave-segura")));
+                "frecuencia", "", "cantidad", "0", "unidad", "", "descripcion", "Almuerzos"), cookie(login("entidad", "clave-segura")));
         assertEquals(400, respuesta.statusCode());
         assertTrue(respuesta.body().contains("id=\"modal-alta\" aria-labelledby=\"titulo-alta\" open"));
         assertTrue(respuesta.body().contains("Elegí cada cuánto la necesitan"));
         assertTrue(respuesta.body().contains("Tiene que ser un número mayor a 0"));
+        assertTrue(respuesta.body().contains("Elegí en qué se mide la cantidad"));
         assertTrue(respuesta.body().contains("<option selected>Arroz</option>"), "conserva la subcategoria");
         assertTrue(respuesta.body().contains(">Almuerzos</textarea>"), "conserva la descripcion");
         assertEquals(null, ultimaNecesidad.get(), "no deberia haber llamado a la API");
@@ -283,7 +287,7 @@ class WebFlujoTest {
     @DisplayName("Necesidades: el error de la API se muestra dentro del modal")
     void necesidadErrorDeLaApi() throws Exception {
         HttpResponse<String> respuesta = post("/entidad/necesidades", Map.of("subcategoria", "Inexistente",
-                "frecuencia", "UNA_VEZ", "cantidad", "5", "descripcion", "x"), cookie(login("entidad", "clave-segura")));
+                "frecuencia", "UNA_VEZ", "cantidad", "5", "unidad", "UNIDADES", "descripcion", "x"), cookie(login("entidad", "clave-segura")));
         assertEquals(400, respuesta.statusCode());
         assertTrue(respuesta.body().contains("No existe la subcategoria"));
         assertEquals("extraordinaria", ultimaNecesidad.get().get("tipoNecesidad").asText());
@@ -411,7 +415,7 @@ class WebFlujoTest {
     void mapaConSesion() throws Exception {
         String pagina = get("/mapa", cookie(login("entidad", "clave-segura"))).body();
         assertTrue(pagina.contains("class=\"menu-lateral\""));
-        assertTrue(pagina.contains("<a href=\"/mapa\">Mapa de entregas</a>"));
+        assertTrue(pagina.contains("href=\"/mapa\" title=\"Mapa de entregas\" aria-current=\"page\""));
     }
 
     @Test
@@ -693,6 +697,7 @@ class WebFlujoTest {
             necesidad.put("periodo", body.get("periodo").asText());
             necesidad.put("descripcion", body.get("descripcion").asText());
             necesidad.put("cantidad", body.get("cantidad").asLong());
+            necesidad.put("unidad", body.get("unidad").asText());
             necesidad.put("cantidadAsignada", 12);
             necesidad.put("satisfecha", false);
             necesidades.add(necesidad);

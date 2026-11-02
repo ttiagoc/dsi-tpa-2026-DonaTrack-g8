@@ -34,6 +34,8 @@
     if (select.getAttribute('aria-invalid')) {
       entrada.setAttribute('aria-invalid', 'true');
     }
+    // el select queda oculto: si tenia autofocus (por ejemplo, el primer campo de un modal), lo toma la caja
+    entrada.autofocus = select.autofocus;
 
     // el label apunta al id: pasa a la caja de texto
     select.id = id + '-valor';

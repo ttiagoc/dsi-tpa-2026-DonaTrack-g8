@@ -11,6 +11,7 @@ import ar.edu.utn.frba.ddsi.web.clients.DonacionesApiClient;
 import ar.edu.utn.frba.ddsi.web.dto.necesidades.Frecuencia;
 import ar.edu.utn.frba.ddsi.web.dto.necesidades.NecesidadRequest;
 import ar.edu.utn.frba.ddsi.web.dto.necesidades.NecesidadResponse;
+import ar.edu.utn.frba.ddsi.web.dto.necesidades.Unidad;
 import ar.edu.utn.frba.ddsi.web.exceptions.ApiException;
 import ar.edu.utn.frba.ddsi.web.sesion.Alertas;
 import io.javalin.http.Context;
@@ -46,6 +47,10 @@ public class NecesidadesController {
             form.error("frecuencia", "Elegí cada cuánto la necesitan");
         }
         Long cantidad = leerCantidad(form);
+        Optional<Unidad> unidad = Unidad.deFormulario(form.valor("unidad"));
+        if (unidad.isEmpty()) {
+            form.error("unidad", "Elegí en qué se mide la cantidad");
+        }
         String descripcion = form.requerido("descripcion", "La descripción");
 
         if (form.tieneErrores()) {
@@ -54,7 +59,8 @@ public class NecesidadesController {
         }
         try {
             donaciones.registrarNecesidad(ctx, new NecesidadRequest(new NecesidadRequest.Subcategoria(subcategoria),
-                    frecuencia.get().tipoNecesidad(), frecuencia.get().periodo(), descripcion, cantidad));
+                    frecuencia.get().tipoNecesidad(), frecuencia.get().periodo(), descripcion, cantidad,
+                    unidad.get().name()));
             Alertas.exito(ctx, "Necesidad agregada.");
             ctx.redirect(RUTA);
         } catch (ApiException e) {
@@ -115,16 +121,19 @@ public class NecesidadesController {
         modelo.put("rubros", donaciones.catalogo());
         modelo.put("frecuencias", Arrays.stream(Frecuencia.values())
                 .map(f -> Map.of("valor", f.name(), "etiqueta", f.etiqueta())).toList());
+        modelo.put("unidades", Arrays.stream(Unidad.values())
+                .map(u -> Map.of("valor", u.name(), "etiqueta", u.etiqueta())).toList());
         ctx.render(VISTA, modelo);
     }
 
     /**
-     * Una fila de la tabla, con la frecuencia en palabras y el porcentaje para la barra de progreso.
+     * Una fila de la tabla, con la frecuencia en palabras, la unidad abreviada ("kg") y el porcentaje
+     * para la barra de progreso.
      * donacionesEnCurso: si hay alguna, "Eliminar" explica que no se puede en lugar de pedir confirmacion.
      */
     public record NecesidadVista(Long id, String subcategoria, String categoria, String descripcion,
             String frecuencia, Long cantidad, Long cantidadAsignada, int porcentaje, boolean satisfecha,
-            long donacionesEnCurso) {
+            long donacionesEnCurso, String unidad) {
 
         static NecesidadVista de(NecesidadResponse n) {
             long asignada = n.cantidadAsignada() == null ? 0 : n.cantidadAsignada();
@@ -132,7 +141,7 @@ public class NecesidadesController {
                     : (int) Math.min(100, asignada * 100 / n.cantidad());
             return new NecesidadVista(n.id(), n.subcategoria(), n.categoria(), n.descripcion(),
                     Frecuencia.de(n).etiqueta(), n.cantidad(), asignada, porcentaje, Boolean.TRUE.equals(n.satisfecha()),
-                    n.donacionesEnCurso() == null ? 0 : n.donacionesEnCurso());
+                    n.donacionesEnCurso() == null ? 0 : n.donacionesEnCurso(), Unidad.de(n).abreviatura());
         }
     }
 }

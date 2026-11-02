@@ -3,12 +3,22 @@
       (el texto va en un <span> para que se oculte cuando el menu esta achicado):
         <a href="/rol/pagina" title="Texto" {{#if (eq rutaActual "/rol/pagina")}}aria-current="page"{{/if}}>
           <svg class="icono"><use href="#i-nombre"/></svg> <span>Texto</span></a>
-      Los iconos estan en partials/iconos. --}}
+      Los iconos estan en partials/iconos.
+      En la cabecera, a la derecha del logo: el boton para achicar el menu (pantallas anchas)
+      o la cruz para cerrarlo (celular). --}}
 <aside class="menu-lateral" aria-label="Menú">
   <div class="menu-lateral__cabecera">
-    <a class="navbar__marca" href="{{usuario.panel}}">
+    <a class="menu-lateral__marca" href="{{usuario.panel}}">
       <img src="/img/logo.svg" alt="" width="28" height="28"> <span>DonaTrack</span>
     </a>
+    <label for="menu-plegado" class="menu-lateral__boton menu-lateral__plegar" title="Achicar o agrandar el menú">
+      <svg class="icono"><use href="#i-plegar"/></svg>
+      <span class="sr-only">Achicar o agrandar el menú</span>
+    </label>
+    <label for="menu-toggle" class="menu-lateral__boton menu-lateral__cerrar" title="Cerrar el menú">
+      <svg class="icono"><use href="#i-cerrar"/></svg>
+      <span class="sr-only">Cerrar el menú</span>
+    </label>
   </div>
   <nav class="menu-lateral__links">
     {{#if usuario.esEntidad}}
@@ -30,14 +40,9 @@
       <p class="menu-lateral__seccion">Administración</p>
       <a href="/admin" title="Inicio" {{#if (eq rutaActual "/admin")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-inicio"/></svg> <span>Inicio</span></a>
     {{/if}}
+    {{!-- paginas comunes a todos los roles (los terminos van en el footer) --}}
+    <p class="menu-lateral__seccion">Plataforma</p>
+    <a href="/mapa" title="Mapa de entregas" {{#if (eq rutaActual "/mapa")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-mapa-entregas"/></svg> <span>Mapa de entregas</span></a>
   </nav>
-  <div class="menu-lateral__pie">
-    {{!-- paginas comunes a todos los roles --}}
-    <span class="menu-lateral__legal">DSI UTN FRBA 2026 · <a href="/mapa">Mapa de entregas</a> · <a href="/legal">Términos y privacidad</a></span>
-    <label for="menu-plegado" class="menu-lateral__plegar" title="Achicar o agrandar el menú">
-      <svg class="icono"><use href="#i-plegar"/></svg>
-      <span class="sr-only">Achicar o agrandar el menú</span>
-    </label>
-  </div>
 </aside>
 <label for="menu-toggle" class="app__velo" aria-hidden="true"></label>

@@ -3,6 +3,7 @@ package ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades;
 import java.util.List;
 
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
+import ar.edu.utn.frba.ddsi.donaciones.models.enums.UnidadDeMedida;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,12 +14,12 @@ import lombok.Setter;
 public class NecesidadExtraordinaria implements TipoNecesidad {
 
   @Override
-  public Double cantidadAsignada(List<Donacion> donaciones) {
+  public Double cantidadAsignada(List<Donacion> donaciones, UnidadDeMedida unidad) {
     if (donaciones == null)
       return 0.0;
 
     return donaciones.stream()
-        .mapToDouble(Donacion::cantidadBienesRecibidos)
+        .mapToDouble(donacion -> donacion.cantidadBienesRecibidos(unidad))
         .sum();
   }
 }

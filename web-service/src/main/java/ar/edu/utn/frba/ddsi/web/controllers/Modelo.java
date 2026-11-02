@@ -15,7 +15,8 @@ import io.javalin.http.Context;
  * Todo controller arranca el modelo de su vista desde aca, asi el layout siempre tiene:
  * - usuario: el usuario logueado (UsuarioVista) o nada si es un visitante;
  * - alertas: los mensajes pendientes (ver Alertas);
- * - rutaActual: para marcar la pagina abierta en el menu lateral.
+ * - rutaActual: para marcar la pagina abierta en el menu lateral y en el navbar;
+ * - enRegistro: si es alguna de las paginas de registro (/registro y sus formularios).
  */
 public final class Modelo {
 
@@ -27,6 +28,7 @@ public final class Modelo {
         SesionUsuario.actual(ctx).ifPresent(sesion -> modelo.put("usuario", UsuarioVista.de(sesion.getUsuario())));
         modelo.put("alertas", new ArrayList<>(Alertas.consumir(ctx)));
         modelo.put("rutaActual", ctx.path());
+        modelo.put("enRegistro", ctx.path().startsWith("/registro"));
         return modelo;
     }
 

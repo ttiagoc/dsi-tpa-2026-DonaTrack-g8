@@ -112,24 +112,34 @@ code {
   font-size: var(--texto-grande);
   color: var(--color-texto);
   text-decoration: none;
-  margin-right: auto;
 }
 
-.navbar__links {
+/* paginas publicas al lado del logo; la cuenta (ingresar y registrarse) aparte, a la derecha */
+.navbar__links,
+.navbar__cuenta {
   display: flex;
   align-items: center;
   gap: var(--espacio-4);
 }
 
-.navbar__links > a:not(.boton) {
+.navbar__links { margin-left: var(--espacio-4); }
+.navbar__cuenta { margin-left: auto; }
+
+.navbar__links > a,
+.navbar__cuenta > a:not(.boton) {
   color: var(--color-texto);
   text-decoration: none;
   font-weight: 500;
 }
 
-.navbar__links > a:not(.boton):hover { color: var(--color-primario); }
+.navbar__links > a:hover,
+.navbar__cuenta > a:not(.boton):hover { color: var(--color-primario); }
 /* la pagina abierta, igual que en el menu lateral */
-.navbar__links > a[aria-current="page"] { color: var(--color-primario); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; }
+.navbar__links > a[aria-current="page"],
+.navbar__cuenta > a[aria-current="page"]:not(.boton) { color: var(--color-primario); }
+.navbar__links > a[aria-current="page"],
+.navbar__cuenta > a[aria-current="page"] { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; }
+.navbar__cuenta > .boton[aria-current="page"] { text-underline-offset: 4px; }
 
 .navbar__toggle { position: absolute; opacity: 0; pointer-events: none; }
 
@@ -148,16 +158,19 @@ code {
 }
 
 @media (max-width: 720px) {
-  .navbar__hamburguesa { display: flex; }
-  .navbar__links {
+  .navbar__hamburguesa { display: flex; margin-left: auto; }
+  .navbar__links,
+  .navbar__cuenta {
     display: none;
     width: 100%;
+    margin-left: 0;
     flex-direction: column;
     align-items: stretch;
     gap: var(--espacio-3);
-    padding-bottom: var(--espacio-3);
   }
-  .navbar__toggle:checked ~ .navbar__links { display: flex; }
+  .navbar__cuenta { padding: var(--espacio-3) 0; border-top: 1px solid var(--color-borde); }
+  .navbar__toggle:checked ~ .navbar__links,
+  .navbar__toggle:checked ~ .navbar__cuenta { display: flex; }
   .navbar__toggle:focus-visible + .navbar__hamburguesa { outline: 3px solid var(--color-acento); }
 }
 
@@ -183,10 +196,14 @@ code {
 .app {
   display: grid;
   grid-template-columns: 248px minmax(0, 1fr);
-  grid-template-rows: 64px 1fr;
-  grid-template-areas: "menu barra" "menu principal";
+  grid-template-rows: 64px 1fr auto;
+  grid-template-areas: "menu barra" "menu principal" "menu pie";
   min-height: 100vh;
 }
+
+/* el footer de siempre, al pie de la columna del contenido (de borde a borde de esa columna) */
+.app .footer { grid-area: pie; }
+.app .footer__contenido { max-width: none; padding: var(--espacio-4) var(--espacio-6); }
 
 .app__principal {
   grid-area: principal;
@@ -217,9 +234,24 @@ code {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  padding: 0 var(--espacio-5);
+  justify-content: space-between;
+  gap: var(--espacio-2);
+  padding: 0 var(--espacio-3) 0 var(--espacio-5);
   border-bottom: 1px solid var(--color-borde);
 }
+
+.menu-lateral__marca {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  min-width: 0;
+  font-weight: 700;
+  font-size: var(--texto-grande);
+  color: var(--color-texto);
+  text-decoration: none;
+}
+
+.menu-lateral__marca:hover { color: var(--color-texto); }
 
 .menu-lateral__links {
   flex: 1;
@@ -260,47 +292,34 @@ code {
 
 .menu-lateral__links a[aria-current="page"] .icono { color: var(--color-primario); }
 
-.menu-lateral__pie {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--espacio-2);
-  padding: var(--espacio-3) var(--espacio-4);
-  border-top: 1px solid var(--color-borde);
-  font-size: 0.75rem;
-  color: var(--color-texto-suave);
-}
-
-.menu-lateral__pie a { color: inherit; }
-
-.menu-lateral__plegar {
+.menu-lateral__boton {
   display: inline-flex;
   flex-shrink: 0;
-  padding: var(--espacio-1);
-  border: 1px solid var(--color-borde);
-  border-radius: 6px;
+  padding: 6px;
+  border-radius: 8px;
   color: var(--color-texto-suave);
   cursor: pointer;
 }
 
-.menu-lateral__plegar:hover { background: var(--color-fondo); color: var(--color-texto); }
+.menu-lateral__boton:hover { background: var(--color-fondo); color: var(--color-texto); }
+.menu-lateral__cerrar { display: none; }
 #menu-plegado:focus-visible ~ .app .menu-lateral__plegar { outline: 3px solid var(--color-acento); }
 
-/* Menu achicado (solo en pantallas anchas): quedan los iconos */
+/* Menu achicado (solo en pantallas anchas): quedan los iconos, y arriba solo el boton para agrandarlo */
 @media (min-width: 721px) {
   #menu-plegado:checked ~ .app { grid-template-columns: 72px minmax(0, 1fr); }
   #menu-plegado:checked ~ .app .menu-lateral__seccion,
   #menu-plegado:checked ~ .app .menu-lateral__links a span,
-  #menu-plegado:checked ~ .app .menu-lateral__cabecera span,
-  #menu-plegado:checked ~ .app .menu-lateral__legal { display: none; }
-  #menu-plegado:checked ~ .app .menu-lateral__cabecera,
-  #menu-plegado:checked ~ .app .menu-lateral__pie { justify-content: center; padding-left: 0; padding-right: 0; }
+  #menu-plegado:checked ~ .app .menu-lateral__marca { display: none; }
+  #menu-plegado:checked ~ .app .menu-lateral__cabecera { justify-content: center; padding: 0; }
   #menu-plegado:checked ~ .app .menu-lateral__links a { justify-content: center; }
   #menu-plegado:checked ~ .app .menu-lateral__plegar .icono { transform: rotate(180deg); }
 }
 
+/* En celular el menu se abre con la hamburguesa de la barra y se cierra con la cruz */
 @media (max-width: 720px) {
   .menu-lateral__plegar { display: none; }
+  .menu-lateral__cerrar { display: inline-flex; }
 }
 
 .sr-only {
@@ -325,7 +344,6 @@ code {
   border-bottom: 1px solid var(--color-borde);
 }
 
-.barra__titulo { margin: 0 auto 0 0; font-size: var(--texto-grande); font-weight: 600; }
 
 .barra__boton {
   position: relative;
@@ -339,7 +357,7 @@ code {
 .barra__boton:hover { background: var(--color-fondo); color: var(--color-texto); }
 .barra__hamburguesa { display: none; }
 
-.perfil { position: relative; }
+.perfil { position: relative; margin-left: auto; }
 
 .perfil__boton {
   display: flex;
@@ -404,8 +422,9 @@ code {
 
 /* En celular el menu lateral se oculta y se abre con la hamburguesa de la barra */
 @media (max-width: 720px) {
-  .app { grid-template-columns: 1fr; grid-template-areas: "barra" "principal"; }
+  .app { grid-template-columns: 1fr; grid-template-areas: "barra" "principal" "pie"; }
   .app__principal { padding: var(--espacio-5) var(--espacio-4); }
+  .app .footer__contenido { padding: var(--espacio-4); }
   .barra { padding: 0 var(--espacio-4); }
   .barra__hamburguesa { display: inline-flex; }
   .perfil__datos { display: none; }
@@ -642,6 +661,7 @@ code {
 .tabla__recorte { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .progreso { display: flex; flex-direction: column; gap: var(--espacio-1); min-width: 110px; }
+.progreso > span { white-space: nowrap; }
 
 .progreso__barra {
   height: 6px;
@@ -761,8 +781,28 @@ code {
 .modal::backdrop { background: rgba(16, 24, 20, 0.45); }
 .modal--chico { width: min(440px, calc(100% - 2 * var(--espacio-4))); }
 .modal form { margin: 0; }
-.modal__encabezado { padding: var(--espacio-5) var(--espacio-5) 0; }
+.modal__encabezado {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+  padding: var(--espacio-5) var(--espacio-5) 0;
+}
 .modal__encabezado h2 { margin: 0; }
+
+/* cruz para cerrar, arriba a la derecha de todo modal (con data-cierra) */
+.modal__cerrar {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin: calc(-1 * var(--espacio-2)) calc(-1 * var(--espacio-2)) 0 0;
+  padding: 6px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-texto-suave);
+  cursor: pointer;
+}
+.modal__cerrar:hover { background: var(--color-fondo); color: var(--color-texto); }
 .modal__cuerpo { padding: var(--espacio-4) var(--espacio-5); }
 .modal__cuerpo p:last-child { margin-bottom: 0; }
 
@@ -835,6 +875,7 @@ code {
 }
 
 .hero__bajada { font-size: 1.1rem; color: var(--color-texto-suave); }
+.hero__mapa { margin-top: var(--espacio-5); }
 .hero__ilustracion { display: flex; justify-content: center; }
 
 @media (max-width: 720px) {

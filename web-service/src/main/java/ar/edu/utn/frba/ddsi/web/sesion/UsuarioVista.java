@@ -10,7 +10,6 @@ public record UsuarioVista(
         Long perfilId,
         String panel,
         String rolEtiqueta,
-        String tituloPanel,
         String iniciales,
         boolean esDonante,
         boolean esEntidad,
@@ -19,7 +18,7 @@ public record UsuarioVista(
     public static UsuarioVista de(UsuarioSesion usuario) {
         RolUsuario rol = usuario.rol();
         return new UsuarioVista(usuario.usuarioId(), usuario.username(), rol.name(), usuario.perfilId(),
-                rol.panel(), rol.etiqueta(), rol.tituloPanel(), iniciales(usuario.username()),
+                rol.panel(), rol.etiqueta(), iniciales(usuario.username()),
                 rol == RolUsuario.DONANTE, rol == RolUsuario.ENTIDAD_BENEFICIARIA,
                 rol == RolUsuario.ADMINISTRADOR);
     }
