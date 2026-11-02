@@ -112,6 +112,8 @@ Hoy **ningún endpoint de `logistica-service` declara roles**, así que son púb
 - **Recibe de A:** la Tarea 0 (para las pantallas), el servicio para crear usuarios (para el CSV) y la autenticación con `X-Api-Key` entre logística y donaciones (sección 3.3).
 - **Entrega a A y B:** las variables de entorno y las URLs del despliegue; el despliegue de prueba temprano.
 - **Avisar a B** si cambian los DTOs de donaciones al pasar a gRPC (los endpoints REST que usa el web no deberían cambiar).
+- **Permisos que cambió A (req. 12):** `POST /api/donaciones/recepciones` (entrega del camión) y `POST /api/donaciones/{id}/fotos` ya no aceptan el rol de entidad: quedan para `SISTEMA` (logística) y `ADMINISTRADOR`. La entidad confirma la recepción en `POST /api/donaciones/{id}/recepcion`. Al pasar logística → donaciones a gRPC, la confirmación de entrega del camión sigue siendo de logística y la de la entidad no se toca.
+- **Página común:** `/mapa` (req. 2) es pública. Su link está en el navbar y al pie del menú lateral, no en el bloque del administrador.
 - **Archivos compartidos:** `pom.xml` raíz (módulo gRPC), `docker-compose.yml`, `navbar.hbs` (links de admin), `styles.css`.
 - **Layout con sesión:** cambió a **menú lateral + barra superior** (ver "Convenciones de pantallas" en [`AGENTS.md`](../../AGENTS.md#convenciones-de-pantallas) y el boceto `documents/bocetos/10-necesidades.png`). A es dueño del layout; C arma el bloque del administrador en el menú lateral (secciones e íconos para las pantallas 15–19). Las pantallas de admin siguen la convención de listado + modal y confirmación al eliminar.
 

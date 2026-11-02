@@ -28,7 +28,7 @@ Sigue el ejemplo de clase `gestion-alumnos-server` (JWT + BCrypt + roles), adapt
 - [x] Tests: `JwtUtilTest`, `UsuarioRepositoryJpaTest`, `AuthServiceTest`, `AuthApiTest`, `RestTemplateConfigTest`; `DonacionesApiPersistenciaTest` y el E2E entran como admin.
 - [x] Postman (carpeta "00 - Autenticación", el login guarda `{{access_token}}`), `demo_presentacion.sh`, `docker-compose.yml` y `Clases.puml` actualizados.
 - [x] Probado con los servicios levantados (`docker compose --profile full up -d --build`): login, registro y roles desde el `web-service`.
-- [ ] **Falta:** correr `demo_presentacion.sh` completo con la autenticación.
+- [ ] **Falta:** correr `demo_presentacion.sh` completo con la autenticación. Entra con el token del administrador, así que el cambio de permisos de `/recepciones` y `/{id}/fotos` (req. 12) no lo afecta.
 
 #### Contrato de `/api/auth` (lo consume el `web-service`)
 | Método y ruta | Body | Respuesta |
@@ -157,6 +157,10 @@ Tests: `WebFlujoTest` (13) levanta la web contra una API falsa y recorre landing
 - [x] `Usuario` y `Rol` en `Clases.puml`.
 
 ## 6. Cronograma
-**[COMPLETAR]** Fechas por bloque. Hecho: Tarea 0 + landing/login/registro. Sigue: bocetos → mapa → pantallas de entidad.
+**[COMPLETAR]** Fechas por bloque.
+- [x] Tarea 0 (autenticación, `web-service`, layout).
+- [x] Pantallas 1, 2, 3, 4, 10, 11 y 12, con sus bocetos.
+- [ ] Correr `demo_presentacion.sh` completo con la autenticación (sección 2.1).
+- [ ] Poner las fechas de cada bloque en esta sección.
 
 Rama: todo va en `entrega-4` (autenticación, `web-service` y pantallas) hasta que esté terminado el trabajo de todo el equipo; recién ahí se integra a `main`.

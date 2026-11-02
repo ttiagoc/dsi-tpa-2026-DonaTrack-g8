@@ -64,6 +64,7 @@ Hoy **no existe nada** de misiones, insignias ni categorías de donante en el c�
 ### 3.4 Filtros de donaciones (req. 5) — `donaciones-service`
 - [ ] Hoy `GET /api/donaciones` devuelve todas y `GET /api/donaciones/estado/{estado}` filtra solo por estado.
 - [ ] Agregar `GET /api/donaciones?donanteId=X&estado=Y&categoriaId=Z&subcategoriaIds=...`.
+  - **Ojo, ya lo tocó A (req. 11):** `GET /api/donaciones` acepta `?entidadId=X` (`DonacionController`): la entidad solo pide las suyas (`exigirPropietario`) y sin filtro solo entran admin y servicios. Sumar `donanteId` igual (`exigirPropietario(ctx, DONANTE, id)`) y combinar los filtros en vez de reemplazar ese bloque. `DonacionResponse` ya trae `subcategoria`, `categoria`, `fechaAsignacion`, `fechaEstado`, `necesidad` y `fotosRecepcion`.
 - [ ] Reutilizar `GET /api/categorias` y `GET /api/categorias/{id}/subcategorias` para armar los selects.
 
 ### 3.5 Catálogo de entidades (req. 6)
@@ -85,6 +86,7 @@ Hoy **no existe nada** de misiones, insignias ni categorías de donante en el c�
 
 ## 5. Dependencias con el resto
 - **Recibe de A:** la Tarea 0 (layout, navbar, sesión, middleware) y la convención de plantillas. Para la parte de pantallas, tomarla de `entrega-4` una vez pusheada.
+- **Para reutilizar de A** (ya en `entrega-4`): `SituacionDonacion` (el estado de una donación en palabras y la clase de su etiqueta), las etiquetas `etiqueta--info`, `etiqueta--error` y `etiqueta--neutra`, y las reglas de archivos de `formularios.js` (`type="file"`, `data-max-archivos`, `data-max-mb`). El mapa de entregas (`/mapa`, req. 2) es una página común a todos los roles: su link está al pie del menú lateral, no en el bloque de ningún rol.
 - **Comparte con A:** el layout con sesión cambió a **menú lateral + barra superior** (ver "Convenciones de pantallas" en [`AGENTS.md`](../../AGENTS.md#convenciones-de-pantallas) y el boceto `10-necesidades.png`). A es dueño del layout, de la barra y del bloque de la entidad en el menú. B arma el bloque del donante y agrega en el bloque de la entidad los links a sus pantallas 13 y 14 (notificaciones y seguimiento), siguiendo el formato que explica `partials/menu-lateral.html.hbs`.
 - **Comparte con C:** si C cambia los DTOs de donaciones al pasar a gRPC, avisar; los endpoints REST que usa el web no deberían cambiar.
 - **Archivos compartidos:** `persistence.xml` (donaciones), `Clases.puml`, `navbar.hbs`, `styles.css`. Regla: agregar al final, en una sección propia.
