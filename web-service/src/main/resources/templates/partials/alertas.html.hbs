@@ -1,6 +1,13 @@
+{{!-- Avisos de la pagina (toasts). Cada uno tiene una cruz a la derecha para cerrarlo. --}}
 {{#each alertas}}
-  <div class="alerta alerta--{{tipo}}" role="status">{{mensaje}}</div>
+  <div class="alerta alerta--{{tipo}} alerta--cerrable" role="status">
+    <span>{{mensaje}}</span>
+    <button type="button" class="alerta__cerrar" aria-label="Cerrar el aviso" onclick="this.parentElement.remove()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
 {{/each}}
 {{#if error}}
-  <div class="alerta alerta--error" role="alert">{{error}}</div>
+  <div class="alerta alerta--error alerta--cerrable" role="alert">
+    <span>{{error}}</span>
+    <button type="button" class="alerta__cerrar" aria-label="Cerrar el aviso" onclick="this.parentElement.remove()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
 {{/if}}

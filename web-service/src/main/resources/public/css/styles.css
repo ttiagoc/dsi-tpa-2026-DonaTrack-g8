@@ -114,7 +114,7 @@ code {
   text-decoration: none;
 }
 
-/* paginas publicas al lado del logo; la cuenta (ingresar y registrarse) aparte, a la derecha */
+/* a la derecha: paginas publicas | cuenta (ingresar y registrarse), separadas por una linea */
 .navbar__links,
 .navbar__cuenta {
   display: flex;
@@ -122,8 +122,8 @@ code {
   gap: var(--espacio-4);
 }
 
-.navbar__links { margin-left: var(--espacio-4); }
-.navbar__cuenta { margin-left: auto; }
+.navbar__links { margin-left: auto; }
+.navbar__cuenta { padding-left: var(--espacio-4); border-left: 1px solid var(--color-borde); }
 
 .navbar__links > a,
 .navbar__cuenta > a:not(.boton) {
@@ -168,7 +168,7 @@ code {
     align-items: stretch;
     gap: var(--espacio-3);
   }
-  .navbar__cuenta { padding: var(--espacio-3) 0; border-top: 1px solid var(--color-borde); }
+  .navbar__cuenta { padding: var(--espacio-3) 0; border-left: 0; border-top: 1px solid var(--color-borde); }
   .navbar__toggle:checked ~ .navbar__links,
   .navbar__toggle:checked ~ .navbar__cuenta { display: flex; }
   .navbar__toggle:focus-visible + .navbar__hamburguesa { outline: 3px solid var(--color-acento); }
@@ -305,13 +305,27 @@ code {
 .menu-lateral__cerrar { display: none; }
 #menu-plegado:focus-visible ~ .app .menu-lateral__plegar { outline: 3px solid var(--color-acento); }
 
-/* Menu achicado (solo en pantallas anchas): quedan los iconos, y arriba solo el boton para agrandarlo */
+/* Menu achicado (solo en pantallas anchas): quedan los iconos y el logo; el boton para agrandarlo queda sobre el borde */
 @media (min-width: 721px) {
   #menu-plegado:checked ~ .app { grid-template-columns: 72px minmax(0, 1fr); }
   #menu-plegado:checked ~ .app .menu-lateral__seccion,
   #menu-plegado:checked ~ .app .menu-lateral__links a span,
-  #menu-plegado:checked ~ .app .menu-lateral__marca { display: none; }
-  #menu-plegado:checked ~ .app .menu-lateral__cabecera { justify-content: center; padding: 0; }
+  #menu-plegado:checked ~ .app .menu-lateral__marca span { display: none; }
+  #menu-plegado:checked ~ .app .menu-lateral { z-index: 6; }
+  #menu-plegado:checked ~ .app .menu-lateral__cabecera { position: relative; justify-content: center; padding: 0; }
+  #menu-plegado:checked ~ .app .menu-lateral__plegar {
+    position: absolute;
+    z-index: 6;
+    top: 50%;
+    right: -13px;
+    padding: 2px;
+    background: var(--color-superficie);
+    border: 1px solid var(--color-borde);
+    border-radius: 999px;
+    box-shadow: var(--sombra);
+    transform: translateY(-50%);
+  }
+  #menu-plegado:checked ~ .app .menu-lateral__plegar .icono { width: 18px; height: 18px; }
   #menu-plegado:checked ~ .app .menu-lateral__links a { justify-content: center; }
   #menu-plegado:checked ~ .app .menu-lateral__plegar .icono { transform: rotate(180deg); }
 }
@@ -579,6 +593,22 @@ code {
 .alerta--exito { background: var(--color-exito-suave); border-color: var(--color-exito); }
 .alerta--error { background: var(--color-error-suave); border-color: var(--color-error); }
 .alerta--info { background: var(--color-info-suave); border-color: var(--color-info); }
+
+/* aviso con cruz para cerrarlo, a la derecha de todo (partials/alertas) */
+.alerta--cerrable { display: flex; align-items: flex-start; gap: var(--espacio-3); }
+.alerta--cerrable > span { flex: 1; }
+.alerta__cerrar {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin: -2px calc(-1 * var(--espacio-2)) -2px 0;
+  padding: 4px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-texto-suave);
+  cursor: pointer;
+}
+.alerta__cerrar:hover { background: rgba(16, 24, 20, 0.08); color: var(--color-texto); }
 
 /* ---- Tablas ---- */
 .tabla-contenedor { overflow-x: auto; }
