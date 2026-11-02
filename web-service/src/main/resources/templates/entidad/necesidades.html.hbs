@@ -38,7 +38,8 @@
               </td>
               <td class="tabla__accion">
                 <form method="post" action="/entidad/necesidades/{{id}}/eliminar" data-confirmar
-                      data-nombre="{{subcategoria}}" data-detalle="{{frecuencia}} · {{cantidad}} unidades">
+                      data-nombre="{{subcategoria}}" data-detalle="{{frecuencia}} · {{cantidad}} unidades"
+                      data-en-curso="{{donacionesEnCurso}}">
                   <button type="submit" class="boton boton--secundario boton--peligro boton--chico">Eliminar</button>
                 </form>
               </td>
@@ -108,13 +109,25 @@
     <div class="modal__encabezado"><h2 id="titulo-eliminar">¿Eliminar la necesidad?</h2></div>
     <div class="modal__cuerpo">
       <p><strong data-nombre></strong> · <span data-detalle></span></p>
-      <p class="texto-suave">Las donaciones que ya tenía asignadas quedan disponibles para otras necesidades. Esta acción no se puede deshacer.</p>
+      <p class="texto-suave">Las donaciones que ya llegaron siguen apareciendo en Donaciones asignadas. Esta acción no se puede deshacer.</p>
     </div>
     <div class="modal__acciones">
       <button type="button" class="boton boton--secundario" data-cierra>Cancelar</button>
       <button type="submit" class="boton boton--peligro">Eliminar</button>
     </div>
   </form>
+</dialog>
+
+{{!-- En lugar de la confirmacion, si la necesidad tiene donaciones en camino (la API tambien lo rechaza) --}}
+<dialog class="modal modal--chico" id="modal-no-eliminar" aria-labelledby="titulo-no-eliminar">
+  <div class="modal__encabezado"><h2 id="titulo-no-eliminar">No se puede eliminar la necesidad</h2></div>
+  <div class="modal__cuerpo">
+    <p><strong data-nombre></strong> · <span data-detalle></span></p>
+    <p class="texto-suave">Tiene <span data-en-curso></span> que todavía no <span data-llegaron></span>. Vas a poder eliminarla cuando se entreguen. Podés ver su estado en <a href="/entidad/donaciones">Donaciones asignadas</a>.</p>
+  </div>
+  <div class="modal__acciones">
+    <button type="button" class="boton" data-cierra>Entendido</button>
+  </div>
 </dialog>
 {{/partial}}
 {{#partial "scripts"}}
@@ -123,6 +136,7 @@
   (function () {
     var alta = document.getElementById('modal-alta');
     var eliminar = document.getElementById('modal-eliminar');
+    var noEliminar = document.getElementById('modal-no-eliminar');
     if (!alta.showModal) return;
 
     if (alta.hasAttribute('open')) { alta.close(); alta.showModal(); }
@@ -142,10 +156,18 @@
     document.querySelectorAll('form[data-confirmar]').forEach(function (form) {
       form.addEventListener('submit', function (e) {
         e.preventDefault();
-        eliminar.querySelector('form').action = form.action;
-        eliminar.querySelector('[data-nombre]').textContent = form.dataset.nombre;
-        eliminar.querySelector('[data-detalle]').textContent = form.dataset.detalle;
-        eliminar.showModal();
+        var enCurso = Number(form.dataset.enCurso) || 0;
+        var modal = enCurso > 0 ? noEliminar : eliminar;
+        modal.querySelector('[data-nombre]').textContent = form.dataset.nombre;
+        modal.querySelector('[data-detalle]').textContent = form.dataset.detalle;
+        if (enCurso > 0) {
+          modal.querySelector('[data-en-curso]').textContent = enCurso === 1
+            ? '1 donación asignada' : enCurso + ' donaciones asignadas';
+          modal.querySelector('[data-llegaron]').textContent = enCurso === 1 ? 'llegó' : 'llegaron';
+        } else {
+          eliminar.querySelector('form').action = form.action;
+        }
+        modal.showModal();
       });
     });
   })();

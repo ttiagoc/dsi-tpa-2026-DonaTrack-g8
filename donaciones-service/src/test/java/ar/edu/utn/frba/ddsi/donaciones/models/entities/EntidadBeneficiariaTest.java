@@ -3,6 +3,7 @@ package ar.edu.utn.frba.ddsi.donaciones.models.entities;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoBien;
@@ -56,6 +57,35 @@ class EntidadBeneficiariaTest {
 
         entidad.eliminarNecesidad(1L);
         assertTrue(entidad.getNecesidades().isEmpty());
+    }
+
+    @Test
+    @DisplayName("No elimina una necesidad con donaciones asignadas que todavía no llegaron")
+    void noEliminaNecesidadConDonacionesEnCurso() {
+        EntidadBeneficiaria entidad = new EntidadBeneficiaria("Fundación UTN", "Medrano 951", "1122334455", new ArrayList<>());
+        Subcategoria subFideos = new Subcategoria("Fideos", new Categoria("Alimentos", false, true));
+        Necesidad necesidad = new Necesidad(subFideos, new NecesidadRecurrente(), "Fideos para comedor", 50L);
+        necesidad.setId(1L);
+        entidad.registrarNecesidad(necesidad);
+
+        Donacion donacion = new Donacion(new Bien("Fideos moñito", 10L, 0.5, 0.5, subFideos, EstadoBien.NUEVO,
+                LocalDateTime.now().plusDays(10).toLocalDate()), LocalDateTime.now());
+        donacion.asignarA(entidad, necesidad);
+        donacion.cambiarEstado(TipoEstadoDonacion.EN_TRASLADO, "Sale el camión");
+        assertEquals(1, necesidad.donacionesEnCurso());
+
+        BusinessException error = assertThrows(BusinessException.class, () -> entidad.eliminarNecesidad(1L));
+        assertTrue(error.getMessage().contains("1 donación asignada"));
+        assertEquals(1, entidad.getNecesidades().size());
+        assertSame(necesidad, donacion.getNecesidad());
+
+        // una vez entregada, se puede eliminar y la donacion queda asignada a la entidad
+        entidad.confirmarEntrega(donacion, "AB123CD", LocalDateTime.now());
+        assertEquals(0, necesidad.donacionesEnCurso());
+        entidad.eliminarNecesidad(1L);
+        assertTrue(entidad.getNecesidades().isEmpty());
+        assertNull(donacion.getNecesidad());
+        assertSame(entidad, donacion.getEntidadBeneficiariaAsignada());
     }
 
     @Test

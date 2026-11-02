@@ -29,9 +29,18 @@ public class DonacionController implements JavalinController {
 
     @Override
     public void registerRoutes(Javalin app) {
+        // ?entidadId=X: las asignadas a esa entidad (la entidad solo pide las suyas). Sin filtro, solo admin y servicios.
         app.get("/api/donaciones", ctx -> {
+            String entidadId = ctx.queryParam("entidadId");
+            if (entidadId != null && !entidadId.isBlank()) {
+                Long id = Long.parseLong(entidadId);
+                Autorizacion.exigirPropietario(ctx, ENTIDAD_BENEFICIARIA, id);
+                ctx.json(donacionService.obtenerPorEntidad(id));
+                return;
+            }
+            Autorizacion.exigir(Autorizacion.esPrivilegiado(ctx));
             ctx.json(donacionService.obtenerTodas());
-        }, ADMINISTRADOR, SISTEMA);
+        }, ENTIDAD_BENEFICIARIA, ADMINISTRADOR, SISTEMA);
 
         // la ve su donante, la entidad a la que se asigno, el administrador y los servicios
         app.get("/api/donaciones/{id}", ctx -> {

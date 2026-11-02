@@ -1,0 +1,60 @@
+{{#partial "titulo"}}Donaciones asignadas · DonaTrack{{/partial}}
+{{#partial "contenido"}}
+<header class="encabezado-pagina">
+  <div>
+    <h1>Donaciones asignadas</h1>
+    <p class="texto-suave">Las donaciones que se asignaron a tu entidad y en qué estado está cada una.</p>
+  </div>
+</header>
+
+{{#if donaciones}}
+  <div class="resumen">
+    <div class="resumen__item"><strong>{{resumen.total}}</strong>Asignadas</div>
+    <div class="resumen__item resumen__item--info"><strong>{{resumen.porLlegar}}</strong>Por llegar</div>
+    <div class="resumen__item resumen__item--pendiente"><strong>{{resumen.paraConfirmar}}</strong>Para confirmar</div>
+    <div class="resumen__item resumen__item--ok"><strong>{{resumen.recibidas}}</strong>Recibidas</div>
+  </div>
+
+  <section class="tarjeta tarjeta--tabla">
+    <div class="tabla-contenedor">
+      <table class="tabla">
+        <thead>
+          <tr><th>Donación</th><th>Necesidad</th><th>Bienes</th><th>Estado</th><th><span class="sr-only">Acciones</span></th></tr>
+        </thead>
+        <tbody>
+          {{#each donaciones}}
+            <tr>
+              <td class="tabla__corta">#{{id}}{{#if asignadaEl}}<span class="tabla__secundario">Asignada el {{asignadaEl}}</span>{{/if}}</td>
+              <td class="tabla__corta">
+                {{necesidad}}
+                {{#if necesidadDescripcion}}
+                  <span class="tabla__secundario tabla__recorte" title="{{necesidadDescripcion}}">{{necesidadDescripcion}}</span>
+                {{else}}
+                  <span class="tabla__secundario">La necesidad se eliminó</span>
+                {{/if}}
+              </td>
+              <td class="tabla__corta">
+                {{#each bienes}}{{#if @first}}{{this}}{{else}}<span class="tabla__secundario">{{this}}</span>{{/if}}{{/each}}
+              </td>
+              <td class="tabla__corta">
+                <span class="etiqueta {{claseEtiqueta}}">{{etiqueta}}</span>
+                <span class="tabla__secundario">{{detalle}}</span>
+              </td>
+              <td class="tabla__accion">
+                {{#if puedeConfirmar}}<a class="boton boton--chico" href="/entidad/donaciones/{{id}}/recepcion">Confirmar recepción</a>{{/if}}
+              </td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <p class="nota">Los estados los actualiza logística. Cuando llegue una donación, confirmá que la recibiste y cargá fotos.</p>
+{{else}}
+  <section class="tarjeta vacio">
+    <strong>Todavía no te asignaron donaciones.</strong>
+    Las donaciones se asignan según las <a href="/entidad/necesidades">necesidades</a> que cargues. Cuando se asigne una, aparece acá con su estado.
+  </section>
+{{/if}}
+{{/partial}}
+{{> layouts/base}}

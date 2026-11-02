@@ -27,6 +27,7 @@ import ar.edu.utn.frba.ddsi.web.clients.ApiClient;
 import ar.edu.utn.frba.ddsi.web.clients.AuthApiClient;
 import ar.edu.utn.frba.ddsi.web.clients.DonacionesApiClient;
 import ar.edu.utn.frba.ddsi.web.config.WebConfig;
+import ar.edu.utn.frba.ddsi.web.controllers.DonacionesAsignadasController;
 import ar.edu.utn.frba.ddsi.web.controllers.HomeController;
 import ar.edu.utn.frba.ddsi.web.controllers.NecesidadesController;
 import ar.edu.utn.frba.ddsi.web.controllers.PanelController;
@@ -59,6 +60,9 @@ class WebFlujoTest {
     private final List<Map<String, Object>> necesidades = new ArrayList<>();
     private final AtomicReference<JsonNode> ultimaNecesidad = new AtomicReference<>();
     private final AtomicReference<String> necesidadEliminada = new AtomicReference<>();
+    // donaciones asignadas a la entidad 10 que devuelve la API falsa
+    private final List<Map<String, Object>> donacionesAsignadas = new ArrayList<>();
+    private final AtomicReference<String> filtroDonaciones = new AtomicReference<>();
 
     private Javalin apiFalsa;
     private Javalin web;
@@ -74,7 +78,8 @@ class WebFlujoTest {
         DonacionesApiClient donaciones = new DonacionesApiClient("http://localhost:" + PUERTO_API + "/api",
                 HttpClient.newHttpClient(), ApiClient.crearObjectMapper(), auth);
         Router router = new Router(new AutorizacionMiddleware(), new HomeController(), new SesionController(auth),
-                new RegistroController(auth), new PanelController(), new NecesidadesController(donaciones));
+                new RegistroController(auth), new PanelController(), new NecesidadesController(donaciones),
+                new DonacionesAsignadasController(donaciones));
 
         web = new Server(router, config).crear();
         // ruta solo para el test: una llamada autenticada a la API, para probar el refresh del token
@@ -280,6 +285,78 @@ class WebFlujoTest {
     }
 
     @Test
+    @DisplayName("Necesidades: con donaciones en camino, eliminar avisa que no se puede y muestra el error de la API")
+    void necesidadConDonacionesEnCurso() throws Exception {
+        Map<String, Object> necesidad = new LinkedHashMap<>();
+        necesidad.put("id", 7);
+        necesidad.put("subcategoria", "Leche larga vida");
+        necesidad.put("periodo", "SEMANAL");
+        necesidad.put("descripcion", "Desayuno");
+        necesidad.put("cantidad", 40);
+        necesidad.put("cantidadAsignada", 12);
+        necesidad.put("satisfecha", false);
+        necesidad.put("donacionesEnCurso", 1);
+        necesidades.add(necesidad);
+        String cookie = cookie(login("entidad", "clave-segura"));
+
+        String listado = get("/entidad/necesidades", cookie).body();
+        assertTrue(listado.contains("data-en-curso=\"1\""));
+        assertTrue(listado.contains("id=\"modal-no-eliminar\""));
+        assertTrue(listado.contains("Las donaciones que ya llegaron siguen apareciendo en Donaciones asignadas"));
+
+        // sin JavaScript el formulario se manda igual: la API lo rechaza y vuelve con el error
+        assertEquals(302, post("/entidad/necesidades/7/eliminar", Map.of(), cookie).statusCode());
+        assertTrue(get("/entidad/necesidades", cookie).body()
+                .contains("No se pudo eliminar la necesidad: No se puede eliminar la necesidad: tiene 1 donación"));
+    }
+
+    @Test
+    @DisplayName("Donaciones asignadas: sin datos muestra la lista vacia y pide las de la entidad logueada")
+    void donacionesAsignadasVacias() throws Exception {
+        HttpResponse<String> respuesta = get("/entidad/donaciones", cookie(login("entidad", "clave-segura")));
+        assertEquals(200, respuesta.statusCode());
+        assertEquals("10", filtroDonaciones.get());
+        assertTrue(respuesta.body().contains("Todavía no te asignaron donaciones."));
+        assertTrue(respuesta.body().contains("href=\"/entidad/donaciones\" title=\"Asignadas\" aria-current=\"page\""));
+        assertFalse(respuesta.body().contains("<table"));
+    }
+
+    @Test
+    @DisplayName("Donaciones asignadas: cada estado en palabras, el resumen y confirmar solo en las entregadas sin fotos")
+    void donacionesAsignadas() throws Exception {
+        donacionesAsignadas.add(donacion(121, "ENTREGADA", List.of(), "Arroz", "Almuerzo de lunes a viernes"));
+        donacionesAsignadas.add(donacion(128, "EN_TRASLADO", List.of(), "Leche larga vida", "Desayuno"));
+        donacionesAsignadas.add(donacion(132, "ASIGNACION_REALIZADA", List.of(), "Frazadas", "Refugio"));
+        donacionesAsignadas.add(donacion(98, "ENTREGA_FALLIDA", List.of(), "Arroz", "Almuerzo de lunes a viernes"));
+        donacionesAsignadas.add(donacion(104, "ENTREGADA", List.of("a.jpg", "b.jpg", "c.jpg"), null, null));
+
+        String pagina = get("/entidad/donaciones", cookie(login("entidad", "clave-segura"))).body();
+
+        assertTrue(pagina.contains("<strong>5</strong>Asignadas"));
+        assertTrue(pagina.contains("<strong>3</strong>Por llegar"));
+        assertTrue(pagina.contains("<strong>1</strong>Para confirmar"));
+        assertTrue(pagina.contains("<strong>1</strong>Recibidas"));
+        assertTrue(pagina.contains("Asignada el 29/10"));
+        assertTrue(pagina.contains("Arroz largo fino × 60"));
+        assertTrue(pagina.contains("title=\"Almuerzo de lunes a viernes\""));
+        assertTrue(pagina.contains("etiqueta--info\">En camino"));
+        assertTrue(pagina.contains("etiqueta--error\">Entrega fallida"));
+        assertTrue(pagina.contains("Esperando el envío"));
+        assertTrue(pagina.contains("El 01/11 · falta confirmar"));
+        assertTrue(pagina.contains("Entregada el 01/11 · 3 fotos"));
+        assertTrue(pagina.contains("La necesidad se eliminó"), "la #104 ya no tiene necesidad");
+        assertTrue(pagina.contains("href=\"/entidad/donaciones/121/recepcion\""));
+        assertFalse(pagina.contains("/entidad/donaciones/104/recepcion"), "la recibida no se confirma de nuevo");
+        assertFalse(pagina.contains("/entidad/donaciones/128/recepcion"), "la que esta en camino tampoco");
+    }
+
+    @Test
+    @DisplayName("Donaciones asignadas: un donante no puede entrar")
+    void donacionesAsignadasSoloEntidad() throws Exception {
+        assertEquals(403, get("/entidad/donaciones", cookie(login("donante", "clave-segura"))).statusCode());
+    }
+
+    @Test
     @DisplayName("Necesidades: un donante no puede entrar")
     void necesidadesSoloEntidad() throws Exception {
         assertEquals(403, get("/entidad/necesidades", cookie(login("donante", "clave-segura"))).statusCode());
@@ -477,10 +554,36 @@ class WebFlujoTest {
         });
         api.delete("/api/entidad-beneficiaria/10/necesidades/{id}", ctx -> {
             necesidadEliminada.set(ctx.pathParam("id"));
+            if ("7".equals(ctx.pathParam("id"))) {
+                ctx.status(400).json(Map.of("error", "bad_request", "message",
+                        "No se puede eliminar la necesidad: tiene 1 donación asignada que todavía no llegó"));
+                return;
+            }
             ctx.status(204);
         });
 
+        api.get("/api/donaciones", ctx -> {
+            filtroDonaciones.set(ctx.queryParam("entidadId"));
+            ctx.json(donacionesAsignadas);
+        });
+
         return api;
+    }
+
+    /** Una donacion como la devuelve GET /donaciones?entidadId=10 (necesidad null = se elimino). */
+    private Map<String, Object> donacion(long id, String estado, List<String> fotos, String subcategoria,
+            String descripcionNecesidad) {
+        Map<String, Object> donacion = new LinkedHashMap<>();
+        donacion.put("id", id);
+        donacion.put("bienes", List.of(Map.of("descripcion", "Arroz largo fino", "cantidad", 60)));
+        donacion.put("estadoActual", estado);
+        donacion.put("subcategoria", "Útiles escolares");
+        donacion.put("fechaAsignacion", "2026-10-29T10:00:00");
+        donacion.put("fechaEstado", "2026-11-01T15:30:00");
+        donacion.put("necesidad", subcategoria == null ? null
+                : Map.of("id", 1, "subcategoria", subcategoria, "descripcion", descripcionNecesidad));
+        donacion.put("fotosRecepcion", fotos);
+        return donacion;
     }
 
     private Map<String, Object> sesion(String username, String rol, String access, String refresh) {

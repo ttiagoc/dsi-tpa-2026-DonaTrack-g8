@@ -3,13 +3,17 @@
 <section class="seccion">
   <h1>Hola, {{usuario.username}}</h1>
   <p class="texto-suave">Panel de la entidad beneficiaria.</p>
-  {{!-- Persona A: donaciones asignadas (req. 11), confirmar recepción (req. 12) --}}
   {{!-- Persona B: notificaciones y seguimiento (req. 13 y 14) --}}
   <div class="grilla grilla--2">
     <a class="tarjeta tarjeta--opcion" href="/entidad/necesidades">
       <h2>Necesidades</h2>
       <p>Contá qué le hace falta a tu entidad. Las donaciones se asignan según estas necesidades.</p>
       <span class="tarjeta__accion">Ver necesidades →</span>
+    </a>
+    <a class="tarjeta tarjeta--opcion" href="/entidad/donaciones">
+      <h2>Donaciones asignadas</h2>
+      <p>Mirá en qué estado está cada donación y confirmá las que ya recibiste.</p>
+      <span class="tarjeta__accion">Ver donaciones →</span>
     </a>
   </div>
 </section>

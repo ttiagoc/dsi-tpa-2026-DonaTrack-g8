@@ -138,6 +138,20 @@ public class Donacion {
     this.registrarEstado(fechaEntrega, TipoEstadoDonacion.ENTREGADA, "Entregado", patenteCamion);
   }
 
+  public LocalDateTime fechaDelEstadoActual() {
+    return this.historialEstados.isEmpty() ? this.fecha
+        : this.historialEstados.get(this.historialEstados.size() - 1).getFecha();
+  }
+
+  // la ultima asignacion: si volvio al deposito y se reasigno, cuenta la nueva
+  public LocalDateTime fechaAsignacion() {
+    return this.historialEstados.stream()
+        .filter(cambio -> cambio.getEstado() == TipoEstadoDonacion.ASIGNACION_REALIZADA)
+        .map(CambioEstado::getFecha)
+        .reduce((primero, ultimo) -> ultimo)
+        .orElse(null);
+  }
+
   public String patenteCamionDeLaEntrega() {
     return this.historialEstados.stream()
         .filter(cambio -> cambio.getEstado() == TipoEstadoDonacion.ENTREGADA)

@@ -128,6 +128,13 @@ class AuthApiTest {
                 .header("Authorization", bearer(comedor))).statusCode());
         assertEquals(403, enviar(get("/entidad-beneficiaria/" + idEscuela + "/necesidades")
                 .header("Authorization", bearer(comedor))).statusCode());
+
+        // donaciones asignadas: solo las propias, y sin filtro no puede listar todas
+        assertEquals(200, enviar(get("/donaciones?entidadId=" + idComedor)
+                .header("Authorization", bearer(comedor))).statusCode());
+        assertEquals(403, enviar(get("/donaciones?entidadId=" + idEscuela)
+                .header("Authorization", bearer(comedor))).statusCode());
+        assertEquals(403, enviar(get("/donaciones").header("Authorization", bearer(comedor))).statusCode());
     }
 
     @Test

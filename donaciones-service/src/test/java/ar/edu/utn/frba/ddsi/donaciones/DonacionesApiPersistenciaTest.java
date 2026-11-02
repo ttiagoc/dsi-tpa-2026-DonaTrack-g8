@@ -137,6 +137,21 @@ class DonacionesApiPersistenciaTest {
         assertTrue(aceptar.statusCode() < 300, "Aceptar la propuesta devolvio " + aceptar.body());
 
         assertEquals("ASIGNACION_REALIZADA", get("/donaciones/" + idDonacion).get("estadoActual").asText());
+
+        // la entidad ve la donacion con su necesidad (req. 11) y no puede eliminar la necesidad mientras no llegue
+        JsonNode asignadas = get("/donaciones?entidadId=" + idEntidad);
+        assertEquals(1, asignadas.size());
+        assertEquals(idDonacion, asignadas.get(0).get("id").asLong());
+        assertEquals("Fideos para el comedor", asignadas.get(0).get("necesidad").get("descripcion").asText());
+        assertEquals(subcategoria, asignadas.get(0).get("subcategoria").asText());
+        assertTrue(asignadas.get(0).hasNonNull("fechaAsignacion"));
+
+        JsonNode necesidad = get("/entidad-beneficiaria/" + idEntidad + "/necesidades").get(0);
+        assertEquals(1, necesidad.get("donacionesEnCurso").asLong());
+        HttpResponse<String> eliminar = delete("/entidad-beneficiaria/" + idEntidad + "/necesidades/"
+                + necesidad.get("id").asLong());
+        assertEquals(400, eliminar.statusCode());
+        assertTrue(eliminar.body().contains("todavía no llegó"), eliminar.body());
     }
 
     @Test

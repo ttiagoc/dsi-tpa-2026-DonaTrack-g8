@@ -18,6 +18,7 @@ import io.javalin.http.Context;
 /**
  * Req. 10: la entidad carga y da de baja sus necesidades. Listado con el alta en un modal (?nueva lo abre sin JS)
  * y confirmacion antes de eliminar. Si el alta falla, se vuelve a mostrar el listado con el modal abierto.
+ * Una necesidad con donaciones en camino no se puede eliminar: el modal lo explica y la API lo rechaza igual.
  */
 @Component
 public class NecesidadesController {
@@ -117,16 +118,21 @@ public class NecesidadesController {
         ctx.render(VISTA, modelo);
     }
 
-    /** Una fila de la tabla, con la frecuencia en palabras y el porcentaje para la barra de progreso. */
+    /**
+     * Una fila de la tabla, con la frecuencia en palabras y el porcentaje para la barra de progreso.
+     * donacionesEnCurso: si hay alguna, "Eliminar" explica que no se puede en lugar de pedir confirmacion.
+     */
     public record NecesidadVista(Long id, String subcategoria, String categoria, String descripcion,
-            String frecuencia, Long cantidad, Long cantidadAsignada, int porcentaje, boolean satisfecha) {
+            String frecuencia, Long cantidad, Long cantidadAsignada, int porcentaje, boolean satisfecha,
+            long donacionesEnCurso) {
 
         static NecesidadVista de(NecesidadResponse n) {
             long asignada = n.cantidadAsignada() == null ? 0 : n.cantidadAsignada();
             int porcentaje = n.cantidad() == null || n.cantidad() == 0 ? 0
                     : (int) Math.min(100, asignada * 100 / n.cantidad());
             return new NecesidadVista(n.id(), n.subcategoria(), n.categoria(), n.descripcion(),
-                    Frecuencia.de(n).etiqueta(), n.cantidad(), asignada, porcentaje, Boolean.TRUE.equals(n.satisfecha()));
+                    Frecuencia.de(n).etiqueta(), n.cantidad(), asignada, porcentaje, Boolean.TRUE.equals(n.satisfecha()),
+                    n.donacionesEnCurso() == null ? 0 : n.donacionesEnCurso());
         }
     }
 }

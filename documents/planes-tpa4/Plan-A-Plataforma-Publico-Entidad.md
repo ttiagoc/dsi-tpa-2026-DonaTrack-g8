@@ -119,13 +119,19 @@ Tests: `WebFlujoTest` (13) levanta la web contra una API falsa y recorre landing
 | 3 | ✅ Registro `/registro` (persona, empresa u organización, entidad) | (Tarea 0) | — |
 | 4 | ✅ Login `/login` | (Tarea 0) | — |
 | 10 | ✅ `/entidad/necesidades` (alta + listado, recurrente vs extraordinaria) | `GET/POST/DELETE /api/entidad-beneficiaria/{id}/necesidades` | — |
-| 11 | `/entidad/donaciones` (estado de las asignadas) | `GET /api/donaciones` (sin filtros) | `GET /api/donaciones?entidadId=X` (`Donacion` ya tiene `entidadBeneficiariaAsignada`). Coordinar con B, que agrega filtros al mismo endpoint |
+| 11 | ✅ `/entidad/donaciones` (estado de las asignadas) | — | ✅ `GET /api/donaciones?entidadId=X`. B suma sus filtros (`donanteId`, `estado`...) al mismo endpoint |
 | 12 | `/entidad/donaciones/{id}/recepcion` (confirmar + fotos) | `POST /api/donaciones/{id}/fotos` (recibe URLs), `POST /api/donaciones/recepciones` | Subir el archivo a un storage externo y mandar las URLs |
 
 ### Cambios que salieron de los bocetos (pantalla 10)
 - [x] **Layout con sesión:** `layouts/base` agrega navbar + footer sin sesión, o menú lateral + barra superior (perfil con "Salir") con sesión; la misma página (por ejemplo `/legal`) sirve para los dos casos. Landing, login y registro redirigen al panel si hay sesión. El menú se puede achicar desde su pie. Las clases del modal, resumen, progreso y etiquetas de estado se agregan a `styles.css` con la pantalla 10. Afecta a B y C: avisado en sus planes (sección de dependencias).
 - [x] **Req. 10:** listado + modal de alta + confirmación al eliminar (`NecesidadesController`, `entidad/necesidades.html.hbs`). "¿Cada cuánto la necesitan?" es un solo campo (`Frecuencia`) que el web traduce a `tipoNecesidad` + `periodo`. Sin JavaScript también funciona (`?nueva` abre el alta; eliminar no pide confirmación). Probado contra el backend real.
 - [x] **Backend:** `NecesidadResponse` suma `categoria`, `cantidadAsignada` y `satisfecha`; la suma quedó en `TipoNecesidad.cantidadAsignada` y `estaSatisfecha` la reutiliza. Tests en `EntidadBeneficiariaServiceTest` y `AsignacionDonacionJpaTest`.
+
+### Cambios que salieron de los bocetos (pantalla 11)
+- [x] **Req. 11:** listado con resumen (asignadas, por llegar, para confirmar, recibidas), la necesidad que cubre cada donación y el estado en palabras (`SituacionDonacion`). "Confirmar recepción" aparece solo en las entregadas sin fotos y lleva a la pantalla 12. `DonacionesAsignadasController`, `entidad/donaciones.html.hbs`, link "Asignadas" en el menú y tarjeta en el panel.
+- [x] **Backend:** `GET /api/donaciones?entidadId=X` (la entidad solo pide las suyas; sin filtro, solo admin y servicios). `DonacionResponse` suma `subcategoria`, `categoria`, `fechaAsignacion`, `fechaEstado`, `necesidad` y `fotosRecepcion`.
+- [x] **Una necesidad con donaciones en camino no se elimina.** Antes se borraba y las donaciones quedaban asignadas sin necesidad; además, el modal de la pantalla 10 decía que quedaban "disponibles para otras necesidades", y no era así. Ahora `EntidadBeneficiaria.eliminarNecesidad` lo rechaza (400) si hay donaciones asignadas, listas, en traslado o con entrega fallida. `NecesidadResponse.donacionesEnCurso` hace que la pantalla 10 muestre el modal "No se puede eliminar" (boceto 10g), y el texto de 10c quedó corregido. Las donaciones ya entregadas se conservan y aparecen con "La necesidad se eliminó".
+
 
 ### Decisiones a tomar
 - **[COMPLETAR]** Coordenadas de las entidades: ¿se cargan en el registro o se geocodifica la dirección (Nominatim)? Hoy el registro de entidad no las pide; si se cargan a mano, sumar `latitud`/`longitud` al formulario (`registro-entidad.html.hbs`, `RegistroController`) y a `EntidadBeneficiariaRequest`.
@@ -138,7 +144,7 @@ Tests: `WebFlujoTest` (13) levanta la web contra una API falsa y recorre landing
 - **Archivos compartidos** (riesgo de conflictos): `Router.java`, `styles.css`, `navbar.html.hbs`, `persistence.xml`, `pom.xml` raíz, `docker-compose.yml`, `Clases.puml`. Regla: A es dueño del layout, del navbar y del `Server`; los demás solo agregan sus rutas, links o estilos en su bloque comentado (`--- Donante (B) ---`, `--- Administrador (C) ---`). `git pull --rebase` antes de cada push.
 
 ## 5. Entregables de documentación
-- [ ] Bocetos de las pantallas 1–4 y 10–12 en `documents/bocetos/`, **antes** de implementarlas. Hechos los de 1, 3 y 4 ([`bocetos/README.md`](../bocetos/README.md), fuente en Figma) y el de 10 (maqueta HTML: listado, modal de alta, confirmar eliminación y lista vacía); faltan 2, 11 y 12. Flujo en [`AGENTS.md`](../../AGENTS.md#flujo-para-cada-pantalla-nueva).
+- [ ] Bocetos de las pantallas 1–4 y 10–12 en `documents/bocetos/`, **antes** de implementarlas. Hechos los de 1, 3 y 4 ([`bocetos/README.md`](../bocetos/README.md), fuente en Figma), el de 10 (maqueta HTML: listado, modal de alta, confirmar eliminación, no se puede eliminar y lista vacía) y el de 11 (listado y lista vacía); faltan 2 y 12. Flujo en [`AGENTS.md`](../../AGENTS.md#flujo-para-cada-pantalla-nueva).
 - [x] Justificación: cliente liviano desacoplado, Handlebars, sesión por cookies (por qué en memoria, defensa contra CSRF con `SameSite`, `HttpOnly`/`Secure`) en [`entregables/JustificacionWebService.md`](../../entregables/JustificacionWebService.md). La parte de JWT, BCrypt y roles está en `entregables/JustificacionAutenticacion.md`.
 - [x] `Usuario` y `Rol` en `Clases.puml`.
 

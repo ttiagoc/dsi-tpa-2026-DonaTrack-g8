@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ar.edu.utn.frba.ddsi.web.dto.catalogo.CategoriaResponse;
 import ar.edu.utn.frba.ddsi.web.dto.catalogo.Rubro;
 import ar.edu.utn.frba.ddsi.web.dto.catalogo.SubcategoriaResponse;
+import ar.edu.utn.frba.ddsi.web.dto.donaciones.DonacionResponse;
 import ar.edu.utn.frba.ddsi.web.dto.necesidades.NecesidadRequest;
 import ar.edu.utn.frba.ddsi.web.dto.necesidades.NecesidadResponse;
 import io.javalin.http.Context;
@@ -57,5 +58,12 @@ public class DonacionesApiClient extends ApiClient {
 
     private String rutaNecesidades(Context ctx) {
         return "/entidad-beneficiaria/" + perfilId(ctx) + "/necesidades";
+    }
+
+    // ---- Donaciones asignadas a la entidad logueada (A, req. 11) ----
+
+    public List<DonacionResponse> listarDonacionesAsignadas(Context ctx) {
+        return get(ctx, "/donaciones?entidadId=" + perfilId(ctx), new TypeReference<List<DonacionResponse>>() {
+        });
     }
 }

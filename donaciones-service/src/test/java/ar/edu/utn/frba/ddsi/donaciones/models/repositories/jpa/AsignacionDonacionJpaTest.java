@@ -159,6 +159,24 @@ class AsignacionDonacionJpaTest extends PersistenciaTest {
                 .getDonacionesAsignadas().isEmpty());
     }
 
+    @Test
+    @DisplayName("buscarPorEntidad trae solo las donaciones asignadas a esa entidad")
+    void buscaLasDonacionesDeUnaEntidad() {
+        registrarNecesidadDeFideosEnElComedor();
+        EntidadBeneficiaria comedor = entidades.findById(idComedor).orElseThrow();
+        Donacion donacion = donaciones.findById(idDonacion).orElseThrow();
+        donacion.asignarA(comedor, comedor.getNecesidades().get(0));
+        donaciones.save(donacion);
+        nuevoRequest();
+
+        List<Donacion> delComedor = donaciones.buscarPorEntidad(idComedor);
+
+        assertEquals(List.of(idDonacion), delComedor.stream().map(Donacion::getId).toList());
+        assertEquals("Fideos", delComedor.get(0).getNecesidad().getDescripcion());
+        assertNotNull(delComedor.get(0).fechaAsignacion());
+        assertTrue(donaciones.buscarPorEntidad(idEscuela).isEmpty());
+    }
+
     private Long registrarNecesidadDeFideosEnElComedor() {
         Subcategoria fideos = subcategorias.findByNombre("Fideos").orElseThrow();
         EntidadBeneficiaria comedor = entidades.findById(idComedor).orElseThrow();

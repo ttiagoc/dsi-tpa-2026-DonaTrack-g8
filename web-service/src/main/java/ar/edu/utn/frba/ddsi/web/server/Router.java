@@ -6,6 +6,7 @@ import static ar.edu.utn.frba.ddsi.web.sesion.RolUsuario.ENTIDAD_BENEFICIARIA;
 
 import org.springframework.stereotype.Component;
 
+import ar.edu.utn.frba.ddsi.web.controllers.DonacionesAsignadasController;
 import ar.edu.utn.frba.ddsi.web.controllers.HomeController;
 import ar.edu.utn.frba.ddsi.web.controllers.NecesidadesController;
 import ar.edu.utn.frba.ddsi.web.controllers.PanelController;
@@ -28,15 +29,18 @@ public class Router {
     private final RegistroController registro;
     private final PanelController panel;
     private final NecesidadesController necesidades;
+    private final DonacionesAsignadasController donacionesAsignadas;
 
     public Router(AutorizacionMiddleware autorizacion, HomeController home, SesionController sesion,
-            RegistroController registro, PanelController panel, NecesidadesController necesidades) {
+            RegistroController registro, PanelController panel, NecesidadesController necesidades,
+            DonacionesAsignadasController donacionesAsignadas) {
         this.autorizacion = autorizacion;
         this.home = home;
         this.sesion = sesion;
         this.registro = registro;
         this.panel = panel;
         this.necesidades = necesidades;
+        this.donacionesAsignadas = donacionesAsignadas;
     }
 
     public void registrar(Javalin app) {
@@ -65,6 +69,7 @@ public class Router {
         app.get("/entidad/necesidades", necesidades::listar, ENTIDAD_BENEFICIARIA);
         app.post("/entidad/necesidades", necesidades::crear, ENTIDAD_BENEFICIARIA);
         app.post("/entidad/necesidades/{id}/eliminar", necesidades::eliminar, ENTIDAD_BENEFICIARIA);
+        app.get("/entidad/donaciones", donacionesAsignadas::listar, ENTIDAD_BENEFICIARIA);
 
         // --- Donante (B) ---
         app.get("/donante", panel::donante, DONANTE);

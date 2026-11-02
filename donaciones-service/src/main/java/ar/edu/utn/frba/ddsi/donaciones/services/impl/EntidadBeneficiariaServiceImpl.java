@@ -69,7 +69,7 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
         String categoria = n.getSubcategoria().getCategoria() != null ? n.getSubcategoria().getCategoria().getNombre() : null;
         return new NecesidadResponse(n.getId(), n.getSubcategoria().getNombre(),
                 n.getTipoNecesidad().getClass().getSimpleName(), periodo, n.getDescripcion(), n.getCantidad(),
-                categoria, Math.round(n.cantidadAsignada()), n.estaSatisfecha());
+                categoria, Math.round(n.cantidadAsignada()), n.estaSatisfecha(), n.donacionesEnCurso());
     }
 
     public EntidadBeneficiariaResponse crear(EntidadBeneficiariaRequest request) {

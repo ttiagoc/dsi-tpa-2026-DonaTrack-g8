@@ -36,4 +36,13 @@ public class JpaDonacion extends RepositorioJpa<Donacion> implements DonacionRep
                 .setParameter("estado", estadoBuscado)
                 .getResultList();
     }
+
+    // las mas recientes primero
+    @Override
+    public List<Donacion> buscarPorEntidad(Long entidadId) {
+        return createQuery("select d from Donacion d where d.entidadBeneficiariaAsignada.id = :entidadId"
+                + " order by d.fecha desc, d.id desc", Donacion.class)
+                .setParameter("entidadId", entidadId)
+                .getResultList();
+    }
 }

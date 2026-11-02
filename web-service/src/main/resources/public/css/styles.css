@@ -594,6 +594,9 @@ code {
 }
 
 .etiqueta--pendiente { background: #fdf3dc; color: #7a5410; }
+.etiqueta--info { background: var(--color-info-suave); color: var(--color-info); }
+.etiqueta--error { background: var(--color-error-suave); color: var(--color-error); }
+.etiqueta--neutra { background: var(--color-fondo); color: var(--color-texto-suave); border: 1px solid var(--color-borde); }
 
 /* ---- Listados: encabezado con accion, resumen, tabla en tarjeta, progreso, lista vacia ---- */
 .encabezado-pagina {
@@ -623,6 +626,7 @@ code {
 .resumen__item strong { display: block; font-size: 1.5rem; line-height: 1.2; color: var(--color-texto); }
 .resumen__item--pendiente strong { color: #a36d00; }
 .resumen__item--ok strong { color: var(--color-primario); }
+.resumen__item--info strong { color: var(--color-info); }
 
 .tarjeta--tabla { padding: 0; overflow: hidden; }
 .tarjeta--tabla .tabla th,
@@ -632,6 +636,8 @@ code {
 .tabla__accion form { margin: 0; }
 .tabla__corta { white-space: nowrap; }
 .tabla__secundario { display: block; color: var(--color-texto-suave); font-size: var(--texto-chico); }
+/* texto largo en una linea con "…" (el completo va en title) */
+.tabla__recorte { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .progreso { display: flex; flex-direction: column; gap: var(--espacio-1); min-width: 110px; }
 

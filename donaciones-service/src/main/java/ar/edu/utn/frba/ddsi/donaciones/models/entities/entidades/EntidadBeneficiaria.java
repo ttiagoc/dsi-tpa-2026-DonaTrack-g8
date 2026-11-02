@@ -19,6 +19,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
@@ -75,11 +76,18 @@ public class EntidadBeneficiaria {
     donacion.confirmarEntrega(patenteCamion, fechaEntrega);
   }
 
-  // las donaciones asignadas se conservan: solo se desvinculan de la necesidad eliminada
+  // no se elimina si tiene donaciones en camino; las que ya llegaron se conservan, desvinculadas de la necesidad
   public void eliminarNecesidad(Long necesidadId) {
     this.necesidades.stream()
         .filter(n -> n.getId().equals(necesidadId))
-        .forEach(Necesidad::liberarDonaciones);
+        .forEach(necesidad -> {
+          long enCurso = necesidad.donacionesEnCurso();
+          if (enCurso > 0) {
+            throw new BusinessException("No se puede eliminar la necesidad: tiene " + enCurso
+                + (enCurso == 1 ? " donación asignada que todavía no llegó" : " donaciones asignadas que todavía no llegaron"));
+          }
+          necesidad.liberarDonaciones();
+        });
     this.necesidades.removeIf(n -> n.getId().equals(necesidadId));
   }
 }

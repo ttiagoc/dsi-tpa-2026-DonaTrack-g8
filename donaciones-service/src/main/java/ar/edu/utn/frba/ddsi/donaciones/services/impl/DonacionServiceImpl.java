@@ -17,6 +17,7 @@ import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EstadoDonacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EstadoDonacionResponse;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.NecesidadDeDonacionResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.SubcategoriaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.SubirFotosRecepcionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.ConfirmacionEntregaExitosaRequest;
@@ -61,6 +62,12 @@ public class DonacionServiceImpl implements DonacionService {
 
     public List<DonacionResponse> obtenerTodas() {
         return donacionRepository.findAll().stream()
+                .map(this::toDonacionResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<DonacionResponse> obtenerPorEntidad(Long entidadId) {
+        return donacionRepository.buscarPorEntidad(entidadId).stream()
                 .map(this::toDonacionResponse)
                 .collect(Collectors.toList());
     }
@@ -196,6 +203,15 @@ public class DonacionServiceImpl implements DonacionService {
                 ? d.getEntidadBeneficiariaAsignada().getId()
                 : null;
         Long donanteId = d.getDonante() != null ? d.getDonante().getId() : null;
+        Subcategoria subcategoria = d.getSubcategoria();
+        String categoria = subcategoria != null && subcategoria.getCategoria() != null
+                ? subcategoria.getCategoria().getNombre()
+                : null;
+        NecesidadDeDonacionResponse necesidad = d.getNecesidad() != null
+                ? new NecesidadDeDonacionResponse(d.getNecesidad().getId(),
+                        d.getNecesidad().getSubcategoria().getNombre(), d.getNecesidad().getDescripcion())
+                : null;
+        List<String> fotos = d.getFotosRecepcion() != null ? List.copyOf(d.getFotosRecepcion()) : List.of();
 
         return new DonacionResponse(
                 d.getId(),
@@ -203,7 +219,13 @@ public class DonacionServiceImpl implements DonacionService {
                 d.estadoActual().toString(),
                 d.getFecha(),
                 donanteId,
-                entidadAsignadaId);
+                entidadAsignadaId,
+                subcategoria != null ? subcategoria.getNombre() : null,
+                categoria,
+                d.fechaAsignacion(),
+                d.fechaDelEstadoActual(),
+                necesidad,
+                fotos);
     }
 
     private Bien toBien(BienRequest bienRequest) {

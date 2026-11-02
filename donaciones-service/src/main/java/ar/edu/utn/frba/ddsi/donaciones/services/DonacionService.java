@@ -14,6 +14,9 @@ public interface DonacionService {
 
     List<DonacionResponse> obtenerTodas();
 
+    // las asignadas a la entidad (req. 11), las mas recientes primero
+    List<DonacionResponse> obtenerPorEntidad(Long entidadId);
+
     DonacionResponse obtenerPorId(Long id);
 
     List<DonacionResponse> crear(DonacionRequest request);

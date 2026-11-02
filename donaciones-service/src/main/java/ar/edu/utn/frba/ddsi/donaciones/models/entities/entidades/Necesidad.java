@@ -109,6 +109,13 @@ public class Necesidad {
     return this.tipoNecesidad.estaSatisfecha(this.donacionesAsignadas, this.cantidad);
   }
 
+  // asignadas y todavia sin entregar: mientras haya alguna, la necesidad no se puede eliminar
+  public long donacionesEnCurso() {
+    return this.donacionesAsignadas.stream()
+        .filter(donacion -> donacion.estadoActual().estaEnCurso())
+        .count();
+  }
+
   // la FK la mapea Donacion.necesidad: los dos lados se actualizan juntos
   public void asignarDonacion(Donacion donacion) {
     this.donacionesAsignadas.add(donacion);
