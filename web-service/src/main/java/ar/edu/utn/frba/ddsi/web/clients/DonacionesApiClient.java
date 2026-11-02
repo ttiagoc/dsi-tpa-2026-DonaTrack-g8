@@ -12,6 +12,7 @@ import ar.edu.utn.frba.ddsi.web.dto.catalogo.CategoriaResponse;
 import ar.edu.utn.frba.ddsi.web.dto.catalogo.Rubro;
 import ar.edu.utn.frba.ddsi.web.dto.catalogo.SubcategoriaResponse;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.DonacionResponse;
+import ar.edu.utn.frba.ddsi.web.dto.donaciones.EntidadConEntregas;
 import ar.edu.utn.frba.ddsi.web.dto.necesidades.NecesidadRequest;
 import ar.edu.utn.frba.ddsi.web.dto.necesidades.NecesidadResponse;
 import io.javalin.http.Context;
@@ -40,6 +41,12 @@ public class DonacionesApiClient extends ApiClient {
                                 SubcategoriaResponse[].class)).map(SubcategoriaResponse::nombre).toList()))
                 .filter(rubro -> !rubro.subcategorias().isEmpty())
                 .toList();
+    }
+
+    // ---- Mapa de entregas (publico, A, req. 2) ----
+
+    public EntidadConEntregas[] entregasPorEntidad() {
+        return getPublico("/donaciones/entregadas", EntidadConEntregas[].class);
     }
 
     // ---- Necesidades de la entidad logueada (A, req. 10) ----

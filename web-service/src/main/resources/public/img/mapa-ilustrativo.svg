@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" preserveAspectRatio="none">
+  <!-- Mapa ilustrativo del mapa de entregas (req. 2): no es una ciudad real. El rio ocupa el 20 % derecho. -->
+  <rect width="800" height="520" fill="#e9eee6"/>
+  <path d="M640 0 C 610 120, 680 220, 650 330 S 700 470, 690 520 L 800 520 L 800 0 Z" fill="#cfe2ee"/>
+  <g fill="#cfe3c6">
+    <ellipse cx="170" cy="120" rx="70" ry="40"/>
+    <rect x="430" y="330" width="110" height="70" rx="14"/>
+    <ellipse cx="560" cy="110" rx="45" ry="30"/>
+  </g>
+  <g stroke="#ffffff" stroke-linecap="round" fill="none">
+    <g stroke-width="3" opacity=".9">
+      <path d="M0 60 H640"/><path d="M0 170 H660"/><path d="M0 260 H655"/><path d="M0 360 H660"/><path d="M0 450 H680"/>
+      <path d="M90 0 V520"/><path d="M210 0 V520"/><path d="M330 0 V520"/><path d="M450 0 V520"/><path d="M560 0 V520"/>
+    </g>
+    <g stroke-width="9">
+      <path d="M0 215 C 200 205, 420 230, 650 210"/>
+      <path d="M270 0 C 260 160, 300 330, 250 520"/>
+      <path d="M0 500 L 620 40"/>
+    </g>
+  </g>
+</svg>

@@ -1,6 +1,7 @@
 package ar.edu.utn.frba.ddsi.donaciones;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URI;
@@ -166,6 +167,21 @@ class DonacionesApiPersistenciaTest {
         HttpResponse<String> repetida = postRespuesta("/donaciones/" + idDonacion + "/recepcion", fotos);
         assertEquals(400, repetida.statusCode());
         assertTrue(repetida.body().contains("ya fue confirmada"), repetida.body());
+
+        // req. 2: la donacion entregada aparece en el mapa publico, dentro de su entidad y con sus fotos
+        JsonNode entidadEnElMapa = null;
+        for (JsonNode e : get("/donaciones/entregadas")) {
+            if (e.get("entidadId").asLong() == idEntidad) {
+                entidadEnElMapa = e;
+            }
+        }
+        assertTrue(entidadEnElMapa != null, "la entidad tiene que estar en el mapa");
+        assertEquals("Comedor " + sufijo, entidadEnElMapa.get("razonSocial").asText());
+        JsonNode entrega = entidadEnElMapa.get("entregas").get(0);
+        assertEquals(idDonacion, entrega.get("donacionId").asLong());
+        assertEquals(2, entrega.get("fotos").size());
+        assertEquals("Fideos secos", entrega.get("bienes").get(0).get("descripcion").asText());
+        assertFalse(entrega.has("donanteId"), "el mapa es publico: nada del donante");
     }
 
     @Test

@@ -10,6 +10,7 @@
     </label>
     <nav class="navbar__links" aria-label="Principal">
       <a href="/#como-funciona">Cómo funciona</a>
+      <a href="/mapa" {{#if (eq rutaActual "/mapa")}}aria-current="page"{{/if}}>Mapa de entregas</a>
       <a href="/login">Ingresar</a>
       <a class="boton boton--chico" href="/registro">Registrarme</a>
     </nav>

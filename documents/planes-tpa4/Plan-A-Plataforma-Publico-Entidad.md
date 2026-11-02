@@ -45,7 +45,7 @@ El `web-service` manda `Authorization: Bearer <accessToken>` en cada llamada; si
 #### Matriz de roles (`propietario` = además `Autorizacion.exigirPropietario`)
 | Endpoint | Público | DONANTE | ENTIDAD | ADMIN | SISTEMA |
 |---|---|---|---|---|---|
-| `/api/auth/*` (salvo `me`), `GET /api/categorias`, `.../subcategorias` | ✓ | | | | |
+| `/api/auth/*` (salvo `me`), `GET /api/categorias`, `.../subcategorias`, `GET /api/donaciones/entregadas` (req. 2) | ✓ | | | | |
 | `POST /api/categorias`, `.../subcategorias`, `/api/matchmaking/*` | | | | ✓ | |
 | `POST /api/donaciones` | | propietario | | ✓ | |
 | `GET /api/donaciones` | | | | ✓ | ✓ |
@@ -116,7 +116,7 @@ Tests: `WebFlujoTest` (13) levanta la web contra una API falsa y recorre landing
 | Req | Pantalla | Backend existente | Backend a agregar |
 |---|---|---|---|
 | 1 | ✅ Landing `/` + `/legal` | — | — |
-| 2 | Mapa público `/mapa` (Leaflet + OSM, popup con detalle y fotos) | `GET /api/donaciones`, `GET /api/entidad-beneficiaria` | `latitud`/`longitud` en `EntidadBeneficiaria` (hoy no existen); `GET /api/donaciones/entregadas` con entidad, ubicación, bienes y fotos |
+| 2 | ✅ Mapa público `/mapa` (mapa ilustrativo mockeado, un marcador por entidad, detalle con fotos) | — | ✅ `GET /api/donaciones/entregadas` (público): entregas agrupadas por entidad, con bienes y fotos, sin datos del donante |
 | 3 | ✅ Registro `/registro` (persona, empresa u organización, entidad) | (Tarea 0) | — |
 | 4 | ✅ Login `/login` | (Tarea 0) | — |
 | 10 | ✅ `/entidad/necesidades` (alta + listado, recurrente vs extraordinaria) | `GET/POST/DELETE /api/entidad-beneficiaria/{id}/necesidades` | — |
@@ -140,8 +140,9 @@ Tests: `WebFlujoTest` (13) levanta la web contra una API falsa y recorre landing
 - [ ] **Para B:** la notificación al donante de que la entidad recibió su donación (req. 8) se engancha en `DonacionServiceImpl.confirmarRecepcion`.
 
 
+
 ### Decisiones a tomar
-- **[COMPLETAR]** Coordenadas de las entidades: ¿se cargan en el registro o se geocodifica la dirección (Nominatim)? Hoy el registro de entidad no las pide; si se cargan a mano, sumar `latitud`/`longitud` al formulario (`registro-entidad.html.hbs`, `RegistroController`) y a `EntidadBeneficiariaRequest`.
+- ✅ Coordenadas de las entidades: no hacen falta. Los profes permitieron mockear el mapa: es un dibujo propio y cada entidad cae en un punto fijo calculado a partir de su id (`PosicionesEnMapa`).
 - ✅ Fotos: se guardan en el disco de la máquina (`FOTOS_DIR`, volumen `fotos-data` en Docker). En la nube, C tiene que montar un disco persistente en esa carpeta (anotado en su plan).
 - ✅ Ajustes según el documento de MVC de la cátedra: aplicados en el `web-service` (ver 2.2).
 
@@ -151,7 +152,7 @@ Tests: `WebFlujoTest` (13) levanta la web contra una API falsa y recorre landing
 - **Archivos compartidos** (riesgo de conflictos): `Router.java`, `styles.css`, `navbar.html.hbs`, `persistence.xml`, `pom.xml` raíz, `docker-compose.yml`, `Clases.puml`. Regla: A es dueño del layout, del navbar y del `Server`; los demás solo agregan sus rutas, links o estilos en su bloque comentado (`--- Donante (B) ---`, `--- Administrador (C) ---`). `git pull --rebase` antes de cada push.
 
 ## 5. Entregables de documentación
-- [ ] Bocetos de las pantallas 1–4 y 10–12 en `documents/bocetos/`, **antes** de implementarlas. Hechos los de 1, 3 y 4 ([`bocetos/README.md`](../bocetos/README.md), fuente en Figma), el de 10 (maqueta HTML: listado, modal de alta, confirmar eliminación, no se puede eliminar y lista vacía), el de 11 (listado y lista vacía) y el de 12 (formulario y error sin fotos); falta el 2. Flujo en [`AGENTS.md`](../../AGENTS.md#flujo-para-cada-pantalla-nueva).
+- [x] Bocetos de las pantallas 1–4 y 10–12 en `documents/bocetos/`, **antes** de implementarlas. Hechos los de 1, 3 y 4 ([`bocetos/README.md`](../bocetos/README.md), fuente en Figma), el de 10 (maqueta HTML: listado, modal de alta, confirmar eliminación, no se puede eliminar y lista vacía), el de 11 (listado y lista vacía), el de 12 (formulario y error sin fotos) y el de 2 (mapa, sin entregas y con sesión). Todos hechos. Flujo en [`AGENTS.md`](../../AGENTS.md#flujo-para-cada-pantalla-nueva).
 - [x] Justificación: cliente liviano desacoplado, Handlebars, sesión por cookies (por qué en memoria, defensa contra CSRF con `SameSite`, `HttpOnly`/`Secure`) en [`entregables/JustificacionWebService.md`](../../entregables/JustificacionWebService.md). La parte de JWT, BCrypt y roles está en `entregables/JustificacionAutenticacion.md`.
 - [x] `Usuario` y `Rol` en `Clases.puml`.
 

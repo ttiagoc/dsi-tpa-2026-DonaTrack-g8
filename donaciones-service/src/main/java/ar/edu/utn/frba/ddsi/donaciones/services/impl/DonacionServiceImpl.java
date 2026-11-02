@@ -1,7 +1,10 @@
 package ar.edu.utn.frba.ddsi.donaciones.services.impl;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -15,6 +18,8 @@ import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.BienResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionAsignadaResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionResponse;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EntidadConEntregasResponse;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EntregaPublicaResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EstadoDonacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EstadoDonacionResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.NecesidadDeDonacionResponse;
@@ -145,6 +150,36 @@ public class DonacionServiceImpl implements DonacionService {
         }
 
         return donacionesAsignadas;
+    }
+
+    // entidades ordenadas por su entrega mas reciente
+    public List<EntidadConEntregasResponse> obtenerEntregasPorEntidad() {
+        Map<Long, List<Donacion>> porEntidad = donacionRepository
+                .buscarPorEstado(TipoEstadoDonacion.ENTREGADA).stream()
+                .filter(d -> d.getEntidadBeneficiariaAsignada() != null)
+                .sorted(Comparator.comparing(Donacion::fechaDelEstadoActual).reversed())
+                .collect(Collectors.groupingBy(d -> d.getEntidadBeneficiariaAsignada().getId(), LinkedHashMap::new,
+                        Collectors.toList()));
+        return porEntidad.values().stream()
+                .map(entregas -> {
+                    EntidadBeneficiaria entidad = entregas.get(0).getEntidadBeneficiariaAsignada();
+                    return new EntidadConEntregasResponse(entidad.getId(), entidad.getRazonSocial(),
+                            entidad.getDireccion(), entregas.stream().map(this::toEntregaPublica).toList());
+                })
+                .toList();
+    }
+
+    private EntregaPublicaResponse toEntregaPublica(Donacion d) {
+        Subcategoria subcategoria = d.getSubcategoria();
+        return new EntregaPublicaResponse(
+                d.getId(),
+                subcategoria != null ? subcategoria.getNombre() : null,
+                subcategoria != null && subcategoria.getCategoria() != null ? subcategoria.getCategoria().getNombre() : null,
+                d.fechaDelEstadoActual(),
+                d.getBienes().stream()
+                        .map(b -> new EntregaPublicaResponse.BienEntregadoResponse(b.getDescripcion(), b.getCantidad()))
+                        .toList(),
+                d.getFotosRecepcion() != null ? List.copyOf(d.getFotosRecepcion()) : List.of());
     }
 
     public void subirFotosRecepcion(Long id, SubirFotosRecepcionRequest request) {

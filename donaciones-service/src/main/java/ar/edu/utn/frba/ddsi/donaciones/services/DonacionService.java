@@ -5,6 +5,7 @@ import java.util.List;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionAsignadaResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.DonacionResponse;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EntidadConEntregasResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EstadoDonacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donacion.EstadoDonacionResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.SubirFotosRecepcionRequest;
@@ -26,6 +27,9 @@ public interface DonacionService {
     EstadoDonacionResponse cambiarEstado(Long id, EstadoDonacionRequest request);
 
     List<DonacionAsignadaResponse> obtenerDonacionesSegunEstado(String estado, int limit, int offset);
+
+    // las donaciones entregadas agrupadas por entidad, para el mapa publico (req. 2)
+    List<EntidadConEntregasResponse> obtenerEntregasPorEntidad();
 
     void subirFotosRecepcion(Long id, SubirFotosRecepcionRequest request);
 

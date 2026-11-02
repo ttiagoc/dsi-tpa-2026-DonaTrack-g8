@@ -1,0 +1,80 @@
+{{#partial "titulo"}}Mapa de entregas · DonaTrack{{/partial}}
+{{#partial "contenido"}}
+<header class="encabezado-pagina">
+  <div>
+    <h1>Mapa de entregas</h1>
+    <p class="texto-suave">Las donaciones que ya llegaron a las entidades beneficiarias. Elegí un punto del mapa para ver qué recibió cada una.</p>
+  </div>
+</header>
+
+{{#if entidades}}
+  <div class="resumen">
+    <div class="resumen__item resumen__item--ok"><strong>{{totalEntregas}}</strong>Donaciones entregadas</div>
+    <div class="resumen__item"><strong>{{totalEntidades}}</strong>Entidades</div>
+  </div>
+
+  {{!-- Sin JavaScript, cada marcador es un link a su detalle y se ven todos los detalles uno abajo del otro --}}
+  <div class="mapa-pagina" data-mapa>
+    <section class="tarjeta mapa" aria-label="Mapa de entregas">
+      <img class="mapa__fondo" src="/img/mapa-ilustrativo.svg" alt="">
+      {{#each entidades}}
+        <a class="mapa__marcador" href="#entidad-{{id}}" data-detalle="entidad-{{id}}" style="left: {{x}}%; top: {{y}}%"
+           aria-label="{{razonSocial}}: {{etiquetaCantidad}}" {{#if elegida}}aria-current="true"{{/if}}><span>{{cantidad}}</span></a>
+      {{/each}}
+      <span class="mapa__leyenda">Mapa ilustrativo: las ubicaciones son aproximadas</span>
+    </section>
+    <div class="mapa-detalles" aria-live="polite">
+      {{#each entidades}}
+        <article class="tarjeta mapa-detalle{{#if elegida}} mapa-detalle--elegido{{/if}}" id="entidad-{{id}}" tabindex="-1">
+          <h2>{{razonSocial}}</h2>
+          <p class="texto-suave">{{direccion}} · Recibió {{etiquetaCantidad}}</p>
+          <ul class="mapa-detalle__entregas">
+            {{#each entregas}}
+              <li>
+                <strong>{{bienes}}</strong>
+                <span class="tabla__secundario">Entregada el {{fecha}}{{#if categoria}} · {{categoria}}{{/if}}{{#unless fotos}} · sin fotos todavía{{/unless}}</span>
+                {{#if fotos}}
+                  <div class="mapa-detalle__fotos">
+                    {{#each fotos}}<a href="{{this}}" target="_blank" rel="noopener"><img src="{{this}}" alt="Foto de la entrega" loading="lazy"></a>{{/each}}
+                  </div>
+                {{/if}}
+              </li>
+            {{/each}}
+          </ul>
+        </article>
+      {{/each}}
+    </div>
+  </div>
+{{else}}
+  <section class="tarjeta vacio">
+    <strong>Todavía no hay donaciones entregadas.</strong>
+    Cuando una donación llegue a su entidad beneficiaria, va a aparecer en este mapa. ¿Querés colaborar? <a href="/registro">Registrate como donante</a>.
+  </section>
+{{/if}}
+{{/partial}}
+{{#partial "scripts"}}
+<script>
+  // Con JavaScript se ve un solo detalle a la vez: el del marcador elegido.
+  (function () {
+    var mapa = document.querySelector('[data-mapa]');
+    if (!mapa) return;
+    mapa.classList.add('mapa-pagina--js');
+    var marcadores = mapa.querySelectorAll('.mapa__marcador');
+    marcadores.forEach(function (marcador) {
+      marcador.addEventListener('click', function (e) {
+        e.preventDefault();
+        marcadores.forEach(function (m) { m.removeAttribute('aria-current'); });
+        marcador.setAttribute('aria-current', 'true');
+        mapa.querySelectorAll('.mapa-detalle').forEach(function (d) {
+          d.classList.toggle('mapa-detalle--elegido', d.id === marcador.dataset.detalle);
+        });
+        // en el celular el detalle queda abajo del mapa
+        if (window.matchMedia('(max-width: 900px)').matches) {
+          document.getElementById(marcador.dataset.detalle).focus();
+        }
+      });
+    });
+  })();
+</script>
+{{/partial}}
+{{> layouts/base}}

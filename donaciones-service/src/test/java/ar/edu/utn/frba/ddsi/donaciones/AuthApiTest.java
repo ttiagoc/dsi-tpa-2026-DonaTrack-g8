@@ -90,6 +90,7 @@ class AuthApiTest {
     @DisplayName("Sin credenciales: las rutas publicas responden y las protegidas devuelven 401")
     void sinCredenciales() throws Exception {
         assertEquals(200, enviar(get("/categorias")).statusCode());
+        assertEquals(200, enviar(get("/donaciones/entregadas")).statusCode(), "el mapa de entregas es publico");
         assertEquals(401, enviar(get("/donantes")).statusCode());
         assertEquals(401, enviar(get("/donaciones/1")).statusCode());
         assertEquals(401, enviar(get("/donantes").header("Authorization", "Bearer no-es-un-token")).statusCode());

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.web.controllers.DonacionesAsignadasController;
 import ar.edu.utn.frba.ddsi.web.controllers.HomeController;
+import ar.edu.utn.frba.ddsi.web.controllers.MapaController;
 import ar.edu.utn.frba.ddsi.web.controllers.NecesidadesController;
 import ar.edu.utn.frba.ddsi.web.controllers.PanelController;
 import ar.edu.utn.frba.ddsi.web.controllers.RecepcionController;
@@ -32,10 +33,11 @@ public class Router {
     private final NecesidadesController necesidades;
     private final DonacionesAsignadasController donacionesAsignadas;
     private final RecepcionController recepcion;
+    private final MapaController mapa;
 
     public Router(AutorizacionMiddleware autorizacion, HomeController home, SesionController sesion,
             RegistroController registro, PanelController panel, NecesidadesController necesidades,
-            DonacionesAsignadasController donacionesAsignadas, RecepcionController recepcion) {
+            DonacionesAsignadasController donacionesAsignadas, RecepcionController recepcion, MapaController mapa) {
         this.autorizacion = autorizacion;
         this.home = home;
         this.sesion = sesion;
@@ -44,6 +46,7 @@ public class Router {
         this.necesidades = necesidades;
         this.donacionesAsignadas = donacionesAsignadas;
         this.recepcion = recepcion;
+        this.mapa = mapa;
     }
 
     public void registrar(Javalin app) {
@@ -56,6 +59,7 @@ public class Router {
         }
         app.get("/", home::index);
         app.get("/legal", home::legal);
+        app.get("/mapa", mapa::mostrar);
         app.get("/login", sesion::mostrarLogin);
         app.post("/login", sesion::login);
         app.post("/logout", sesion::logout);

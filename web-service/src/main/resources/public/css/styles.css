@@ -128,6 +128,8 @@ code {
 }
 
 .navbar__links > a:not(.boton):hover { color: var(--color-primario); }
+/* la pagina abierta, igual que en el menu lateral */
+.navbar__links > a[aria-current="page"] { color: var(--color-primario); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; }
 
 .navbar__toggle { position: absolute; opacity: 0; pointer-events: none; }
 
@@ -699,6 +701,51 @@ code {
   cursor: pointer;
 }
 .fotos__lista small { display: block; overflow: hidden; color: var(--color-texto-suave); font-size: var(--texto-chico); text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---- Mapa de entregas (req. 2): dibujo de fondo + marcadores en % + detalle al costado ---- */
+.mapa-pagina { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--espacio-4); align-items: start; }
+.mapa { position: relative; overflow: hidden; height: 460px; padding: 0; }
+.mapa__fondo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
+.mapa__marcador {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  transform: translate(-50%, -100%) rotate(-45deg);
+  border: 3px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  background: var(--color-primario);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  text-decoration: none;
+}
+.mapa__marcador span { transform: rotate(45deg); color: #fff; font-size: 0.85rem; font-weight: 700; }
+.mapa__marcador[aria-current="true"] { z-index: 1; width: 42px; height: 42px; background: var(--color-acento); }
+.mapa__marcador[aria-current="true"] span { color: var(--color-texto); }
+.mapa__leyenda {
+  position: absolute;
+  left: var(--espacio-3);
+  bottom: var(--espacio-3);
+  padding: var(--espacio-1) var(--espacio-2);
+  border-radius: var(--radio);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--color-texto-suave);
+  font-size: var(--texto-chico);
+}
+.mapa-detalles { display: flex; flex-direction: column; gap: var(--espacio-4); }
+/* con JavaScript se ve solo el detalle del marcador elegido */
+.mapa-pagina--js .mapa-detalle:not(.mapa-detalle--elegido) { display: none; }
+.mapa-detalle h2 { margin: 0 0 var(--espacio-1); font-size: 1.25rem; }
+.mapa-detalle__entregas { margin: var(--espacio-4) 0 0; padding: 0; list-style: none; }
+.mapa-detalle__entregas li { padding: var(--espacio-3) 0; border-top: 1px solid var(--color-borde); }
+.mapa-detalle__fotos { display: flex; flex-wrap: wrap; gap: var(--espacio-2); margin-top: var(--espacio-2); }
+.mapa-detalle__fotos img { display: block; width: 84px; height: 63px; object-fit: cover; border: 1px solid var(--color-borde); border-radius: var(--radio); }
+
+@media (max-width: 900px) {
+  .mapa-pagina { grid-template-columns: 1fr; }
+  .mapa { height: 360px; }
+}
 
 /* ---- Modal (<dialog>): alta, edicion y confirmaciones ---- */
 .modal {

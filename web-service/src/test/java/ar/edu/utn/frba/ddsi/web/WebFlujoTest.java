@@ -33,6 +33,7 @@ import ar.edu.utn.frba.ddsi.web.clients.DonacionesApiClient;
 import ar.edu.utn.frba.ddsi.web.config.WebConfig;
 import ar.edu.utn.frba.ddsi.web.controllers.DonacionesAsignadasController;
 import ar.edu.utn.frba.ddsi.web.controllers.HomeController;
+import ar.edu.utn.frba.ddsi.web.controllers.MapaController;
 import ar.edu.utn.frba.ddsi.web.controllers.NecesidadesController;
 import ar.edu.utn.frba.ddsi.web.controllers.PanelController;
 import ar.edu.utn.frba.ddsi.web.controllers.RecepcionController;
@@ -70,6 +71,8 @@ class WebFlujoTest {
     private final List<Map<String, Object>> donacionesAsignadas = new ArrayList<>();
     private final AtomicReference<String> filtroDonaciones = new AtomicReference<>();
     private final AtomicReference<JsonNode> ultimaRecepcion = new AtomicReference<>();
+    // lo que devuelve GET /api/donaciones/entregadas (mapa publico)
+    private final List<Map<String, Object>> entregas = new ArrayList<>();
 
     @TempDir
     Path carpetaFotos;
@@ -91,7 +94,8 @@ class WebFlujoTest {
                 HttpClient.newHttpClient(), ApiClient.crearObjectMapper(), auth);
         Router router = new Router(new AutorizacionMiddleware(), new HomeController(), new SesionController(auth),
                 new RegistroController(auth), new PanelController(), new NecesidadesController(donaciones),
-                new DonacionesAsignadasController(donaciones), new RecepcionController(donaciones, fotos));
+                new DonacionesAsignadasController(donaciones), new RecepcionController(donaciones, fotos),
+                new MapaController(donaciones));
 
         web = new Server(router, config, fotos).crear();
         // ruta solo para el test: una llamada autenticada a la API, para probar el refresh del token
@@ -366,6 +370,48 @@ class WebFlujoTest {
     @DisplayName("Donaciones asignadas: un donante no puede entrar")
     void donacionesAsignadasSoloEntidad() throws Exception {
         assertEquals(403, get("/entidad/donaciones", cookie(login("donante", "clave-segura"))).statusCode());
+    }
+
+    @Test
+    @DisplayName("Mapa: es publico, marca la pagina en el navbar y sin entregas muestra el mensaje")
+    void mapaVacio() throws Exception {
+        HttpResponse<String> respuesta = get("/mapa", null);
+        assertEquals(200, respuesta.statusCode());
+        assertTrue(respuesta.body().contains("Todavía no hay donaciones entregadas."));
+        assertTrue(respuesta.body().contains("href=\"/mapa\" aria-current=\"page\""));
+        assertTrue(get("/", null).body().contains("href=\"/mapa\""), "la landing enlaza al mapa (req. 1)");
+    }
+
+    @Test
+    @DisplayName("Mapa: un marcador por entidad con su detalle y las fotos de las entregas")
+    void mapaConEntregas() throws Exception {
+        entregas.add(entidadConEntregas(6, "Comedor San Martín", List.of(
+                entrega(2, "Arroz largo fino 1 kg", 60, List.of("/fotos/a.png", "/fotos/b.png")),
+                entrega(3, "Leche entera 1 L", 12, List.of()))));
+        entregas.add(entidadConEntregas(9, "Escuela Rural 10", List.of(
+                entrega(7, "Kits escolares", 50, List.of("/fotos/c.png")))));
+
+        String pagina = get("/mapa", null).body();
+
+        assertTrue(pagina.contains("<strong>3</strong>Donaciones entregadas"));
+        assertTrue(pagina.contains("<strong>2</strong>Entidades"));
+        assertTrue(pagina.contains("aria-label=\"Comedor San Martín: 2 donaciones\" aria-current=\"true\""),
+                "la primera entidad arranca elegida");
+        assertTrue(pagina.contains("aria-label=\"Escuela Rural 10: 1 donación\""));
+        assertTrue(pagina.contains("href=\"#entidad-9\""), "sin JavaScript, el marcador lleva al detalle");
+        assertTrue(pagina.contains("<strong>Arroz largo fino 1 kg × 60</strong>"));
+        assertTrue(pagina.contains("Entregada el 01/11 · Alimentos"));
+        assertTrue(pagina.contains("<img src=\"/fotos/a.png\""));
+        assertTrue(pagina.contains("· sin fotos todavía"));
+        assertTrue(pagina.contains("Mapa ilustrativo"));
+    }
+
+    @Test
+    @DisplayName("Mapa: con sesion se ve con el menu lateral, que tiene el link al mapa")
+    void mapaConSesion() throws Exception {
+        String pagina = get("/mapa", cookie(login("entidad", "clave-segura"))).body();
+        assertTrue(pagina.contains("class=\"menu-lateral\""));
+        assertTrue(pagina.contains("<a href=\"/mapa\">Mapa de entregas</a>"));
     }
 
     @Test
@@ -666,6 +712,7 @@ class WebFlujoTest {
             filtroDonaciones.set(ctx.queryParam("entidadId"));
             ctx.json(donacionesAsignadas);
         });
+        api.get("/api/donaciones/entregadas", ctx -> ctx.json(entregas));
         api.get("/api/donaciones/{id}", ctx -> {
             long id = Long.parseLong(ctx.pathParam("id"));
             donacionesAsignadas.stream().filter(d -> ((Number) d.get("id")).longValue() == id).findFirst()
@@ -699,6 +746,17 @@ class WebFlujoTest {
                 : Map.of("id", 1, "subcategoria", subcategoria, "descripcion", descripcionNecesidad));
         donacion.put("fotosRecepcion", fotos);
         return donacion;
+    }
+
+    private Map<String, Object> entidadConEntregas(long id, String razonSocial, List<Map<String, Object>> deLaEntidad) {
+        return Map.of("entidadId", id, "razonSocial", razonSocial, "direccion", "San Martín 1234",
+                "entregas", deLaEntidad);
+    }
+
+    private Map<String, Object> entrega(long donacionId, String bien, long cantidad, List<String> fotos) {
+        return Map.of("donacionId", donacionId, "subcategoria", "Arroz", "categoria", "Alimentos",
+                "fechaEntrega", "2026-11-01T15:30:00",
+                "bienes", List.of(Map.of("descripcion", bien, "cantidad", cantidad)), "fotos", fotos);
     }
 
     private Map<String, Object> sesion(String username, String rol, String access, String refresh) {

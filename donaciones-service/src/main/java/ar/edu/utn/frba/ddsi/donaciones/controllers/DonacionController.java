@@ -42,6 +42,10 @@ public class DonacionController implements JavalinController {
             ctx.json(donacionService.obtenerTodas());
         }, ENTIDAD_BENEFICIARIA, ADMINISTRADOR, SISTEMA);
 
+        // publico (req. 2, mapa de entregas): las donaciones entregadas por entidad, sin datos del donante.
+        // Va antes de /{id} para que "entregadas" no se tome como un id.
+        app.get("/api/donaciones/entregadas", ctx -> ctx.json(donacionService.obtenerEntregasPorEntidad()));
+
         // la ve su donante, la entidad a la que se asigno, el administrador y los servicios
         app.get("/api/donaciones/{id}", ctx -> {
             Long id = Long.parseLong(ctx.pathParam("id"));
