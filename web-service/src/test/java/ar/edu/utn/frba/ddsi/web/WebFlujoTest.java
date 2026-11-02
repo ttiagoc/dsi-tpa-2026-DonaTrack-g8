@@ -11,6 +11,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.io.ByteArrayOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,6 +25,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import ar.edu.utn.frba.ddsi.web.clients.ApiClient;
 import ar.edu.utn.frba.ddsi.web.clients.AuthApiClient;
@@ -31,9 +35,11 @@ import ar.edu.utn.frba.ddsi.web.controllers.DonacionesAsignadasController;
 import ar.edu.utn.frba.ddsi.web.controllers.HomeController;
 import ar.edu.utn.frba.ddsi.web.controllers.NecesidadesController;
 import ar.edu.utn.frba.ddsi.web.controllers.PanelController;
+import ar.edu.utn.frba.ddsi.web.controllers.RecepcionController;
 import ar.edu.utn.frba.ddsi.web.controllers.RegistroController;
 import ar.edu.utn.frba.ddsi.web.controllers.SesionController;
 import ar.edu.utn.frba.ddsi.web.exceptions.NoEncontradoException;
+import ar.edu.utn.frba.ddsi.web.fotos.AlmacenFotos;
 import ar.edu.utn.frba.ddsi.web.middlewares.AutorizacionMiddleware;
 import ar.edu.utn.frba.ddsi.web.server.Router;
 import ar.edu.utn.frba.ddsi.web.server.Server;
@@ -63,6 +69,10 @@ class WebFlujoTest {
     // donaciones asignadas a la entidad 10 que devuelve la API falsa
     private final List<Map<String, Object>> donacionesAsignadas = new ArrayList<>();
     private final AtomicReference<String> filtroDonaciones = new AtomicReference<>();
+    private final AtomicReference<JsonNode> ultimaRecepcion = new AtomicReference<>();
+
+    @TempDir
+    Path carpetaFotos;
 
     private Javalin apiFalsa;
     private Javalin web;
@@ -73,15 +83,17 @@ class WebFlujoTest {
 
         WebConfig config = new WebConfig();
         config.getSesion().setMinutosInactividad(30);
+        config.getFotos().setDirectorio(carpetaFotos.toString());
+        AlmacenFotos fotos = new AlmacenFotos(config);
         AuthApiClient auth = new AuthApiClient("http://localhost:" + PUERTO_API + "/api",
                 HttpClient.newHttpClient(), ApiClient.crearObjectMapper());
         DonacionesApiClient donaciones = new DonacionesApiClient("http://localhost:" + PUERTO_API + "/api",
                 HttpClient.newHttpClient(), ApiClient.crearObjectMapper(), auth);
         Router router = new Router(new AutorizacionMiddleware(), new HomeController(), new SesionController(auth),
                 new RegistroController(auth), new PanelController(), new NecesidadesController(donaciones),
-                new DonacionesAsignadasController(donaciones));
+                new DonacionesAsignadasController(donaciones), new RecepcionController(donaciones, fotos));
 
-        web = new Server(router, config).crear();
+        web = new Server(router, config, fotos).crear();
         // ruta solo para el test: una llamada autenticada a la API, para probar el refresh del token
         web.get("/test/me", ctx -> ctx.result(auth.me(ctx).username()));
         web.get("/test/no-encontrado", ctx -> {
@@ -357,6 +369,94 @@ class WebFlujoTest {
     }
 
     @Test
+    @DisplayName("Recepcion: muestra la donacion y el campo de fotos")
+    void recepcionFormulario() throws Exception {
+        donacionesAsignadas.add(donacion(121, "ENTREGADA", List.of(), "Arroz", "Almuerzo de lunes a viernes"));
+        HttpResponse<String> pagina = get("/entidad/donaciones/121/recepcion", cookie(login("entidad", "clave-segura")));
+        assertEquals(200, pagina.statusCode());
+        assertTrue(pagina.body().contains("Arroz · Almuerzo de lunes a viernes"));
+        assertTrue(pagina.body().contains("Arroz largo fino × 60"));
+        assertTrue(pagina.body().contains("El 01/11 a las 15:30"));
+        assertTrue(pagina.body().contains("enctype=\"multipart/form-data\""));
+        assertTrue(pagina.body().contains("/js/fotos.js"));
+    }
+
+    @Test
+    @DisplayName("Recepcion: guarda las fotos en el disco, manda sus URLs y quedan publicas")
+    void recepcionConfirmada() throws Exception {
+        donacionesAsignadas.add(donacion(121, "ENTREGADA", List.of(), "Arroz", "Almuerzo de lunes a viernes"));
+        String cookie = cookie(login("entidad", "clave-segura"));
+
+        Map<String, byte[]> fotos = new LinkedHashMap<>();
+        fotos.put("bolsas.png", png());
+        fotos.put("deposito.jpg", new byte[] {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0, 1, 2});
+        HttpResponse<String> respuesta = postFotos("/entidad/donaciones/121/recepcion", fotos, cookie);
+        assertEquals(302, respuesta.statusCode(), respuesta.body());
+        assertEquals("/entidad/donaciones", respuesta.headers().firstValue("Location").orElse(null));
+
+        JsonNode urls = ultimaRecepcion.get().get("fotosUrl");
+        assertEquals(2, urls.size());
+        assertTrue(urls.get(0).asText().matches("/fotos/[0-9a-f-]{36}\\.png"), urls.toString());
+        assertTrue(urls.get(1).asText().endsWith(".jpg"), "la extension sale del contenido");
+        try (var guardadas = Files.list(carpetaFotos)) {
+            assertEquals(2, guardadas.count());
+        }
+        assertEquals(200, get(urls.get(0).asText(), null).statusCode(), "las fotos se ven sin sesion");
+        assertTrue(get("/entidad/donaciones", cookie).body().contains("Recepción de la donación #121 confirmada"));
+    }
+
+    @Test
+    @DisplayName("Recepcion: sin fotos o con un archivo que no es foto vuelve con el error y no llama a la API")
+    void recepcionInvalida() throws Exception {
+        donacionesAsignadas.add(donacion(121, "ENTREGADA", List.of(), "Arroz", "Almuerzo de lunes a viernes"));
+        String cookie = cookie(login("entidad", "clave-segura"));
+
+        HttpResponse<String> sinFotos = postFotos("/entidad/donaciones/121/recepcion", Map.of(), cookie);
+        assertEquals(400, sinFotos.statusCode());
+        assertTrue(sinFotos.body().contains("Cargá al menos una foto de lo que recibieron"));
+        assertTrue(sinFotos.body().contains("campo--fotos campo--error"));
+
+        HttpResponse<String> noEsFoto = postFotos("/entidad/donaciones/121/recepcion",
+                Map.of("virus.jpg", "<script>alert(1)</script>".getBytes(StandardCharsets.UTF_8)), cookie);
+        assertEquals(400, noEsFoto.statusCode());
+        assertTrue(noEsFoto.body().contains("no es una foto JPG o PNG"));
+
+        assertEquals(null, ultimaRecepcion.get());
+        try (var guardadas = Files.list(carpetaFotos)) {
+            assertEquals(0, guardadas.count());
+        }
+    }
+
+    @Test
+    @DisplayName("Recepcion: si la API la rechaza, muestra el error y borra las fotos guardadas")
+    void recepcionRechazadaPorLaApi() throws Exception {
+        donacionesAsignadas.add(donacion(122, "ENTREGADA", List.of(), "Arroz", "Almuerzo de lunes a viernes"));
+        HttpResponse<String> respuesta = postFotos("/entidad/donaciones/122/recepcion",
+                Map.of("bolsas.png", png()), cookie(login("entidad", "clave-segura")));
+        assertEquals(400, respuesta.statusCode());
+        assertTrue(respuesta.body().contains("ya fue confirmada"));
+        try (var guardadas = Files.list(carpetaFotos)) {
+            assertEquals(0, guardadas.count());
+        }
+    }
+
+    @Test
+    @DisplayName("Recepcion: una donacion sin entregar o ya confirmada vuelve al listado con un aviso")
+    void recepcionNoCorresponde() throws Exception {
+        donacionesAsignadas.add(donacion(128, "EN_TRASLADO", List.of(), "Leche larga vida", "Desayuno"));
+        donacionesAsignadas.add(donacion(104, "ENTREGADA", List.of("/fotos/a.jpg"), "Útiles escolares", "Kits"));
+        String cookie = cookie(login("entidad", "clave-segura"));
+
+        HttpResponse<String> enCamino = get("/entidad/donaciones/128/recepcion", cookie);
+        assertEquals(302, enCamino.statusCode());
+        assertTrue(get("/entidad/donaciones", cookie).body().contains("La donación #128 todavía no fue entregada"));
+
+        assertEquals(302, postFotos("/entidad/donaciones/104/recepcion", Map.of("a.png", png()), cookie).statusCode());
+        assertTrue(get("/entidad/donaciones", cookie).body().contains("La recepción de la donación #104 ya está confirmada"));
+        assertEquals(null, ultimaRecepcion.get());
+    }
+
+    @Test
     @DisplayName("Necesidades: un donante no puede entrar")
     void necesidadesSoloEntidad() throws Exception {
         assertEquals(403, get("/entidad/necesidades", cookie(login("donante", "clave-segura"))).statusCode());
@@ -566,6 +666,21 @@ class WebFlujoTest {
             filtroDonaciones.set(ctx.queryParam("entidadId"));
             ctx.json(donacionesAsignadas);
         });
+        api.get("/api/donaciones/{id}", ctx -> {
+            long id = Long.parseLong(ctx.pathParam("id"));
+            donacionesAsignadas.stream().filter(d -> ((Number) d.get("id")).longValue() == id).findFirst()
+                    .ifPresentOrElse(ctx::json, () -> ctx.status(404).json(Map.of("error", "not_found",
+                            "message", "No se encontro una donacion con el id: " + id)));
+        });
+        api.post("/api/donaciones/{id}/recepcion", ctx -> {
+            ultimaRecepcion.set(mapper.readTree(ctx.body()));
+            if ("122".equals(ctx.pathParam("id"))) {
+                ctx.status(400).json(Map.of("error", "bad_request",
+                        "message", "La recepción de esta donación ya fue confirmada"));
+                return;
+            }
+            ctx.json(Map.of("id", Long.parseLong(ctx.pathParam("id"))));
+        });
 
         return api;
     }
@@ -644,5 +759,34 @@ class WebFlujoTest {
             pedido.header("Cookie", cookie);
         }
         return navegador.send(pedido.build(), HttpResponse.BodyHandlers.ofString());
+    }
+
+    /** Un formulario multipart/form-data con archivos en el campo "fotos" (nombre -> contenido). */
+    private HttpResponse<String> postFotos(String ruta, Map<String, byte[]> fotos, String cookie) throws Exception {
+        String limite = "----donatrack" + System.nanoTime();
+        ByteArrayOutputStream body = new ByteArrayOutputStream();
+        if (fotos.isEmpty()) {
+            // lo que manda el navegador con el input vacio
+            fotos = Map.of("", new byte[0]);
+        }
+        for (Map.Entry<String, byte[]> foto : fotos.entrySet()) {
+            body.write(("--" + limite + "\r\nContent-Disposition: form-data; name=\"fotos\"; filename=\""
+                    + foto.getKey() + "\"\r\nContent-Type: application/octet-stream\r\n\r\n")
+                    .getBytes(StandardCharsets.UTF_8));
+            body.write(foto.getValue());
+            body.write("\r\n".getBytes(StandardCharsets.UTF_8));
+        }
+        body.write(("--" + limite + "--\r\n").getBytes(StandardCharsets.UTF_8));
+        HttpRequest pedido = HttpRequest.newBuilder(URI.create(WEB + ruta))
+                .header("Content-Type", "multipart/form-data; boundary=" + limite)
+                .header("Cookie", cookie)
+                .POST(HttpRequest.BodyPublishers.ofByteArray(body.toByteArray()))
+                .build();
+        return navegador.send(pedido, HttpResponse.BodyHandlers.ofString());
+    }
+
+    /** Los primeros bytes de un PNG: alcanza para que AlmacenFotos lo reconozca. */
+    private static byte[] png() {
+        return new byte[] {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n', 0, 0, 0, 13};
     }
 }

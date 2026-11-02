@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -157,5 +158,29 @@ class DonacionTest {
 
         assertFalse(donacionAntigua.estaDentroDelPeriodoActual(Periodo.MENSUAL));
         assertFalse(donacionAntigua.estaDentroDelPeriodoActual(Periodo.ANUAL));
+    }
+
+    @Test
+    @DisplayName("La entidad confirma la recepcion solo de una donacion entregada, una vez y con fotos")
+    void confirmarRecepcion() {
+        Donacion donacion = new Donacion(bienBase, fechaCreacion);
+        BusinessException sinEntregar = assertThrows(BusinessException.class,
+                () -> donacion.confirmarRecepcion(List.of("/fotos/a.jpg")));
+        assertTrue(sinEntregar.getMessage().contains("donación entregada"));
+
+        donacion.confirmarEntrega("AB123CD", LocalDateTime.now());
+        assertFalse(donacion.recepcionConfirmada());
+        assertThrows(BusinessException.class, () -> donacion.confirmarRecepcion(List.of()));
+        assertThrows(BusinessException.class, () -> donacion.confirmarRecepcion(
+                List.of("1", "2", "3", "4", "5", "6")));
+
+        donacion.confirmarRecepcion(List.of("/fotos/a.jpg", "/fotos/b.jpg"));
+        assertTrue(donacion.recepcionConfirmada());
+        assertEquals(List.of("/fotos/a.jpg", "/fotos/b.jpg"), donacion.getFotosRecepcion());
+
+        BusinessException repetida = assertThrows(BusinessException.class,
+                () -> donacion.confirmarRecepcion(List.of("/fotos/c.jpg")));
+        assertTrue(repetida.getMessage().contains("ya fue confirmada"));
+        assertEquals(2, donacion.getFotosRecepcion().size());
     }
 }

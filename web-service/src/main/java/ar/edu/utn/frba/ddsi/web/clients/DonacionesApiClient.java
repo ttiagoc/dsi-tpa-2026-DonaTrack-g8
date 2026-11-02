@@ -3,6 +3,7 @@ package ar.edu.utn.frba.ddsi.web.clients;
 import java.net.http.HttpClient;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -65,5 +66,16 @@ public class DonacionesApiClient extends ApiClient {
     public List<DonacionResponse> listarDonacionesAsignadas(Context ctx) {
         return get(ctx, "/donaciones?entidadId=" + perfilId(ctx), new TypeReference<List<DonacionResponse>>() {
         });
+    }
+
+    // ---- Confirmar la recepcion de una donacion (A, req. 12) ----
+
+    /** La API devuelve 403 si la donacion no esta asignada a la entidad logueada. */
+    public DonacionResponse obtenerDonacion(Context ctx, Long id) {
+        return get(ctx, "/donaciones/" + id, DonacionResponse.class);
+    }
+
+    public DonacionResponse confirmarRecepcion(Context ctx, Long id, List<String> fotosUrl) {
+        return post(ctx, "/donaciones/" + id + "/recepcion", Map.of("fotosUrl", fotosUrl), DonacionResponse.class);
     }
 }

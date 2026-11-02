@@ -52,8 +52,9 @@ El `web-service` manda `Authorization: Bearer <accessToken>` en cada llamada; si
 | `GET /api/donaciones/{id}` | | propietario | propietario | ✓ | ✓ |
 | `DELETE /api/donaciones/{id}` | | | | ✓ | |
 | `PUT /api/donaciones/{id}/estado`, `GET /api/donaciones/estado/{estado}` | | | | ✓ | ✓ |
-| `POST /api/donaciones/{id}/fotos` | | | propietario | ✓ | |
-| `POST /api/donaciones/recepciones` | | | propietario | ✓ | ✓ |
+| `POST /api/donaciones/{id}/recepcion` (req. 12) | | | propietario | ✓ | |
+| `POST /api/donaciones/{id}/fotos` | | | | ✓ | |
+| `POST /api/donaciones/recepciones` (entrega del camión) | | | | ✓ | ✓ |
 | `GET/PUT /api/donantes/{id}`, `PUT .../persona-*/{id}` | | propietario | | ✓ | |
 | `GET /api/donantes/{id}/contacto` | | propietario | | ✓ | ✓ |
 | `GET /api/donantes`, `DELETE`, `POST /api/donantes/persona-*`, inactividad | | | | ✓ | |
@@ -64,7 +65,7 @@ El `web-service` manda `Authorization: Bearer <accessToken>` en cada llamada; si
 **Regla para B y C:** todo endpoint nuevo declara sus roles al crearlo (sin roles = público) y, si es "solo lo mío", llama a `exigirPropietario`.
 
 #### Pendientes y riesgos
-- `POST /api/donaciones/recepciones` lo usan logística (entrega del camión) y la entidad (req. 12): separar la confirmación de la entidad en `POST /api/donaciones/{id}/recepcion` al hacer el req. 12.
+- ✅ La confirmación de la entidad (req. 12) quedó separada en `POST /api/donaciones/{id}/recepcion`; `/recepciones` (entrega del camión) y `/{id}/fotos` ya no aceptan el rol de entidad.
 - Cuando la Persona C pase logística → donaciones a gRPC, el canal gRPC se protege con la misma `SERVICE_API_KEY` (interceptores) y los endpoints REST que solo usaba logística pierden el rol `SISTEMA`.
 - `notificaciones-service` sigue sin proteger (decisión de C: red privada o la misma clave).
 - Logout: con JWT el logout es borrar la sesión del `web-service`; el refresh token sigue válido hasta que vence (alcanza para el TP).
@@ -120,7 +121,7 @@ Tests: `WebFlujoTest` (13) levanta la web contra una API falsa y recorre landing
 | 4 | ✅ Login `/login` | (Tarea 0) | — |
 | 10 | ✅ `/entidad/necesidades` (alta + listado, recurrente vs extraordinaria) | `GET/POST/DELETE /api/entidad-beneficiaria/{id}/necesidades` | — |
 | 11 | ✅ `/entidad/donaciones` (estado de las asignadas) | — | ✅ `GET /api/donaciones?entidadId=X`. B suma sus filtros (`donanteId`, `estado`...) al mismo endpoint |
-| 12 | `/entidad/donaciones/{id}/recepcion` (confirmar + fotos) | `POST /api/donaciones/{id}/fotos` (recibe URLs), `POST /api/donaciones/recepciones` | Subir el archivo a un storage externo y mandar las URLs |
+| 12 | ✅ `/entidad/donaciones/{id}/recepcion` (confirmar + fotos) | — | ✅ `POST /api/donaciones/{id}/recepcion` con las URLs; las fotos se guardan en el disco del `web-service` |
 
 ### Cambios que salieron de los bocetos (pantalla 10)
 - [x] **Layout con sesión:** `layouts/base` agrega navbar + footer sin sesión, o menú lateral + barra superior (perfil con "Salir") con sesión; la misma página (por ejemplo `/legal`) sirve para los dos casos. Landing, login y registro redirigen al panel si hay sesión. El menú se puede achicar desde su pie. Las clases del modal, resumen, progreso y etiquetas de estado se agregan a `styles.css` con la pantalla 10. Afecta a B y C: avisado en sus planes (sección de dependencias).
@@ -132,10 +133,16 @@ Tests: `WebFlujoTest` (13) levanta la web contra una API falsa y recorre landing
 - [x] **Backend:** `GET /api/donaciones?entidadId=X` (la entidad solo pide las suyas; sin filtro, solo admin y servicios). `DonacionResponse` suma `subcategoria`, `categoria`, `fechaAsignacion`, `fechaEstado`, `necesidad` y `fotosRecepcion`.
 - [x] **Una necesidad con donaciones en camino no se elimina.** Antes se borraba y las donaciones quedaban asignadas sin necesidad; además, el modal de la pantalla 10 decía que quedaban "disponibles para otras necesidades", y no era así. Ahora `EntidadBeneficiaria.eliminarNecesidad` lo rechaza (400) si hay donaciones asignadas, listas, en traslado o con entrega fallida. `NecesidadResponse.donacionesEnCurso` hace que la pantalla 10 muestre el modal "No se puede eliminar" (boceto 10g), y el texto de 10c quedó corregido. Las donaciones ya entregadas se conservan y aparecen con "La necesidad se eliminó".
 
+### Pantalla 12 (confirmar recepción)
+- [x] **Req. 12:** página con el detalle de la donación y el campo de fotos (entre 1 y 5, JPG o PNG, hasta 5 MB cada una), con miniaturas, quitar y arrastrar (`public/js/fotos.js`). La validación está en el navegador (reglas de archivos en `formularios.js`) y en el servidor (`RecepcionController` + `AlmacenFotos`, que mira el contenido, no el nombre). Solo se puede confirmar una donación entregada que no tenga fotos; si no, vuelve al listado con un aviso.
+- [x] **Fotos en disco:** `AlmacenFotos` las guarda con un nombre aleatorio en `FOTOS_DIR` y el `Server` las publica en `/fotos/...` sin login (las va a usar el mapa público). Si la API rechaza la confirmación, las fotos guardadas se borran.
+- [x] **Backend:** `Donacion.confirmarRecepcion` (entregada, una sola vez, de 1 a 5 fotos) y `POST /api/donaciones/{id}/recepcion`.
+- [ ] **Para B:** la notificación al donante de que la entidad recibió su donación (req. 8) se engancha en `DonacionServiceImpl.confirmarRecepcion`.
+
 
 ### Decisiones a tomar
 - **[COMPLETAR]** Coordenadas de las entidades: ¿se cargan en el registro o se geocodifica la dirección (Nominatim)? Hoy el registro de entidad no las pide; si se cargan a mano, sumar `latitud`/`longitud` al formulario (`registro-entidad.html.hbs`, `RegistroController`) y a `EntidadBeneficiariaRequest`.
-- **[COMPLETAR]** Storage de fotos: Supabase Storage o Cloudinary (el disco del PaaS no persiste). Coordinarlo con la Persona C por las variables de entorno.
+- ✅ Fotos: se guardan en el disco de la máquina (`FOTOS_DIR`, volumen `fotos-data` en Docker). En la nube, C tiene que montar un disco persistente en esa carpeta (anotado en su plan).
 - ✅ Ajustes según el documento de MVC de la cátedra: aplicados en el `web-service` (ver 2.2).
 
 ## 4. Dependencias con el resto
@@ -144,7 +151,7 @@ Tests: `WebFlujoTest` (13) levanta la web contra una API falsa y recorre landing
 - **Archivos compartidos** (riesgo de conflictos): `Router.java`, `styles.css`, `navbar.html.hbs`, `persistence.xml`, `pom.xml` raíz, `docker-compose.yml`, `Clases.puml`. Regla: A es dueño del layout, del navbar y del `Server`; los demás solo agregan sus rutas, links o estilos en su bloque comentado (`--- Donante (B) ---`, `--- Administrador (C) ---`). `git pull --rebase` antes de cada push.
 
 ## 5. Entregables de documentación
-- [ ] Bocetos de las pantallas 1–4 y 10–12 en `documents/bocetos/`, **antes** de implementarlas. Hechos los de 1, 3 y 4 ([`bocetos/README.md`](../bocetos/README.md), fuente en Figma), el de 10 (maqueta HTML: listado, modal de alta, confirmar eliminación, no se puede eliminar y lista vacía) y el de 11 (listado y lista vacía); faltan 2 y 12. Flujo en [`AGENTS.md`](../../AGENTS.md#flujo-para-cada-pantalla-nueva).
+- [ ] Bocetos de las pantallas 1–4 y 10–12 en `documents/bocetos/`, **antes** de implementarlas. Hechos los de 1, 3 y 4 ([`bocetos/README.md`](../bocetos/README.md), fuente en Figma), el de 10 (maqueta HTML: listado, modal de alta, confirmar eliminación, no se puede eliminar y lista vacía), el de 11 (listado y lista vacía) y el de 12 (formulario y error sin fotos); falta el 2. Flujo en [`AGENTS.md`](../../AGENTS.md#flujo-para-cada-pantalla-nueva).
 - [x] Justificación: cliente liviano desacoplado, Handlebars, sesión por cookies (por qué en memoria, defensa contra CSRF con `SameSite`, `HttpOnly`/`Secure`) en [`entregables/JustificacionWebService.md`](../../entregables/JustificacionWebService.md). La parte de JWT, BCrypt y roles está en `entregables/JustificacionAutenticacion.md`.
 - [x] `Usuario` y `Rol` en `Clases.puml`.
 

@@ -159,6 +159,13 @@ public class DonacionServiceImpl implements DonacionService {
         donacionRepository.save(donacion);
     }
 
+    public DonacionResponse confirmarRecepcion(Long id, SubirFotosRecepcionRequest request) {
+        Donacion donacion = donacionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro una donacion con el id: " + id));
+        donacion.confirmarRecepcion(request.fotosUrl());
+        return this.toDonacionResponse(this.guardar(donacion));
+    }
+
     public void confirmarEntregaExitosa(ConfirmacionEntregaExitosaRequest request) {
         EntidadBeneficiaria entidad = entidadBeneficiariaRepository.findById(request.entidadId())
                 .orElseThrow(() -> new ResourceNotFoundException(

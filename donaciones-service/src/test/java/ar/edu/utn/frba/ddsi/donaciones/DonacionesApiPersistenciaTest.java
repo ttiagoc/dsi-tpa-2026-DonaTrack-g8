@@ -152,6 +152,20 @@ class DonacionesApiPersistenciaTest {
                 + necesidad.get("id").asLong());
         assertEquals(400, eliminar.statusCode());
         assertTrue(eliminar.body().contains("todavía no llegó"), eliminar.body());
+
+        // req. 12: la recepcion se confirma recien cuando la donacion fue entregada, y una sola vez
+        String fotos = "{\"fotosUrl\":[\"/fotos/a.jpg\",\"/fotos/b.jpg\"]}";
+        assertEquals(400, postRespuesta("/donaciones/" + idDonacion + "/recepcion", fotos).statusCode());
+        enviar(HttpRequest.newBuilder(URI.create(BASE + "/donaciones/" + idDonacion + "/estado"))
+                .header("Content-Type", "application/json")
+                .PUT(HttpRequest.BodyPublishers.ofString("{\"estado\":\"ENTREGADA\",\"justificacion\":\"Entregado\"}"))
+                .build());
+        JsonNode recibida = post("/donaciones/" + idDonacion + "/recepcion", fotos, 200);
+        assertEquals(2, recibida.get("fotosRecepcion").size());
+        assertEquals(2, get("/donaciones/" + idDonacion).get("fotosRecepcion").size());
+        HttpResponse<String> repetida = postRespuesta("/donaciones/" + idDonacion + "/recepcion", fotos);
+        assertEquals(400, repetida.statusCode());
+        assertTrue(repetida.body().contains("ya fue confirmada"), repetida.body());
     }
 
     @Test
@@ -193,12 +207,16 @@ class DonacionesApiPersistenciaTest {
     }
 
     private JsonNode post(String path, String json, int statusEsperado) throws Exception {
-        HttpResponse<String> response = enviar(HttpRequest.newBuilder(URI.create(BASE + path))
+        HttpResponse<String> response = postRespuesta(path, json);
+        assertEquals(statusEsperado, response.statusCode(), "POST " + path + " -> " + response.body());
+        return mapper.readTree(response.body());
+    }
+
+    private HttpResponse<String> postRespuesta(String path, String json) throws Exception {
+        return enviar(HttpRequest.newBuilder(URI.create(BASE + path))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build());
-        assertEquals(statusEsperado, response.statusCode(), "POST " + path + " -> " + response.body());
-        return mapper.readTree(response.body());
     }
 
     private JsonNode get(String path) throws Exception {

@@ -29,5 +29,8 @@ public interface DonacionService {
 
     void subirFotosRecepcion(Long id, SubirFotosRecepcionRequest request);
 
+    // la entidad confirma que recibio una donacion entregada, con sus fotos (req. 12)
+    DonacionResponse confirmarRecepcion(Long id, SubirFotosRecepcionRequest request);
+
     void confirmarEntregaExitosa(ConfirmacionEntregaExitosaRequest request);
 }

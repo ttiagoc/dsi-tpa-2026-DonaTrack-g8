@@ -28,6 +28,7 @@ En [Figma](https://www.figma.com/design/1tzIHQUO6aSwCbdgtPuXgj) quedó una prime
 | 10 | Necesidades: no se puede eliminar (tiene donaciones en camino) | `/entidad/necesidades` | [10g-necesidades-no-se-puede-eliminar.png](10g-necesidades-no-se-puede-eliminar.png) |
 | 11 | Donaciones asignadas | `/entidad/donaciones` | [11-donaciones-asignadas.png](11-donaciones-asignadas.png) |
 | 11 | Donaciones asignadas: lista vacía | `/entidad/donaciones` | [11b-donaciones-vacia.png](11b-donaciones-vacia.png) |
-| 12 | Confirmar recepción con fotos | `/entidad/donaciones/{id}/recepcion` | Pendiente |
+| 12 | Confirmar recepción con fotos | `/entidad/donaciones/{id}/recepcion` | [12-confirmar-recepcion.png](12-confirmar-recepcion.png) |
+| 12 | Confirmar recepción: sin fotos (error) | `/entidad/donaciones/{id}/recepcion` | [12b-confirmar-recepcion-error.png](12b-confirmar-recepcion-error.png) |
 
 Convención de nombres: `<req>[letra]-<pantalla>.png`. B y C agregan sus tablas (pantallas 5–9, 13–14 y 15–19) en este mismo archivo.

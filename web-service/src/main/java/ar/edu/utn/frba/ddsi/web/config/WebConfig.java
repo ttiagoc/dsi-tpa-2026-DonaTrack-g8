@@ -12,6 +12,7 @@ public class WebConfig {
 
     private Api api = new Api();
     private Sesion sesion = new Sesion();
+    private Fotos fotos = new Fotos();
 
     @Getter
     @Setter
@@ -27,5 +28,12 @@ public class WebConfig {
         /** En la nube va en true: la cookie solo viaja por HTTPS. */
         private boolean cookieSegura;
         private int minutosInactividad = 120;
+    }
+
+    @Getter
+    @Setter
+    public static class Fotos {
+        /** Carpeta del disco donde se guardan las fotos subidas (en la nube, un disco persistente). */
+        private String directorio = "fotos";
     }
 }

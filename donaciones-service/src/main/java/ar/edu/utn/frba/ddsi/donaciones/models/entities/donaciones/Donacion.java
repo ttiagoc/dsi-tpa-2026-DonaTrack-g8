@@ -38,6 +38,8 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Donacion {
+  public static final int MAXIMO_FOTOS_RECEPCION = 5;
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -136,6 +138,30 @@ public class Donacion {
 
   public void confirmarEntrega(String patenteCamion, LocalDateTime fechaEntrega) {
     this.registrarEstado(fechaEntrega, TipoEstadoDonacion.ENTREGADA, "Entregado", patenteCamion);
+  }
+
+  // req. 12: la entidad confirma que recibio una donacion ya entregada, con fotos de lo que llego
+  public void confirmarRecepcion(List<String> fotos) {
+    if (this.estadoActual != TipoEstadoDonacion.ENTREGADA) {
+      throw new BusinessException("Solo se puede confirmar la recepción de una donación entregada");
+    }
+    if (this.recepcionConfirmada()) {
+      throw new BusinessException("La recepción de esta donación ya fue confirmada");
+    }
+    if (fotos == null || fotos.isEmpty()) {
+      throw new BusinessException("Cargá al menos una foto de lo que recibieron");
+    }
+    if (fotos.size() > MAXIMO_FOTOS_RECEPCION) {
+      throw new BusinessException("Se pueden cargar hasta " + MAXIMO_FOTOS_RECEPCION + " fotos");
+    }
+    if (this.fotosRecepcion == null) {
+      this.fotosRecepcion = new ArrayList<>();
+    }
+    this.fotosRecepcion.addAll(fotos);
+  }
+
+  public boolean recepcionConfirmada() {
+    return this.fotosRecepcion != null && !this.fotosRecepcion.isEmpty();
   }
 
   public LocalDateTime fechaDelEstadoActual() {

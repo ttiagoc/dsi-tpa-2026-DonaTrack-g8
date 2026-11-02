@@ -659,6 +659,47 @@ code {
 .boton--secundario.boton--peligro { background: transparent; color: var(--color-error); }
 .boton--secundario.boton--peligro:hover { background: var(--color-error-suave); color: #8c1d17; }
 
+/* ---- Detalle (lista de datos "etiqueta: valor") ---- */
+.detalle { display: grid; grid-template-columns: max-content 1fr; gap: var(--espacio-2) var(--espacio-4); margin: 0 0 var(--espacio-5); }
+.detalle dt { color: var(--color-texto-suave); font-size: var(--texto-chico); }
+.detalle dd { margin: 0; }
+
+/* ---- Campo de fotos (public/js/fotos.js, <div data-fotos>) ---- */
+.fotos {
+  display: block;
+  padding: var(--espacio-4);
+  border: 2px dashed var(--color-borde);
+  border-radius: var(--radio);
+  background: var(--color-fondo);
+  text-align: center;
+  cursor: pointer;
+}
+.fotos strong { display: block; color: var(--color-primario); }
+.fotos:hover,
+.fotos--encima { border-color: var(--color-primario); background: var(--color-primario-suave); }
+.campo--error .fotos { border-color: var(--color-error); }
+/* con JavaScript el input queda oculto (sigue recibiendo el foco) y el recuadro hace de boton */
+.campo--fotos { position: relative; }
+.campo--fotos-js input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.campo--fotos-js:focus-within .fotos { outline: 3px solid var(--color-acento); outline-offset: 2px; }
+.fotos__lista { display: flex; flex-wrap: wrap; gap: var(--espacio-3); margin: var(--espacio-3) 0 0; padding: 0; list-style: none; }
+.fotos__lista:empty { display: none; }
+.fotos__lista li { position: relative; width: 120px; }
+.fotos__lista img { display: block; width: 120px; height: 90px; object-fit: cover; border: 1px solid var(--color-borde); border-radius: var(--radio); }
+.fotos__lista button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  cursor: pointer;
+}
+.fotos__lista small { display: block; overflow: hidden; color: var(--color-texto-suave); font-size: var(--texto-chico); text-overflow: ellipsis; white-space: nowrap; }
+
 /* ---- Modal (<dialog>): alta, edicion y confirmaciones ---- */
 .modal {
   width: min(560px, calc(100% - 2 * var(--espacio-4)));

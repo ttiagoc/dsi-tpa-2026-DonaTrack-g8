@@ -27,6 +27,7 @@ Abrir <http://localhost:7070> y entrar con el admin inicial (`ADMIN_USERNAME` / 
 | `LOGISTICA_API_URL` | `http://localhost:8081/api` | API de logística |
 | `NOTIFICACIONES_API_URL` | `http://localhost:8082/api` | API de notificaciones |
 | `COOKIE_SECURE` | `false` | `true` en la nube: la cookie de sesión solo viaja por HTTPS |
+| `FOTOS_DIR` | `./fotos` | Carpeta del disco donde se guardan las fotos que suben los usuarios (se publican en `/fotos/...`). En la nube tiene que ser un disco persistente |
 | `SESION_MINUTOS_INACTIVIDAD` | `120` | Vencimiento de la sesión por inactividad |
 
 ## Estructura

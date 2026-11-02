@@ -155,6 +155,8 @@ package "Microservicio Donaciones" {
     asignarA(entidad : EntidadBeneficiaria, necesidad : Necesidad) : void
     volverADeposito(justificacion : String) : void
     confirmarEntrega(patenteCamion : String, fechaEntrega : LocalDateTime) : void
+    confirmarRecepcion(fotos : List<String>) : void
+    recepcionConfirmada() : boolean
     fechaDelEstadoActual() : LocalDateTime
     fechaAsignacion() : LocalDateTime
     patenteCamionDeLaEntrega() : String

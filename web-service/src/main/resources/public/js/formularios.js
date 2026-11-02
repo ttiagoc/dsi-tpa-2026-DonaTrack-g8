@@ -10,6 +10,8 @@
  * - type="number" + min      -> numero entero mayor o igual a min
  * - minlength                -> largo minimo
  * - data-igual-a="otroCampo" -> tiene que coincidir con otroCampo (repetir contrasenia)
+ * - type="file"              -> required, accept (tipos), data-max-archivos y data-max-mb (por archivo)
+ * - data-mensaje-requerido   -> el mensaje cuando falta un campo obligatorio, en lugar del generico
  */
 (function () {
   'use strict';
@@ -25,9 +27,12 @@
   };
 
   function errorDe(campo) {
+    if (campo.type === 'file') {
+      return errorDeArchivos(campo);
+    }
     var valor = (campo.value || '').trim();
     if (!valor) {
-      return campo.required ? MENSAJES.obligatorio : null;
+      return campo.required ? (campo.dataset.mensajeRequerido || MENSAJES.obligatorio) : null;
     }
     if (campo.type === 'email' && !EMAIL.test(valor)) {
       return MENSAJES.email;
@@ -53,6 +58,28 @@
       var otro = campo.form.elements[campo.dataset.igualA];
       if (otro && otro.value !== campo.value) {
         return MENSAJES.distintos;
+      }
+    }
+    return null;
+  }
+
+  function errorDeArchivos(campo) {
+    var archivos = Array.prototype.slice.call(campo.files || []);
+    if (!archivos.length) {
+      return campo.required ? (campo.dataset.mensajeRequerido || MENSAJES.obligatorio) : null;
+    }
+    var maximo = Number(campo.dataset.maxArchivos);
+    if (maximo && archivos.length > maximo) {
+      return 'Podés cargar hasta ' + maximo + ' archivos';
+    }
+    var tipos = campo.accept ? campo.accept.split(',') : [];
+    var maxMb = Number(campo.dataset.maxMb);
+    for (var i = 0; i < archivos.length; i++) {
+      if (tipos.length && tipos.indexOf(archivos[i].type) < 0) {
+        return '"' + archivos[i].name + '" no tiene un formato aceptado';
+      }
+      if (maxMb && archivos[i].size > maxMb * 1024 * 1024) {
+        return '"' + archivos[i].name + '" pesa más de ' + maxMb + ' MB';
       }
     }
     return null;
@@ -123,7 +150,7 @@
       }
     });
     form.addEventListener('change', function (evento) {
-      if (evento.target.tagName === 'SELECT') {
+      if (evento.target.tagName === 'SELECT' || evento.target.type === 'file') {
         validar(evento.target);
       }
     });

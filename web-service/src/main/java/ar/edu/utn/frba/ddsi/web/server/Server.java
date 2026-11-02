@@ -16,10 +16,12 @@ import ar.edu.utn.frba.ddsi.web.exceptions.ApiNoDisponibleException;
 import ar.edu.utn.frba.ddsi.web.exceptions.NoEncontradoException;
 import ar.edu.utn.frba.ddsi.web.exceptions.SesionRequeridaException;
 import ar.edu.utn.frba.ddsi.web.exceptions.SesionVencidaException;
+import ar.edu.utn.frba.ddsi.web.fotos.AlmacenFotos;
 import ar.edu.utn.frba.ddsi.web.server.templates.JavalinHandlebars;
 import ar.edu.utn.frba.ddsi.web.server.templates.JavalinRenderer;
 import ar.edu.utn.frba.ddsi.web.sesion.SesionUsuario;
 import io.javalin.Javalin;
+import io.javalin.config.SizeUnit;
 import io.javalin.http.Context;
 import io.javalin.http.staticfiles.Location;
 
@@ -34,11 +36,13 @@ public class Server {
 
     private final Router router;
     private final WebConfig config;
+    private final AlmacenFotos fotos;
     private Javalin app;
 
-    public Server(Router router, WebConfig config) {
+    public Server(Router router, WebConfig config, AlmacenFotos fotos) {
         this.router = router;
         this.config = config;
+        this.fotos = fotos;
     }
 
     public Javalin crear() {
@@ -46,6 +50,15 @@ public class Server {
             javalinConfig.showJavalinBanner = false;
             javalinConfig.fileRenderer(new JavalinRenderer().register("hbs", new JavalinHandlebars()));
             javalinConfig.staticFiles.add("/public", Location.CLASSPATH);
+            // fotos subidas por los usuarios: publicas, desde el disco (AlmacenFotos)
+            javalinConfig.staticFiles.add(archivos -> {
+                archivos.hostedPath = AlmacenFotos.RUTA_PUBLICA;
+                archivos.directory = fotos.getDirectorio().toString();
+                archivos.location = Location.EXTERNAL;
+            });
+            // tope del servidor; el limite real (5 MB por foto) lo valida AlmacenFotos con un mensaje claro
+            javalinConfig.jetty.multipartConfig.maxFileSize(20, SizeUnit.MB);
+            javalinConfig.jetty.multipartConfig.maxTotalRequestSize(60, SizeUnit.MB);
             javalinConfig.jetty.modifyServletContextHandler(handler -> handler.setSessionHandler(sesiones()));
         });
         registrarErrores(javalin);

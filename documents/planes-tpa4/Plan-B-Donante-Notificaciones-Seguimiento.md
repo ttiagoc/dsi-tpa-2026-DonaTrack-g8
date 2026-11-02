@@ -44,6 +44,7 @@ Hoy **no existe nada** de misiones, insignias ni categorías de donante en el c�
 - [ ] Agregar `GET /api/notificaciones?destinatarioId=X&tipoDestinatario=DONANTE|ENTIDAD`, ordenado por fecha descendente.
 - [ ] **[COMPLETAR]** Verificar que el `destinatarioId` distinga donante de entidad (si no, agregar un `tipoDestinatario`, porque los ids pueden coincidir).
 - [ ] Verificar que se emitan los 4 casos del donante: donación asignada, misión cumplida, subida de categoría y donación recibida por la entidad. Y los 2 de la entidad: asignación y confirmación de recepción.
+  - "Recibida por la entidad" = la entidad confirmó la recepción con fotos (req. 12, A): `POST /api/donaciones/{id}/recepcion` → `DonacionServiceImpl.confirmarRecepcion`. Ahí se engancha la notificación (por ejemplo, un evento nuevo en `GestorDeEventos`). Las fotos quedan en `fotosRecepcion` (URLs `/fotos/...` del `web-service`).
 - [ ] (Opcional) marcar como leída.
 - [ ] **Proteger la API:** hoy `notificaciones-service` no exige autenticación. Ya usa `common-lib`, así que tiene el mismo `AutenticacionHandler` que donaciones: declarar roles en cada ruta (matriz del Plan A, 2.1).
   - `GET /api/notificaciones?...` → `DONANTE` y `ENTIDAD_BENEFICIARIA`, con `Autorizacion.exigirPropietario` (cada uno ve solo las suyas), más `ADMINISTRADOR`.

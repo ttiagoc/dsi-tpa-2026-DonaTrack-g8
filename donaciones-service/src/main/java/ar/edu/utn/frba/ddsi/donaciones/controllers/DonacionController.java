@@ -81,20 +81,27 @@ public class DonacionController implements JavalinController {
             ctx.json(donacionService.obtenerDonacionesSegunEstado(estado, limit, offset));
         }, ADMINISTRADOR, SISTEMA);
 
+        // carga directa de fotos (solo el administrador); la entidad las carga al confirmar la recepcion
         app.post("/api/donaciones/{id}/fotos", ctx -> {
             Long id = Long.parseLong(ctx.pathParam("id"));
-            Autorizacion.exigirPropietario(ctx, ENTIDAD_BENEFICIARIA, donacionService.obtenerPorId(id).entidadAsignadaId());
             SubirFotosRecepcionRequest request = ctx.bodyAsClass(SubirFotosRecepcionRequest.class);
             donacionService.subirFotosRecepcion(id, request);
             ctx.status(204);
+        }, ADMINISTRADOR);
+
+        // req. 12: la entidad confirma que recibio una donacion entregada y carga las URLs de sus fotos
+        app.post("/api/donaciones/{id}/recepcion", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            Autorizacion.exigirPropietario(ctx, ENTIDAD_BENEFICIARIA, donacionService.obtenerPorId(id).entidadAsignadaId());
+            SubirFotosRecepcionRequest request = ctx.bodyAsClass(SubirFotosRecepcionRequest.class);
+            ctx.json(donacionService.confirmarRecepcion(id, request));
         }, ENTIDAD_BENEFICIARIA, ADMINISTRADOR);
 
-        // la usan logistica (entrega del camion) y la entidad al confirmar la recepcion
+        // entrega del camion: la informa logistica (la entidad confirma la recepcion en /{id}/recepcion)
         app.post("/api/donaciones/recepciones", ctx -> {
             ConfirmacionEntregaExitosaRequest request = ctx.bodyAsClass(ConfirmacionEntregaExitosaRequest.class);
-            Autorizacion.exigirPropietario(ctx, ENTIDAD_BENEFICIARIA, request.entidadId());
             donacionService.confirmarEntregaExitosa(request);
             ctx.status(204);
-        }, ENTIDAD_BENEFICIARIA, ADMINISTRADOR, SISTEMA);
+        }, ADMINISTRADOR, SISTEMA);
     }
 }

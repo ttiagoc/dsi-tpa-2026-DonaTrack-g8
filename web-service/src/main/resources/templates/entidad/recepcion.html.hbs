@@ -1,0 +1,34 @@
+{{#partial "titulo"}}Confirmar recepción · DonaTrack{{/partial}}
+{{#partial "contenido"}}
+<section class="tarjeta formulario">
+  <p><a href="/entidad/donaciones">← Donaciones asignadas</a></p>
+  <h1>Confirmar recepción</h1>
+  <p class="texto-suave">Contanos que llegó la donación <strong>#{{donacion.id}}</strong> y cargá fotos de lo que recibieron. El donante las va a ver, y también quedan en el mapa público de donaciones entregadas.</p>
+  <dl class="detalle">
+    <dt>Necesidad</dt><dd>{{donacion.necesidad}}</dd>
+    <dt>Bienes</dt><dd>{{#each donacion.bienes}}{{this}}{{#unless @last}}<br>{{/unless}}{{/each}}</dd>
+    {{#if donacion.entregada}}<dt>Entregada</dt><dd>{{donacion.entregada}}</dd>{{/if}}
+  </dl>
+  <form method="post" action="/entidad/donaciones/{{donacion.id}}/recepcion" enctype="multipart/form-data" novalidate>
+    {{!-- data-fotos: public/js/fotos.js muestra las miniaturas; sin JavaScript queda el input del navegador --}}
+    <div class="campo campo--fotos{{#if errores.fotos}} campo--error{{/if}}" data-fotos>
+      <label for="fotos">Fotos <span class="campo__requerido" aria-hidden="true">*</span></label>
+      <label class="fotos" for="fotos">
+        <strong>Elegí las fotos</strong>
+        <span class="texto-suave">JPG o PNG, hasta {{maximoMb}} MB cada una. Entre 1 y {{maximoFotos}} fotos.</span>
+      </label>
+      <input type="file" id="fotos" name="fotos" accept="image/jpeg,image/png" multiple required
+             data-max-archivos="{{maximoFotos}}" data-max-mb="{{maximoMb}}"
+             data-mensaje-requerido="Cargá al menos una foto de lo que recibieron">
+      <ul class="fotos__lista" aria-label="Fotos elegidas"></ul>
+      {{#if errores.fotos}}<small class="campo__error">{{errores.fotos}}</small>{{/if}}
+    </div>
+    <div class="acciones">
+      <a class="boton boton--secundario" href="/entidad/donaciones">Cancelar</a>
+      <button type="submit" class="boton">Confirmar recepción</button>
+    </div>
+  </form>
+</section>
+{{/partial}}
+{{#partial "scripts"}}<script src="/js/fotos.js"></script>{{/partial}}
+{{> layouts/base}}

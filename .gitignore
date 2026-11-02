@@ -56,3 +56,7 @@ run.ps1
 mvnw
 mvnw.cmd
 .mvn/
+
+### Fotos subidas al web-service en local (FOTOS_DIR) ###
+/fotos/
+/web-service/fotos/

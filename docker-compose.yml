@@ -102,8 +102,13 @@ services:
       NOTIFICACIONES_API_URL: http://notificaciones-service:8082/api
       # En la nube (HTTPS) va en true para que la cookie de sesion lleve el atributo Secure
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      # Fotos que suben los usuarios: en un volumen, para que no se pierdan al reconstruir el contenedor
+      FOTOS_DIR: /data/fotos
+    volumes:
+      - fotos-data:/data/fotos
     depends_on:
       - donaciones-service
 
 volumes:
   postgres-data:
+  fotos-data:

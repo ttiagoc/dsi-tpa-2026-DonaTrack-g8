@@ -97,6 +97,7 @@ Hoy **ningún endpoint de `logistica-service` declara roles**, así que son púb
 ### 5.2 Tareas
 - [ ] Base de datos administrada con las bases `donaciones`, `logistica` y `notificaciones` (`docker/postgres/init-databases.sql`).
 - [x] `web-service/Dockerfile` y `web-service` en `docker-compose.yml` (perfil `full`): los hizo A junto con la Tarea 0. Falta definir las variables en la nube (`DONACIONES_API_URL`, `COOKIE_SECURE=true`).
+- [ ] **Fotos de recepción (req. 12, A):** el `web-service` las guarda en el disco, en `FOTOS_DIR` (en `docker-compose.yml`, el volumen `fotos-data`). En la nube hay que montar un disco o volumen persistente en esa carpeta: el disco del contenedor se borra en cada deploy y se perderían las fotos.
 - [ ] **Sacar URLs fijas a localhost**:
   - `GestorPlanificacionRutas.java` arma el callback con `http://localhost:8081/...`;
   - `common-lib/src/main/resources/application.yml` tiene las URLs por defecto.

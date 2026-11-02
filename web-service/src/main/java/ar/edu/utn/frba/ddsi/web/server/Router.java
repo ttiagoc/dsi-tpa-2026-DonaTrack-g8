@@ -10,6 +10,7 @@ import ar.edu.utn.frba.ddsi.web.controllers.DonacionesAsignadasController;
 import ar.edu.utn.frba.ddsi.web.controllers.HomeController;
 import ar.edu.utn.frba.ddsi.web.controllers.NecesidadesController;
 import ar.edu.utn.frba.ddsi.web.controllers.PanelController;
+import ar.edu.utn.frba.ddsi.web.controllers.RecepcionController;
 import ar.edu.utn.frba.ddsi.web.controllers.RegistroController;
 import ar.edu.utn.frba.ddsi.web.controllers.SesionController;
 import ar.edu.utn.frba.ddsi.web.middlewares.AutorizacionMiddleware;
@@ -30,10 +31,11 @@ public class Router {
     private final PanelController panel;
     private final NecesidadesController necesidades;
     private final DonacionesAsignadasController donacionesAsignadas;
+    private final RecepcionController recepcion;
 
     public Router(AutorizacionMiddleware autorizacion, HomeController home, SesionController sesion,
             RegistroController registro, PanelController panel, NecesidadesController necesidades,
-            DonacionesAsignadasController donacionesAsignadas) {
+            DonacionesAsignadasController donacionesAsignadas, RecepcionController recepcion) {
         this.autorizacion = autorizacion;
         this.home = home;
         this.sesion = sesion;
@@ -41,6 +43,7 @@ public class Router {
         this.panel = panel;
         this.necesidades = necesidades;
         this.donacionesAsignadas = donacionesAsignadas;
+        this.recepcion = recepcion;
     }
 
     public void registrar(Javalin app) {
@@ -70,6 +73,8 @@ public class Router {
         app.post("/entidad/necesidades", necesidades::crear, ENTIDAD_BENEFICIARIA);
         app.post("/entidad/necesidades/{id}/eliminar", necesidades::eliminar, ENTIDAD_BENEFICIARIA);
         app.get("/entidad/donaciones", donacionesAsignadas::listar, ENTIDAD_BENEFICIARIA);
+        app.get("/entidad/donaciones/{id}/recepcion", recepcion::mostrar, ENTIDAD_BENEFICIARIA);
+        app.post("/entidad/donaciones/{id}/recepcion", recepcion::confirmar, ENTIDAD_BENEFICIARIA);
 
         // --- Donante (B) ---
         app.get("/donante", panel::donante, DONANTE);
