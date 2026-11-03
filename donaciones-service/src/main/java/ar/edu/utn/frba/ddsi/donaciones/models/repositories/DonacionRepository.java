@@ -21,4 +21,6 @@ public interface DonacionRepository {
     List<Donacion> buscarPorEstado(TipoEstadoDonacion estadoBuscado);
 
     List<Donacion> buscarPorEntidad(Long entidadId);
+    List<Donacion> buscar(Long donanteId, TipoEstadoDonacion estado, Long categoriaId,
+                          List<Long> subcategoriaIds, Long entidadId);
 }

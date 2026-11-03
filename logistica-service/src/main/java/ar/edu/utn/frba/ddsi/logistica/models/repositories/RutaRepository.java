@@ -20,4 +20,6 @@ public interface RutaRepository {
     List<Ruta> buscarRutasActivasPorCamion(Long idCamion);
 
     Ruta buscarRutaDelCamion(Long idCamion);
+
+    List<Ruta> buscarRutasActivasFiltradas(Long entidadId, List<Long> donacionIds);
 }

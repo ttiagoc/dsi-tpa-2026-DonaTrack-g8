@@ -5,8 +5,11 @@ import static ar.edu.utn.frba.ddsi.web.sesion.RolUsuario.DONANTE;
 import static ar.edu.utn.frba.ddsi.web.sesion.RolUsuario.ENTIDAD_BENEFICIARIA;
 
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
+
 
 import ar.edu.utn.frba.ddsi.web.controllers.DonacionesAsignadasController;
+import ar.edu.utn.frba.ddsi.web.controllers.DonanteWebController;
 import ar.edu.utn.frba.ddsi.web.controllers.HomeController;
 import ar.edu.utn.frba.ddsi.web.controllers.MapaController;
 import ar.edu.utn.frba.ddsi.web.controllers.NecesidadesController;
@@ -34,10 +37,15 @@ public class Router {
     private final DonacionesAsignadasController donacionesAsignadas;
     private final RecepcionController recepcion;
     private final MapaController mapa;
+    private final DonanteWebController donanteWeb;
 
+
+    @Autowired
     public Router(AutorizacionMiddleware autorizacion, HomeController home, SesionController sesion,
             RegistroController registro, PanelController panel, NecesidadesController necesidades,
-            DonacionesAsignadasController donacionesAsignadas, RecepcionController recepcion, MapaController mapa) {
+            DonacionesAsignadasController donacionesAsignadas, RecepcionController recepcion, MapaController mapa,
+            DonanteWebController donanteWeb) {
+
         this.autorizacion = autorizacion;
         this.home = home;
         this.sesion = sesion;
@@ -47,6 +55,14 @@ public class Router {
         this.donacionesAsignadas = donacionesAsignadas;
         this.recepcion = recepcion;
         this.mapa = mapa;
+        this.donanteWeb = donanteWeb;
+    }
+
+  // Sobrecarga para tests
+    public Router(AutorizacionMiddleware autorizacion, HomeController home, SesionController sesion,
+                  RegistroController registro, PanelController panel, NecesidadesController necesidades,
+                  DonacionesAsignadasController donacionesAsignadas, RecepcionController recepcion, MapaController mapa) {
+      this(autorizacion, home, sesion, registro, panel, necesidades, donacionesAsignadas, recepcion, mapa, null);
     }
 
     public void registrar(Javalin app) {
@@ -71,7 +87,7 @@ public class Router {
         app.get("/registro/entidad", registro::formEntidad);
         app.post("/registro/entidad", registro::registrarEntidad);
 
-        // --- Entidad beneficiaria (A) ---
+        // --- Entidad beneficiaria (A + B) ---
         app.get("/entidad", panel::entidad, ENTIDAD_BENEFICIARIA);
         app.get("/entidad/necesidades", necesidades::listar, ENTIDAD_BENEFICIARIA);
         app.post("/entidad/necesidades", necesidades::crear, ENTIDAD_BENEFICIARIA);
@@ -79,9 +95,20 @@ public class Router {
         app.get("/entidad/donaciones", donacionesAsignadas::listar, ENTIDAD_BENEFICIARIA);
         app.get("/entidad/donaciones/{id}/recepcion", recepcion::mostrar, ENTIDAD_BENEFICIARIA);
         app.post("/entidad/donaciones/{id}/recepcion", recepcion::confirmar, ENTIDAD_BENEFICIARIA);
+        if( donanteWeb != null ) {
+          app.get("/entidad/notificaciones", donanteWeb::notificacionesEntidad, ENTIDAD_BENEFICIARIA);
+          app.get("/entidad/seguimiento", donanteWeb::seguimientoEntidad, ENTIDAD_BENEFICIARIA);
+        }
 
         // --- Donante (B) ---
         app.get("/donante", panel::donante, DONANTE);
+        if(donanteWeb != null) {
+          app.get("/donante/donaciones", donanteWeb::misDonaciones, DONANTE);
+          app.get("/donante/entidades", donanteWeb::entidades, DONANTE);
+          app.get("/donante/incentivos", donanteWeb::incentivos, DONANTE);
+          app.get("/donante/notificaciones", donanteWeb::notificacionesDonante, DONANTE);
+          app.get("/donante/seguimiento", donanteWeb::seguimientoDonante, DONANTE);
+        }
 
         // --- Administrador (C) ---
         app.get("/admin", panel::admin, ADMINISTRADOR);

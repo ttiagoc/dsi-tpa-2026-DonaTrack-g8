@@ -31,6 +31,7 @@ public class DonacionesApiClient extends ApiClient {
         super(donacionesUrl, http, mapper, auth);
     }
 
+
     // ---- Catalogo (publico) ----
 
     /** Categorias con sus subcategorias, para los selects agrupados. */
@@ -83,6 +84,23 @@ public class DonacionesApiClient extends ApiClient {
     }
 
     public DonacionResponse confirmarRecepcion(Context ctx, Long id, List<String> fotosUrl) {
-        return post(ctx, "/donaciones/" + id + "/recepcion", Map.of("fotosUrl", fotosUrl), DonacionResponse.class);
+      return post(ctx, "/donaciones/" + id + "/recepcion", Map.of("fotosUrl", fotosUrl), DonacionResponse.class);
+    }
+
+    public List<Map<String, Object>> buscarDonaciones(Context ctx, Long donanteId, String estado, Long categoriaId) {
+        StringBuilder query = new StringBuilder("/donaciones?");
+        if (donanteId != null) query.append("donanteId=").append(donanteId).append("&");
+        if (estado != null && !estado.isBlank()) query.append("estado=").append(estado).append("&");
+        if (categoriaId != null) query.append("categoriaId=").append(categoriaId).append("&");
+        return get(ctx, query.toString(), new TypeReference<List<Map<String, Object>>>() {});
+    }
+    public List<Map<String, Object>> obtenerCategorias(Context ctx) {
+        return get(ctx, "/categorias", new TypeReference<List<Map<String, Object>>>() {});
+    }
+    public List<Map<String, Object>> obtenerEntidades(Context ctx) {
+        return get(ctx, "/entidad-beneficiaria", new TypeReference<List<Map<String, Object>>>() {});
+    }
+    public Map<String, Object> obtenerIncentivos(Context ctx, Long donanteId) {
+        return get(ctx, "/donantes/" + donanteId + "/incentivos", new TypeReference<Map<String, Object>>() {});
     }
 }

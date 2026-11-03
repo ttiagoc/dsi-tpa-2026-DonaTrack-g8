@@ -15,10 +15,11 @@ public class NotificacionRequest {
     private TipoContacto tipoContacto;
     private String mensaje;
     private String tipoEvento;
+    private String tipoDestinatario;
     private Long destinatarioId;
     private Long donacionId;
 
     public NotificacionRequest(String valor, TipoContacto tipoContacto, String mensaje) {
-        this(valor, tipoContacto, mensaje, null, null, null);
+        this(valor, tipoContacto, mensaje, null, null, null, null);
     }
 }

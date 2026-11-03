@@ -152,4 +152,32 @@ class NotificacionRepositoryJpaTest extends PersistenciaTest {
 
     assertTrue(notificaciones.findById(id).isEmpty());
   }
+
+  @Test
+  @DisplayName("findByDestinatario recupera solo las notificaciones del destinatario y tipo especificado")
+  void recuperaNotificacionesPorDestinatarioYTipo() {
+    MedioContacto contacto = new MedioContacto("juan@mail.com", TipoContacto.EMAIL);
+    // Notificación 1: Donante con ID 10
+    Notificacion notifDonante = new Notificacion(
+        "Donación asignada", contacto, "DONACION_ASIGNADA", "DONANTE", 10L, 1L
+    );
+    notifDonante.setFechaDeEnvio(LocalDateTime.now().minusHours(1));
+    // Notificación 2: Entidad con el MISMO ID 10
+    Notificacion notifEntidad = new Notificacion(
+        "Tenés una nueva donación para recibir", contacto, "DONACION_ASIGNADA", "ENTIDAD", 10L, 1L
+    );
+    notifEntidad.setFechaDeEnvio(LocalDateTime.now());
+    notificaciones.save(notifDonante);
+    notificaciones.save(notifEntidad);
+    nuevoRequest();
+    List<Notificacion> paraDonante = notificaciones.findByDestinatario(10L, "DONANTE");
+    List<Notificacion> paraEntidad = notificaciones.findByDestinatario(10L, "ENTIDAD");
+    assertEquals(1, paraDonante.size());
+    assertEquals("Donación asignada", paraDonante.get(0).getMensaje());
+    assertEquals("DONANTE", paraDonante.get(0).getTipoDestinatario());
+    assertEquals(1, paraEntidad.size());
+    assertEquals("Tenés una nueva donación para recibir", paraEntidad.get(0).getMensaje());
+    assertEquals("ENTIDAD", paraEntidad.get(0).getTipoDestinatario());
+  }
+
 }

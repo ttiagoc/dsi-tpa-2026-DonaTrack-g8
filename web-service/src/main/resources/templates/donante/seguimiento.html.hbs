@@ -1,0 +1,83 @@
+{{#partial "titulo"}}Seguimiento en Vivo — DonaTrack{{/partial}}
+
+{{#partial "head"}}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+{{/partial}}
+
+{{#partial "contenido"}}
+<section class="panel">
+  <div class="panel__encabezado">
+    <h1>Seguimiento de Entregas en Vivo</h1>
+    <p>Ubicación en tiempo real de los camiones con donaciones asignadas en viaje.</p>
+  </div>
+
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <div id="mapa-seguimiento" style="height: 450px; width: 100%; border-radius: 6px;"></div>
+  </div>
+
+  <h3>Camiones y Rutas en Traslado</h3>
+  <div class="grid grid--2">
+    {{#if rutas}}
+      {{#each rutas}}
+        <div class="card card--borde">
+          <h4>Camión Patente: {{this.patenteCamion}}</h4>
+          <p><strong>Chofer:</strong> {{this.chofer}}</p>
+          <p><strong>Velocidad:</strong> {{this.velocidad}} km/h</p>
+          <p><strong>Última actualización:</strong> {{this.ultimaActualizacion}}</p>
+          <h5>Paradas de la ruta:</h5>
+          <ul>
+            {{#each this.paradas}}
+              <li>Parada #{{this.orden}}: {{this.destino}} ({{this.estado}})</li>
+            {{/each}}
+          </ul>
+        </div>
+      {{/each}}
+    {{else}}
+      <div class="alerta alerta--info">
+        No hay entregas en traslado activo en este momento.
+      </div>
+    {{/if}}
+  </div>
+</section>
+{{/partial}}
+
+{{#partial "scripts"}}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Inicializar mapa centrado en Buenos Aires por defecto
+    var map = L.map('mapa-seguimiento').setView([-34.6037, -58.3816], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Rutas enviadas por el servidor
+    var rutas = [
+      {{#each rutas}}
+        {{#if this.latitud}}
+          {
+            patente: "{{this.patenteCamion}}",
+            chofer: "{{this.chofer}}",
+            lat: {{this.latitud}},
+            lng: {{this.longitud}},
+            actualizacion: "{{this.ultimaActualizacion}}"
+          },
+        {{/if}}
+      {{/each}}
+    ];
+
+    if (rutas.length > 0) {
+      var bounds = [];
+      rutas.forEach(function (r) {
+        var marker = L.marker([r.lat, r.lng]).addTo(map);
+        marker.bindPopup("<b>Camión: " + r.patente + "</b><br>Chofer: " + r.chofer + "<br>Última actualización: " + r.actualizacion).openPopup();
+        bounds.push([r.lat, r.lng]);
+      });
+      map.fitBounds(bounds, { padding: [50, 50] });
+    }
+  });
+</script>
+{{/partial}}
+
+{{> layouts/base}}

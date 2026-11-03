@@ -37,4 +37,6 @@ public interface DonacionService {
     DonacionResponse confirmarRecepcion(Long id, SubirFotosRecepcionRequest request);
 
     void confirmarEntregaExitosa(ConfirmacionEntregaExitosaRequest request);
+
+    List<DonacionResponse> buscar(Long donanteId, String estado, Long categoriaId, List<Long> subcategoriasIds, Long entidadId);
 }

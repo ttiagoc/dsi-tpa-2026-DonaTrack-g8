@@ -208,4 +208,47 @@ public class RutaServiceImpl implements RutaService {
     public UbicacionResponse obtenerUbicacionActual(Long id) {
         return monitorDeRutas.obtenerUltimaUbicacionPorRuta(id);
     }
+
+    @Override
+    public List<ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaSeguimientoResponse> obtenerRutasActivas(Long entidadId, List<Long> donacionIds) {
+      List<Ruta> rutas = rutaRepository.buscarRutasActivasFiltradas(entidadId, donacionIds);
+      return rutas.stream()
+          .map(this::toRutaSeguimientoResponse)
+          .collect(Collectors.toList());
+    }
+
+    private ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaSeguimientoResponse toRutaSeguimientoResponse(Ruta ruta) {
+      Camion camion = ruta.getCamion();
+      String patente = camion != null ? camion.getPatente() : null;
+      String chofer = (camion != null && camion.getChofer() != null)
+          ? camion.getChofer().getNombre() + " " + camion.getChofer().getApellido()
+          : null;
+
+      Double latitud = null;
+      Double longitud = null;
+      Double velocidad = null;
+      java.time.LocalDateTime ultimaActualizacion = null;
+
+      if (camion != null && camion.getUbicacion() != null) {
+        latitud = camion.getUbicacion().getLatitud();
+        longitud = camion.getUbicacion().getLongitud();
+        velocidad = camion.getUbicacion().getVelocidad();
+        ultimaActualizacion = camion.getUbicacion().getTimestamp();
+      }
+
+      List<ParadaResponse> paradas = ruta.getParadas().stream()
+          .map(this::toParadaResponse)
+          .collect(Collectors.toList());
+
+      return new ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaSeguimientoResponse(
+          ruta.getId(),
+          patente,
+          chofer,
+          latitud,
+          longitud,
+          velocidad,
+          ultimaActualizacion,
+          paradas
+      );
+    }
 }

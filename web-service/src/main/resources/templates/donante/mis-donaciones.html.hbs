@@ -1,0 +1,81 @@
+{{#partial "titulo"}}Mis Donaciones — DonaTrack{{/partial}}
+
+{{#partial "contenido"}}
+<section class="panel">
+  <div class="panel__encabezado">
+    <h1>Mis Donaciones</h1>
+    <p>Revisá el historial de tus donaciones realizadas y filtralas por estado o categoría.</p>
+  </div>
+
+  {{!-- Formulario de Filtros (GET) --}}
+  <form method="get" action="/donante/donaciones" class="filtros card card--borde">
+    <div class="grid grid--3">
+      <div class="campo">
+        <label for="estado">Estado</label>
+        <select name="estado" id="estado" class="campo__control">
+          <option value="">Todos los estados</option>
+          <option value="PENDIENTE">Pendiente</option>
+          <option value="EN_DEPOSITO">En depósito</option>
+          <option value="ASIGNADA">Asignada</option>
+          <option value="EN_DISTRIBUCION">En distribución</option>
+          <option value="ENTREGADA">Entregada</option>
+          <option value="ENTREGA_FALLIDA">Entrega fallida</option>
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="categoriaId">Categoría</label>
+        <select name="categoriaId" id="categoriaId" class="campo__control">
+          <option value="">Todas las categorías</option>
+          {{#each categorias}}
+            <option value="{{this.id}}">{{this.nombre}}</option>
+          {{/each}}
+        </select>
+      </div>
+
+      <div class="campo campo--acciones" style="display: flex; align-items: flex-end; gap: 0.5rem;">
+        <button type="submit" class="boton boton--primario">Filtrar</button>
+        <a href="/donante/donaciones" class="boton boton--secundario">Limpiar</a>
+      </div>
+    </div>
+  </form>
+
+  {{!-- Tabla de Donaciones --}}
+  <div class="tabla-responsive card">
+    {{#if donaciones}}
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th>Bienes / Artículos</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each donaciones}}
+            <tr>
+              <td><strong>#{{this.id}}</strong></td>
+              <td>{{this.fecha}}</td>
+              <td><span class="badge badge--estado">{{this.estadoActual}}</span></td>
+              <td>
+                <ul class="lista-bienes">
+                  {{#each this.bienes}}
+                    <li>{{this.cantidad}}x {{this.descripcion}}</li>
+                  {{/each}}
+                </ul>
+              </td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    {{else}}
+      <div class="alerta alerta--info" style="margin: 1.5rem;">
+        No se encontraron donaciones registradas con los filtros seleccionados.
+      </div>
+    {{/if}}
+  </div>
+</section>
+{{/partial}}
+
+{{> layouts/base}}

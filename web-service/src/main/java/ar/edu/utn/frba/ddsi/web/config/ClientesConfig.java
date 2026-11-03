@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Configuration;
 import ar.edu.utn.frba.ddsi.web.clients.ApiClient;
 import ar.edu.utn.frba.ddsi.web.clients.AuthApiClient;
 import ar.edu.utn.frba.ddsi.web.clients.DonacionesApiClient;
+import ar.edu.utn.frba.ddsi.web.clients.LogisticaApiClient;
+import ar.edu.utn.frba.ddsi.web.clients.NotificacionesApiClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -34,5 +36,17 @@ public class ClientesConfig {
     public DonacionesApiClient donacionesApiClient(WebConfig config, HttpClient http, ObjectMapper mapper,
             AuthApiClient auth) {
         return new DonacionesApiClient(config.getApi().getDonacionesUrl(), http, mapper, auth);
+    }
+
+    @Bean
+    public NotificacionesApiClient notificacionesApiClient(WebConfig config, HttpClient http,
+            ObjectMapper mapper, AuthApiClient auth) {
+      return new NotificacionesApiClient(config.getApi().getNotificacionesUrl(), http, mapper, auth);
+    }
+
+    @Bean
+    public LogisticaApiClient logisticaApiClient(WebConfig config, HttpClient http,
+            ObjectMapper mapper, AuthApiClient auth) {
+      return new LogisticaApiClient(config.getApi().getLogisticaUrl(), http, mapper, auth);
     }
 }

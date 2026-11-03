@@ -26,4 +26,8 @@ public interface RutaService {
     void registrarEntregaNoRecibida(Long rutaId, Long paradaId);
 
     UbicacionResponse obtenerUbicacionActual(Long id);
+
+    List<ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaSeguimientoResponse> obtenerRutasActivas(Long entidadId, List<Long> donacionIds);
+
+
 }

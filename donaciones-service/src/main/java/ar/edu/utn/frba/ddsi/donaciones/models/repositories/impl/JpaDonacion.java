@@ -40,9 +40,52 @@ public class JpaDonacion extends RepositorioJpa<Donacion> implements DonacionRep
     // las mas recientes primero
     @Override
     public List<Donacion> buscarPorEntidad(Long entidadId) {
-        return createQuery("select d from Donacion d where d.entidadBeneficiariaAsignada.id = :entidadId"
-                + " order by d.fecha desc, d.id desc", Donacion.class)
-                .setParameter("entidadId", entidadId)
-                .getResultList();
+      return createQuery("select d from Donacion d where d.entidadBeneficiariaAsignada.id = :entidadId"
+          + " order by d.fecha desc, d.id desc", Donacion.class)
+          .setParameter("entidadId", entidadId)
+          .getResultList();
+    }
+
+    @Override
+    public List<Donacion> buscar(Long donanteId, TipoEstadoDonacion estado, Long categoriaId,
+                                 List<Long> subcategoriaIds, Long entidadId) {
+      StringBuilder jpq1 = new StringBuilder("select distinct d from Donacion d left join d.subcategoria s left join s.categoria c where 1=1");
+
+      if (donanteId != null) {
+        jpq1.append(" and d.donante.id = :donanteId");
+      }
+      if (estado != null) {
+        jpq1.append(" and d.estadoActual = :estado");
+      }
+      if (categoriaId != null) {
+        jpq1.append(" and c.id = :categoriaId");
+      }
+      if (subcategoriaIds != null && !subcategoriaIds.isEmpty()) {
+        jpq1.append(" and s.id in :subcategoriaIds");
+      }
+      if (entidadId != null) {
+        jpq1.append(" and d.entidadBeneficiariaAsignada.id = :entidadId");
+      }
+
+      jpq1.append(" Order by d.fecha desc");
+
+      var query = createQuery(jpq1.toString(), Donacion.class);
+
+      if (donanteId != null) {
+        query.setParameter("donanteId", donanteId);
+      }
+      if (estado != null) {
+        query.setParameter("estado", estado);
+      }
+      if (categoriaId != null) {
+        query.setParameter("categoriaId", categoriaId);
+      }
+      if (subcategoriaIds != null && !subcategoriaIds.isEmpty()) {
+        query.setParameter("subcategoriaIds", subcategoriaIds);
+      }
+      if (entidadId != null) {
+        query.setParameter("entidadId", entidadId);
+      }
+      return query.getResultList();
     }
 }

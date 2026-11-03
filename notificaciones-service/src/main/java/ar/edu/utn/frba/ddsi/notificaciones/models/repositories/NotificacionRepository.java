@@ -14,4 +14,6 @@ public interface NotificacionRepository {
     List<Notificacion> findAll();
 
     boolean deleteById(Long id);
+
+    List<Notificacion> findByDestinatario(Long destinatarioId, String tipoDestinatario);
 }

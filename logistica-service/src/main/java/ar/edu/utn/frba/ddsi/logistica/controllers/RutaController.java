@@ -94,5 +94,21 @@ public class RutaController implements JavalinController {
             planificadorDeRutas.ejecutarPlanificacion(request);
             ctx.status(204);
         });
+
+        app.get("/api/rutas/activas", ctx -> {
+          String entidadIdStr = ctx.queryParam("entidadId");
+          Long entidadId = (entidadIdStr != null && !entidadIdStr.isBlank()) ? Long.parseLong(entidadIdStr) : null;
+          java.util.List<Long> donacionIds = null;
+          String donacionesStr = ctx.queryParam("donacionIds");
+          if (donacionesStr != null && !donacionesStr.isBlank()) {
+            donacionIds = java.util.Arrays.stream(donacionesStr.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(Long::parseLong)
+                .toList();
+          }
+          ctx.json(rutaService.obtenerRutasActivas(entidadId, donacionIds));
+        });
+
     }
 }

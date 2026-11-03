@@ -332,4 +332,17 @@ public class DonacionServiceImpl implements DonacionService {
                         "No existe la subcategoria '" + subcategoria.nombre() + "' en el catalogo"));
     }
 
+    @Override
+    public List<DonacionResponse> buscar(Long donanteId, String estado, Long categoriaId,
+                                         List<Long> subcategoriaIds, Long entidadId) {
+      TipoEstadoDonacion estadoEnum = null;
+      if(estado != null && !estado.isBlank()) {
+        estadoEnum = toTipoEstadoDonacion(estado);
+      }
+      return donacionRepository.buscar(donanteId, estadoEnum, categoriaId, subcategoriaIds,
+              entidadId).stream()
+          .map(this::toDonacionResponse)
+          .collect(Collectors.toList());
+    }
+
 }

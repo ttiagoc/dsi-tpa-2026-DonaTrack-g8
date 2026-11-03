@@ -1,0 +1,37 @@
+{{#partial "titulo"}}Catálogo de Entidades — DonaTrack{{/partial}}
+
+{{#partial "contenido"}}
+<section class="panel">
+  <div class="panel__encabezado">
+    <h1>Entidades Beneficiarias</h1>
+    <p>Conocé las organizaciones que reciben donaciones y cuáles son sus necesidades actuales.</p>
+  </div>
+
+  <div class="grid grid--3">
+    {{#each entidades}}
+      <article class="card card--borde">
+        <header class="card__header">
+          <h3>{{this.nombre}}</h3>
+          <span class="badge badge--secundario">{{this.tipo}}</span>
+        </header>
+        <div class="card__cuerpo">
+          <p><strong>Dirección:</strong> {{this.direccion}}</p>
+          <hr style="margin: 0.75rem 0; opacity: 0.2;">
+          <h4>Necesidades solicitadas:</h4>
+          {{#if this.necesidades}}
+            <ul style="padding-left: 1.25rem;">
+              {{#each this.necesidades}}
+                <li>{{this.descripcion}} ({{this.cantidad}} un.)</li>
+              {{/each}}
+            </ul>
+          {{else}}
+            <p class="texto--apagado" style="font-size: 0.9rem;">Sin necesidades urgentes registradas.</p>
+          {{/if}}
+        </div>
+      </article>
+    {{/each}}
+  </div>
+</section>
+{{/partial}}
+
+{{> layouts/base}}

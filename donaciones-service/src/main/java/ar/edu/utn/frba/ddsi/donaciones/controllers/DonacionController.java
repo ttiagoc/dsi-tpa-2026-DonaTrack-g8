@@ -28,22 +28,43 @@ public class DonacionController implements JavalinController {
     }
 
     @Override
-    public void registerRoutes(Javalin app) {
-        // ?entidadId=X: las asignadas a esa entidad (la entidad solo pide las suyas). Sin filtro, solo admin y servicios.
+      public void registerRoutes(Javalin app) {
+        // GET /api/donaciones con filtros (donanteId, entidadId, estado, categoriaId, subcategoriaIds)
         app.get("/api/donaciones", ctx -> {
-            String entidadId = ctx.queryParam("entidadId");
-            if (entidadId != null && !entidadId.isBlank()) {
-                Long id = Long.parseLong(entidadId);
-                Autorizacion.exigirPropietario(ctx, ENTIDAD_BENEFICIARIA, id);
-                ctx.json(donacionService.obtenerPorEntidad(id));
-                return;
-            }
+          String donanteIdStr = ctx.queryParam("donanteId");
+          Long donanteId = (donanteIdStr != null && !donanteIdStr.isBlank()) ? Long.parseLong(donanteIdStr) : null;
+          if (donanteId != null) {
+            Autorizacion.exigirPropietario(ctx, DONANTE, donanteId);
+          }
+
+          String entidadIdStr = ctx.queryParam("entidadId");
+          Long entidadId = (entidadIdStr != null && !entidadIdStr.isBlank()) ? Long.parseLong(entidadIdStr) : null;
+          if (entidadId != null) {
+            Autorizacion.exigirPropietario(ctx, ENTIDAD_BENEFICIARIA, entidadId);
+          }
+
+          if (donanteId == null && entidadId == null) {
             Autorizacion.exigir(Autorizacion.esPrivilegiado(ctx));
-            ctx.json(donacionService.obtenerTodas());
-        }, ENTIDAD_BENEFICIARIA, ADMINISTRADOR, SISTEMA);
+          }
+
+          String estado = ctx.queryParam("estado");
+          String categoriaIdStr = ctx.queryParam("categoriaId");
+          Long categoriaId = (categoriaIdStr != null && !categoriaIdStr.isBlank()) ? Long.parseLong(categoriaIdStr) : null;
+
+          List<Long> subcategoriaIds = null;
+          String subcatStr = ctx.queryParam("subcategoriaIds");
+          if (subcatStr != null && !subcatStr.isBlank()) {
+            subcategoriaIds = Arrays.stream(subcatStr.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(Long::parseLong)
+                .toList();
+          }
+
+          ctx.json(donacionService.buscar(donanteId, estado, categoriaId, subcategoriaIds, entidadId));
+        }, DONANTE, ENTIDAD_BENEFICIARIA, ADMINISTRADOR, SISTEMA);
 
         // publico (req. 2, mapa de entregas): las donaciones entregadas por entidad, sin datos del donante.
-        // Va antes de /{id} para que "entregadas" no se tome como un id.
         app.get("/api/donaciones/entregadas", ctx -> ctx.json(donacionService.obtenerEntregasPorEntidad()));
 
         // la ve su donante, la entidad a la que se asigno, el administrador y los servicios

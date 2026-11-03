@@ -44,4 +44,24 @@ public class JpaRuta extends RepositorioJpa<Ruta> implements RutaRepository {
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("El camión no tiene ninguna ruta."));
     }
+
+    @Override
+    public List<Ruta> buscarRutasActivasFiltradas(Long entidadId, List<Long> donacionIds) {
+      StringBuilder jpql = new StringBuilder("select distinct r from Ruta r join r.paradas p where r.estado = :enTraslado");
+      if (entidadId != null) {
+        jpql.append(" and p.entidadId = :entidadId");
+      }
+      if (donacionIds != null && !donacionIds.isEmpty()) {
+        jpql.append(" and exists (select d from p.donacionIds d where d in :donacionIds)");
+      }
+      var query = createQuery(jpql.toString(), Ruta.class)
+          .setParameter("enTraslado", EstadoRuta.EN_TRASLADO);
+      if (entidadId != null) {
+        query.setParameter("entidadId", entidadId);
+      }
+      if (donacionIds != null && !donacionIds.isEmpty()) {
+        query.setParameter("donacionIds", donacionIds);
+      }
+      return query.getResultList();
+    }
 }

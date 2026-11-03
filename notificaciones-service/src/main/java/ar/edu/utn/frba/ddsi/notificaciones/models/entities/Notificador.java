@@ -43,6 +43,7 @@ public class Notificador {
             notificacionRequest.getMensaje(),
             contacto,
             notificacionRequest.getTipoEvento(),
+            notificacionRequest.getTipoDestinatario(),
             notificacionRequest.getDestinatarioId(),
             notificacionRequest.getDonacionId()
         );
