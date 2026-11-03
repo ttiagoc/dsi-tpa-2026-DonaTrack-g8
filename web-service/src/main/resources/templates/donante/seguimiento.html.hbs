@@ -1,58 +1,79 @@
-{{#partial "titulo"}}Seguimiento en Vivo — DonaTrack{{/partial}}
+{{#partial "titulo"}}Seguimiento en Vivo · DonaTrack{{/partial}}
 
 {{#partial "head"}}
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 {{/partial}}
 
 {{#partial "contenido"}}
-<section class="panel">
-  <div class="panel__encabezado">
-    <h1>Seguimiento de Entregas en Vivo</h1>
-    <p>Ubicación en tiempo real de los camiones con donaciones asignadas en viaje.</p>
+<header class="encabezado-pagina">
+  <div>
+    <h1>Seguimiento en vivo</h1>
+    <p class="texto-suave">Ubicación en tiempo real de los camiones con donaciones en viaje.</p>
   </div>
+</header>
 
-  <div class="card" style="margin-bottom: 1.5rem;">
-    <div id="mapa-seguimiento" style="height: 450px; width: 100%; border-radius: 6px;"></div>
-  </div>
+{{!-- Mapa interactivo --}}
+<div class="tarjeta" style="padding: 0; overflow: hidden; margin-bottom: var(--espacio-5);">
+  <div id="mapa-seguimiento" style="height: 480px; width: 100%;"></div>
+</div>
 
-  <h3>Camiones y Rutas en Traslado</h3>
-  <div class="grid grid--2">
-    {{#if rutas}}
-      {{#each rutas}}
-        <div class="card card--borde">
-          <h4>Camión Patente: {{this.patenteCamion}}</h4>
-          <p><strong>Chofer:</strong> {{this.chofer}}</p>
-          <p><strong>Velocidad:</strong> {{this.velocidad}} km/h</p>
-          <p><strong>Última actualización:</strong> {{this.ultimaActualizacion}}</p>
-          <h5>Paradas de la ruta:</h5>
-          <ul>
-            {{#each this.paradas}}
-              <li>Parada #{{this.orden}}: {{this.destino}} ({{this.estado}})</li>
-            {{/each}}
-          </ul>
-        </div>
-      {{/each}}
-    {{else}}
-      <div class="alerta alerta--info">
-        No hay entregas en traslado activo en este momento.
-      </div>
-    {{/if}}
+<h2 style="font-size: 1.25rem; margin-bottom: var(--espacio-3);">Camiones y entregas en traslado</h2>
+
+{{#if rutas}}
+  <div class="grilla grilla--2">
+    {{#each rutas}}
+      <article class="tarjeta">
+        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--espacio-3);">
+          <div style="display: flex; align-items: center; gap: var(--espacio-2);">
+            <span style="font-size: 1.75rem;">🚚</span>
+            <div>
+              <h3 style="font-size: 1.1rem; margin: 0;">Camión {{this.patenteCamion}}</h3>
+              <p class="texto-suave" style="font-size: var(--texto-chico); margin: 0;">Chofer: {{this.chofer}}</p>
+            </div>
+          </div>
+          {{#if this.velocidad}}
+            <span class="etiqueta etiqueta--ok">{{this.velocidad}} km/h</span>
+          {{/if}}
+        </header>
+
+        <h4 style="font-size: 0.95rem; margin-bottom: var(--espacio-2);">Paradas del recorrido:</h4>
+        <ul style="padding-left: 1.25rem; margin: 0;" class="texto-suave">
+          {{#each this.paradas}}
+            <li style="margin-bottom: var(--espacio-1);">
+              <strong>Parada #{{this.orden}}:</strong> {{this.destino}} ({{this.estado}})
+            </li>
+          {{/each}}
+        </ul>
+      </article>
+    {{/each}}
   </div>
-</section>
+{{else}}
+  <section class="tarjeta vacio">
+    <strong>No hay entregas en traslado activo.</strong>
+    Cuando un camión inicie el recorrido hacia el destino, vas a poder seguirlo en el mapa acá.
+  </section>
+{{/if}}
 {{/partial}}
 
 {{#partial "scripts"}}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    // Inicializar mapa centrado en Buenos Aires por defecto
-    var map = L.map('mapa-seguimiento').setView([-34.6037, -58.3816], 12);
+    var map = L.map('mapa-seguimiento').setView([-34.6037, -58.3816], 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Rutas enviadas por el servidor
+    // Ícono de Camión con sombra y centrado
+    var iconoCamion = L.divIcon({
+      className: 'marcador-camion',
+      html: '<div style="font-size: 32px; line-height: 1; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.4)); transform: scaleX(-1);">🚚</div>',
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
+      popupAnchor: [0, -18]
+    });
+
     var rutas = [
       {{#each rutas}}
         {{#if this.latitud}}
@@ -61,6 +82,7 @@
             chofer: "{{this.chofer}}",
             lat: {{this.latitud}},
             lng: {{this.longitud}},
+            velocidad: "{{this.velocidad}}",
             actualizacion: "{{this.ultimaActualizacion}}"
           },
         {{/if}}
@@ -70,11 +92,11 @@
     if (rutas.length > 0) {
       var bounds = [];
       rutas.forEach(function (r) {
-        var marker = L.marker([r.lat, r.lng]).addTo(map);
-        marker.bindPopup("<b>Camión: " + r.patente + "</b><br>Chofer: " + r.chofer + "<br>Última actualización: " + r.actualizacion).openPopup();
+        var marker = L.marker([r.lat, r.lng], { icon: iconoCamion }).addTo(map);
+        marker.bindPopup("<b>Camión: " + r.patente + "</b><br>Chofer: " + r.chofer + "<br>Velocidad: " + r.velocidad + " km/h").openPopup();
         bounds.push([r.lat, r.lng]);
       });
-      map.fitBounds(bounds, { padding: [50, 50] });
+      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 15 });
     }
   });
 </script>

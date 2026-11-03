@@ -493,6 +493,64 @@ package "Microservicio Logistica" {
   }
 }
 
+package "Gamificación e Incentivos (Microservicio Donaciones)" {
+  class Insignia {
+    id : Long
+    nombre : String
+    descripcion : String
+    iconoUrl : String
+  }
+
+  class Mision {
+    id : Long
+    codigo : String
+    nombre : String
+    descripcion : String
+    meta : Integer
+    insignia : Insignia
+  }
+
+  class ProgresoMision {
+    id : Long
+    donanteId : Long
+    mision : Mision
+    progresoActual : Integer
+    cumplida : Boolean
+    fechaCumplimiento : LocalDateTime
+    actualizarProgreso(cantidad : int) : boolean
+  }
+
+  enum CategoriaDonante {
+    BRONCE
+    PLATA
+    ORO
+    DIAMANTE
+    getTitulo() : String
+    getMetaDonaciones() : int
+    determinarCategoria(totalDonaciones : long) : CategoriaDonante
+  }
+
+  interface GamificacionService {
+    obtenerIncentivos(donanteId : Long) : Map<String, Object>
+    evaluarProgresoDonante(donanteId : Long) : void
+  }
+
+  class GamificacionServiceImpl implements GamificacionService {
+    donacionRepository : DonacionRepository
+    misionRepository : MisionRepository
+    progresoRepository : ProgresoMisionRepository
+    donanteRepository : DonanteRepository
+    obtenerIncentivos(donanteId : Long) : Map<String, Object>
+    evaluarProgresoDonante(donanteId : Long) : void
+  }
+
+  class EntregaExitosaListener implements EventListener {
+    gamificacionService : GamificacionService
+    onEntregaExitosa(donacionId : Long) : void
+  }
+}
+
+
 Notificacion --> MedioContacto
 MedioContacto --> TipoContacto
 Notificador --> "*" EstrategiaNotificacion
@@ -614,5 +672,11 @@ Usuario ..> EntidadBeneficiaria : perfilId
 Email --> ProveedorEmail
 SMS --> ProveedorSMS
 WhatsApp --> ProveedorWhatsapp
+
+Mision "1" *--> "1" Insignia
+ProgresoMision "1" --> "1" Mision
+GamificacionServiceImpl ..> ProgresoMision
+GamificacionServiceImpl ..> CategoriaDonante
+EntregaExitosaListener --> GamificacionService
 
 @enduml

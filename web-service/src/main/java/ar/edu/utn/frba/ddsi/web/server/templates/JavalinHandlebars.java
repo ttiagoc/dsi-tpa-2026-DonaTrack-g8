@@ -3,6 +3,7 @@ package ar.edu.utn.frba.ddsi.web.server.templates;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Map;
+import java.nio.charset.StandardCharsets;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -34,6 +35,8 @@ public class JavalinHandlebars implements FileRenderer {
     private final Handlebars handlebars;
 
     public JavalinHandlebars() {
+        ClassPathTemplateLoader loader = new ClassPathTemplateLoader("/templates", EXTENSION);
+        loader.setCharset(StandardCharsets.UTF_8);
         this.handlebars = new Handlebars(new ClassPathTemplateLoader("/templates", EXTENSION))
                 .with(new ConcurrentMapTemplateCache());
         this.handlebars.registerHelpers(ConditionalHelpers.class);
@@ -42,6 +45,7 @@ public class JavalinHandlebars implements FileRenderer {
     @NotNull
     @Override
     public String render(@NotNull String filePath, @NotNull Map<String, ?> model, @NotNull Context context) {
+        context.contentType("text/html; charset=UTF-8");
         try {
             Template template = handlebars.compile(filePath.replace(EXTENSION, ""));
             com.github.jknack.handlebars.Context contexto = com.github.jknack.handlebars.Context.newBuilder(model)

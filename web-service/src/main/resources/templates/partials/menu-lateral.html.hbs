@@ -29,11 +29,18 @@
       <p class="menu-lateral__seccion">Donaciones</p>
       <a href="/entidad/donaciones" title="Asignadas" {{#if (eq rutaActual "/entidad/donaciones")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-paquete"/></svg> <span>Asignadas</span></a>
       {{!-- Persona B: "Seguimiento" (req. 14) va aca, con el icono #i-mapa --}}
+      <a href="/entidad/seguimiento" title="Seguimiento" {{#if (eq rutaActual "/entidad/seguimiento")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-mapa"/></svg> <span>Seguimiento</span></a>
+      <a href="/entidad/notificaciones" title="Notificaciones" {{#if (eq rutaActual "/entidad/notificaciones")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-campana"/></svg> <span>Notificaciones</span></a>
     {{/if}}
     {{#if usuario.esDonante}}
-      {{!-- --- Donante (B) --- --}}
-      <p class="menu-lateral__seccion">Mis donaciones</p>
-      <a href="/donante" title="Inicio" {{#if (eq rutaActual "/donante")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-inicio"/></svg> <span>Inicio</span></a>
+    {{!-- --- Donante (B) --- --}}
+        <p class="menu-lateral__seccion">Mi actividad</p>
+        <a href="/donante" title="Inicio" {{#if (eq rutaActual "/donante")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-inicio"/></svg> <span>Inicio</span></a>
+        <a href="/donante/donaciones" title="Mis donaciones" {{#if (eq rutaActual "/donante/donaciones")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-paquete"/></svg> <span>Mis donaciones</span></a>
+        <a href="/donante/entidades" title="Entidades" {{#if (eq rutaActual "/donante/entidades")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-edificio"/></svg> <span>Entidades</span></a>
+        <a href="/donante/incentivos" title="Incentivos" {{#if (eq rutaActual "/donante/incentivos")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-premio"/></svg> <span>Incentivos</span></a>
+        <a href="/donante/seguimiento" title="Seguimiento" {{#if (eq rutaActual "/donante/seguimiento")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-mapa"/></svg> <span>Seguimiento</span></a>
+        <a href="/donante/notificaciones" title="Notificaciones" {{#if (eq rutaActual "/donante/notificaciones")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-campana"/></svg> <span>Notificaciones</span></a>
     {{/if}}
     {{#if usuario.esAdmin}}
       {{!-- --- Administrador (C) --- --}}

@@ -1,65 +1,72 @@
-{{#partial "titulo"}}Mis Incentivos y Logros — DonaTrack{{/partial}}
+{{#partial "titulo"}}Incentivos y Logros · DonaTrack{{/partial}}
 
 {{#partial "contenido"}}
-<section class="panel">
-  <div class="panel__encabezado">
-    <h1>Mis Incentivos</h1>
-    <p>Tu impacto solidario en la comunidad. Completá misiones para subir de nivel y desbloquear insignias.</p>
+<header class="encabezado-pagina">
+  <div>
+    <h1>Mis incentivos</h1>
+    <p class="texto-suave">Tu impacto solidario. Completá misiones para subir de nivel y desbloquear insignias.</p>
+  </div>
+</header>
+
+{{#if incentivos}}
+  {{!-- Resumen de Nivel --}}
+  <div class="resumen" style="margin-bottom: var(--espacio-5);">
+    <div class="resumen__item resumen__item--ok">
+      <strong>{{incentivos.tituloCategoria}}</strong>
+      Nivel actual
+    </div>
+    <div class="resumen__item">
+      <strong>{{incentivos.totalDonaciones}}</strong>
+      Donaciones realizadas
+    </div>
   </div>
 
-  {{#if incentivos}}
-    {{!-- Resumen de Categoría y Nivel --}}
-    <div class="card card--destacada" style="margin-bottom: 2rem; background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 2rem; border-radius: 8px;">
-      <span style="text-transform: uppercase; letter-spacing: 1px; font-size: 0.85rem;">Categoría de Donante</span>
-      <h2 style="font-size: 2rem; margin: 0.5rem 0;">{{incentivos.tituloCategoria}}</h2>
-      <p style="font-size: 1.1rem; opacity: 0.9;">Llevás <strong>{{incentivos.totalDonaciones}}</strong> donaciones realizadas.</p>
-    </div>
-
-    {{!-- Misiones y Progreso --}}
-    <h2>Misiones</h2>
-    <div class="grid grid--2" style="margin-bottom: 2.5rem;">
-      {{#each incentivos.misiones}}
-        <div class="card card--borde">
-          <div style="display: flex; justify-content: space-between; align-items: start;">
-            <div>
-              <h3>{{this.nombre}}</h3>
-              <p style="font-size: 0.95rem; color: #64748b;">{{this.descripcion}}</p>
-            </div>
-            {{#if this.cumplida}}
-              <span class="badge badge--exito">¡Cumplida!</span>
-            {{else}}
-              <span class="badge">{{this.progresoActual}} / {{this.meta}}</span>
-            {{/if}}
+  {{!-- Misiones --}}
+  <h2 style="font-size: 1.25rem; margin-bottom: var(--espacio-3);">Misiones</h2>
+  <div class="grilla grilla--2" style="margin-bottom: var(--espacio-6);">
+    {{#each incentivos.misiones}}
+      <article class="tarjeta">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--espacio-3);">
+          <div>
+            <h3 style="font-size: 1.1rem; margin: 0 0 var(--espacio-1);">{{this.nombre}}</h3>
+            <p class="texto-suave" style="font-size: var(--texto-chico); margin: 0;">{{this.descripcion}}</p>
           </div>
-
-          <div style="background-color: #e2e8f0; height: 12px; border-radius: 6px; overflow: hidden; margin: 1rem 0;">
-            <div style="background-color: #22c55e; height: 100%; width: {{this.porcentaje}}%;"></div>
-          </div>
-          <span style="font-size: 0.85rem; color: #64748b;">Progreso: {{this.porcentaje}}%</span>
+          {{#if this.cumplida}}
+            <span class="etiqueta">¡Cumplida!</span>
+          {{else}}
+            <span class="etiqueta etiqueta--pendiente">{{this.progresoActual}} / {{this.meta}}</span>
+          {{/if}}
         </div>
+
+        <div class="progreso">
+          <div class="progreso__barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{this.porcentaje}}">
+            <span style="width: {{this.porcentaje}}%;"></span>
+          </div>
+          <span class="texto-suave" style="font-size: var(--texto-chico);">Progreso: {{this.porcentaje}}%</span>
+        </div>
+      </article>
+    {{/each}}
+  </div>
+
+  {{!-- Insignias Desbloqueadas --}}
+  <h2 style="font-size: 1.25rem; margin-bottom: var(--espacio-3);">Insignias desbloqueadas</h2>
+  {{#if incentivos.insigniasObtenidas}}
+    <div class="grilla grilla--3">
+      {{#each incentivos.insigniasObtenidas}}
+        <article class="tarjeta" style="text-align: center; padding: var(--espacio-5);">
+          <div style="font-size: 2.5rem; margin-bottom: var(--espacio-2);">🎖️</div>
+          <h3 style="font-size: 1.05rem; margin: 0 0 var(--espacio-1);">{{this.nombre}}</h3>
+          <p class="texto-suave" style="font-size: var(--texto-chico); margin: 0;">{{this.descripcion}}</p>
+        </article>
       {{/each}}
     </div>
-
-    {{!-- Insignias Obtenidas --}}
-    <h2>Insignias Desbloqueadas</h2>
-    {{#if incentivos.insigniasObtenidas}}
-      <div class="grid grid--4">
-        {{#each incentivos.insigniasObtenidas}}
-          <div class="card card--borde" style="text-align: center; padding: 1.5rem;">
-            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎖️</div>
-            <h4>{{this.nombre}}</h4>
-            <p style="font-size: 0.85rem; color: #64748b;">{{this.descripcion}}</p>
-          </div>
-        {{/each}}
-      </div>
-    {{else}}
-      <div class="alerta alerta--info">
-        Aún no desbloqueaste insignias. ¡Completá tu primera donación para conseguir la primera!
-      </div>
-    {{/if}}
-
+  {{else}}
+    <section class="tarjeta vacio">
+      <strong>Aún no desbloqueaste insignias.</strong>
+      Completá tus misiones realizando donaciones para conseguir tu primera medalla.
+    </section>
   {{/if}}
-</section>
+{{/if}}
 {{/partial}}
 
 {{> layouts/base}}

@@ -47,11 +47,22 @@ public class Notificador {
             notificacionRequest.getDestinatarioId(),
             notificacionRequest.getDonacionId()
         );
+        /*
         notificacion.setFechaDeEnvio(LocalDateTime.now());
         notificar(notificacion);
         notificacion.setCompletada(true);
+         */
+        notificacion.setFechaDeEnvio(LocalDateTime.now());
+        try {
+          notificar(notificacion);
+          notificacion.setCompletada(true);
+        } catch (Exception e) {
+          System.err.println("Aviso: no se pudo despachar por el proveedor externo (mock o sin saldo): " + e.getMessage());
+          notificacion.setCompletada(false);
+        }
 
         notificacionRepository.save(notificacion);
+
     }
 
     public void notificar(Notificacion notificacion) {

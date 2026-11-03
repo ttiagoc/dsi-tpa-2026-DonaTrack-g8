@@ -1,33 +1,52 @@
-{{#partial "titulo"}}Bandeja de Notificaciones — DonaTrack{{/partial}}
+{{#partial "titulo"}}Notificaciones · DonaTrack{{/partial}}
 
 {{#partial "contenido"}}
-<section class="panel">
-  <div class="panel__encabezado">
+<header class="encabezado-pagina">
+  <div>
     <h1>Notificaciones</h1>
-    <p>Avisos sobre el estado de tus donaciones, misiones y entregas.</p>
+    <p class="texto-suave">Avisos sobre el estado de tus donaciones, entregas y logros.</p>
   </div>
+</header>
 
-  <div class="card">
-    {{#if notificaciones}}
-      <ul class="lista-notificaciones" style="list-style: none; padding: 0; margin: 0;">
-        {{#each notificaciones}}
-          <li style="padding: 1rem; border-bottom: 1px solid #e2e8f0; display: flex; gap: 1rem; align-items: center;">
-            <span style="font-size: 1.5rem;">🔔</span>
-            <div style="flex: 1;">
-              <p style="margin: 0; font-weight: 500;">{{this.mensaje}}</p>
-              <small style="color: #64748b;">{{this.fechaDeEnvio}}</small>
-            </div>
-            <span class="badge badge--secundario">{{this.tipoEvento}}</span>
-          </li>
-        {{/each}}
-      </ul>
-    {{else}}
-      <div class="alerta alerta--info" style="margin: 1.5rem;">
-        No tenés notificaciones pendientes en este momento.
-      </div>
-    {{/if}}
-  </div>
-</section>
+{{#if notificaciones}}
+  <section class="tarjeta tarjeta--tabla">
+    <div class="tabla-contenedor">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>Aviso</th>
+            <th class="tabla__corta" style="text-align: right;">Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each notificaciones}}
+            <tr>
+              <td>
+                <div style="display: flex; gap: var(--espacio-3); align-items: flex-start;">
+                  <span style="font-size: 1.25rem; line-height: 1;">🔔</span>
+                  <div>
+                    <div><strong>{{this.mensaje}}</strong></div>
+                    {{#if this.tipoEvento}}
+                      <span class="tabla__secundario">{{this.tipoEvento}}</span>
+                    {{/if}}
+                  </div>
+                </div>
+              </td>
+              <td class="tabla__corta tabla__secundario" style="text-align: right; vertical-align: top;">
+                {{this.fechaFormateada}}
+              </td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{{else}}
+  <section class="tarjeta vacio">
+    <strong>Bandeja al día.</strong>
+    No tenés notificaciones pendientes en este momento.
+  </section>
+{{/if}}
 {{/partial}}
 
 {{> layouts/base}}

@@ -31,6 +31,21 @@ public class RutaController implements JavalinController {
             ctx.json(rutaService.obtenerTodas(fecha));
         });
 
+        app.get("/api/rutas/activas", ctx -> {
+          String entidadIdStr = ctx.queryParam("entidadId");
+          Long entidadId = (entidadIdStr != null && !entidadIdStr.isBlank()) ? Long.parseLong(entidadIdStr) : null;
+          java.util.List<Long> donacionIds = null;
+          String donacionesStr = ctx.queryParam("donacionIds");
+          if (donacionesStr != null && !donacionesStr.isBlank()) {
+            donacionIds = java.util.Arrays.stream(donacionesStr.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(Long::parseLong)
+                .toList();
+          }
+          ctx.json(rutaService.obtenerRutasActivas(entidadId, donacionIds));
+        });
+
         app.get("/api/rutas/{id}", ctx -> {
             Long id = Long.parseLong(ctx.pathParam("id"));
             ctx.json(rutaService.obtenerPorId(id));
@@ -95,20 +110,7 @@ public class RutaController implements JavalinController {
             ctx.status(204);
         });
 
-        app.get("/api/rutas/activas", ctx -> {
-          String entidadIdStr = ctx.queryParam("entidadId");
-          Long entidadId = (entidadIdStr != null && !entidadIdStr.isBlank()) ? Long.parseLong(entidadIdStr) : null;
-          java.util.List<Long> donacionIds = null;
-          String donacionesStr = ctx.queryParam("donacionIds");
-          if (donacionesStr != null && !donacionesStr.isBlank()) {
-            donacionIds = java.util.Arrays.stream(donacionesStr.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .map(Long::parseLong)
-                .toList();
-          }
-          ctx.json(rutaService.obtenerRutasActivas(entidadId, donacionIds));
-        });
+
 
     }
 }

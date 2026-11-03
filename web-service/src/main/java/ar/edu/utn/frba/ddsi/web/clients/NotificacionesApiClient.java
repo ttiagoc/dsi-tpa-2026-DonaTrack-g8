@@ -19,14 +19,29 @@ public class NotificacionesApiClient extends ApiClient {
       return get(ctx, path, new TypeReference<List<NotificacionDto>>() {});
     }
 
-    public record NotificacionDto(
-        Long id,
-        String fechaDeEnvio,
-        String mensaje,
-        String tipoEvento,
-        String tipoDestinatario,
-        Long destinatarioId,
-        Long donacionId,
-        Boolean completada
-    ) {}
+  public record NotificacionDto(
+      Long id,
+      String fechaDeEnvio,
+      String mensaje,
+      String tipoEvento,
+      String tipoDestinatario,
+      Long destinatarioId,
+      Long donacionId,
+      Boolean completada
+  ) {
+    public String fechaFormateada() {
+      if (fechaDeEnvio == null || fechaDeEnvio.isBlank()) return "-";
+      try {
+        if (fechaDeEnvio.contains("T")) {
+          String[] partes = fechaDeEnvio.split("T");
+          String fecha = partes[0];
+          String hora = partes[1].substring(0, Math.min(5, partes[1].length()));
+          return fecha + " " + hora;
+        }
+        return fechaDeEnvio;
+      } catch (Exception e) {
+        return fechaDeEnvio;
+      }
+    }
+  }
 }
