@@ -11,8 +11,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ar.edu.utn.frba.ddsi.web.dto.catalogo.CategoriaResponse;
 import ar.edu.utn.frba.ddsi.web.dto.catalogo.Rubro;
 import ar.edu.utn.frba.ddsi.web.dto.catalogo.SubcategoriaResponse;
+import ar.edu.utn.frba.ddsi.web.dto.donaciones.DonacionAltaRequest;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.DonacionResponse;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.EntidadConEntregas;
+import ar.edu.utn.frba.ddsi.web.dto.donaciones.EstadoDonacionRequest;
+import ar.edu.utn.frba.ddsi.web.dto.donantes.DonanteResponse;
+import ar.edu.utn.frba.ddsi.web.dto.donantes.PersonaHumanaRequest;
+import ar.edu.utn.frba.ddsi.web.dto.matchmaking.EstadoPropuestaRequest;
+import ar.edu.utn.frba.ddsi.web.dto.matchmaking.PropuestaMatchmakingResponse;
 import ar.edu.utn.frba.ddsi.web.dto.necesidades.NecesidadRequest;
 import ar.edu.utn.frba.ddsi.web.dto.necesidades.NecesidadResponse;
 import io.javalin.http.Context;
@@ -102,5 +108,64 @@ public class DonacionesApiClient extends ApiClient {
     }
     public Map<String, Object> obtenerIncentivos(Context ctx, Long donanteId) {
         return get(ctx, "/donantes/" + donanteId + "/incentivos", new TypeReference<Map<String, Object>>() {});
+    }
+
+    // ---- Administracion: Deposito y Vencimientos (C, req. 16) ----
+
+    public List<DonacionResponse> listarDonaciones(Context ctx, String estado) {
+        String ruta = (estado != null && !estado.isBlank())
+                ? "/donaciones?estado=" + estado
+                : "/donaciones";
+        return get(ctx, ruta, new TypeReference<List<DonacionResponse>>() {});
+    }
+
+    public DonacionResponse cambiarEstado(Context ctx, Long id, String estado, String justificacion) {
+        return put(ctx, "/donaciones/" + id + "/estado", new EstadoDonacionRequest(estado, justificacion), DonacionResponse.class);
+    }
+
+    // ---- Administracion: Matchmaking y Asignaciones (C, req. 17) ----
+
+    public List<PropuestaMatchmakingResponse> obtenerPropuestasPendientes(Context ctx) {
+        return get(ctx, "/matchmaking/pendientes", new TypeReference<List<PropuestaMatchmakingResponse>>() {});
+    }
+
+    public void ejecutarMatchmaking(Context ctx) {
+        post(ctx, "/matchmaking/ejecuciones", Map.of(), Void.class);
+    }
+
+    public void aceptarPropuesta(Context ctx, Long propuestaId, Long entidadId) {
+        put(ctx, "/matchmaking/propuestas/" + propuestaId + "/estado", new EstadoPropuestaRequest("ACEPTADO", entidadId), Void.class);
+    }
+
+    public void rechazarPropuesta(Context ctx, Long propuestaId) {
+        put(ctx, "/matchmaking/propuestas/" + propuestaId + "/estado", new EstadoPropuestaRequest("RECHAZADO", null), Void.class);
+    }
+
+    // ---- Administracion: Recepcion en Deposito (C, req. 15) ----
+
+    public List<DonanteResponse> listarDonantes(Context ctx) {
+        return get(ctx, "/donantes", new TypeReference<List<DonanteResponse>>() {});
+    }
+
+    public DonanteResponse crearDonantePersonaHumana(Context ctx, PersonaHumanaRequest request) {
+        return post(ctx, "/donantes/persona-humana", request, DonanteResponse.class);
+    }
+
+    public DonacionResponse registrarDonacionPresencial(Context ctx, DonacionAltaRequest request) {
+        return post(ctx, "/donaciones", request, DonacionResponse.class);
+    }
+
+    // ---- Administracion: Importacion Masiva CSV (C, req. 19) ----
+
+    public List<ar.edu.utn.frba.ddsi.web.dto.importacion.ImportacionResponse> listarImportaciones(Context ctx) {
+        return get(ctx, "/donantes/importaciones", new TypeReference<List<ar.edu.utn.frba.ddsi.web.dto.importacion.ImportacionResponse>>() {});
+    }
+
+    public ar.edu.utn.frba.ddsi.web.dto.importacion.ImportacionResponse obtenerImportacion(Context ctx, String id) {
+        return get(ctx, "/donantes/importaciones/" + id, ar.edu.utn.frba.ddsi.web.dto.importacion.ImportacionResponse.class);
+    }
+
+    public ar.edu.utn.frba.ddsi.web.dto.importacion.ImportacionResponse iniciarImportacion(Context ctx, byte[] bytes, String filename) {
+        return postCsv(ctx, "/donantes/importaciones", bytes, filename, ar.edu.utn.frba.ddsi.web.dto.importacion.ImportacionResponse.class);
     }
 }

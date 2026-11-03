@@ -1,0 +1,173 @@
+{{#partial "titulo"}}Recepción en Depósito · DonaTrack{{/partial}}
+{{#partial "contenido"}}
+<header class="encabezado-pagina">
+  <div>
+    <h1>Recepción de Donaciones en Depósito</h1>
+    <p class="texto-suave">Registrá el ingreso físico de donaciones y asociá donantes presenciales en el centro de acopio.</p>
+  </div>
+  <a class="boton boton--secundario" href="/admin/recepcion?nuevoDonante=true" data-abre="modal-donante">+ Nuevo donante</a>
+</header>
+
+<div class="resumen">
+  <div class="resumen__item"><strong>{{totalDonantes}}</strong>Donantes registrados</div>
+  <div class="resumen__item resumen__item--ok"><strong>{{resumen.ingresosMes}}</strong>Donaciones en depósito</div>
+  <div class="resumen__item resumen__item--info"><strong>Depósito Central</strong>Ubicación operativa</div>
+</div>
+
+<section class="tarjeta">
+  <form method="post" action="/admin/recepcion" novalidate>
+    {{#if errorGeneral}}<div class="alerta alerta--error" role="alert">{{errorGeneral}}</div>{{/if}}
+
+    <div class="seccion-form">
+      <h2 class="seccion-form__titulo">1. Donante</h2>
+      <div class="campo{{#if errores.donanteId}} campo--error{{/if}}">
+        <label for="donanteId">Donante que entrega los bienes <span class="campo__requerido" aria-hidden="true">*</span></label>
+        <select id="donanteId" name="donanteId" required data-buscador="Buscá por DNI, CUIT o nombre">
+          <option value="">Seleccioná un donante...</option>
+          {{#each donantes}}
+            <option value="{{id}}" {{#if (eq ../form.donanteId idStr)}}selected{{/if}}>{{etiquetaBuscador}}</option>
+          {{/each}}
+        </select>
+        {{#if errores.donanteId}}<small class="campo__error">{{errores.donanteId}}</small>{{/if}}
+      </div>
+    </div>
+
+    <div class="seccion-form">
+      <h2 class="seccion-form__titulo">2. Donación y Rubro</h2>
+      <div class="grilla grilla--2">
+        <div class="campo{{#if errores.subcategoria}} campo--error{{/if}}">
+          <label for="subcategoria">Subcategoría del bien <span class="campo__requerido" aria-hidden="true">*</span></label>
+          <select id="subcategoria" name="subcategoria" required data-buscador="Buscá una subcategoría">
+            <option value="">Seleccioná subcategoría...</option>
+            {{#each catalogo}}
+              <optgroup label="{{nombre}}">
+                {{#each subcategorias}}
+                  <option value="{{this}}" {{#if (eq ../../form.subcategoria this)}}selected{{/if}}>{{this}}</option>
+                {{/each}}
+              </optgroup>
+            {{/each}}
+          </select>
+          {{#if errores.subcategoria}}<small class="campo__error">{{errores.subcategoria}}</small>{{/if}}
+        </div>
+
+        <div class="campo{{#if errores.descripcion}} campo--error{{/if}}">
+          <label for="descripcion">Descripción general</label>
+          <input type="text" id="descripcion" name="descripcion" value="{{#if form.descripcion}}{{form.descripcion}}{{else}}Recepción presencial en centro de acopio{{/if}}" placeholder="ej: Entrega presencial en depósito">
+          {{#if errores.descripcion}}<small class="campo__error">{{errores.descripcion}}</small>{{/if}}
+        </div>
+      </div>
+    </div>
+
+    <div class="seccion-form">
+      <h2 class="seccion-form__titulo">3. Detalle de Bienes</h2>
+      <div class="grilla grilla--3">
+        <div class="campo{{#if errores.bienDescripcion}} campo--error{{/if}}">
+          <label for="bienDescripcion">Detalle del artículo <span class="campo__requerido" aria-hidden="true">*</span></label>
+          <input type="text" id="bienDescripcion" name="bienDescripcion" value="{{form.bienDescripcion}}" required placeholder="ej: Cajas de leche entera x 1 L">
+          {{#if errores.bienDescripcion}}<small class="campo__error">{{errores.bienDescripcion}}</small>{{/if}}
+        </div>
+        <div class="campo{{#if errores.cantidad}} campo--error{{/if}}">
+          <label for="cantidad">Cantidad de unidades <span class="campo__requerido" aria-hidden="true">*</span></label>
+          <input type="number" id="cantidad" name="cantidad" value="{{form.cantidad}}" required min="1" placeholder="120">
+          {{#if errores.cantidad}}<small class="campo__error">{{errores.cantidad}}</small>{{/if}}
+        </div>
+        <div class="campo{{#if errores.fechaVencimiento}} campo--error{{/if}}">
+          <label for="fechaVencimiento">Fecha de vencimiento (si aplica)</label>
+          <input type="date" id="fechaVencimiento" name="fechaVencimiento" value="{{form.fechaVencimiento}}">
+          {{#if errores.fechaVencimiento}}<small class="campo__error">{{errores.fechaVencimiento}}</small>{{/if}}
+        </div>
+      </div>
+
+      <div class="grilla grilla--3">
+        <div class="campo{{#if errores.pesoKg}} campo--error{{/if}}">
+          <label for="pesoKg">Peso por unidad (kg)</label>
+          <input type="number" id="pesoKg" name="pesoKg" value="{{#if form.pesoKg}}{{form.pesoKg}}{{else}}1.0{{/if}}" min="0.01" step="any" placeholder="1.0">
+          {{#if errores.pesoKg}}<small class="campo__error">{{errores.pesoKg}}</small>{{/if}}
+        </div>
+        <div class="campo{{#if errores.volumenM3}} campo--error{{/if}}">
+          <label for="volumenM3">Volumen por unidad (m³)</label>
+          <input type="number" id="volumenM3" name="volumenM3" value="{{#if form.volumenM3}}{{form.volumenM3}}{{else}}0.001{{/if}}" min="0.0001" step="any" placeholder="0.001">
+          {{#if errores.volumenM3}}<small class="campo__error">{{errores.volumenM3}}</small>{{/if}}
+        </div>
+        <div class="campo">
+          <label for="estadoBien">Estado de los bienes</label>
+          <select id="estadoBien" name="estadoBien">
+            <option value="NUEVO" {{#if (eq form.estadoBien "NUEVO")}}selected{{/if}}>Nuevo / Sellado</option>
+            <option value="USADO" {{#if (eq form.estadoBien "USADO")}}selected{{/if}}>Usado en buen estado</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="acciones" style="margin-top: var(--espacio-5); justify-content: flex-end;">
+      <a class="boton boton--secundario" href="/admin">Cancelar</a>
+      <button type="submit" class="boton">Registrar recepción en depósito</button>
+    </div>
+  </form>
+</section>
+
+{{!-- Modal de Alta Rápida de Donante Presencial --}}
+<dialog class="modal" id="modal-donante" aria-labelledby="titulo-donante" {{#if abrirModalDonante}}open{{/if}}>
+  <form method="post" action="/admin/recepcion/donante-humana" accept-charset="UTF-8" novalidate>
+    <div class="modal__encabezado">
+      <h2 id="titulo-donante">Nuevo donante presencial</h2>
+      <a class="modal__cerrar" href="/admin/recepcion" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></a>
+    </div>
+    <div class="modal__cuerpo">
+      {{#if errorDonante}}<div class="alerta alerta--error" role="alert">{{errorDonante}}</div>{{/if}}
+
+      <p class="texto-suave">Registrá a la persona que se presentó en depósito para poder asociarle la entrega.</p>
+
+      <div class="grilla grilla--2">
+        <div class="campo{{#if erroresDonante.nombre}} campo--error{{/if}}">
+          <label for="nombre">Nombre <span class="campo__requerido" aria-hidden="true">*</span></label>
+          <input type="text" id="nombre" name="nombre" value="{{formDonante.nombre}}" required autofocus placeholder="Mariano">
+          {{#if erroresDonante.nombre}}<small class="campo__error">{{erroresDonante.nombre}}</small>{{/if}}
+        </div>
+        <div class="campo{{#if erroresDonante.apellido}} campo--error{{/if}}">
+          <label for="apellido">Apellido <span class="campo__requerido" aria-hidden="true">*</span></label>
+          <input type="text" id="apellido" name="apellido" value="{{formDonante.apellido}}" required placeholder="López">
+          {{#if erroresDonante.apellido}}<small class="campo__error">{{erroresDonante.apellido}}</small>{{/if}}
+        </div>
+      </div>
+
+      <div class="grilla grilla--2">
+        <div class="campo{{#if erroresDonante.dni}} campo--error{{/if}}">
+          <label for="dni">DNI <span class="campo__requerido" aria-hidden="true">*</span></label>
+          <input type="text" id="dni" name="dni" value="{{formDonante.dni}}" required placeholder="34567890">
+          {{#if erroresDonante.dni}}<small class="campo__error">{{erroresDonante.dni}}</small>{{/if}}
+        </div>
+        <div class="campo{{#if erroresDonante.fechaNacimiento}} campo--error{{/if}}">
+          <label for="fechaNacimiento">Fecha de nacimiento</label>
+          <input type="date" id="fechaNacimiento" name="fechaNacimiento" value="{{formDonante.fechaNacimiento}}">
+          {{#if erroresDonante.fechaNacimiento}}<small class="campo__error">{{erroresDonante.fechaNacimiento}}</small>{{/if}}
+        </div>
+      </div>
+
+      <div class="grilla grilla--2">
+        <div class="campo{{#if erroresDonante.email}} campo--error{{/if}}">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" value="{{formDonante.email}}" placeholder="mariano@ejemplo.com">
+          {{#if erroresDonante.email}}<small class="campo__error">{{erroresDonante.email}}</small>{{/if}}
+        </div>
+        <div class="campo{{#if erroresDonante.telefono}} campo--error{{/if}}">
+          <label for="telefono">Teléfono</label>
+          <input type="tel" id="telefono" name="telefono" value="{{formDonante.telefono}}" placeholder="11 4433-2211">
+          {{#if erroresDonante.telefono}}<small class="campo__error">{{erroresDonante.telefono}}</small>{{/if}}
+        </div>
+      </div>
+
+      <div class="campo">
+        <label for="direccion">Dirección</label>
+        <input type="text" id="direccion" name="direccion" value="{{formDonante.direccion}}" placeholder="Calle y número, localidad">
+      </div>
+    </div>
+    <div class="modal__acciones">
+      <a class="boton boton--secundario" href="/admin/recepcion" data-cierra>Cancelar</a>
+      <button type="submit" class="boton">Guardar y seleccionar</button>
+    </div>
+  </form>
+</dialog>
+
+{{/partial}}
+{{> layouts/base}}

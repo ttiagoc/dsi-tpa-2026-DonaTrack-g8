@@ -139,4 +139,37 @@ class ImportadorDeDonantesTest {
                 eq(Void.class)
         );
     }
+
+    @Test
+    @DisplayName("Debe iniciar importación asincrónica, procesar filas y registrar estado")
+    void iniciarImportacionAsincronica() throws Exception {
+        String csvContent = "TipoPersona,TipoDoc,Documento,Nombre,Email,Telefono\n" +
+                "HUMANA,,22334455,Carlos Gomez,carlos@test.com,1155667788\n" +
+                "JURIDICA,,30-99887766-5,Cooperativa Norte,coop@test.com,\n" +
+                "HUMANA,,,Sin Documento,invalido@test.com,\n";
+
+        when(donanteRepository.buscarPorEmail(anyString())).thenReturn(Optional.empty());
+
+        java.io.ByteArrayInputStream in = new java.io.ByteArrayInputStream(csvContent.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        ImportacionTarea tarea = importadorService.iniciarImportacion(in, "test_lote.csv");
+
+        org.junit.jupiter.api.Assertions.assertNotNull(tarea);
+        org.junit.jupiter.api.Assertions.assertEquals("test_lote.csv", tarea.getNombreArchivo());
+        org.junit.jupiter.api.Assertions.assertEquals(3, tarea.getTotalFilas());
+
+        // Esperar a que el hilo termine (hasta 2 segundos)
+        long limite = System.currentTimeMillis() + 2000;
+        while (!"COMPLETADA".equals(tarea.getEstado()) && !"FALLIDA".equals(tarea.getEstado()) && System.currentTimeMillis() < limite) {
+            Thread.sleep(50);
+        }
+
+        org.junit.jupiter.api.Assertions.assertEquals("COMPLETADA", tarea.getEstado());
+        org.junit.jupiter.api.Assertions.assertEquals(3, tarea.getProcesadas());
+        org.junit.jupiter.api.Assertions.assertEquals(2, tarea.getCreados());
+        org.junit.jupiter.api.Assertions.assertEquals(1, tarea.getDescartadas());
+        org.junit.jupiter.api.Assertions.assertFalse(tarea.getErrores().isEmpty());
+
+        ar.edu.utn.frba.ddsi.donaciones.dto.importacion.ImportacionResponse resp = tarea.toResponse();
+        org.junit.jupiter.api.Assertions.assertEquals(100, resp.porcentaje());
+    }
 }

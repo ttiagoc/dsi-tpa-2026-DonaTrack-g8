@@ -1,0 +1,236 @@
+{{#partial "titulo"}}Importación Masiva de Donantes · DonaTrack{{/partial}}
+{{#partial "contenido"}}
+<header class="encabezado-pagina">
+  <div>
+    <h1>Importación Masiva de Donantes</h1>
+    <p class="texto-suave">Carga de donantes por lote mediante archivos CSV (&gt;10.000 filas). El procesamiento se realiza en segundo plano.</p>
+  </div>
+</header>
+
+<div class="resumen">
+  <div class="resumen__item"><strong>{{resumen.total}}</strong>Importaciones realizadas</div>
+  <div class="resumen__item resumen__item--ok"><strong>{{resumen.donantesProcesados}}</strong>Donantes procesados</div>
+  <div class="resumen__item"><strong>{{resumen.enProceso}}</strong>En proceso</div>
+</div>
+
+{{#if importacionActiva}}
+  <section class="tarjeta" id="importacion-activa" data-id="{{importacionActiva.id}}" style="margin-bottom: var(--espacio-5); border-left: 4px solid var(--color-primario);">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--espacio-3);">
+      <div>
+        {{#if importacionActiva.esEnProceso}}
+          <span id="progreso-estado" class="etiqueta etiqueta--info" style="margin-bottom: var(--espacio-2); display: inline-block;">
+            <svg class="icono" style="width: 14px; height: 14px; margin-right: 4px;"><use href="#i-reloj"/></svg>
+            Procesando en segundo plano
+          </span>
+        {{/if}}
+        {{#if importacionActiva.esCompletada}}
+          <span id="progreso-estado" class="etiqueta" style="margin-bottom: var(--espacio-2); display: inline-block;">
+            Completada
+          </span>
+        {{/if}}
+        {{#if importacionActiva.esFallida}}
+          <span id="progreso-estado" class="etiqueta etiqueta--error" style="margin-bottom: var(--espacio-2); display: inline-block;">
+            Fallida
+          </span>
+        {{/if}}
+        <h2 style="font-size: var(--texto-grande); margin: 0;">{{importacionActiva.nombreArchivo}}</h2>
+        <span class="texto-suave" style="font-size: var(--texto-chico);">ID de tarea: #{{importacionActiva.id}} · Fecha: {{importacionActiva.fecha}}</span>
+      </div>
+      <span id="progreso-porcentaje" style="font-size: var(--texto-muy-grande); font-weight: 700; color: var(--color-primario);">{{importacionActiva.porcentaje}}%</span>
+    </div>
+
+    <div class="progreso" style="margin-bottom: var(--espacio-4);">
+      <div class="progreso__barra" style="height: 10px;">
+        <span id="progreso-barra" style="width: {{importacionActiva.porcentaje}}%;"></span>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: var(--texto-chico); color: var(--color-texto-suave);">
+        <span id="progreso-filas">{{importacionActiva.procesadas}} de {{importacionActiva.totalFilas}} filas procesadas</span>
+        <span>Procesamiento en segundo plano</span>
+      </div>
+    </div>
+
+    <div class="resumen" style="margin-bottom: var(--espacio-4);">
+      <div class="resumen__item"><strong>{{importacionActiva.totalFilas}}</strong>Total filas</div>
+      <div class="resumen__item"><strong id="stat-procesadas">{{importacionActiva.procesadas}}</strong>Procesadas</div>
+      <div class="resumen__item resumen__item--ok"><strong id="stat-creados">{{importacionActiva.creados}}</strong>Nuevos donantes</div>
+      <div class="resumen__item"><strong id="stat-actualizados">{{importacionActiva.actualizados}}</strong>Actualizados</div>
+      <div class="resumen__item resumen__item--alerta"><strong id="stat-descartadas">{{importacionActiva.descartadas}}</strong>Descartadas</div>
+    </div>
+
+    {{#if importacionActiva.esEnProceso}}
+      <div class="alerta alerta--info" style="margin-bottom: var(--espacio-4);">
+        <span>
+          <strong>Proceso en segundo plano activo:</strong> podés continuar usando el sistema o cerrar la pestaña sin interrumpir la carga. Los datos se actualizan automáticamente en pantalla.
+        </span>
+      </div>
+    {{/if}}
+
+    {{#if importacionActiva.tieneErrores}}
+      <div>
+        <h3 style="font-size: var(--texto-base); margin-bottom: var(--espacio-2);">Filas descartadas con error</h3>
+        <div class="tabla-contenedor" style="max-height: 180px; overflow-y: auto; border: 1px solid var(--color-borde); border-radius: var(--radio);">
+          <table class="tabla" style="font-size: var(--texto-chico);">
+            <thead>
+              <tr>
+                <th style="width: 80px;">Fila</th>
+                <th>Dato / Identificador</th>
+                <th>Motivo del descarte</th>
+                <th style="width: 100px;">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-errores-cuerpo">
+              {{#each importacionActiva.errores}}
+                <tr>
+                  <td><strong>#{{fila}}</strong></td>
+                  <td><code>{{valor}}</code></td>
+                  <td>{{motivo}}</td>
+                  <td><span class="etiqueta etiqueta--error">Descartada</span></td>
+                </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {{/if}}
+  </section>
+{{/if}}
+
+<section class="tarjeta" style="margin-bottom: var(--espacio-5);">
+  <h2 style="font-size: var(--texto-grande); margin-bottom: var(--espacio-2);">Nueva importación</h2>
+  <p class="texto-suave" style="margin-bottom: var(--espacio-4);">Seleccioná un archivo CSV para importar donantes individuales u organizaciones de forma masiva.</p>
+
+  <form method="post" action="/admin/importaciones" enctype="multipart/form-data">
+    <div class="campo">
+      <label class="fotos" for="archivo" style="padding: var(--espacio-6) var(--espacio-4); display: block; text-align: center;">
+        <svg class="icono" style="width: 36px; height: 36px; color: var(--color-primario); margin: 0 auto var(--espacio-2); display: block;"><use href="#i-subir"/></svg>
+        <strong style="font-size: var(--texto-base); margin-bottom: var(--espacio-1);">Arrastrá tu archivo CSV acá o hacé clic para buscarlo</strong>
+        <span class="texto-suave">Formato delimitado por comas (.csv) hasta 50 MB / más de 10.000 filas.</span>
+        <input type="file" id="archivo" name="archivo" accept=".csv,text/csv" required style="margin-top: var(--espacio-3);">
+      </label>
+    </div>
+
+    <div style="background: var(--color-superficie); border: 1px solid var(--color-borde); border-radius: var(--radio); padding: var(--espacio-3) var(--espacio-4); margin: var(--espacio-4) 0; font-size: var(--texto-chico);">
+      <strong style="color: var(--color-texto);">Formato de columnas requerido:</strong>
+      <code style="display: block; margin: var(--espacio-1) 0; font-family: monospace; background: var(--color-fondo); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--color-borde);">TipoPersona, TipoDoc, Documento, Nombre, Email, Telefono</code>
+      <p class="texto-suave" style="margin: var(--espacio-1) 0 0;">
+        Valores de <code>TipoPersona</code>: <code>HUMANA</code> o <code>JURIDICA</code>. Si el donante ya existe por correo electrónico, se actualizan sus datos sin duplicarlo.
+      </p>
+    </div>
+
+    <div class="acciones" style="margin-top: var(--espacio-4);">
+      <button type="submit" class="boton boton--primario">
+        <svg class="icono"><use href="#i-subir"/></svg>
+        Comenzar importación masiva
+      </button>
+    </div>
+  </form>
+</section>
+
+<section class="tarjeta tarjeta--tabla">
+  <div style="padding: var(--espacio-4) var(--espacio-4) var(--espacio-2);">
+    <h2 style="font-size: var(--texto-grande); margin: 0;">Historial de importaciones</h2>
+  </div>
+  {{#if tieneImportaciones}}
+    <div class="tabla-contenedor">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th># ID / Archivo</th>
+            <th>Fecha y hora</th>
+            <th>Filas totales</th>
+            <th>Procesadas</th>
+            <th>Creados</th>
+            <th>Actualizados</th>
+            <th>Errores</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each importaciones}}
+            <tr>
+              <td>
+                <a href="/admin/importaciones?activa={{id}}" style="text-decoration: none; color: inherit;">
+                  <strong>#{{id}}</strong>
+                  <span class="tabla__secundario">{{nombreArchivo}}</span>
+                </a>
+              </td>
+              <td>{{fecha}}</td>
+              <td>{{totalFilas}}</td>
+              <td>{{procesadas}}</td>
+              <td>{{creados}}</td>
+              <td>{{actualizados}}</td>
+              <td>{{descartadas}}</td>
+              <td>
+                {{#if esEnProceso}}
+                  <span class="etiqueta etiqueta--info">En proceso ({{porcentaje}}%)</span>
+                {{/if}}
+                {{#if esCompletada}}
+                  <span class="etiqueta">Completada</span>
+                {{/if}}
+                {{#if esFallida}}
+                  <span class="etiqueta etiqueta--error">Fallida</span>
+                {{/if}}
+              </td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+  {{else}}
+    <div class="vacio">
+      <strong>No hay importaciones registradas</strong>
+      <p class="texto-suave">Cargá tu primer archivo CSV de donantes para comenzar la importación.</p>
+    </div>
+  {{/if}}
+</section>
+{{/partial}}
+
+{{#partial "scripts"}}
+<script>
+(function () {
+  var activa = document.getElementById('importacion-activa');
+  if (!activa) return;
+  var id = activa.dataset.id;
+  if (!id) return;
+
+  var intervalo = setInterval(function () {
+    fetch('/admin/importaciones/' + id + '/estado')
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        var barra = document.getElementById('progreso-barra');
+        var pctTexto = document.getElementById('progreso-porcentaje');
+        var filasTexto = document.getElementById('progreso-filas');
+        var statProc = document.getElementById('stat-procesadas');
+        var statCreados = document.getElementById('stat-creados');
+        var statAct = document.getElementById('stat-actualizados');
+        var statDesc = document.getElementById('stat-descartadas');
+        var estadoBadge = document.getElementById('progreso-estado');
+
+        if (barra) barra.style.width = data.porcentaje + '%';
+        if (pctTexto) pctTexto.textContent = data.porcentaje + '%';
+        if (filasTexto) filasTexto.textContent = data.procesadas + ' de ' + data.totalFilas + ' filas procesadas';
+        if (statProc) statProc.textContent = data.procesadas;
+        if (statCreados) statCreados.textContent = data.creados;
+        if (statAct) statAct.textContent = data.actualizados;
+        if (statDesc) statDesc.textContent = data.descartadas;
+
+        if (data.estado !== 'EN_PROCESO') {
+          clearInterval(intervalo);
+          if (estadoBadge) {
+            estadoBadge.className = data.estado === 'COMPLETADA' ? 'etiqueta' : 'etiqueta etiqueta--error';
+            estadoBadge.textContent = data.estado === 'COMPLETADA' ? 'Completada' : 'Fallida';
+          }
+          setTimeout(function () {
+            window.location.href = '/admin/importaciones?activa=' + id;
+          }, 1500);
+        }
+      })
+      .catch(function (err) {
+        console.error('Error al actualizar estado:', err);
+      });
+  }, 2000);
+})();
+</script>
+{{/partial}}
+{{> layouts/base}}
+

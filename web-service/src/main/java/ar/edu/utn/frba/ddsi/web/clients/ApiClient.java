@@ -80,6 +80,14 @@ public abstract class ApiClient {
         return leer(enviarAutenticado(ctx, () -> conJson(request(ruta), "POST", json)), tipo);
     }
 
+    protected <T> T postCsv(Context ctx, String ruta, byte[] bytes, String filename, Class<T> tipo) {
+        Supplier<HttpRequest.Builder> reqSupplier = () -> request(ruta)
+                .header("Content-Type", "text/csv")
+                .header("X-Filename", filename != null ? filename : "donantes.csv")
+                .POST(HttpRequest.BodyPublishers.ofByteArray(bytes));
+        return leer(enviarAutenticado(ctx, reqSupplier), tipo);
+    }
+
     protected <T> T put(Context ctx, String ruta, Object body, Class<T> tipo) {
         String json = aJson(body);
         return leer(enviarAutenticado(ctx, () -> conJson(request(ruta), "PUT", json)), tipo);

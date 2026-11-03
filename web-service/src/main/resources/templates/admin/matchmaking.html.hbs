@@ -1,0 +1,113 @@
+{{#partial "titulo"}}Matchmaking y Asignaciones · DonaTrack{{/partial}}
+{{#partial "contenido"}}
+<header class="encabezado-pagina">
+  <div>
+    <h1>Matchmaking y Asignaciones</h1>
+    <p class="texto-suave">Asignación inteligente de donaciones en depósito a entidades beneficiarias según compatibilidad y necesidad.</p>
+  </div>
+  <form method="post" action="/admin/matchmaking/ejecutar">
+    <button type="submit" class="boton">
+      <svg class="icono" style="margin-right: var(--espacio-1);"><use href="#i-rayo"/></svg> Ejecutar matchmaking
+    </button>
+  </form>
+</header>
+
+<div class="resumen">
+  <div class="resumen__item resumen__item--pendiente"><strong>{{resumen.pendientes}}</strong>Propuestas pendientes</div>
+  <div class="resumen__item resumen__item--info"><strong>{{resumen.candidatas}}</strong>Entidades candidatas</div>
+  <div class="resumen__item resumen__item--ok"><strong>{{resumen.compatibilidad}}</strong>Compatibilidad promedio</div>
+</div>
+
+{{#if propuestas}}
+  <section class="tarjeta tarjeta--tabla">
+    <div class="tabla-contenedor">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th># ID</th>
+            <th>Donación</th>
+            <th>Bienes y cantidad</th>
+            <th>Fecha de cálculo</th>
+            <th>Sugerencias</th>
+            <th><span class="sr-only">Acciones</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each propuestas}}
+            <tr>
+              <td class="tabla__corta"><strong>#{{id}}</strong></td>
+              <td>
+                Donación #{{donacionId}}
+                {{#if subcategoria}}<span class="tabla__secundario">{{subcategoria}}{{#if categoria}} · {{categoria}}{{/if}}</span>{{/if}}
+              </td>
+              <td>{{bienesResumen}}</td>
+              <td>{{fechaFormateada}}</td>
+              <td><span class="etiqueta etiqueta--info">{{cantidadSugerencias}} {{#if (eq cantidadSugerencias 1)}}entidad sugerida{{else}}entidades sugeridas{{/if}}</span></td>
+              <td class="tabla__accion">
+                <a class="boton boton--chico" href="/admin/matchmaking?propuesta={{id}}">Ver sugerencias</a>
+              </td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{{else}}
+  <section class="tarjeta vacio">
+    <strong>No hay propuestas de matchmaking pendientes de resolución.</strong>
+    Hacé clic en “Ejecutar matchmaking” para procesar las donaciones en depósito y generar nuevas recomendaciones de asignación.
+  </section>
+{{/if}}
+
+{{#if abrirModalSugerencias}}
+<dialog class="modal" id="modal-sugerencias" open aria-labelledby="titulo-sugerencias">
+  <form method="post" action="/admin/matchmaking/propuestas/{{propuestaSeleccionada.id}}/aceptar" accept-charset="UTF-8">
+    <div class="modal__encabezado">
+      <h2 id="titulo-sugerencias">Sugerencias de asignación · Propuesta #{{propuestaSeleccionada.id}}</h2>
+      <a class="modal__cerrar" href="/admin/matchmaking" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></a>
+    </div>
+    <div class="modal__cuerpo">
+      <p>Donación <strong>#{{propuestaSeleccionada.donacionId}}: {{propuestaSeleccionada.subcategoria}}</strong> ({{propuestaSeleccionada.bienesResumen}}) actualmente en depósito.</p>
+      <p class="texto-suave">El motor evaluó compatibilidad por necesidad declarada y nivel de desatención. Seleccioná a qué entidad querés asignar la entrega:</p>
+
+      {{#if propuestaSeleccionada.entidadesSugeridas}}
+        <div class="ranking-lista">
+          {{#each propuestaSeleccionada.entidadesSugeridas}}
+            <label class="ranking-item {{#if esPrioridadUno}}ranking-item--seleccionado{{/if}}">
+              <input type="radio" name="entidadId" value="{{id}}" {{#if esPrioridadUno}}checked{{/if}} required>
+              <div class="ranking-item__info">
+                <div class="ranking-item__titulo">
+                  <span class="ranking-item__entidad">{{razonSocial}}</span>
+                  {{#if esPrioridadUno}}
+                    <span class="etiqueta">Prioridad #{{orden}}</span>
+                  {{else}}
+                    <span class="etiqueta etiqueta--neutra">Prioridad #{{orden}}</span>
+                  {{/if}}
+                </div>
+                {{#if direccion}}<span class="texto-suave">{{direccion}}</span>{{/if}}
+              </div>
+            </label>
+          {{/each}}
+        </div>
+      {{else}}
+        <p class="alerta alerta--info">No se encontraron entidades compatibles en esta propuesta.</p>
+      {{/if}}
+
+      <p class="nota">Al asignar la donación, cambiará a estado <strong>Asignación Realizada</strong> y quedará lista para ser planificada en una ruta de transporte.</p>
+    </div>
+    <div class="modal__acciones" style="justify-content: space-between;">
+      <button type="submit" class="boton boton--secundario boton--peligro" formaction="/admin/matchmaking/propuestas/{{propuestaSeleccionada.id}}/rechazar">Descartar propuesta</button>
+      <div style="display: flex; gap: var(--espacio-2);">
+        <a class="boton boton--secundario" href="/admin/matchmaking" data-cierra>Cancelar</a>
+        {{#if propuestaSeleccionada.entidadesSugeridas}}
+          <button type="submit" class="boton">Confirmar asignación</button>
+        {{/if}}
+      </div>
+    </div>
+  </form>
+</dialog>
+{{/if}}
+
+{{/partial}}
+{{> layouts/base}}
+

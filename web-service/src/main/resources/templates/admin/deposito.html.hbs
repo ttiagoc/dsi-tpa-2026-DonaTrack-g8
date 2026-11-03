@@ -1,0 +1,112 @@
+{{#partial "titulo"}}Depósito y Vencimientos · DonaTrack{{/partial}}
+{{#partial "contenido"}}
+<header class="encabezado-pagina">
+  <div>
+    <h1>Depósito y Vencimientos</h1>
+    <p class="texto-suave">Control de stock de donaciones recibidas y gestión de caducidades.</p>
+  </div>
+</header>
+
+<div class="resumen">
+  <div class="resumen__item"><strong>{{resumen.enDeposito}}</strong>Donaciones en depósito</div>
+  <div class="resumen__item resumen__item--ok"><strong>{{resumen.unidades}}</strong>Unidades almacenadas</div>
+  <div class="resumen__item resumen__item--alerta"><strong>{{resumen.vencidas}}</strong>Donaciones vencidas</div>
+</div>
+
+<nav class="pestanas" aria-label="Filtro de donaciones">
+  <a class="pestana {{#if esTabEnDeposito}}pestana--activa{{/if}}" href="/admin/deposito?filtro=en_deposito">
+    En depósito <span class="pestana__badge">{{resumen.enDeposito}}</span>
+  </a>
+  <a class="pestana {{#if esTabVencidas}}pestana--activa{{/if}}" href="/admin/deposito?filtro=vencidas">
+    Vencidas <span class="pestana__badge">{{resumen.vencidas}}</span>
+  </a>
+</nav>
+
+{{#if donaciones}}
+  <section class="tarjeta tarjeta--tabla">
+    <div class="tabla-contenedor">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th># ID</th>
+            <th>Subcategoría</th>
+            <th>Bienes y cantidad</th>
+            <th>Fecha de ingreso</th>
+            <th>Estado</th>
+            {{#if esTabVencidas}}
+              <th>Motivo de baja</th>
+            {{else}}
+              <th><span class="sr-only">Acciones</span></th>
+            {{/if}}
+          </tr>
+        </thead>
+        <tbody>
+          {{#each donaciones}}
+            <tr>
+              <td class="tabla__corta"><strong>#{{id}}</strong></td>
+              <td>
+                {{subcategoria}}
+                {{#if categoria}}<span class="tabla__secundario">{{categoria}}</span>{{/if}}
+              </td>
+              <td>{{bienesResumen}}</td>
+              <td>{{fechaFormateada}}</td>
+              <td>
+                {{#if esVencida}}
+                  <span class="etiqueta etiqueta--error">Vencida</span>
+                {{else}}
+                  <span class="etiqueta">En depósito</span>
+                {{/if}}
+              </td>
+              {{#if ../esTabVencidas}}
+                <td><span class="texto-suave">{{#if justificacion}}{{justificacion}}{{else}}Sin justificación registrada{{/if}}</span></td>
+              {{else}}
+                <td class="tabla__accion">
+                  <a class="boton boton--secundario boton--peligro boton--chico" href="/admin/deposito?filtro=en_deposito&vencer={{id}}">Marcar vencida</a>
+                </td>
+              {{/if}}
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{{else}}
+  <section class="tarjeta vacio">
+    <strong>No hay donaciones {{#if esTabVencidas}}vencidas registradas{{else}}en depósito actualmente{{/if}}.</strong>
+    {{#if esTabVencidas}}
+      Las donaciones dadas de baja por vencimiento figurarán en este listado histórico.
+    {{else}}
+      Las donaciones físicas recibidas en depósito figurarán aquí disponibles para asignación y entrega.
+    {{/if}}
+  </section>
+{{/if}}
+
+{{#if abrirModalVencer}}
+<dialog class="modal" id="modal-vencer" open aria-labelledby="titulo-vencer">
+  <form method="post" action="/admin/deposito/{{donacionAVencer.id}}/vencer" accept-charset="UTF-8" novalidate>
+    <div class="modal__encabezado">
+      <h2 id="titulo-vencer">¿Marcar donación como vencida?</h2>
+      <a class="modal__cerrar" href="/admin/deposito{{#if filtro}}?filtro={{filtro}}{{/if}}" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></a>
+    </div>
+    <div class="modal__cuerpo">
+      {{#if errorGeneral}}<div class="alerta alerta--error" role="alert">{{errorGeneral}}</div>{{/if}}
+
+      <p>Vas a declarar vencida la donación <strong>#{{donacionAVencer.id}}</strong> ({{donacionAVencer.subcategoria}}{{#if donacionAVencer.bienesResumen}} · {{donacionAVencer.bienesResumen}}{{/if}}).</p>
+      <p class="texto-suave">La donación cambiará de estado a <strong>Vencida</strong> y se retirará automáticamente del stock disponible para asignación y entrega.</p>
+
+      <div class="campo{{#if errores.justificacion}} campo--error{{/if}}">
+        <label for="justificacion">Motivo o justificación del vencimiento <span class="campo__requerido" aria-hidden="true">*</span></label>
+        <textarea id="justificacion" name="justificacion" rows="3" required autofocus placeholder="Indicá la fecha de vencimiento alcanzada o el motivo de la baja">{{form.justificacion}}</textarea>
+        {{#if errores.justificacion}}<small class="campo__error">{{errores.justificacion}}</small>{{/if}}
+      </div>
+    </div>
+    <div class="modal__acciones">
+      <a class="boton boton--secundario" href="/admin/deposito{{#if filtro}}?filtro={{filtro}}{{/if}}" data-cierra>Cancelar</a>
+      <button type="submit" class="boton boton--peligro">Confirmar vencimiento</button>
+    </div>
+  </form>
+</dialog>
+{{/if}}
+
+{{/partial}}
+{{> layouts/base}}

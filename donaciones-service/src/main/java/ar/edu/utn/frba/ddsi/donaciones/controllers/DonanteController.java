@@ -12,6 +12,11 @@ import ar.edu.utn.frba.ddsi.common.security.Autorizacion;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaHumanaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaJuridicaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.GestorDeEventos;
+import java.io.InputStream;
+import io.javalin.http.UploadedFile;
+
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.ImportacionTarea;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.ImportadorDeDonantes;
 import ar.edu.utn.frba.ddsi.donaciones.services.DonanteService;
 import io.javalin.Javalin;
 
@@ -21,16 +26,47 @@ public class DonanteController implements JavalinController {
     private final DonanteService donanteService;
     private final GestorDeEventos gestorDeEventos;
     private final ar.edu.utn.frba.ddsi.donaciones.services.GamificacionService gamificacionService;
+    private final ImportadorDeDonantes importadorDeDonantes;
 
     public DonanteController(DonanteService donanteService, GestorDeEventos gestorDeEventos,
-                ar.edu.utn.frba.ddsi.donaciones.services.GamificacionService gamificacionService) {
+                ar.edu.utn.frba.ddsi.donaciones.services.GamificacionService gamificacionService,
+                ImportadorDeDonantes importadorDeDonantes) {
         this.donanteService = donanteService;
         this.gestorDeEventos = gestorDeEventos;
         this.gamificacionService = gamificacionService;
+        this.importadorDeDonantes = importadorDeDonantes;
     }
 
     @Override
     public void registerRoutes(Javalin app) {
+        app.get("/api/donantes/importaciones", ctx -> {
+            ctx.json(importadorDeDonantes.obtenerImportaciones().stream().map(ImportacionTarea::toResponse).toList());
+        }, ADMINISTRADOR);
+
+        app.get("/api/donantes/importaciones/{id}", ctx -> {
+            String id = ctx.pathParam("id");
+            ImportacionTarea tarea = importadorDeDonantes.obtenerImportacion(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("No se encontro la importacion: " + id));
+            ctx.json(tarea.toResponse());
+        }, ADMINISTRADOR);
+
+        app.post("/api/donantes/importaciones", ctx -> {
+            String filename = ctx.header("X-Filename");
+            InputStream is;
+            UploadedFile uploadedFile = ctx.uploadedFile("archivo");
+            if (uploadedFile != null) {
+                filename = uploadedFile.filename();
+                is = uploadedFile.content();
+            } else {
+                if (filename == null || filename.isBlank()) {
+                    filename = "donantes.csv";
+                }
+                is = ctx.bodyInputStream();
+            }
+            ImportacionTarea tarea = importadorDeDonantes.iniciarImportacion(is, filename);
+            ctx.status(202).json(tarea.toResponse());
+        }, ADMINISTRADOR);
+
         app.get("/api/donantes", ctx -> {
             ctx.json(donanteService.obtenerTodos());
         }, ADMINISTRADOR);

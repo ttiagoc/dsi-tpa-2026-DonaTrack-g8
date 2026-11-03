@@ -46,6 +46,11 @@
       {{!-- --- Administrador (C) --- --}}
       <p class="menu-lateral__seccion">Administración</p>
       <a href="/admin" title="Inicio" {{#if (eq rutaActual "/admin")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-inicio"/></svg> <span>Inicio</span></a>
+      <a href="/admin/camiones" title="Camiones" {{#if (eq rutaActual "/admin/camiones")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-camion"/></svg> <span>Camiones</span></a>
+      <a href="/admin/deposito" title="Depósito y Vencidas" {{#if (eq rutaActual "/admin/deposito")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-caja"/></svg> <span>Depósito</span></a>
+      <a href="/admin/matchmaking" title="Matchmaking" {{#if (eq rutaActual "/admin/matchmaking")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-conexiones"/></svg> <span>Matchmaking</span></a>
+      <a href="/admin/recepcion" title="Recepción" {{#if (eq rutaActual "/admin/recepcion")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-recibir"/></svg> <span>Recepción</span></a>
+      <a href="/admin/importaciones" title="Importar CSV" {{#if (eq rutaActual "/admin/importaciones")}}aria-current="page"{{/if}}><svg class="icono"><use href="#i-subir"/></svg> <span>Importar CSV</span></a>
     {{/if}}
     {{!-- paginas comunes a todos los roles (los terminos van en el footer) --}}
     <p class="menu-lateral__seccion">Plataforma</p>

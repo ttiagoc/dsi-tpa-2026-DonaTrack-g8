@@ -678,6 +678,110 @@ code {
 .resumen__item--pendiente strong { color: #a36d00; }
 .resumen__item--ok strong { color: var(--color-primario); }
 .resumen__item--info strong { color: var(--color-info); }
+.resumen__item--alerta strong { color: var(--color-error); }
+
+/* ---- Pestañas de filtrado (ej. deposito) ---- */
+.pestanas {
+  display: flex;
+  gap: var(--espacio-2);
+  border-bottom: 2px solid var(--color-borde);
+  margin-bottom: var(--espacio-4);
+}
+.pestana {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--espacio-2) var(--espacio-4);
+  text-decoration: none;
+  color: var(--color-texto-suave);
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.pestana:hover {
+  color: var(--color-texto);
+}
+.pestana--activa {
+  color: var(--color-primario);
+  border-bottom-color: var(--color-primario);
+}
+.pestana__badge {
+  display: inline-block;
+  margin-left: var(--espacio-1);
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: var(--texto-chico);
+  background: var(--color-fondo);
+  color: var(--color-texto-suave);
+}
+.pestana--activa .pestana__badge {
+  background: var(--color-primario-suave);
+  color: var(--color-primario);
+}
+
+/* ---- Matchmaking: ranking de entidades sugeridas en modal ---- */
+.ranking-lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-3);
+  margin: var(--espacio-4) 0;
+}
+.ranking-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espacio-3);
+  padding: var(--espacio-3) var(--espacio-4);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  background: var(--color-superficie);
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+.ranking-item:hover {
+  border-color: var(--color-primario);
+}
+.ranking-item input[type="radio"] {
+  margin-top: 4px;
+}
+.ranking-item--seleccionado,
+.ranking-item:has(input[type="radio"]:checked) {
+  border-color: var(--color-primario);
+  background: var(--color-primario-suave);
+}
+.ranking-item__info {
+  flex: 1;
+}
+.ranking-item__titulo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--espacio-1);
+}
+.ranking-item__entidad {
+  font-weight: 600;
+  color: var(--color-texto);
+}
+
+/* ---- Recepcion: bloques de formulario agrupados ---- */
+.seccion-form {
+  margin-bottom: var(--espacio-5);
+  padding-bottom: var(--espacio-4);
+  border-bottom: 1px solid var(--color-borde);
+}
+.seccion-form:last-child {
+  border-bottom: 0;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+.seccion-form__titulo {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-texto);
+  margin-bottom: var(--espacio-3);
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+}
 
 .tarjeta--tabla { padding: 0; overflow: hidden; }
 .tarjeta--tabla .tabla th,

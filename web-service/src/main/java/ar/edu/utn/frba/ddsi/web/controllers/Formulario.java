@@ -93,6 +93,14 @@ public class Formulario {
         return !errores.isEmpty();
     }
 
+    public Map<String, String> errores() {
+        return errores;
+    }
+
+    public Map<String, String> valores() {
+        return valores;
+    }
+
     /** Agrega form y errores al modelo, mas un error general arriba del formulario si hay. */
     public Map<String, Object> enModelo(Map<String, Object> modelo, String errorGeneral) {
         modelo.put("form", valores);

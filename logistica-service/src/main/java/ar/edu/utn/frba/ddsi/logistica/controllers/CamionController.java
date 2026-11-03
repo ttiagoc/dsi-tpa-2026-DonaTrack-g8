@@ -4,6 +4,8 @@ import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.common.controllers.JavalinController;
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
+import static ar.edu.utn.frba.ddsi.common.security.Rol.ADMINISTRADOR;
+import static ar.edu.utn.frba.ddsi.common.security.Rol.SISTEMA;
 import ar.edu.utn.frba.ddsi.logistica.dto.camion.CamionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.services.CamionService;
@@ -22,23 +24,23 @@ public class CamionController implements JavalinController {
     public void registerRoutes(Javalin app) {
         app.get("/api/camiones", ctx -> {
             ctx.json(camionService.obtenerTodos());
-        });
+        }, ADMINISTRADOR, SISTEMA);
 
         app.get("/api/camiones/{id}", ctx -> {
             Long id = Long.parseLong(ctx.pathParam("id"));
             ctx.json(camionService.obtenerPorId(id));
-        });
+        }, ADMINISTRADOR, SISTEMA);
 
         app.post("/api/camiones", ctx -> {
             CamionRequest request = ctx.bodyAsClass(CamionRequest.class);
             ctx.status(201).json(camionService.crear(request));
-        });
+        }, ADMINISTRADOR, SISTEMA);
 
         app.put("/api/camiones/{id}", ctx -> {
             Long id = Long.parseLong(ctx.pathParam("id"));
             CamionRequest request = ctx.bodyAsClass(CamionRequest.class);
             ctx.json(camionService.actualizar(id, request));
-        });
+        }, ADMINISTRADOR, SISTEMA);
 
         app.delete("/api/camiones/{id}", ctx -> {
             Long id = Long.parseLong(ctx.pathParam("id"));
@@ -46,7 +48,7 @@ public class CamionController implements JavalinController {
                 throw new ResourceNotFoundException("No se encontro un camion con el id: " + id);
             }
             ctx.status(204);
-        });
+        }, ADMINISTRADOR, SISTEMA);
 
         app.get("/api/camiones/activos", ctx -> {
             ctx.json(camionService.obtenerCamionesActivos());
