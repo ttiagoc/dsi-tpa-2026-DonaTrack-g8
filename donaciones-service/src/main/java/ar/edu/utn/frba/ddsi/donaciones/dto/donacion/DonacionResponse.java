@@ -17,5 +17,14 @@ public record DonacionResponse(
                 LocalDateTime fechaAsignacion,
                 LocalDateTime fechaEstado,
                 NecesidadDeDonacionResponse necesidad,
-                List<String> fotosRecepcion) {
+                List<String> fotosRecepcion,
+                String justificacion) {
+
+    public DonacionResponse(Long id, List<BienResponse> bienes, String estadoActual, LocalDateTime fecha,
+            Long donanteId, Long entidadAsignadaId, String subcategoria, String categoria,
+            LocalDateTime fechaAsignacion, LocalDateTime fechaEstado,
+            NecesidadDeDonacionResponse necesidad, List<String> fotosRecepcion) {
+        this(id, bienes, estadoActual, fecha, donanteId, entidadAsignadaId, subcategoria, categoria,
+                fechaAsignacion, fechaEstado, necesidad, fotosRecepcion, null);
+    }
 }

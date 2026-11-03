@@ -267,7 +267,8 @@ public class DonacionServiceImpl implements DonacionService {
                 d.fechaAsignacion(),
                 d.fechaDelEstadoActual(),
                 necesidad,
-                fotos);
+                fotos,
+                d.justificacionDelEstadoActual());
     }
 
     private Bien toBien(BienRequest bienRequest) {

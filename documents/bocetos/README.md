@@ -37,8 +37,16 @@ En [Figma](https://www.figma.com/design/1tzIHQUO6aSwCbdgtPuXgj) quedó una prime
 
 | Req | Pantalla | Ruta | Boceto |
 |---|---|---|---|
+| 15 | Recepción en depósito: registro de donación presencial | `/admin/recepcion` | [15-recepcion.png](15-recepcion.png) |
+| 15 | Recepción en depósito: modal de alta rápida de donante | `/admin/recepcion` | [15b-recepcion-alta-donante.png](15b-recepcion-alta-donante.png) |
+| 16 | Depósito: stock disponible y vencidas | `/admin/deposito` | [16-deposito.png](16-deposito.png) |
+| 16 | Depósito: modal para marcar donación como vencida | `/admin/deposito` | [16b-deposito-vencer.png](16b-deposito-vencer.png) |
+| 17 | Matchmaking: propuestas de asignación pendientes | `/admin/matchmaking` | [17-matchmaking.png](17-matchmaking.png) |
+| 17 | Matchmaking: modal interactivo de selección de entidad sugerida | `/admin/matchmaking` | [17b-matchmaking-sugerencias.png](17b-matchmaking-sugerencias.png) |
 | 18 | Camiones: listado de flota | `/admin/camiones` | [18-camiones.png](18-camiones.png) |
 | 18 | Camiones: modal de alta y edición | `/admin/camiones` | [18b-camiones-alta.png](18b-camiones-alta.png) |
 | 18 | Camiones: modal de confirmación de eliminación | `/admin/camiones` | [18c-camiones-eliminar.png](18c-camiones-eliminar.png) |
+| 19 | Importación masiva: carga de donantes CSV (>10.000 filas) e historial | `/admin/importaciones` | [19-importaciones.png](19-importaciones.png) |
+| 19 | Importación masiva: progreso en segundo plano y detalle de errores | `/admin/importaciones` | [19b-importaciones-progreso.png](19b-importaciones-progreso.png) |
 
 Convención de nombres: `<req>[letra]-<pantalla>.png`. B y C agregan sus tablas (pantallas 5–9, 13–14 y 15–19) en este mismo archivo.

@@ -88,10 +88,44 @@ public class MotorDeMatchmaking {
     }
 
     private PropuestaMatchmakingResponse toPropuestaMatchmakingResponse(ResultadoMatchmaking p) {
+        Donacion d = p.getDonacion();
+        String subcat = (d != null && d.getSubcategoria() != null) ? d.getSubcategoria().getNombre() : null;
+        String cat = (d != null && d.getSubcategoria() != null && d.getSubcategoria().getCategoria() != null)
+                ? d.getSubcategoria().getCategoria().getNombre() : null;
+        String bienesResumen = "-";
+        long totalUnidades = 0;
+        if (d != null && d.getBienes() != null && !d.getBienes().isEmpty()) {
+            bienesResumen = d.getBienes().stream()
+                    .map(b -> (b.getCantidad() != null ? b.getCantidad() + " x " : "") + b.getDescripcion())
+                    .reduce((a, b) -> a + ", " + b)
+                    .orElse("-");
+            totalUnidades = d.getBienes().stream()
+                    .mapToLong(b -> b.getCantidad() != null ? b.getCantidad() : 0)
+                    .sum();
+        }
+
+        List<PropuestaMatchmakingResponse.EntidadSugeridaDto> entidadesDto = new ArrayList<>();
+        if (p.getEntidadesSugeridas() != null) {
+            for (int i = 0; i < p.getEntidadesSugeridas().size(); i++) {
+                EntidadBeneficiaria ent = p.getEntidadesSugeridas().get(i);
+                entidadesDto.add(new PropuestaMatchmakingResponse.EntidadSugeridaDto(
+                        ent.getId(),
+                        ent.getRazonSocial(),
+                        ent.getDireccion(),
+                        i + 1
+                ));
+            }
+        }
+
         return new PropuestaMatchmakingResponse(
                 p.getId(),
-                p.getDonacion().getId(),
-                p.getEntidadesSugeridas().stream().map(EntidadBeneficiaria::getId).toList(),
+                d != null ? d.getId() : null,
+                subcat,
+                cat,
+                bienesResumen,
+                totalUnidades,
+                p.getEntidadesSugeridas() != null ? p.getEntidadesSugeridas().stream().map(EntidadBeneficiaria::getId).toList() : List.of(),
+                entidadesDto,
                 p.getFechaEjecucion());
     }
 

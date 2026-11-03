@@ -170,6 +170,13 @@ public class Donacion {
         : this.historialEstados.get(this.historialEstados.size() - 1).getFecha();
   }
 
+  public String justificacionDelEstadoActual() {
+    if (this.historialEstados == null || this.historialEstados.isEmpty()) {
+      return null;
+    }
+    return this.historialEstados.get(this.historialEstados.size() - 1).getJustificacion();
+  }
+
   // la ultima asignacion: si volvio al deposito y se reasigno, cuenta la nueva
   public LocalDateTime fechaAsignacion() {
     return this.historialEstados.stream()

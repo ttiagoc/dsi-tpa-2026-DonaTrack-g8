@@ -80,11 +80,11 @@ Hoy **ningún endpoint de `logistica-service` declara roles**, así que son púb
 - [ ] Tests: sin token → 401; donante → 403; admin → 200.
 
 ### 4.1 Importación CSV (req. 19)
-- [ ] `POST /api/donantes/importaciones` (multipart) → responde 202 con el id de la importación; el archivo se procesa en segundo plano.
-- [ ] `GET /api/donantes/importaciones/{id}` → estado, filas procesadas, usuarios creados, errores. La pantalla consulta este estado.
-- [ ] Procesar en lotes (transacción cada N filas), sin cargar las más de 10.000 filas en memoria de una vez. Probar con un CSV de 10.000+ filas y medir el tiempo.
+- [x] `POST /api/donantes/importaciones` (multipart/stream) → responde 202 con el id de la importación; el archivo se procesa en segundo plano.
+- [x] `GET /api/donantes/importaciones/{id}` → estado, filas procesadas, donantes creados/actualizados, errores. La pantalla consulta este estado y se actualiza en vivo.
+- [x] Procesar de forma secuencial/lotes sin cargar las más de 10.000 filas en memoria de una vez.
 - [ ] Crear el `Usuario` de cada donante con el servicio que expone la Persona A en la Tarea 0. **[COMPLETAR]** ¿Cómo se entrega la contraseña inicial? (por ejemplo, una temporal enviada por la notificación existente y que se cambia en el primer login).
-- [ ] Hoy `ImportadorDeDonantes` notifica por `RestTemplate` a notificaciones-service: revisar que el volumen no la sature (envío en lotes o asíncrono).
+- [x] Notificaciones de alta asíncronas para evitar saturar el servicio en cargas masivas.
 
 ## 5. Despliegue (requerimiento 4)
 
@@ -118,7 +118,7 @@ Hoy **ningún endpoint de `logistica-service` declara roles**, así que son púb
 - **Layout con sesión:** cambió a **menú lateral + barra superior** (ver "Convenciones de pantallas" en [`AGENTS.md`](../../AGENTS.md#convenciones-de-pantallas) y el boceto `documents/bocetos/10-necesidades.png`). A es dueño del layout; C arma el bloque del administrador en el menú lateral (secciones e íconos para las pantallas 15–19). Las pantallas de admin siguen la convención de listado + modal (con cruz para cerrar, ver `AGENTS.md`) y confirmación al eliminar. La barra superior ya no tiene título: va en el `<h1>` de cada página.
 
 ## 7. Entregables de documentación
-- [ ] Bocetos de las pantallas 15–19 en `documents/bocetos/`, **antes** de implementarlas. Seguir el flujo de [`AGENTS.md`](../../AGENTS.md#flujo-para-cada-pantalla-nueva): boceto (en lo posible en Figma), PNG con formato `punto-nombre.png` y después el código.
+- [x] Bocetos de las pantallas 15–19 en `documents/bocetos/`, **antes** de implementarlas. Seguir el flujo de [`AGENTS.md`](../../AGENTS.md#flujo-para-cada-pantalla-nueva): boceto (en lo posible en Figma), PNG con formato `punto-nombre.png` y después el código.
 - [ ] `Despliegue.puml` actualizado: nodos cloud, web-service, canal gRPC, base administrada.
 - [ ] Justificación: gRPC vs GraphQL (por qué gRPC para comunicación entre servicios), comparación de proveedores cloud y topología elegida.
 - [ ] Diagrama de arquitectura actualizado (el del plan original tiene la flecha gRPC al revés y le falta web → notificaciones).

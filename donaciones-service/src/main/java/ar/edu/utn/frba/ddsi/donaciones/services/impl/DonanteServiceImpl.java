@@ -46,10 +46,24 @@ public class DonanteServiceImpl implements DonanteService {
     }
 
     private DonanteResponse toDonanteResponse(Donante d) {
+        String nombre = null;
+        String documento = null;
+        if (d instanceof PersonaHumana ph) {
+            nombre = ph.getNombre() + (ph.getApellido() != null && !ph.getApellido().isBlank() ? " " + ph.getApellido() : "");
+            documento = ph.getDni();
+        } else if (d instanceof PersonaJuridica pj) {
+            nombre = pj.getRazonSocial();
+            documento = pj.getCuit();
+        }
+        String contacto = (d.getContactoPredeterminado() != null && d.getContactoPredeterminado().getValor() != null)
+                ? d.getContactoPredeterminado().getValor()
+                : null;
         return new DonanteResponse(
                 d.getId(),
                 getStringTipoDonante(d),
-                d.getContactoPredeterminado().getValor());
+                nombre,
+                documento,
+                contacto);
     }
 
     public DonanteResponse obtenerPorId(Long id) {

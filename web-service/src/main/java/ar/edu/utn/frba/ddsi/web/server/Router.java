@@ -9,6 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 
 import ar.edu.utn.frba.ddsi.web.controllers.CamionesAdminController;
+import ar.edu.utn.frba.ddsi.web.controllers.DepositoAdminController;
+import ar.edu.utn.frba.ddsi.web.controllers.MatchmakingAdminController;
+import ar.edu.utn.frba.ddsi.web.controllers.RecepcionAdminController;
+import ar.edu.utn.frba.ddsi.web.controllers.ImportacionesAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.DonacionesAsignadasController;
 import ar.edu.utn.frba.ddsi.web.controllers.DonanteWebController;
 import ar.edu.utn.frba.ddsi.web.controllers.HomeController;
@@ -40,13 +44,21 @@ public class Router {
     private final MapaController mapa;
     private final DonanteWebController donanteWeb;
     private final CamionesAdminController camionesAdmin;
+    private final DepositoAdminController depositoAdmin;
+    private final MatchmakingAdminController matchmakingAdmin;
+    private final RecepcionAdminController recepcionAdmin;
+    private final ImportacionesAdminController importacionesAdmin;
 
     @Autowired
     public Router(AutorizacionMiddleware autorizacion, HomeController home, SesionController sesion,
             RegistroController registro, PanelController panel, NecesidadesController necesidades,
             DonacionesAsignadasController donacionesAsignadas, RecepcionController recepcion, MapaController mapa,
             DonanteWebController donanteWeb,
-            @Autowired(required = false) CamionesAdminController camionesAdmin) {
+            @Autowired(required = false) CamionesAdminController camionesAdmin,
+            @Autowired(required = false) DepositoAdminController depositoAdmin,
+            @Autowired(required = false) MatchmakingAdminController matchmakingAdmin,
+            @Autowired(required = false) RecepcionAdminController recepcionAdmin,
+            @Autowired(required = false) ImportacionesAdminController importacionesAdmin) {
 
         this.autorizacion = autorizacion;
         this.home = home;
@@ -59,13 +71,17 @@ public class Router {
         this.mapa = mapa;
         this.donanteWeb = donanteWeb;
         this.camionesAdmin = camionesAdmin;
+        this.depositoAdmin = depositoAdmin;
+        this.matchmakingAdmin = matchmakingAdmin;
+        this.recepcionAdmin = recepcionAdmin;
+        this.importacionesAdmin = importacionesAdmin;
     }
 
   // Sobrecarga para tests
     public Router(AutorizacionMiddleware autorizacion, HomeController home, SesionController sesion,
                   RegistroController registro, PanelController panel, NecesidadesController necesidades,
                   DonacionesAsignadasController donacionesAsignadas, RecepcionController recepcion, MapaController mapa) {
-      this(autorizacion, home, sesion, registro, panel, necesidades, donacionesAsignadas, recepcion, mapa, null, null);
+      this(autorizacion, home, sesion, registro, panel, necesidades, donacionesAsignadas, recepcion, mapa, null, null, null, null, null, null);
     }
 
     public void registrar(Javalin app) {
@@ -120,6 +136,26 @@ public class Router {
             app.post("/admin/camiones", camionesAdmin::crear, ADMINISTRADOR);
             app.post("/admin/camiones/{id}/editar", camionesAdmin::actualizar, ADMINISTRADOR);
             app.post("/admin/camiones/{id}/eliminar", camionesAdmin::eliminar, ADMINISTRADOR);
+        }
+        if (depositoAdmin != null) {
+            app.get("/admin/deposito", depositoAdmin::listar, ADMINISTRADOR);
+            app.post("/admin/deposito/{id}/vencer", depositoAdmin::marcarVencida, ADMINISTRADOR);
+        }
+        if (matchmakingAdmin != null) {
+            app.get("/admin/matchmaking", matchmakingAdmin::listar, ADMINISTRADOR);
+            app.post("/admin/matchmaking/ejecutar", matchmakingAdmin::ejecutar, ADMINISTRADOR);
+            app.post("/admin/matchmaking/propuestas/{id}/aceptar", matchmakingAdmin::aceptar, ADMINISTRADOR);
+            app.post("/admin/matchmaking/propuestas/{id}/rechazar", matchmakingAdmin::rechazar, ADMINISTRADOR);
+        }
+        if (recepcionAdmin != null) {
+            app.get("/admin/recepcion", recepcionAdmin::mostrarFormulario, ADMINISTRADOR);
+            app.post("/admin/recepcion", recepcionAdmin::registrarDonacion, ADMINISTRADOR);
+            app.post("/admin/recepcion/donante-humana", recepcionAdmin::crearDonanteHumana, ADMINISTRADOR);
+        }
+        if (importacionesAdmin != null) {
+            app.get("/admin/importaciones", importacionesAdmin::listar, ADMINISTRADOR);
+            app.post("/admin/importaciones", importacionesAdmin::importar, ADMINISTRADOR);
+            app.get("/admin/importaciones/{id}/estado", importacionesAdmin::consultarEstado, ADMINISTRADOR);
         }
     }
 }

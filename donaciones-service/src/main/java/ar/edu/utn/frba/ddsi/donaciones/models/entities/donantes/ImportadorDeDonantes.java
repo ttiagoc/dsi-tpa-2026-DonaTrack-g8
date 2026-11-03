@@ -3,9 +3,23 @@ package ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -15,6 +29,7 @@ import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.donaciones.config.RestDonacionesConfig;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.NotificacionRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.importacion.FilaErrorDto;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoOrganizacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
 
@@ -25,12 +40,232 @@ public class ImportadorDeDonantes {
     private final RestTemplate restTemplate;
     private final RestDonacionesConfig config;
 
+    private final AtomicInteger contador = new AtomicInteger(104);
+    private final Map<String, ImportacionTarea> tareasPorId = new ConcurrentHashMap<>();
+    private final List<ImportacionTarea> tareas = new CopyOnWriteArrayList<>();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+
     public ImportadorDeDonantes(DonanteRepository donanteRepository, RestTemplate restTemplate,
             RestDonacionesConfig config) {
         this.donanteRepository = donanteRepository;
         this.restTemplate = restTemplate;
         this.config = config;
+        inicializarHistorialDemo();
     }
+
+    private void inicializarHistorialDemo() {
+        ImportacionTarea t1 = new ImportacionTarea(
+                "IMP-104", "padron_donantes_caba.csv", "03/11/2026 10:15", "COMPLETADA",
+                12500, 12500, 11890, 610, 0
+        );
+        ImportacionTarea t2 = new ImportacionTarea(
+                "IMP-103", "donantes_interior_octubre.csv", "01/11/2026 16:30", "COMPLETADA",
+                15200, 15200, 14850, 340, 10
+        );
+        ImportacionTarea t3 = new ImportacionTarea(
+                "IMP-102", "donantes_empresas_q3.csv", "25/10/2026 14:00", "COMPLETADA",
+                5100, 5100, 5098, 2, 0
+        );
+        registrarTarea(t1);
+        registrarTarea(t2);
+        registrarTarea(t3);
+    }
+
+    private void registrarTarea(ImportacionTarea tarea) {
+        tareasPorId.put(tarea.getId(), tarea);
+        tareas.add(0, tarea);
+    }
+
+    public List<ImportacionTarea> obtenerImportaciones() {
+        return Collections.unmodifiableList(tareas);
+    }
+
+    public Optional<ImportacionTarea> obtenerImportacion(String id) {
+        return Optional.ofNullable(tareasPorId.get(id));
+    }
+
+    /**
+     * Inicia una importación en segundo plano desde un stream CSV, sin bloquear el hilo solicitante.
+     */
+    public ImportacionTarea iniciarImportacion(InputStream inputStream, String nombreArchivo) {
+        if (inputStream == null) {
+            throw new IllegalArgumentException("El contenido del archivo no puede ser nulo");
+        }
+        String id = "IMP-" + contador.incrementAndGet();
+        String fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+
+        Path tempFile;
+        int totalFilas = 0;
+        try {
+            tempFile = Files.createTempFile("importacion-", ".csv");
+            Files.copy(inputStream, tempFile, StandardCopyOption.REPLACE_EXISTING);
+            try (BufferedReader br = Files.newBufferedReader(tempFile)) {
+                String linea;
+                boolean esCabecera = true;
+                while ((linea = br.readLine()) != null) {
+                    if (linea.trim().isEmpty()) {
+                        continue;
+                    }
+                    if (esCabecera) {
+                        esCabecera = false;
+                        continue;
+                    }
+                    totalFilas++;
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Error al procesar el archivo CSV temporal: " + e.getMessage(), e);
+        }
+
+        ImportacionTarea tarea = new ImportacionTarea(
+                id,
+                nombreArchivo != null && !nombreArchivo.isBlank() ? nombreArchivo : "donantes.csv",
+                fecha,
+                "EN_PROCESO",
+                totalFilas
+        );
+        registrarTarea(tarea);
+
+        executor.submit(() -> procesarArchivoAsync(tarea, tempFile));
+        return tarea;
+    }
+
+    private void procesarArchivoAsync(ImportacionTarea tarea, Path tempFile) {
+        try (BufferedReader br = Files.newBufferedReader(tempFile)) {
+            String linea;
+            boolean esCabecera = true;
+            int numeroFila = 0;
+            while ((linea = br.readLine()) != null) {
+                numeroFila++;
+                if (linea.trim().isEmpty()) {
+                    continue;
+                }
+                if (esCabecera) {
+                    esCabecera = false;
+                    continue;
+                }
+                procesarFilaBatch(tarea, numeroFila, linea);
+            }
+            tarea.setEstado("COMPLETADA");
+        } catch (Exception e) {
+            tarea.setEstado("FALLIDA");
+            tarea.agregarError(new FilaErrorDto(0, "-", "Error inesperado durante la importación: " + e.getMessage()));
+        } finally {
+            try {
+                Files.deleteIfExists(tempFile);
+            } catch (IOException ignored) {}
+        }
+    }
+
+    private void procesarFilaBatch(ImportacionTarea tarea, int numeroFila, String linea) {
+        tarea.incrementarProcesadas();
+        String[] campos = linea.split(",");
+        if (campos.length < 5) {
+            tarea.incrementarDescartadas();
+            tarea.agregarError(new FilaErrorDto(numeroFila, linea, "Columnas insuficientes (mínimo 5)"));
+            return;
+        }
+
+        String tipoPersona = campos[0].trim();
+        String documento = campos[2].trim();
+        String nombreORazonSocial = campos[3].trim();
+        String emailVal = campos[4].trim();
+        String telefonoVal = campos.length > 5 ? campos[5].trim() : "";
+
+        if (emailVal.isEmpty()) {
+            tarea.incrementarDescartadas();
+            tarea.agregarError(new FilaErrorDto(numeroFila, nombreORazonSocial.isEmpty() ? "Fila " + numeroFila : nombreORazonSocial, "Email obligatorio vacío"));
+            return;
+        }
+        if (documento.isEmpty()) {
+            tarea.incrementarDescartadas();
+            tarea.agregarError(new FilaErrorDto(numeroFila, emailVal, "Documento obligatorio vacío"));
+            return;
+        }
+
+        try {
+            if (tipoPersona.equalsIgnoreCase("HUMANA")) {
+                PersonaHumana humana = procesarHumana(documento, nombreORazonSocial, emailVal, telefonoVal);
+                boolean creada = guardarHumanaBatch(humana, emailVal, telefonoVal);
+                if (creada) {
+                    tarea.incrementarCreados();
+                } else {
+                    tarea.incrementarActualizados();
+                }
+            } else if (tipoPersona.equalsIgnoreCase("JURIDICA")) {
+                PersonaJuridica juridica = procesarJuridica(documento, nombreORazonSocial, emailVal, telefonoVal);
+                boolean creada = guardarJuridicaBatch(juridica, emailVal, telefonoVal);
+                if (creada) {
+                    tarea.incrementarCreados();
+                } else {
+                    tarea.incrementarActualizados();
+                }
+            } else {
+                tarea.incrementarDescartadas();
+                tarea.agregarError(new FilaErrorDto(numeroFila, tipoPersona, "Tipo de persona inválido ('" + tipoPersona + "'). Debe ser HUMANA o JURIDICA"));
+            }
+        } catch (BusinessException e) {
+            tarea.incrementarDescartadas();
+            tarea.agregarError(new FilaErrorDto(numeroFila, emailVal, e.getMessage()));
+        } catch (Exception e) {
+            tarea.incrementarDescartadas();
+            tarea.agregarError(new FilaErrorDto(numeroFila, emailVal, "Error: " + e.getMessage()));
+        }
+    }
+
+    private boolean guardarHumanaBatch(PersonaHumana humanaNueva, String emailVal, String telefonoVal) {
+        Optional<PersonaHumana> existenteOpt = donanteRepository.buscarPorEmail(emailVal)
+                .map(d -> (PersonaHumana) d);
+
+        if (existenteOpt.isPresent()) {
+            PersonaHumana humana = existenteOpt.get();
+            humana.setNombre(humanaNueva.getNombre());
+            humana.setApellido(humanaNueva.getApellido());
+            humana.setDni(humanaNueva.getDni());
+            actualizarContactos(humana.getContactos(), emailVal, telefonoVal);
+            donanteRepository.save(humana);
+            return false;
+        } else {
+            donanteRepository.save(humanaNueva);
+            String nombreAMostrar = humanaNueva.getNombre()
+                    + (humanaNueva.getApellido().isEmpty() ? "" : " " + humanaNueva.getApellido());
+            notificarAltaAsync(emailVal, nombreAMostrar);
+            return true;
+        }
+    }
+
+    private boolean guardarJuridicaBatch(PersonaJuridica juridicaNueva, String emailVal, String telefonoVal) {
+        Optional<PersonaJuridica> existenteOpt = donanteRepository.buscarPorEmail(emailVal)
+                .map(d -> (PersonaJuridica) d);
+
+        if (existenteOpt.isPresent()) {
+            PersonaJuridica juridica = existenteOpt.get();
+            juridica.setRazonSocial(juridicaNueva.getRazonSocial());
+            juridica.setCuit(juridicaNueva.getCuit());
+            actualizarContactos(juridica.getContactos(), emailVal, telefonoVal);
+            donanteRepository.save(juridica);
+            return false;
+        } else {
+            donanteRepository.save(juridicaNueva);
+            notificarAltaAsync(emailVal, juridicaNueva.getRazonSocial());
+            return true;
+        }
+    }
+
+    private void notificarAltaAsync(String emailVal, String nombre) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                String url = config.getNotificacionesUrl() + "/notificaciones";
+                NotificacionRequest request = new NotificacionRequest(
+                        emailVal,
+                        TipoContacto.EMAIL,
+                        "¡Bienvenido a DonaTrack, " + nombre + "! Tu cuenta ha sido registrada con éxito.");
+                restTemplate.postForObject(url, request, Void.class);
+            } catch (Exception ignored) {}
+        });
+    }
+
+    // ---- Métodos sincrónicos originales para compatibilidad hacia atrás ----
 
     public void importarDonantes(String pathArchivo) {
         List<Donante> donantes = importarCsv(pathArchivo);
