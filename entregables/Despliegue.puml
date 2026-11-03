@@ -36,90 +36,93 @@ skinparam cloud {
     FontColor #006064
     FontStyle bold
 }
+skinparam storage {
+    BackgroundColor #FFF3E0
+    BorderColor #FB8C00
+    FontColor #E65100
+    FontStyle bold
+}
 
 ' --- 1. CAPA CLIENTE ---
-node "Computadora Personal" <<Device>> {
-    component "Navegador Web" as Nav
+node "Dispositivo Usuario" <<Device>> {
+    component "Navegador Web\n(Desktop / Mobile)" as Nav
 }
 
 ' --- RED INTERMEDIA ---
-cloud "Internet" as Net
+cloud "Internet Pública" as Net
 
-' --- 2. CAPA FRONTEND ---
-' Cliente liviano con MVC del lado del servidor: arma el HTML y solo habla HTTP con las APIs
-' (sin base de datos propia). La sesion vive en memoria del servidor; el navegador solo
-' guarda la cookie donatrack_session (HttpOnly, SameSite=Lax, Secure en la nube).
-rectangle "Capa de Presentación" {
-    node "Servidor Web" as NodeWeb {
-        component "web-service\n(Javalin + Handlebars)\npuerto 7070" as Front
-        component "Sesiones en memoria\n(tokens JWT por usuario)" as Sesiones
+' --- 2. ENTORNO CLOUD (INFRAESTRUCTURA DE DESPLIEGUE) ---
+rectangle "Infraestructura Cloud (Red Privada / VPC)" {
+
+    ' Capa de Presentación (Frontend)
+    node "Nodo Cloud: Web" as NodeWeb {
+        component "web-service\n(Javalin + Handlebars)\nPuerto :7070" as Front
+        component "Sesiones en Memoria\n(JWT por usuario)" as Sesiones
+    }
+
+    storage "Volumen Persistente\n(/data/fotos)" as StorageFotos
+
+    ' Capa de Dominio (Microservicios en Nodos Separados)
+    node "Nodo Cloud: Donaciones (Principal)" as NodeS1 {
+        component "donaciones-service\n(Spring Boot)\nREST :8080\ngRPC Server :9090" as S1
+    }
+
+    node "Nodo Cloud: Logística (Extraído)" as NodeS2 {
+        component "logistica-service\n(Spring Boot)\nREST :8081\ngRPC Client" as S2
+    }
+
+    node "Nodo Cloud: Notificaciones" as NodeS3 {
+        component "notificaciones-service\n(Spring Boot)\nREST :8082" as S3
+    }
+
+    ' Capa de Persistencia Administrada
+    database "PostgreSQL Administrado\n(Managed DB / Neon)" as NodeDB {
+        component "Base donaciones" as DB1
+        component "Base logistica" as DB2
+        component "Base notificaciones" as DB3
     }
 }
 
-' --- 3. CAPA DOMINIO (MICROSERVICIOS) ---
-rectangle "Capa de Dominio" {
-    node "Servidor Donaciones" as NodeS1 {
-        component "Microservicio Donaciones" as S1
-    }
-    node "Servidor Logística" as NodeS2 {
-        component "Microservicio Logística" as S2
-    }
-    node "Servidor Notificaciones" as NodeS3 {
-        component "Microservicio Notificaciones" as S3
-    }
-}
-
-' --- 4. CAPA PERSISTENCIA Y EXTERNOS ---
-' Cada microservicio tiene su propia base de datos: ningun servicio accede
-' a los datos de otro, solo se comunican por API REST.
-rectangle "Capa de Persistencia" {
-    database "Servidor BD Donaciones" as NodeDB1 {
-        component "PostgreSQL\nbase: donaciones" as DB1
-    }
-    database "Servidor BD Logística" as NodeDB2 {
-        component "PostgreSQL\nbase: logistica" as DB2
-    }
-    database "Servidor BD Notificaciones" as NodeDB3 {
-        component "PostgreSQL\nbase: notificaciones" as DB3
-    }
-}
-
+' --- 3. SISTEMAS EXTERNOS ---
 node "Sistemas Externos" <<External System>> #ECEFF1 {
-    component "APIs de Mensajería" as Ext
-    component "Componente de Planificación de Rutas" as Planif
+    component "APIs de Mensajería\n(Resend / Twilio)" as Ext
+    component "Componente Externo de\nPlanificación de Rutas" as Planif
 }
 
 ' --- ALINEACIÓN VERTICAL INTERNA ---
+NodeWeb -[hidden]down-> StorageFotos
 NodeS1 -[hidden]down-> NodeS2
 NodeS2 -[hidden]down-> NodeS3
-NodeDB1 -[hidden]down-> NodeDB2
-NodeDB2 -[hidden]down-> NodeDB3
+DB1 -[hidden]down-> DB2
+DB2 -[hidden]down-> DB3
 
-' --- FLUJOS Y CONEXIONES (Izquierda a Derecha) ---
+' --- FLUJOS Y CONEXIONES ---
 
-' Cliente -> Internet -> Frontend
-Nav --> Net : HTTPS (HTML + cookie de sesión)
-Net --> Front : HTTPS
-
+' Cliente -> Internet -> Frontend Web
+Nav --> Net : HTTPS (HTML + cookie donatrack_session)
+Net --> Front : HTTPS (Reverse Proxy / SSL)
 Front -- Sesiones
+Front --> StorageFotos : Almacenamiento fotos recepción (disco persistente)
 
-' Frontend -> Microservicios (Authorization: Bearer <JWT>; login y registro en /api/auth de Donaciones)
-Front --> S1 : HTTP - API REST + JWT
-Front --> S2 : HTTP - API REST + JWT
-Front --> S3 : HTTP - API REST + JWT
+' Frontend -> Microservicios (Red Privada, REST + JWT Bearer)
+Front --> S1 : HTTP/1.1 REST (:8080) + JWT
+Front --> S2 : HTTP/1.1 REST (:8081) + JWT
+Front --> S3 : HTTP/1.1 REST (:8082) + JWT
 
-' Conexiones cruzadas entre Microservicios
-S1 <--> S2 : HTTP - API REST
-S2 <--> S3 : HTTP - API REST
-S1 <--> S3 : HTTP - API REST
+' Integración inter-servicios: Logística -> Donaciones vía gRPC HTTP/2
+S2 --> S1 : gRPC sobre HTTP/2 (:9090)\n[x-api-key en metadata]
 
-' Microservicios -> Base de Datos propia (JPA/Hibernate sobre JDBC)
-S1 --> DB1 : TCP/IP - JDBC
-S2 --> DB2 : TCP/IP - JDBC
-S3 --> DB3 : TCP/IP - JDBC
+' Integración inter-servicios: Notificaciones vía REST
+S1 --> S3 : HTTP REST (:8082)\n[notificaciones de eventos]
+S2 --> S3 : HTTP REST (:8082)\n[notificaciones de rutas]
+
+' Microservicios -> PostgreSQL Administrado (Bases separadas)
+S1 --> DB1 : TCP/IP JDBC (SSL)
+S2 --> DB2 : TCP/IP JDBC (SSL)
+S3 --> DB3 : TCP/IP JDBC (SSL)
 
 ' Salida a Sistemas Externos
-S3 --> Ext : HTTPS
-S2 <--> Planif : HTTP - API REST
+S3 --> Ext : HTTPS (Email / WhatsApp / SMS)
+S2 <--> Planif : HTTP REST (Callback asíncrono)
 
 @enduml

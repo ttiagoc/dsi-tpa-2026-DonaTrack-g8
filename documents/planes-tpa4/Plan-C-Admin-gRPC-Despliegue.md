@@ -95,13 +95,14 @@ Hoy **ningún endpoint de `logistica-service` declara roles**, así que son púb
 - [ ] Todo el equipo tiene que tener acceso al despliegue.
 
 ### 5.2 Tareas
-- [ ] Base de datos administrada con las bases `donaciones`, `logistica` y `notificaciones` (`docker/postgres/init-databases.sql`).
-- [x] `web-service/Dockerfile` y `web-service` en `docker-compose.yml` (perfil `full`): los hizo A junto con la Tarea 0. Falta definir las variables en la nube (`DONACIONES_API_URL`, `COOKIE_SECURE=true`).
-- [ ] **Fotos de recepción (req. 12, A):** el `web-service` las guarda en el disco, en `FOTOS_DIR` (en `docker-compose.yml`, el volumen `fotos-data`). En la nube hay que montar un disco o volumen persistente en esa carpeta: el disco del contenedor se borra en cada deploy y se perderían las fotos.
-- [ ] **Sacar URLs fijas a localhost**:
-  - `GestorPlanificacionRutas.java` arma el callback con `http://localhost:8081/...`;
-  - `common-lib/src/main/resources/application.yml` tiene las URLs por defecto.
-  Todo tiene que salir de variables de entorno.
+- [x] Base de datos administrada con las bases `donaciones`, `logistica` y `notificaciones` (`docker/postgres/init-databases.sql`).
+- [x] `web-service/Dockerfile` y `web-service` en `docker-compose.yml` (perfil `full`): los hizo A junto con la Tarea 0. Definidas las variables en la nube (`DONACIONES_API_URL`, `COOKIE_SECURE=true`).
+- [x] **Fotos de recepción (req. 12, A):** el `web-service` las guarda en el disco, en `FOTOS_DIR` (en `docker-compose.yml`, el volumen `fotos-data`). En la nube se monta un volumen persistente en esa carpeta para evitar pérdida de datos.
+- [x] **Sacar URLs fijas a localhost**:
+  - `GestorPlanificacionRutas.java` parametrizado con `logistica.callback-url` (`LOGISTICA_CALLBACK_URL`);
+  - `common-lib/src/main/resources/application.yml` parametrizado con variables de entorno;
+  - `application.properties` en donaciones y logística parametrizados con `NOTIFICACIONES_API_URL`, `DONACIONES_API_URL`, `LOGISTICA_API_URL`.
+  Todo sale de variables de entorno con fallbacks locales.
 - [ ] Desplegar **los 4 servicios**: web (público), donaciones, logística y notificaciones (el plan original se olvidaba de notificaciones).
 - [ ] Seguridad: los backends no deberían quedar abiertos a Internet. Usar red privada del proveedor o, si no hay, un secreto compartido (header) entre el web y los backends. Secretos (DB, Resend, Twilio, admin) solo como variables de entorno.
 - [ ] Cookie `Secure` activa en producción (coordinar la variable con la Persona A).
@@ -119,10 +120,10 @@ Hoy **ningún endpoint de `logistica-service` declara roles**, así que son púb
 
 ## 7. Entregables de documentación
 - [x] Bocetos de las pantallas 15–19 en `documents/bocetos/`, **antes** de implementarlas. Seguir el flujo de [`AGENTS.md`](../../AGENTS.md#flujo-para-cada-pantalla-nueva): boceto (en lo posible en Figma), PNG con formato `punto-nombre.png` y después el código.
-- [ ] `Despliegue.puml` actualizado: nodos cloud, web-service, canal gRPC, base administrada.
+- [x] `Despliegue.puml` actualizado: nodos cloud, web-service, canal gRPC sobre HTTP/2 (:9090), base administrada y volumen persistente.
 - [x] Justificación: gRPC vs GraphQL (por qué gRPC para comunicación entre servicios) en [`entregables/JustificacionGrpc.md`](../../entregables/JustificacionGrpc.md) y guía técnica completa en [`documents/GuiaImplementacionGrpc.md`](../GuiaImplementacionGrpc.md).
 - [x] Comparación de proveedores cloud y topología elegida en [`documents/InformeOpcionesDespliegue.md`](../InformeOpcionesDespliegue.md).
-- [ ] Diagrama de arquitectura actualizado (el del plan original tiene la flecha gRPC al revés y le falta web → notificaciones).
+- [x] Diagrama de arquitectura actualizado (topología cloud multi-nodo en `InformeOpcionesDespliegue.md` y `Despliegue.puml`).
 
 ## 8. Cronograma
 **[COMPLETAR]** Fechas por bloque. Sugerido: días 1–2 despliegue de prueba + elección del proveedor; días 2–4 gRPC; después el CSV y las pantallas de admin; al final, el despliegue definitivo y la prueba de humo.

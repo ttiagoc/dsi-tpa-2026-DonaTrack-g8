@@ -1,7 +1,7 @@
 rest:
-  donaciones-url: "http://localhost:8080/api"
-  logistica-url: "http://localhost:8081/api"
-  notificaciones-url: "http://localhost:8082/api"
+  donaciones-url: "${DONACIONES_API_URL:http://localhost:8080/api}"
+  logistica-url: "${LOGISTICA_API_URL:http://localhost:8081/api}"
+  notificaciones-url: "${NOTIFICACIONES_API_URL:http://localhost:8082/api}"
 
 # Secreto con el que se firman y validan los JWT (HS256, al menos 32 bytes). Tiene que ser el mismo en
 # todos los servicios. El valor por defecto es solo para correr en local: en la nube se define JWT_SECRET.

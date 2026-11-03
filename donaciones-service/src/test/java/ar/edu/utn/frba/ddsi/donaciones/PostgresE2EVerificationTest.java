@@ -261,10 +261,10 @@ public class PostgresE2EVerificationTest {
         assertTrue(res.statusCode() < 300, "Request a " + url + " devolvio " + res.statusCode());
     }
 
-    // La API de donaciones exige un usuario: el test entra como el administrador inicial
+    // La API de donaciones y logistica exige un usuario: el test entra como el administrador inicial
     private HttpRequest.Builder request(String url) throws Exception {
         HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(url));
-        if (url.startsWith(DONACIONES_URL)) {
+        if (url.startsWith(DONACIONES_URL) || url.startsWith(LOGISTICA_URL)) {
             builder.header("Authorization", "Bearer " + tokenAdmin());
         }
         return builder;

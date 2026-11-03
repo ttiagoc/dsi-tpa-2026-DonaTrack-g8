@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import ar.edu.utn.frba.ddsi.logistica.dto.donacion.DonacionDTO;
@@ -11,15 +14,22 @@ import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.CamionPlanificacionReque
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.DireccionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
 
-import org.springframework.stereotype.Component;
-
 @Component
 public class GestorPlanificacionRutas {
 
     private final RestTemplate restTemplate;
+    private final String callbackUrl;
+
+    @Autowired
+    public GestorPlanificacionRutas(
+            RestTemplate restTemplate,
+            @Value("${logistica.callback-url:http://localhost:8081/api/rutas/planificaciones/resultados}") String callbackUrl) {
+        this.restTemplate = restTemplate;
+        this.callbackUrl = callbackUrl;
+    }
 
     public GestorPlanificacionRutas(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+        this(restTemplate, "http://localhost:8081/api/rutas/planificaciones/resultados");
     }
 
     public void solicitarPlanificacion(List<DonacionDTO> donaciones, List<Camion> camiones) {
@@ -52,8 +62,8 @@ public class GestorPlanificacionRutas {
                 EjecutarPlanificacionRequest mockResponse = new EjecutarPlanificacionRequest(camionesProcesados,
                         donacionesSobrantes);
 
-                String urlCallback = "http://localhost:8081/api/rutas/planificaciones/resultados";
-                System.out.println("Cálculo terminado. Golpeando la URL de callback...");
+                String urlCallback = this.callbackUrl;
+                System.out.println("Cálculo terminado. Golpeando la URL de callback: " + urlCallback);
 
                 restTemplate.postForObject(urlCallback, mockResponse, Void.class);
             } catch (Exception e) {
