@@ -1,44 +1,35 @@
 package ar.edu.utn.frba.ddsi.logistica.models.entities.logistica;
 
-import java.net.URI;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import ar.edu.utn.frba.ddsi.logistica.config.RestLogisticaConfig;
 import ar.edu.utn.frba.ddsi.logistica.dto.donacion.DonacionDTO;
-import ar.edu.utn.frba.ddsi.logistica.dto.donacion.EstadoDonacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.CamionPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.DireccionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
+import ar.edu.utn.frba.ddsi.logistica.grpc.DonacionesGrpcClient;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
 
 @Component
 public class PlanificadorDeRutas {
 
-    private final RestTemplate restTemplate;
-    private final RestLogisticaConfig properties;
+    private final DonacionesGrpcClient donacionesGrpcClient;
     private final GestorPlanificacionRutas gestorPlanificacionRutas;
     private final CamionRepository camionRepository;
     private final RutaRepository rutaRepository;
     private static final int TAMANO_LOTE_DONACIONES = 100;
     private static final int TAMANO_LOTE_CAMIONES = 5;
 
-    public PlanificadorDeRutas(RestTemplate restTemplate, RestLogisticaConfig properties,
+    public PlanificadorDeRutas(DonacionesGrpcClient donacionesGrpcClient,
             GestorPlanificacionRutas gestorPlanificacionRutas, CamionRepository camionRepository,
             RutaRepository rutaRepository) {
-        this.restTemplate = restTemplate;
-        this.properties = properties;
+        this.donacionesGrpcClient = donacionesGrpcClient;
         this.gestorPlanificacionRutas = gestorPlanificacionRutas;
         this.camionRepository = camionRepository;
         this.rutaRepository = rutaRepository;
@@ -109,22 +100,13 @@ public class PlanificadorDeRutas {
             }
         }
 
-        // 2. Notificar cambio de estado a LISTA_PARA_ENTREGAR para las donaciones asignadas
+        // 2. Notificar cambio de estado a LISTA_PARA_ENTREGAR vía gRPC para las donaciones asignadas
         List<Long> donacionesPlanificadas = toListIdDonaciones(request.camiones());
         for (Long donacionId : donacionesPlanificadas) {
-            URI url = UriComponentsBuilder.fromUriString(properties.getDonacionesUrl())
-                    .path("/donaciones/" + donacionId + "/estado")
-                    .build().toUri();
-
-            EstadoDonacionRequest requestBody = new EstadoDonacionRequest(
+            donacionesGrpcClient.actualizarEstado(
+                    donacionId,
                     "LISTA_PARA_ENTREGAR",
                     "Donacion lista para entregar");
-
-            try {
-                restTemplate.put(url, requestBody);
-            } catch (Exception e) {
-                System.err.println("Error actualizando estado de donación " + donacionId + ": " + e.getMessage());
-            }
         }
 
         // 3. Gestionar donaciones sin asignar devueltas por el planificador externo
@@ -136,17 +118,7 @@ public class PlanificadorDeRutas {
     }
 
     private List<DonacionDTO> getLote(int offset) {
-        URI url = UriComponentsBuilder.fromUriString(properties.getDonacionesUrl())
-                .path("/donaciones/estado/asignacion_realizada")
-                .queryParam("limit", TAMANO_LOTE_DONACIONES)
-                .queryParam("offset", offset)
-                .build().toUri();
-
-        ResponseEntity<List<DonacionDTO>> response = restTemplate.exchange(
-                url, HttpMethod.GET, null, new ParameterizedTypeReference<List<DonacionDTO>>() {
-                });
-
-        return response.getBody() != null ? response.getBody() : List.of();
+        return donacionesGrpcClient.listarPorEstado("asignacion_realizada", TAMANO_LOTE_DONACIONES, offset);
     }
 
     private List<Long> toListIdDonaciones(List<CamionPlanificacionRequest> camiones) {

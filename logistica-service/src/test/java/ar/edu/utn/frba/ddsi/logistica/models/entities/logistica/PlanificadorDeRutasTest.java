@@ -8,121 +8,87 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.net.URI;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import ar.edu.utn.frba.ddsi.logistica.config.RestLogisticaConfig;
 import ar.edu.utn.frba.ddsi.logistica.dto.donacion.DonacionDTO;
-import ar.edu.utn.frba.ddsi.logistica.dto.donacion.EstadoDonacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.CamionPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.DireccionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
+import ar.edu.utn.frba.ddsi.logistica.grpc.DonacionesGrpcClient;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
+import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
 
-@DisplayName("Tests de PlanificadorDeRutas")
-@SuppressWarnings("unchecked")
+@DisplayName("Tests de PlanificadorDeRutas con cliente gRPC")
 class PlanificadorDeRutasTest {
 
-        private RestTemplate restTemplate;
-        private RestLogisticaConfig properties;
-        private GestorPlanificacionRutas gestorPlanificacionRutas;
-        private CamionRepository camionRepository;
-        private ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository rutaRepository;
-        private PlanificadorDeRutas planificadorDeRutas;
+    private DonacionesGrpcClient donacionesGrpcClient;
+    private GestorPlanificacionRutas gestorPlanificacionRutas;
+    private CamionRepository camionRepository;
+    private RutaRepository rutaRepository;
+    private PlanificadorDeRutas planificadorDeRutas;
 
-        @BeforeEach
-        void setUp() {
-                restTemplate = mock(RestTemplate.class);
-                properties = mock(RestLogisticaConfig.class);
-                gestorPlanificacionRutas = mock(GestorPlanificacionRutas.class);
-                camionRepository = mock(CamionRepository.class);
-                rutaRepository = mock(ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository.class);
+    @BeforeEach
+    void setUp() {
+        donacionesGrpcClient = mock(DonacionesGrpcClient.class);
+        gestorPlanificacionRutas = mock(GestorPlanificacionRutas.class);
+        camionRepository = mock(CamionRepository.class);
+        rutaRepository = mock(RutaRepository.class);
 
-                when(properties.getDonacionesUrl()).thenReturn("http://localhost:8080/api");
+        planificadorDeRutas = new PlanificadorDeRutas(donacionesGrpcClient,
+                gestorPlanificacionRutas, camionRepository, rutaRepository);
+    }
 
-                planificadorDeRutas = new PlanificadorDeRutas(restTemplate, properties,
-                                gestorPlanificacionRutas, camionRepository, rutaRepository);
-        }
+    @Test
+    @DisplayName("Debe delegar la planificacion al gestor cuando hay lote y camiones disponibles")
+    void planificarRutasExitoso() {
+        List<DonacionDTO> loteSimulado = List.of(new DonacionDTO(1L, 50.0, 2.0, "Calle 123"));
+        when(donacionesGrpcClient.listarPorEstado("asignacion_realizada", 100, 0))
+                .thenReturn(loteSimulado);
 
-        @Test
-        @DisplayName("Debe delegar la planificacion al gestor cuando hay lote y camiones disponibles")
-        void planificarRutasExitoso() {
-                URI urlGetLote = UriComponentsBuilder
-                                .fromUriString("http://localhost:8080/api/donaciones/estado/asignacion_realizada")
-                                .queryParam("limit", 100)
-                                .queryParam("offset", 0).build().toUri();
+        Camion camion = new Camion("ABC123D", 20.0, 3.0, 1000.0, null);
+        List<Camion> camiones = List.of(camion);
+        when(camionRepository.findAllDisponibles()).thenReturn(camiones);
 
-                List<DonacionDTO> loteSimulado = List.of(new DonacionDTO(1L, 50.0, 2.0, "Calle 123"));
-                ResponseEntity<List<DonacionDTO>> responseMock = ResponseEntity.ok(loteSimulado);
+        planificadorDeRutas.planificarRutas();
 
-                when(restTemplate.exchange(eq(urlGetLote), eq(HttpMethod.GET), eq(null),
-                                any(ParameterizedTypeReference.class)))
-                                .thenReturn(responseMock);
+        verify(gestorPlanificacionRutas, times(1)).solicitarPlanificacion(loteSimulado, camiones);
+    }
 
-                Camion camion = new Camion("ABC123D", 20.0, 3.0, 1000.0, null);
-                List<Camion> camiones = List.of(camion);
-                when(camionRepository.findAllDisponibles()).thenReturn(camiones);
+    @Test
+    @DisplayName("No debe solicitar planificacion si no hay camiones disponibles")
+    void planificarRutasSinCamiones() {
+        List<DonacionDTO> loteSimulado = List.of(new DonacionDTO(1L, 50.0, 2.0, "Calle 123"));
+        when(donacionesGrpcClient.listarPorEstado("asignacion_realizada", 100, 0))
+                .thenReturn(loteSimulado);
 
-                planificadorDeRutas.planificarRutas();
+        when(camionRepository.findAllDisponibles()).thenReturn(List.of());
 
-                verify(gestorPlanificacionRutas, times(1)).solicitarPlanificacion(loteSimulado, camiones);
-        }
+        planificadorDeRutas.planificarRutas();
 
-        @Test
-        @DisplayName("No debe solicitar planificacion si no hay camiones disponibles")
-        void planificarRutasSinCamiones() {
-                URI urlGetLote = UriComponentsBuilder
-                                .fromUriString("http://localhost:8080/api/donaciones/estado/asignacion_realizada")
-                                .queryParam("limit", 100)
-                                .queryParam("offset", 0).build().toUri();
+        verify(gestorPlanificacionRutas, never()).solicitarPlanificacion(any(), any());
+    }
 
-                List<DonacionDTO> loteSimulado = List.of(new DonacionDTO(1L, 50.0, 2.0, "Calle 123"));
-                ResponseEntity<List<DonacionDTO>> responseMock = ResponseEntity.ok(loteSimulado);
+    @Test
+    @DisplayName("Debe persistir rutas/paradas y notificar donaciones planificadas vía gRPC")
+    void ejecutarPlanificacion() {
+        Camion camion = new Camion("ABC123D", 20.0, 3.0, 1000.0, null);
+        camion.setId(1L);
+        when(camionRepository.findById(1L)).thenReturn(java.util.Optional.of(camion));
 
-                when(restTemplate.exchange(eq(urlGetLote), eq(HttpMethod.GET), eq(null),
-                                any(ParameterizedTypeReference.class)))
-                                .thenReturn(responseMock);
+        DireccionRequest dir1 = new DireccionRequest("Calle 1", List.of(10L, 20L), 99L);
+        CamionPlanificacionRequest camionRequest = new CamionPlanificacionRequest(1L, List.of(dir1));
+        EjecutarPlanificacionRequest request = new EjecutarPlanificacionRequest(
+                List.of(camionRequest),
+                List.of(30L, 40L));
 
-                when(camionRepository.findAllDisponibles()).thenReturn(List.of());
+        planificadorDeRutas.ejecutarPlanificacion(request);
 
-                planificadorDeRutas.planificarRutas();
-
-                verify(gestorPlanificacionRutas, never()).solicitarPlanificacion(any(), any());
-        }
-
-        @Test
-        @DisplayName("Debe persistir rutas/paradas y notificar donaciones planificadas")
-        void ejecutarPlanificacion() {
-                Camion camion = new Camion("ABC123D", 20.0, 3.0, 1000.0, null);
-                camion.setId(1L);
-                when(camionRepository.findById(1L)).thenReturn(java.util.Optional.of(camion));
-
-                DireccionRequest dir1 = new DireccionRequest("Calle 1", List.of(10L, 20L), 99L);
-                CamionPlanificacionRequest camionRequest = new CamionPlanificacionRequest(1L, List.of(dir1));
-                EjecutarPlanificacionRequest request = new EjecutarPlanificacionRequest(
-                                List.of(camionRequest),
-                                List.of(30L, 40L));
-
-                URI url1 = UriComponentsBuilder.fromUriString("http://localhost:8080/api/donaciones/10/estado").build().toUri();
-                URI url2 = UriComponentsBuilder.fromUriString("http://localhost:8080/api/donaciones/20/estado").build().toUri();
-                EstadoDonacionRequest payload = new EstadoDonacionRequest(
-                                "LISTA_PARA_ENTREGAR",
-                                "Donacion lista para entregar"
-                );
-
-                planificadorDeRutas.ejecutarPlanificacion(request);
-
-                verify(rutaRepository, times(1)).save(any(Ruta.class));
-                verify(restTemplate, times(1)).put(eq(url1), eq(payload));
-                verify(restTemplate, times(1)).put(eq(url2), eq(payload));
-        }
+        verify(rutaRepository, times(1)).save(any(Ruta.class));
+        verify(donacionesGrpcClient, times(1)).actualizarEstado(eq(10L), eq("LISTA_PARA_ENTREGAR"), any());
+        verify(donacionesGrpcClient, times(1)).actualizarEstado(eq(20L), eq("LISTA_PARA_ENTREGAR"), any());
+    }
 }

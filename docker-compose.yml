@@ -34,10 +34,12 @@ services:
     container_name: donatrack-donaciones
     ports:
       - "8080:8080"
+      - "9090:9090"
     environment:
       DONACIONES_DB_URL: jdbc:postgresql://postgres:5432/donaciones
       DONACIONES_DB_USERNAME: postgres
       DONACIONES_DB_PASSWORD: postgres
+      GRPC_PORT: 9090
       # Dentro de la red de compose "localhost" es el propio contenedor: las llamadas
       # entre servicios se resuelven por el nombre del servicio de compose.
       REST_NOTIFICACIONES_URL: http://notificaciones-service:8082/api
@@ -62,6 +64,8 @@ services:
       LOGISTICA_DB_URL: jdbc:postgresql://postgres:5432/logistica
       LOGISTICA_DB_USERNAME: postgres
       LOGISTICA_DB_PASSWORD: postgres
+      DONACIONES_GRPC_HOST: donaciones-service
+      DONACIONES_GRPC_PORT: 9090
       REST_DONACIONES_URL: http://donaciones-service:8080/api
       REST_LOGISTICA_URL: http://logistica-service:8081/api
       REST_NOTIFICACIONES_URL: http://notificaciones-service:8082/api

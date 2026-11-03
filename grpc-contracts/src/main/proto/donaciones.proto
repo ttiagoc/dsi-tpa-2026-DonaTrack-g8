@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package ar.edu.utn.frba.ddsi.grpc;
+
+option java_multiple_files = true;
+option java_package = "ar.edu.utn.frba.ddsi.grpc";
+option java_outer_classname = "DonacionesProto";
+
+service DonacionesGrpcService {
+  rpc ListarDonacionesPorEstado (ListarDonacionesPorEstadoRequest) returns (ListarDonacionesPorEstadoResponse);
+  rpc ActualizarEstadoDonacion (ActualizarEstadoDonacionRequest) returns (ActualizarEstadoDonacionResponse);
+  rpc ConfirmarEntregaDonaciones (ConfirmarEntregaDonacionesRequest) returns (ConfirmarEntregaDonacionesResponse);
+  rpc ObtenerContactosEntidad (ObtenerContactosEntidadRequest) returns (ObtenerContactosEntidadResponse);
+  rpc ObtenerDonacion (ObtenerDonacionRequest) returns (DonacionDetalleResponse);
+  rpc ObtenerContactoDonante (ObtenerContactoDonanteRequest) returns (ContactoDonanteResponse);
+}
+
+message ListarDonacionesPorEstadoRequest {
+  string estado = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+message DonacionItem {
+  int64 id = 1;
+  double peso = 2;
+  double volumen = 3;
+  string direccion = 4;
+}
+
+message ListarDonacionesPorEstadoResponse {
+  repeated DonacionItem donaciones = 1;
+}
+
+message ActualizarEstadoDonacionRequest {
+  int64 donacion_id = 1;
+  string nuevo_estado = 2;
+  string justificacion = 3;
+}
+
+message ActualizarEstadoDonacionResponse {
+  bool exito = 1;
+  string mensaje = 2;
+}
+
+message ConfirmarEntregaDonacionesRequest {
+  int64 entidad_id = 1;
+  repeated int64 donacion_ids = 2;
+  string patente_camion = 3;
+  string fecha_hora = 4;
+}
+
+message ConfirmarEntregaDonacionesResponse {
+  bool exito = 1;
+  string mensaje = 2;
+}
+
+message ObtenerContactosEntidadRequest {
+  int64 entidad_id = 1;
+}
+
+message ContactoItem {
+  string valor = 1;
+  string tipo_contacto = 2;
+}
+
+message ObtenerContactosEntidadResponse {
+  repeated ContactoItem contactos = 1;
+}
+
+message ObtenerDonacionRequest {
+  int64 donacion_id = 1;
+}
+
+message DonacionDetalleResponse {
+  int64 id = 1;
+  int64 donante_id = 2;
+  int64 entidad_asignada_id = 3;
+  string estado = 4;
+  string descripcion = 5;
+}
+
+message ObtenerContactoDonanteRequest {
+  int64 donante_id = 1;
+}
+
+message ContactoDonanteResponse {
+  string valor = 1;
+  string tipo_contacto = 2;
+}
+

@@ -36,26 +36,27 @@ Por lo tanto: **servidor gRPC en `donaciones-service`, cliente gRPC en `logistic
 - [ ] **[COMPLETAR]** Confirmar con el equipo cuál fue el servicio "extraído en la entrega 2" (la consigna habla de ese canal) y releer la justificación de la entrega 2.
 
 ### 3.2 Tareas
-- [ ] `.proto` con los métodos que se usan de verdad, por ejemplo:
+- [x] `.proto` con los métodos que se usan de verdad (`donaciones.proto` en `grpc-contracts`):
   - `ListarDonacionesPorEstado(estado, limit, offset)`
   - `ActualizarEstadoDonacion(donacionId, estado, justificacion)`
+  - `ConfirmarEntregaDonaciones(entidadId, donacionIds, patente, fechaHora)`
+  - `ObtenerContactosEntidad(entidadId)`
   - `ObtenerDonacion(donacionId)`
   - `ObtenerContactoDonante(donanteId)`
-  - `NotificarInicioRuta(...)` / `ConfirmarEntrega(...)`
-- [ ] **[COMPLETAR]** Ubicación del `.proto`: en `common-lib` o en un módulo nuevo `grpc-contracts` (recomendado: no meter el plugin de protobuf en `common-lib`, que usan todos).
-- [ ] `protobuf-maven-plugin` + `grpc-netty-shaded` / `grpc-protobuf` / `grpc-stub`. Verificar que no choquen con las versiones fijadas por el BOM de Spring Boot (ya hubo conflictos con Jetty y jaxb, ver comentarios en los pom).
-- [ ] Servidor gRPC en donaciones, en un puerto propio (`GRPC_PORT`, por ejemplo 9090), que reutilice los `Service` existentes (no duplicar lógica).
-- [ ] Cliente en logística con `ManagedChannel` configurable por variable de entorno (`DONACIONES_GRPC_HOST` / `DONACIONES_GRPC_PORT`) que reemplace las llamadas con `RestTemplate` de la tabla.
-- [ ] Mantener los endpoints REST de donaciones: los sigue usando el `web-service`.
-- [ ] **Autenticación del canal gRPC** (ver 3.3): `ServerInterceptor` en donaciones y `ClientInterceptor` en logística con `SERVICE_API_KEY`.
+- [x] Ubicación del `.proto`: en módulo nuevo `grpc-contracts` en el reactor raíz.
+- [x] `protobuf-maven-plugin` + `os-maven-plugin` + `grpc-netty-shaded` / `grpc-protobuf` / `grpc-stub` configurados sin colisiones.
+- [x] Servidor gRPC en donaciones, en puerto configurable (`GRPC_PORT`, default 9090), que reutiliza los `Service` existentes (`DonacionService`, `DonanteService`, `EntidadBeneficiariaService`).
+- [x] Cliente en logística con `ManagedChannel` configurable por variable de entorno (`DONACIONES_GRPC_HOST` / `DONACIONES_GRPC_PORT`) y adaptador `DonacionesGrpcClient` que reemplaza `RestTemplate` en `PlanificadorDeRutas`, `GestorDeRutas` e `InicioRutaListener`.
+- [x] Mantener los endpoints REST de donaciones: los sigue usando el `web-service`.
+- [x] **Autenticación del canal gRPC** (ver 3.3): `ServerInterceptor` en donaciones y `ClientInterceptor` en logística con `SERVICE_API_KEY`.
 
 ### 3.3 Coordinación con la autenticación de la Persona A
 La Persona A protege la API REST de donaciones con JWT y roles (contrato, matriz de roles y pendientes en [Plan-A-Plataforma-Publico-Entidad.md](Plan-A-Plataforma-Publico-Entidad.md), sección 2.1). Las llamadas de logística de la tabla 3.1 no tienen usuario, así que se resuelven así:
 
 - **Mientras siguen por REST** (lo hace A): logística manda el header `X-Api-Key` con el valor de la variable `SERVICE_API_KEY`, agregado por un interceptor del `RestTemplate`. Donaciones lo trata como rol `SISTEMA`. Al tomar la rama de gRPC, partir de esa versión para no pisar el interceptor.
 - **Al pasar a gRPC** (lo hace C): el servidor gRPC no pasa por Javalin, así que no lo cubre la autenticación de A. Hay que agregar:
-  - [ ] `ServerInterceptor` en donaciones que valide `x-api-key` en los metadata contra `SERVICE_API_KEY` (si no coincide, `Status.UNAUTHENTICATED`).
-  - [ ] `ClientInterceptor` en logística que agregue `x-api-key` a cada llamada.
+  - [x] `ServerInterceptor` (`ApiKeyGrpcServerInterceptor`) en donaciones que valida `x-api-key` en los metadata contra `SERVICE_API_KEY` (si no coincide, `Status.UNAUTHENTICATED`).
+  - [x] `ClientInterceptor` (`ApiKeyGrpcClientInterceptor`) en logística que agrega `x-api-key` a cada llamada.
   - [ ] Avisar a A cuando se mergee, para quitar el rol `SISTEMA` de los endpoints REST que solo usaba logística.
 - **Despliegue:** definir `SERVICE_API_KEY` (y `JWT_SECRET`, el mismo en todos los servicios que validen tokens) como variables de entorno en donaciones y logística. Si el proveedor tiene red privada, no exponer el puerto gRPC; la clave se mantiene igual.
 - [ ] **[COMPLETAR]** Decidir con B si `notificaciones-service` exige `SERVICE_API_KEY` en el `POST /api/notificaciones` (hoy lo llaman donaciones y logística sin autenticación) o si alcanza con la red privada. La protección de los endpoints que consume el web la hace B (su plan, 3.2).
@@ -120,7 +121,8 @@ Hoy **ningún endpoint de `logistica-service` declara roles**, así que son púb
 ## 7. Entregables de documentación
 - [ ] Bocetos de las pantallas 15–19 en `documents/bocetos/`, **antes** de implementarlas. Seguir el flujo de [`AGENTS.md`](../../AGENTS.md#flujo-para-cada-pantalla-nueva): boceto (en lo posible en Figma), PNG con formato `punto-nombre.png` y después el código.
 - [ ] `Despliegue.puml` actualizado: nodos cloud, web-service, canal gRPC, base administrada.
-- [ ] Justificación: gRPC vs GraphQL (por qué gRPC para comunicación entre servicios), comparación de proveedores cloud y topología elegida.
+- [x] Justificación: gRPC vs GraphQL (por qué gRPC para comunicación entre servicios) en [`entregables/JustificacionGrpc.md`](../../entregables/JustificacionGrpc.md) y guía técnica completa en [`documents/GuiaImplementacionGrpc.md`](../GuiaImplementacionGrpc.md).
+- [ ] Comparación de proveedores cloud y topología elegida.
 - [ ] Diagrama de arquitectura actualizado (el del plan original tiene la flecha gRPC al revés y le falta web → notificaciones).
 
 ## 8. Cronograma
