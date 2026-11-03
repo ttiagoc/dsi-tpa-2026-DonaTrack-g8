@@ -95,18 +95,22 @@ service DonacionesGrpcService {
 
 ## 4. Cómo se compila y genera el código Java
 
-El módulo `grpc-contracts` utiliza dos plugins en Maven:
-1. `kr.motd.maven:os-maven-plugin`: Detecta la plataforma operativa (`windows-x86_64`, `linux-x86_64`, etc.) para descargar el binario `protoc` adecuado.
-2. `org.xolstice.maven.plugins:protobuf-maven-plugin`: Ejecuta el compilador de Google junto con el generador de stubs gRPC (`protoc-gen-grpc-java`).
+El módulo `grpc-contracts` define el contrato tipado en `src/main/proto/donaciones.proto`.
 
-Cuando se ejecuta:
-```powershell
-mvn clean install -pl grpc-contracts
+### 4.1 Código generado y portabilidad multiplataforma
+Para garantizar compatibilidad absoluta entre sistemas operativos (Windows, macOS con procesadores Intel o Apple Silicon ARM64, entornos Linux y contenedores Docker en la nube) sin fricciones ni dependencias nativas de compiladores C++ en cada máquina:
+* Los stubs y clases de mensajes generados a partir de `donaciones.proto` se encuentran compilados y versionados en `grpc-contracts/src/main/java/ar/edu/utn/frba/ddsi/grpc/`.
+* Cualquier desarrollador y entorno de despliegue puede compilar directamente con `mvn clean compile` o `mvn clean package` usando Java 21 estándar sin necesidad de herramientas externas.
+
+### 4.2 Regeneración del contrato (en caso de cambios)
+Si en el futuro se modifican o agregan métodos a `donaciones.proto`, el código Java se regenera ejecutando:
+```bash
+mvn compile -Pgenerate-protobuf -pl grpc-contracts
 ```
-Se generan automáticamente en `grpc-contracts/target/generated-sources/protobuf`:
-* Las clases de mensajes Java (`ListarDonacionesPorEstadoRequest`, `DonacionItem`, etc.).
-* La clase abstracta del servidor: `DonacionesGrpcServiceGrpc.DonacionesGrpcServiceImplBase`.
-* El cliente bloqueante sincrónico: `DonacionesGrpcServiceGrpc.DonacionesGrpcServiceBlockingStub`.
+o bien corriendo el comando dentro de un contenedor Docker estándar:
+```bash
+docker run --rm -v "$(pwd)":/app -w /app maven:3.9.6-eclipse-temurin-21 mvn compile -Pgenerate-protobuf -pl grpc-contracts
+```
 
 Tanto `donaciones-service` como `logistica-service` agregan `grpc-contracts` a su `pom.xml`, obteniendo acceso inmediato a estas clases.
 
@@ -115,7 +119,7 @@ Tanto `donaciones-service` como `logistica-service` agregan `grpc-contracts` a s
 ## 5. El Servidor en `donaciones-service`
 
 ### 5.1 Ciclo de vida (`DonacionesGrpcServer.java`)
-Para mantener el mismo patrón arquitectónico que [`JavalinWebServer`](file:///d:/Facultad/Trabajos_Y_Laboratorios/dsi-tpa-2026-DonaTrack-g8/common-lib/src/main/java/ar/edu/utn/frba/ddsi/common/controllers/JavalinWebServer.java):
+Para mantener el mismo patrón arquitectónico que [`JavalinWebServer`](../common-lib/src/main/java/ar/edu/utn/frba/ddsi/common/controllers/JavalinWebServer.java):
 * Es un `@Component` de Spring anotado con `@Profile("!test")`.
 * En `@PostConstruct`, inicia `io.grpc.Server` en el puerto `9090` (configurable mediante `GRPC_PORT`).
 * En `@PreDestroy`, ejecuta `server.shutdown()`.

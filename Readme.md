@@ -36,13 +36,14 @@ dsi-tpa-2026-DonaTrack-g8/
 ├── docker-compose.yml         # PostgreSQL local (+ los servicios, con el perfil "full")
 ├── docker/postgres/           # Script de inicialización de las bases
 ├── common-lib/                # Librería compartida (JAR), importada por los servicios
-├── donaciones-service/        # Servicio de donaciones — puerto 8080
-├── logistica-service/         # Servicio de logística — puerto 8081
+├── grpc-contracts/            # Contratos Protobuf y stubs compilados de gRPC
+├── donaciones-service/        # Servicio de donaciones — puerto HTTP 8080 y gRPC 9090
+├── logistica-service/         # Servicio de logística — puerto HTTP 8081 y cliente gRPC
 ├── notificaciones-service/    # Servicio de notificaciones — puerto 8082
 └── web-service/               # Sitio web (cliente liviano, Javalin + Handlebars) — puerto 7070
 ```
 
-Cada servicio es una aplicación Spring Boot independiente que declara `common-lib` como dependencia local del reactor. El `web-service` es la excepción: no depende de `common-lib` y solo habla HTTP con las APIs (ver [`web-service/README.md`](web-service/README.md)).
+Cada servicio es una aplicación Spring Boot independiente que declara `common-lib` como dependencia local del reactor. La comunicación entre `logistica-service` y `donaciones-service` utiliza **gRPC sobre HTTP/2** tipado mediante `grpc-contracts` y autenticado por metadatos `x-api-key` (ver [`entregables/JustificacionGrpc.md`](entregables/JustificacionGrpc.md) y [`documents/GuiaImplementacionGrpc.md`](documents/GuiaImplementacionGrpc.md)). El `web-service` no depende de `common-lib` y habla HTTP con las APIs REST (ver [`web-service/README.md`](web-service/README.md)).
 
 ---
 
@@ -53,6 +54,7 @@ Cada servicio es una aplicación Spring Boot independiente que declara `common-l
 | Java                | 21            |
 | Spring Boot         | 4.0.5         |
 | Spring Cloud BOM    | 2025.1.1      |
+| gRPC / Protobuf     | 1.63.0 / 3.25.3 |
 | Lombok              | 1.18.34       |
 | Maven               | 3.9+          |
 
