@@ -178,3 +178,4 @@ flowchart TB
 2. **Seguridad y Aislamiento:** El puerto gRPC `:9090` no está expuesto a Internet; solo es visible por Logística a través del canal privado seguro con autenticación `x-api-key`.
 3. **Resiliencia de Datos:** La base de datos es independiente de los ciclos de vida de los contenedores de aplicación, y las fotos subidas residen en un volumen persistente.
 4. **Presentación sin sobresaltos:** Al no tener suspensiones por inactividad, los docentes podrán navegar el sitio, registrarse, planificar rutas y verificar el mapa sin experimentar demoras de arranque.
+
