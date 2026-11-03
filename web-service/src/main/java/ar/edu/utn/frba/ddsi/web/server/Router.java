@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Autowired;
 
 
+import ar.edu.utn.frba.ddsi.web.controllers.CamionesAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.DonacionesAsignadasController;
 import ar.edu.utn.frba.ddsi.web.controllers.DonanteWebController;
 import ar.edu.utn.frba.ddsi.web.controllers.HomeController;
@@ -38,13 +39,14 @@ public class Router {
     private final RecepcionController recepcion;
     private final MapaController mapa;
     private final DonanteWebController donanteWeb;
-
+    private final CamionesAdminController camionesAdmin;
 
     @Autowired
     public Router(AutorizacionMiddleware autorizacion, HomeController home, SesionController sesion,
             RegistroController registro, PanelController panel, NecesidadesController necesidades,
             DonacionesAsignadasController donacionesAsignadas, RecepcionController recepcion, MapaController mapa,
-            DonanteWebController donanteWeb) {
+            DonanteWebController donanteWeb,
+            @Autowired(required = false) CamionesAdminController camionesAdmin) {
 
         this.autorizacion = autorizacion;
         this.home = home;
@@ -56,13 +58,14 @@ public class Router {
         this.recepcion = recepcion;
         this.mapa = mapa;
         this.donanteWeb = donanteWeb;
+        this.camionesAdmin = camionesAdmin;
     }
 
   // Sobrecarga para tests
     public Router(AutorizacionMiddleware autorizacion, HomeController home, SesionController sesion,
                   RegistroController registro, PanelController panel, NecesidadesController necesidades,
                   DonacionesAsignadasController donacionesAsignadas, RecepcionController recepcion, MapaController mapa) {
-      this(autorizacion, home, sesion, registro, panel, necesidades, donacionesAsignadas, recepcion, mapa, null);
+      this(autorizacion, home, sesion, registro, panel, necesidades, donacionesAsignadas, recepcion, mapa, null, null);
     }
 
     public void registrar(Javalin app) {
@@ -112,5 +115,11 @@ public class Router {
 
         // --- Administrador (C) ---
         app.get("/admin", panel::admin, ADMINISTRADOR);
+        if (camionesAdmin != null) {
+            app.get("/admin/camiones", camionesAdmin::listar, ADMINISTRADOR);
+            app.post("/admin/camiones", camionesAdmin::crear, ADMINISTRADOR);
+            app.post("/admin/camiones/{id}/editar", camionesAdmin::actualizar, ADMINISTRADOR);
+            app.post("/admin/camiones/{id}/eliminar", camionesAdmin::eliminar, ADMINISTRADOR);
+        }
     }
 }

@@ -1,0 +1,134 @@
+{{#partial "titulo"}}Camiones · DonaTrack{{/partial}}
+{{#partial "contenido"}}
+<header class="encabezado-pagina">
+  <div>
+    <h1>Camiones</h1>
+    <p class="texto-suave">Flota disponible para la logística de recolección y entrega de donaciones.</p>
+  </div>
+  <a class="boton" href="/admin/camiones?nuevo" data-abre="modal-camion">+ Nuevo camión</a>
+</header>
+
+{{#if camiones}}
+  <div class="resumen">
+    <div class="resumen__item"><strong>{{resumen.total}}</strong>Camiones registrados</div>
+    <div class="resumen__item resumen__item--ok"><strong>{{resumen.cargaTotal}} kg</strong>Capacidad de carga total</div>
+    <div class="resumen__item"><strong>{{resumen.volumenTotal}} m³</strong>Volumen total disponible</div>
+  </div>
+
+  <section class="tarjeta tarjeta--tabla">
+    <div class="tabla-contenedor">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>Patente</th>
+            <th>Chofer asignado</th>
+            <th>Carga máxima</th>
+            <th>Volumen</th>
+            <th>Altura</th>
+            <th><span class="sr-only">Acciones</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each camiones}}
+            <tr>
+              <td class="tabla__corta"><strong>{{patente}}</strong></td>
+              <td>{{choferNombreCompleto}}</td>
+              <td>{{capacidadCarga}} kg</td>
+              <td>{{capacidadVolumen}} m³</td>
+              <td>{{altura}} m</td>
+              <td class="tabla__accion">
+                <div class="acciones">
+                  <a class="boton boton--secundario boton--chico" href="/admin/camiones?editar={{id}}">Editar</a>
+                  <a class="boton boton--secundario boton--peligro boton--chico" href="/admin/camiones?eliminar={{id}}">Eliminar</a>
+                </div>
+              </td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{{else}}
+  <section class="tarjeta vacio">
+    <strong>Todavía no hay camiones registrados en la flota.</strong>
+    Con el botón “Nuevo camión” podés dar de alta la primera unidad de transporte.
+  </section>
+{{/if}}
+
+{{!-- Modal de Alta / Edición --}}
+<dialog class="modal" id="modal-camion" aria-labelledby="titulo-camion" {{#if abrirModal}}open{{/if}}>
+  <form method="post" action="{{#if esNuevo}}/admin/camiones{{else}}/admin/camiones/{{camionId}}/editar{{/if}}" accept-charset="UTF-8" novalidate>
+    <div class="modal__encabezado">
+      <h2 id="titulo-camion">{{#if esNuevo}}Nuevo camión{{else}}Editar camión{{/if}}</h2>
+      <a class="modal__cerrar" href="/admin/camiones" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></a>
+    </div>
+    <div class="modal__cuerpo">
+      {{#if errorGeneral}}<div class="alerta alerta--error" role="alert">{{errorGeneral}}</div>{{/if}}
+
+      <div class="campo{{#if errores.patente}} campo--error{{/if}}">
+        <label for="patente">Patente <span class="campo__requerido" aria-hidden="true">*</span></label>
+        <input type="text" id="patente" name="patente" value="{{form.patente}}" required autofocus placeholder="ej: AF 123 CD">
+        {{#if errores.patente}}<small class="campo__error">{{errores.patente}}</small>{{/if}}
+      </div>
+
+      <div class="grilla grilla--3">
+        <div class="campo{{#if errores.capacidadCarga}} campo--error{{/if}}">
+          <label for="capacidadCarga">Carga máx. (kg) <span class="campo__requerido" aria-hidden="true">*</span></label>
+          <input type="number" id="capacidadCarga" name="capacidadCarga" value="{{form.capacidadCarga}}" required min="1" step="any" placeholder="4500">
+          {{#if errores.capacidadCarga}}<small class="campo__error">{{errores.capacidadCarga}}</small>{{/if}}
+        </div>
+        <div class="campo{{#if errores.capacidadVolumen}} campo--error{{/if}}">
+          <label for="capacidadVolumen">Volumen (m³) <span class="campo__requerido" aria-hidden="true">*</span></label>
+          <input type="number" id="capacidadVolumen" name="capacidadVolumen" value="{{form.capacidadVolumen}}" required min="0.1" step="any" placeholder="30">
+          {{#if errores.capacidadVolumen}}<small class="campo__error">{{errores.capacidadVolumen}}</small>{{/if}}
+        </div>
+        <div class="campo{{#if errores.altura}} campo--error{{/if}}">
+          <label for="altura">Altura (m) <span class="campo__requerido" aria-hidden="true">*</span></label>
+          <input type="number" id="altura" name="altura" value="{{form.altura}}" required min="0.1" step="any" placeholder="2.8">
+          {{#if errores.altura}}<small class="campo__error">{{errores.altura}}</small>{{/if}}
+        </div>
+      </div>
+
+      <div class="grilla grilla--2">
+        <div class="campo{{#if errores.choferNombre}} campo--error{{/if}}">
+          <label for="choferNombre">Nombre del chofer <span class="campo__requerido" aria-hidden="true">*</span></label>
+          <input type="text" id="choferNombre" name="choferNombre" value="{{form.choferNombre}}" required placeholder="Carlos">
+          {{#if errores.choferNombre}}<small class="campo__error">{{errores.choferNombre}}</small>{{/if}}
+        </div>
+        <div class="campo{{#if errores.choferApellido}} campo--error{{/if}}">
+          <label for="choferApellido">Apellido del chofer <span class="campo__requerido" aria-hidden="true">*</span></label>
+          <input type="text" id="choferApellido" name="choferApellido" value="{{form.choferApellido}}" required placeholder="Gómez">
+          {{#if errores.choferApellido}}<small class="campo__error">{{errores.choferApellido}}</small>{{/if}}
+        </div>
+      </div>
+    </div>
+    <div class="modal__acciones">
+      <a class="boton boton--secundario" href="/admin/camiones" data-cierra>Cancelar</a>
+      <button type="submit" class="boton">{{#if esNuevo}}Guardar camión{{else}}Actualizar camión{{/if}}</button>
+    </div>
+  </form>
+</dialog>
+
+{{!-- Modal de Confirmación de Baja --}}
+{{#if abrirEliminar}}
+<dialog class="modal" id="modal-eliminar" aria-labelledby="titulo-eliminar" open>
+  <form method="post" action="/admin/camiones/{{camionAEliminar.id}}/eliminar">
+    <div class="modal__encabezado">
+      <h2 id="titulo-eliminar">¿Eliminar camión?</h2>
+      <a class="modal__cerrar" href="/admin/camiones" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></a>
+    </div>
+    <div class="modal__cuerpo">
+      <p>Estás a punto de dar de baja el camión patente <strong>{{camionAEliminar.patente}}</strong> (Chofer: {{camionAEliminar.choferNombreCompleto}}).</p>
+      <p class="texto-suave">El vehículo dejará de estar disponible para la planificación de nuevas rutas de entrega.</p>
+    </div>
+    <div class="modal__acciones">
+      <a class="boton boton--secundario" href="/admin/camiones" data-cierra autofocus>Cancelar</a>
+      <button type="submit" class="boton boton--peligro">Eliminar camión</button>
+    </div>
+  </form>
+</dialog>
+{{/if}}
+
+{{/partial}}
+{{> layouts/base}}
+

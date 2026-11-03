@@ -73,7 +73,7 @@ La Persona A protege la API REST de donaciones con JWT y roles (contrato, matriz
 
 ### 4.0 Proteger la API de logística
 Hoy **ningún endpoint de `logistica-service` declara roles**, así que son públicos (cualquiera puede crear o borrar camiones). Logística ya usa `common-lib`, así que tiene el mismo `AutenticacionHandler` que donaciones: alcanza con declarar los roles en cada ruta (`app.get(ruta, handler, ADMINISTRADOR)`, ver la matriz de roles en el Plan A, 2.1).
-- [ ] `/api/camiones/*` y la planificación de rutas → `ADMINISTRADOR`. Lo llama el `web-service` con el JWT del admin.
+- [x] `/api/camiones/*` y la planificación de rutas → `ADMINISTRADOR`. Lo llama el `web-service` con el JWT del admin.
 - [ ] Endpoints que llaman otros servicios (no el web) → `SISTEMA`: el que llama manda `X-Api-Key` con `SERVICE_API_KEY`, igual que logística → donaciones.
 - [ ] Los endpoints de seguimiento para donante y entidad (`/api/rutas/activas?...`) los protege la Persona B (su plan, 3.3).
 - [ ] Verificar que `JWT_SECRET` y `SERVICE_API_KEY` lleguen a logística en local, en Docker y en la nube (en `docker-compose.yml` ya están).

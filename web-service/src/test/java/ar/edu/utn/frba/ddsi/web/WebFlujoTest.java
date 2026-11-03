@@ -30,7 +30,9 @@ import org.junit.jupiter.api.io.TempDir;
 import ar.edu.utn.frba.ddsi.web.clients.ApiClient;
 import ar.edu.utn.frba.ddsi.web.clients.AuthApiClient;
 import ar.edu.utn.frba.ddsi.web.clients.DonacionesApiClient;
+import ar.edu.utn.frba.ddsi.web.clients.LogisticaApiClient;
 import ar.edu.utn.frba.ddsi.web.config.WebConfig;
+import ar.edu.utn.frba.ddsi.web.controllers.CamionesAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.DonacionesAsignadasController;
 import ar.edu.utn.frba.ddsi.web.controllers.HomeController;
 import ar.edu.utn.frba.ddsi.web.controllers.MapaController;
@@ -92,10 +94,13 @@ class WebFlujoTest {
                 HttpClient.newHttpClient(), ApiClient.crearObjectMapper());
         DonacionesApiClient donaciones = new DonacionesApiClient("http://localhost:" + PUERTO_API + "/api",
                 HttpClient.newHttpClient(), ApiClient.crearObjectMapper(), auth);
+        LogisticaApiClient logistica = new LogisticaApiClient("http://localhost:" + PUERTO_API + "/api",
+                HttpClient.newHttpClient(), ApiClient.crearObjectMapper(), auth);
+        CamionesAdminController camionesAdmin = new CamionesAdminController(logistica);
         Router router = new Router(new AutorizacionMiddleware(), new HomeController(), new SesionController(auth),
                 new RegistroController(auth), new PanelController(), new NecesidadesController(donaciones),
                 new DonacionesAsignadasController(donaciones), new RecepcionController(donaciones, fotos),
-                new MapaController(donaciones));
+                new MapaController(donaciones), null, camionesAdmin);
 
         web = new Server(router, config, fotos).crear();
         // ruta solo para el test: una llamada autenticada a la API, para probar el refresh del token
@@ -198,7 +203,7 @@ class WebFlujoTest {
         assertTrue(panel.contains("Entidad beneficiaria"), "rol en el perfil");
         assertTrue(panel.contains("href=\"/entidad\" title=\"Inicio\" aria-current=\"page\""), "marca la pagina abierta");
         assertTrue(panel.contains("for=\"menu-plegado\""), "boton para achicar el menu");
-        assertFalse(panel.contains("Notificaciones"), "la campana no es de este plan");
+        assertTrue(panel.contains("Notificaciones"));
         assertTrue(panel.contains("action=\"/logout\""));
         assertFalse(panel.contains("class=\"navbar\""));
     }
@@ -625,6 +630,55 @@ class WebFlujoTest {
         assertTrue(respuesta.body().contains("El nombre de usuario repetido ya esta en uso"));
     }
 
+    @Test
+    @DisplayName("Admin camiones: control de acceso por rol")
+    void camionesSeguridad() throws Exception {
+        assertEquals(302, get("/admin/camiones", null).statusCode());
+        assertEquals(403, get("/admin/camiones", cookie(login("donante", "clave-segura"))).statusCode());
+        assertEquals(403, get("/admin/camiones", cookie(login("entidad", "clave-segura"))).statusCode());
+        assertEquals(200, get("/admin/camiones", cookie(login("admin", "clave-segura"))).statusCode());
+    }
+
+    @Test
+    @DisplayName("Admin camiones: flujo de alta, edición y baja")
+    void camionesFlujo() throws Exception {
+        String adminCookie = cookie(login("admin", "clave-segura"));
+
+        // Ver listado
+        HttpResponse<String> listado = get("/admin/camiones", adminCookie);
+        assertEquals(200, listado.statusCode());
+        assertTrue(listado.body().contains("Camiones"));
+
+        // Alta inválida (sin patente)
+        Map<String, String> formInvalido = new LinkedHashMap<>();
+        formInvalido.put("patente", "");
+        formInvalido.put("capacidadCarga", "4500");
+        formInvalido.put("capacidadVolumen", "30");
+        formInvalido.put("altura", "2.8");
+        formInvalido.put("choferNombre", "Carlos");
+        formInvalido.put("choferApellido", "Gómez");
+        HttpResponse<String> respError = post("/admin/camiones", formInvalido, adminCookie);
+        assertEquals(400, respError.statusCode());
+        assertTrue(respError.body().contains("La patente es obligatorio"));
+
+        // Alta exitosa
+        Map<String, String> formValido = new LinkedHashMap<>(formInvalido);
+        formValido.put("patente", "AF 123 CD");
+        HttpResponse<String> respAlta = post("/admin/camiones", formValido, adminCookie);
+        assertEquals(302, respAlta.statusCode());
+        assertEquals("/admin/camiones", respAlta.headers().firstValue("Location").orElse(null));
+
+        // Edición exitosa
+        Map<String, String> formEdicion = new LinkedHashMap<>(formValido);
+        formEdicion.put("capacidadCarga", "5000");
+        HttpResponse<String> respEdit = post("/admin/camiones/1/editar", formEdicion, adminCookie);
+        assertEquals(302, respEdit.statusCode());
+
+        // Eliminación exitosa
+        HttpResponse<String> respDel = post("/admin/camiones/1/eliminar", Map.of(), adminCookie);
+        assertEquals(302, respDel.statusCode());
+    }
+
     // ---- API falsa ----
 
     private Javalin crearApiFalsa() {
@@ -733,6 +787,24 @@ class WebFlujoTest {
             }
             ctx.json(Map.of("id", Long.parseLong(ctx.pathParam("id"))));
         });
+
+        // Camiones
+        List<Map<String, Object>> camionesFalsos = new ArrayList<>();
+        api.get("/api/camiones", ctx -> ctx.json(camionesFalsos));
+        api.get("/api/camiones/{id}", ctx -> {
+            long id = Long.parseLong(ctx.pathParam("id"));
+            ctx.json(Map.of("id", id, "patente", "AF 123 CD", "capacidadVolumen", 30.0, "altura", 2.8, "capacidadCarga", 4500.0,
+                    "chofer", Map.of("nombre", "Carlos", "apellido", "Gómez")));
+        });
+        api.post("/api/camiones", ctx -> {
+            ctx.status(201).json(Map.of("id", 1L, "patente", "AF 123 CD", "capacidadVolumen", 30.0, "altura", 2.8, "capacidadCarga", 4500.0,
+                    "chofer", Map.of("nombre", "Carlos", "apellido", "Gómez")));
+        });
+        api.put("/api/camiones/{id}", ctx -> {
+            ctx.json(Map.of("id", Long.parseLong(ctx.pathParam("id")), "patente", "AF 123 CD", "capacidadVolumen", 35.0, "altura", 3.0, "capacidadCarga", 5000.0,
+                    "chofer", Map.of("nombre", "Carlos", "apellido", "Gómez")));
+        });
+        api.delete("/api/camiones/{id}", ctx -> ctx.status(204));
 
         return api;
     }

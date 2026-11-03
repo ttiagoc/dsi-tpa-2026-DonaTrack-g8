@@ -33,4 +33,12 @@ En [Figma](https://www.figma.com/design/1tzIHQUO6aSwCbdgtPuXgj) quedó una prime
 | 12 | Confirmar recepción con fotos | `/entidad/donaciones/{id}/recepcion` | [12-confirmar-recepcion.png](12-confirmar-recepcion.png) |
 | 12 | Confirmar recepción: sin fotos (error) | `/entidad/donaciones/{id}/recepcion` | [12b-confirmar-recepcion-error.png](12b-confirmar-recepcion-error.png) |
 
+## Persona C: administración
+
+| Req | Pantalla | Ruta | Boceto |
+|---|---|---|---|
+| 18 | Camiones: listado de flota | `/admin/camiones` | [18-camiones.png](18-camiones.png) |
+| 18 | Camiones: modal de alta y edición | `/admin/camiones` | [18b-camiones-alta.png](18b-camiones-alta.png) |
+| 18 | Camiones: modal de confirmación de eliminación | `/admin/camiones` | [18c-camiones-eliminar.png](18c-camiones-eliminar.png) |
+
 Convención de nombres: `<req>[letra]-<pantalla>.png`. B y C agregan sus tablas (pantallas 5–9, 13–14 y 15–19) en este mismo archivo.

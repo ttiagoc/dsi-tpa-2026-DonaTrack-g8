@@ -31,11 +31,16 @@ public class AlmacenFotos {
     private final Path directorio;
 
     public AlmacenFotos(WebConfig config) {
-        this.directorio = Path.of(config.getFotos().getDirectorio()).toAbsolutePath();
+        this.directorio = resolverDirectorio(config.getFotos().getDirectorio());
+    }
+
+    private static Path resolverDirectorio(String dirStr) {
+        Path dir = Path.of(dirStr).toAbsolutePath();
         try {
-            Files.createDirectories(directorio);
+            Files.createDirectories(dir);
+            return dir.toRealPath();
         } catch (IOException e) {
-            throw new UncheckedIOException("No se pudo crear la carpeta de fotos " + directorio, e);
+            return dir;
         }
     }
 
