@@ -21,9 +21,14 @@ public class RestTemplateConfig {
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getInterceptors().add((request, body, execution) -> {
             String donacionesUrl = config.getDonacionesUrl();
-            if (!serviceApiKey.isBlank() && donacionesUrl != null
-                    && request.getURI().toString().startsWith(donacionesUrl)) {
-                request.getHeaders().set(AutenticacionHandler.HEADER_API_KEY, serviceApiKey);
+            String logisticaUrl = config.getLogisticaUrl();
+            if (!serviceApiKey.isBlank()) {
+                String uri = request.getURI().toString();
+                boolean haciaDonaciones = donacionesUrl != null && uri.startsWith(donacionesUrl);
+                boolean haciaLogistica = logisticaUrl != null && uri.startsWith(logisticaUrl);
+                if (haciaDonaciones || haciaLogistica) {
+                    request.getHeaders().set(AutenticacionHandler.HEADER_API_KEY, serviceApiKey);
+                }
             }
             return execution.execute(request, body);
         });

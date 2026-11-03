@@ -6,6 +6,8 @@ import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.common.controllers.JavalinController;
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
+import static ar.edu.utn.frba.ddsi.common.security.Rol.ADMINISTRADOR;
+import static ar.edu.utn.frba.ddsi.common.security.Rol.SISTEMA;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaRequest;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.PlanificadorDeRutas;
@@ -102,13 +104,13 @@ public class RutaController implements JavalinController {
         app.post("/api/rutas/planificaciones", ctx -> {
             planificadorDeRutas.planificarRutas();
             ctx.status(204);
-        });
+        }, ADMINISTRADOR, SISTEMA);
 
         app.post("/api/rutas/planificaciones/resultados", ctx -> {
             EjecutarPlanificacionRequest request = ctx.bodyAsClass(EjecutarPlanificacionRequest.class);
             planificadorDeRutas.ejecutarPlanificacion(request);
             ctx.status(204);
-        });
+        }, SISTEMA, ADMINISTRADOR);
 
 
 

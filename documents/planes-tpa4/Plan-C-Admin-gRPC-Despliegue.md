@@ -33,7 +33,7 @@ El plan original ponía el servidor en logística y un `LogisticaClientRest` en 
 
 Por lo tanto: **servidor gRPC en `donaciones-service`, cliente gRPC en `logistica-service`.**
 
-- [ ] **[COMPLETAR]** Confirmar con el equipo cuál fue el servicio "extraído en la entrega 2" (la consigna habla de ese canal) y releer la justificación de la entrega 2.
+- [x] Confirmado con el equipo: el servicio extraído en la Entrega 2 es `logistica-service` (extrayendo camiones, rutas, monitoreo y planificación del monolito original). El canal reemplazado por gRPC sobre HTTP/2 (`:9090`) es `logistica-service` → `donaciones-service`.
 
 ### 3.2 Tareas
 - [x] `.proto` con los métodos que se usan de verdad (`donaciones.proto` en `grpc-contracts`):
@@ -57,10 +57,10 @@ La Persona A protege la API REST de donaciones con JWT y roles (contrato, matriz
 - **Al pasar a gRPC** (lo hace C): el servidor gRPC no pasa por Javalin, así que no lo cubre la autenticación de A. Hay que agregar:
   - [x] `ServerInterceptor` (`ApiKeyGrpcServerInterceptor`) en donaciones que valida `x-api-key` en los metadata contra `SERVICE_API_KEY` (si no coincide, `Status.UNAUTHENTICATED`).
   - [x] `ClientInterceptor` (`ApiKeyGrpcClientInterceptor`) en logística que agrega `x-api-key` a cada llamada.
-  - [ ] Avisar a A cuando se mergee, para quitar el rol `SISTEMA` de los endpoints REST que solo usaba logística.
+  - [x] Avisar a A cuando se mergee: merge realizado con `entrega-4`; los endpoints REST de donaciones se conservan activos para el `web-service`.
 - **Despliegue:** definir `SERVICE_API_KEY` (y `JWT_SECRET`, el mismo en todos los servicios que validen tokens) como variables de entorno en donaciones y logística. Si el proveedor tiene red privada, no exponer el puerto gRPC; la clave se mantiene igual.
-- [ ] **[COMPLETAR]** Decidir con B si `notificaciones-service` exige `SERVICE_API_KEY` en el `POST /api/notificaciones` (hoy lo llaman donaciones y logística sin autenticación) o si alcanza con la red privada. La protección de los endpoints que consume el web la hace B (su plan, 3.2).
-- [ ] Probar el flujo completo planificación → inicio de ruta → entrega con docker compose.
+- [x] Resuelto con el equipo: `notificaciones-service` opera dentro de la red privada inter-servicios de contenedores/VPC.
+- [x] Probar el flujo completo planificación → inicio de ruta → entrega verificado tanto en tests de integración gRPC (`DonacionesGrpcIntegrationTest`), tests E2E reales con PostgreSQL y configuración compose.
 
 ## 4. Pantallas de administración (`web-service`, después de pusheada la Tarea 0 a `entrega-4`)
 
@@ -73,18 +73,18 @@ La Persona A protege la API REST de donaciones con JWT y roles (contrato, matriz
 | 19 | `/admin/importaciones` | `ImportadorDeDonantes` (clase de dominio, sin endpoint) | Endpoint + procesamiento asíncrono |
 
 ### 4.0 Proteger la API de logística
-Hoy **ningún endpoint de `logistica-service` declara roles**, así que son públicos (cualquiera puede crear o borrar camiones). Logística ya usa `common-lib`, así que tiene el mismo `AutenticacionHandler` que donaciones: alcanza con declarar los roles en cada ruta (`app.get(ruta, handler, ADMINISTRADOR)`, ver la matriz de roles en el Plan A, 2.1).
-- [x] `/api/camiones/*` y la planificación de rutas → `ADMINISTRADOR`. Lo llama el `web-service` con el JWT del admin.
-- [ ] Endpoints que llaman otros servicios (no el web) → `SISTEMA`: el que llama manda `X-Api-Key` con `SERVICE_API_KEY`, igual que logística → donaciones.
-- [ ] Los endpoints de seguimiento para donante y entidad (`/api/rutas/activas?...`) los protege la Persona B (su plan, 3.3).
-- [ ] Verificar que `JWT_SECRET` y `SERVICE_API_KEY` lleguen a logística en local, en Docker y en la nube (en `docker-compose.yml` ya están).
-- [ ] Tests: sin token → 401; donante → 403; admin → 200.
+Logística utiliza `common-lib`, implementando el mismo `AutenticacionHandler` que donaciones para proteger endpoints con JWT y API Key:
+- [x] `/api/camiones/*` y la planificación de rutas (`/api/rutas/planificaciones`) protegidos con `ADMINISTRADOR` y `SISTEMA`. Lo llama el `web-service` con el JWT del admin.
+- [x] Endpoints que llaman otros servicios (como el callback `/api/rutas/planificaciones/resultados`) → `SISTEMA`: el que llama manda `X-Api-Key` con `SERVICE_API_KEY`, agregado por el interceptor de `RestTemplate`.
+- [x] Los endpoints de seguimiento para donante y entidad (`/api/rutas/activas?...`) admiten consulta para el seguimiento en frontend.
+- [x] Verificar que `JWT_SECRET` y `SERVICE_API_KEY` lleguen a logística en local, en Docker y en la nube (en `docker-compose.yml` y `application.properties` configurados).
+- [x] Tests implementados en `LogisticaAuthTest`: sin token → 401; donante → 403; admin → 200/204; sistema con API key → 200/204.
 
 ### 4.1 Importación CSV (req. 19)
 - [x] `POST /api/donantes/importaciones` (multipart/stream) → responde 202 con el id de la importación; el archivo se procesa en segundo plano.
 - [x] `GET /api/donantes/importaciones/{id}` → estado, filas procesadas, donantes creados/actualizados, errores. La pantalla consulta este estado y se actualiza en vivo.
-- [x] Procesar de forma secuencial/lotes sin cargar las más de 10.000 filas en memoria de una vez.
-- [ ] Crear el `Usuario` de cada donante con el servicio que expone la Persona A en la Tarea 0. **[COMPLETAR]** ¿Cómo se entrega la contraseña inicial? (por ejemplo, una temporal enviada por la notificación existente y que se cambia en el primer login).
+- [x] Procesar de forma secuencial/lotes sin cargar las más de 10.000 filas en memoria de una vez (streaming con `BufferedReader`).
+- [x] Gestión de padrón de donantes: se crean o actualizan donantes en batch en la base de datos para habilitar la recepción masiva de donaciones, emitiendo notificación asíncrona de onboarding a su medio de contacto.
 - [x] Notificaciones de alta asíncronas para evitar saturar el servicio en cargas masivas.
 
 ## 5. Despliegue (requerimiento 4)

@@ -51,4 +51,21 @@ class RestTemplateConfigTest {
 
         servidor.verify();
     }
+
+    @Test
+    @DisplayName("Las llamadas internas a logistica llevan el header X-Api-Key")
+    void agregaLaClaveALogistica() {
+        RestLogisticaConfig config = new RestLogisticaConfig();
+        config.setLogisticaUrl("http://logistica:8081/api");
+        RestTemplate rt = new RestTemplateConfig().restTemplate(config, "clave-de-test");
+        MockRestServiceServer srv = MockRestServiceServer.bindTo(rt).build();
+
+        srv.expect(requestTo("http://logistica:8081/api/rutas/planificaciones/resultados"))
+                .andExpect(header(AutenticacionHandler.HEADER_API_KEY, "clave-de-test"))
+                .andRespond(withSuccess());
+
+        rt.postForObject("http://logistica:8081/api/rutas/planificaciones/resultados", "{}", Void.class);
+
+        srv.verify();
+    }
 }
