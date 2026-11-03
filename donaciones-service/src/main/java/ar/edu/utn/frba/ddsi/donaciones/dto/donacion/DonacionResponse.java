@@ -27,4 +27,12 @@ public record DonacionResponse(
         this(id, bienes, estadoActual, fecha, donanteId, entidadAsignadaId, subcategoria, categoria,
                 fechaAsignacion, fechaEstado, necesidad, fotosRecepcion, null);
     }
+
+    public String estado() {
+        return estadoActual;
+    }
+
+    public String descripcion() {
+        return subcategoria != null ? subcategoria : "";
+    }
 }

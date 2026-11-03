@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
@@ -22,6 +23,8 @@ import ar.edu.utn.frba.ddsi.donaciones.services.DonanteService;
 import ar.edu.utn.frba.ddsi.donaciones.services.EntidadBeneficiariaService;
 import ar.edu.utn.frba.ddsi.grpc.*;
 import io.grpc.*;
+import io.grpc.inprocess.InProcessChannelBuilder;
+import io.grpc.inprocess.InProcessServerBuilder;
 
 @DisplayName("Test de Integración gRPC: DonacionesGrpcService con Seguridad")
 class DonacionesGrpcIntegrationTest {
@@ -149,7 +152,7 @@ class DonacionesGrpcIntegrationTest {
                 DonacionesGrpcServiceGrpc.newBlockingStub(channel).withInterceptors(clientAuthInterceptor);
 
         when(donacionService.cambiarEstado(eq(5L), any()))
-                .thenReturn(new EstadoDonacionResponse(5L, "LISTA_PARA_ENTREGAR", "Cambio"));
+                .thenReturn(new EstadoDonacionResponse(5L, "LISTA_PARA_ENTREGAR", LocalDateTime.now()));
 
         ActualizarEstadoDonacionRequest request = ActualizarEstadoDonacionRequest.newBuilder()
                 .setDonacionId(5L)

@@ -65,6 +65,13 @@
             <artifactId>grpc-netty-shaded</artifactId>
         </dependency>
 
+        <!-- Testing gRPC (in-process channel y server para integration tests) -->
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-testing</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Persistencia: JPA (Hibernate) + jpa-extras -->
         <dependency>
             <groupId>io.github.flbulgarelli</groupId>
