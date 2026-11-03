@@ -34,6 +34,9 @@ import ar.edu.utn.frba.ddsi.web.clients.LogisticaApiClient;
 import ar.edu.utn.frba.ddsi.web.config.WebConfig;
 import ar.edu.utn.frba.ddsi.web.controllers.CamionesAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.DepositoAdminController;
+import ar.edu.utn.frba.ddsi.web.controllers.MatchmakingAdminController;
+import ar.edu.utn.frba.ddsi.web.controllers.RecepcionAdminController;
+import ar.edu.utn.frba.ddsi.web.controllers.ImportacionesAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.DonacionesAsignadasController;
 import ar.edu.utn.frba.ddsi.web.controllers.HomeController;
 import ar.edu.utn.frba.ddsi.web.controllers.MapaController;
@@ -76,6 +79,8 @@ class WebFlujoTest {
     private final AtomicReference<JsonNode> ultimaRecepcion = new AtomicReference<>();
     // lo que devuelve GET /api/donaciones/entregadas (mapa publico)
     private final List<Map<String, Object>> entregas = new ArrayList<>();
+    private final List<Map<String, Object>> propuestasFalsas = new ArrayList<>();
+    private final List<Map<String, Object>> donantesFalsos = new ArrayList<>();
 
     @TempDir
     Path carpetaFotos;
@@ -99,10 +104,13 @@ class WebFlujoTest {
                 HttpClient.newHttpClient(), ApiClient.crearObjectMapper(), auth);
         CamionesAdminController camionesAdmin = new CamionesAdminController(logistica);
         DepositoAdminController depositoAdmin = new DepositoAdminController(donaciones);
+        MatchmakingAdminController matchmakingAdmin = new MatchmakingAdminController(donaciones);
+        RecepcionAdminController recepcionAdmin = new RecepcionAdminController(donaciones);
+        ImportacionesAdminController importacionesAdmin = new ImportacionesAdminController(donaciones);
         Router router = new Router(new AutorizacionMiddleware(), new HomeController(), new SesionController(auth),
                 new RegistroController(auth), new PanelController(), new NecesidadesController(donaciones),
                 new DonacionesAsignadasController(donaciones), new RecepcionController(donaciones, fotos),
-                new MapaController(donaciones), null, camionesAdmin, depositoAdmin);
+                new MapaController(donaciones), null, camionesAdmin, depositoAdmin, matchmakingAdmin, recepcionAdmin, importacionesAdmin);
 
         web = new Server(router, config, fotos).crear();
         // ruta solo para el test: una llamada autenticada a la API, para probar el refresh del token
@@ -718,6 +726,159 @@ class WebFlujoTest {
         assertEquals("/admin/deposito?filtro=vencidas", respVencer.headers().firstValue("Location").orElse(null));
     }
 
+    @Test
+    @DisplayName("Admin matchmaking: control de acceso por rol")
+    void matchmakingSeguridad() throws Exception {
+        assertEquals(302, get("/admin/matchmaking", null).statusCode());
+        assertEquals(403, get("/admin/matchmaking", cookie(login("donante", "clave-segura"))).statusCode());
+        assertEquals(403, get("/admin/matchmaking", cookie(login("entidad", "clave-segura"))).statusCode());
+        assertEquals(200, get("/admin/matchmaking", cookie(login("admin", "clave-segura"))).statusCode());
+    }
+
+    @Test
+    @DisplayName("Admin matchmaking: ejecutar, listar y aceptar o descartar asignación")
+    void matchmakingFlujo() throws Exception {
+        String adminCookie = cookie(login("admin", "clave-segura"));
+
+        // Ejecutar matchmaking
+        HttpResponse<String> respEjecutar = post("/admin/matchmaking/ejecutar", Map.of(), adminCookie);
+        assertEquals(302, respEjecutar.statusCode());
+        assertEquals("/admin/matchmaking", respEjecutar.headers().firstValue("Location").orElse(null));
+
+        // Cargar una propuesta de ejemplo
+        propuestasFalsas.add(Map.of(
+                "id", 1L,
+                "donacionId", 104L,
+                "subcategoria", "Leche larga vida",
+                "categoria", "Alimentos",
+                "bienesResumen", "120 cajas x 1 L",
+                "totalUnidades", 120L,
+                "entidadesSugeridasIds", List.of(10L, 12L),
+                "entidadesSugeridas", List.of(
+                        Map.of("id", 10L, "razonSocial", "Comedor Los Bajitos", "direccion", "Av. San Martín 2341", "orden", 1),
+                        Map.of("id", 12L, "razonSocial", "Hogar Santa Rita", "direccion", "Belgrano 450", "orden", 2)
+                ),
+                "fechaEjecucion", "2026-11-03T09:30:00"
+        ));
+
+        // Ver listado con la propuesta
+        HttpResponse<String> listado = get("/admin/matchmaking", adminCookie);
+        assertEquals(200, listado.statusCode());
+        assertTrue(listado.body().contains("Matchmaking y Asignaciones"));
+        assertTrue(listado.body().contains("Donación #104"));
+        assertTrue(listado.body().contains("2 entidades sugeridas"));
+
+        // Abrir modal de sugerencias
+        HttpResponse<String> conModal = get("/admin/matchmaking?propuesta=1", adminCookie);
+        assertEquals(200, conModal.statusCode());
+        assertTrue(conModal.body().contains("Sugerencias de asignación · Propuesta #1"));
+        assertTrue(conModal.body().contains("Comedor Los Bajitos"));
+
+        // Aceptar asignación
+        HttpResponse<String> respAceptar = post("/admin/matchmaking/propuestas/1/aceptar", Map.of("entidadId", "10"), adminCookie);
+        assertEquals(302, respAceptar.statusCode());
+        assertEquals("/admin/matchmaking", respAceptar.headers().firstValue("Location").orElse(null));
+
+        // Rechazar propuesta
+        HttpResponse<String> respRechazar = post("/admin/matchmaking/propuestas/1/rechazar", Map.of(), adminCookie);
+        assertEquals(302, respRechazar.statusCode());
+    }
+
+    @Test
+    @DisplayName("Admin recepción: control de acceso por rol")
+    void recepcionSeguridad() throws Exception {
+        assertEquals(302, get("/admin/recepcion", null).statusCode());
+        assertEquals(403, get("/admin/recepcion", cookie(login("donante", "clave-segura"))).statusCode());
+        assertEquals(403, get("/admin/recepcion", cookie(login("entidad", "clave-segura"))).statusCode());
+        assertEquals(200, get("/admin/recepcion", cookie(login("admin", "clave-segura"))).statusCode());
+    }
+
+    @Test
+    @DisplayName("Admin recepción: alta rápida de donante y registro de donación en depósito")
+    void recepcionFlujo() throws Exception {
+        String adminCookie = cookie(login("admin", "clave-segura"));
+
+        // Ver pantalla de recepción
+        HttpResponse<String> pantalla = get("/admin/recepcion", adminCookie);
+        assertEquals(200, pantalla.statusCode());
+        assertTrue(pantalla.body().contains("Recepción de Donaciones en Depósito"));
+
+        // Alta rápida de donante inválida (sin DNI)
+        Map<String, String> formDonanteInvalido = new LinkedHashMap<>();
+        formDonanteInvalido.put("nombre", "Mariano");
+        formDonanteInvalido.put("apellido", "López");
+        formDonanteInvalido.put("dni", "");
+        HttpResponse<String> respErrorDonante = post("/admin/recepcion/donante-humana", formDonanteInvalido, adminCookie);
+        assertEquals(400, respErrorDonante.statusCode());
+        assertTrue(respErrorDonante.body().contains("El DNI es obligatorio"));
+
+        // Alta rápida de donante válida
+        Map<String, String> formDonanteValido = new LinkedHashMap<>(formDonanteInvalido);
+        formDonanteValido.put("dni", "34567890");
+        formDonanteValido.put("email", "mariano@ejemplo.com");
+        formDonanteValido.put("telefono", "1144332211");
+        HttpResponse<String> respAltaDonante = post("/admin/recepcion/donante-humana", formDonanteValido, adminCookie);
+        assertEquals(302, respAltaDonante.statusCode());
+        assertTrue(respAltaDonante.headers().firstValue("Location").orElse("").contains("/admin/recepcion?donanteId="));
+
+        // Registro de donación inválido (sin cantidad ni subcategoría)
+        Map<String, String> formDonacionInvalido = new LinkedHashMap<>();
+        formDonacionInvalido.put("donanteId", "1");
+        formDonacionInvalido.put("subcategoria", "");
+        formDonacionInvalido.put("bienDescripcion", "Cajas de leche");
+        formDonacionInvalido.put("cantidad", "0");
+        HttpResponse<String> respErrorDonacion = post("/admin/recepcion", formDonacionInvalido, adminCookie);
+        assertEquals(400, respErrorDonacion.statusCode());
+        assertTrue(respErrorDonacion.body().contains("La subcategoría es obligatorio"));
+
+        // Registro de donación válido
+        Map<String, String> formDonacionValido = new LinkedHashMap<>();
+        formDonacionValido.put("donanteId", "1");
+        formDonacionValido.put("subcategoria", "Leche larga vida");
+        formDonacionValido.put("bienDescripcion", "Cajas de leche entera x 1 L");
+        formDonacionValido.put("cantidad", "50");
+        formDonacionValido.put("pesoKg", "1.0");
+        formDonacionValido.put("volumenM3", "0.001");
+        formDonacionValido.put("estadoBien", "NUEVO");
+        HttpResponse<String> respAltaDonacion = post("/admin/recepcion", formDonacionValido, adminCookie);
+        assertEquals(302, respAltaDonacion.statusCode());
+        assertEquals("/admin/deposito", respAltaDonacion.headers().firstValue("Location").orElse(null));
+    }
+
+    @Test
+    @DisplayName("Admin importaciones: seguridad de roles")
+    void importacionesSeguridad() throws Exception {
+        assertEquals(302, get("/admin/importaciones", null).statusCode());
+        assertEquals(403, get("/admin/importaciones", cookie(login("comedor", "clave-segura"))).statusCode());
+        assertEquals(403, get("/admin/importaciones", cookie(login("donante", "clave-segura"))).statusCode());
+        assertEquals(200, get("/admin/importaciones", cookie(login("admin", "clave-segura"))).statusCode());
+    }
+
+    @Test
+    @DisplayName("Admin importaciones: iniciar importación masiva y consultar estado")
+    void importacionesFlujo() throws Exception {
+        String adminCookie = cookie(login("admin", "clave-segura"));
+
+        // Ver pantalla
+        HttpResponse<String> pantalla = get("/admin/importaciones", adminCookie);
+        assertEquals(200, pantalla.statusCode());
+        assertTrue(pantalla.body().contains("Importación Masiva de Donantes"));
+        assertTrue(pantalla.body().contains("Historial de importaciones"));
+
+        // Subir archivo CSV
+        String csv = "TipoPersona,TipoDoc,Documento,Nombre,Email,Telefono\nHUMANA,,11222333,Ana Lopez,humana@test.com,\n";
+        HttpResponse<String> respPost = postArchivo("/admin/importaciones", "archivo", "donantes_2026.csv",
+                csv.getBytes(StandardCharsets.UTF_8), adminCookie);
+        assertEquals(302, respPost.statusCode());
+        assertTrue(respPost.headers().firstValue("Location").orElse("").contains("/admin/importaciones?activa=IMP-105"));
+
+        // Consultar estado JSON de la importación
+        HttpResponse<String> estadoJson = get("/admin/importaciones/IMP-105/estado", adminCookie);
+        assertEquals(200, estadoJson.statusCode());
+        assertTrue(estadoJson.body().contains("IMP-105"));
+        assertTrue(estadoJson.body().contains("EN_PROCESO"));
+    }
+
     // ---- API falsa ----
 
     private Javalin crearApiFalsa() {
@@ -866,7 +1027,67 @@ class WebFlujoTest {
         });
         api.delete("/api/camiones/{id}", ctx -> ctx.status(204));
 
+        // Matchmaking
+        api.get("/api/matchmaking/pendientes", ctx -> ctx.json(propuestasFalsas));
+        api.post("/api/matchmaking/ejecuciones", ctx -> ctx.status(204));
+        api.put("/api/matchmaking/propuestas/{id}/estado", ctx -> ctx.status(204));
+
+        // Donantes y recepción presencial
+        api.get("/api/donantes", ctx -> ctx.json(donantesFalsos));
+        api.post("/api/donantes/persona-humana", ctx -> {
+            JsonNode body = mapper.readTree(ctx.body());
+            long id = donantesFalsos.size() + 1L;
+            Map<String, Object> donante = Map.of(
+                    "id", id,
+                    "tipo", "Persona Humana",
+                    "nombre", body.get("nombre").asText() + " " + body.get("apellido").asText(),
+                    "documento", body.get("dni").asText()
+            );
+            donantesFalsos.add(donante);
+            ctx.status(201).json(donante);
+        });
+        api.post("/api/donaciones", ctx -> {
+            ctx.status(201).json(Map.of("id", 401L, "estadoActual", "EN_DEPOSITO"));
+        });
+
+        List<Map<String, Object>> importacionesFalsas = new ArrayList<>(List.of(
+                importacionFake("IMP-104", "padron_donantes_caba.csv", "COMPLETADA", 12500, 12500, 11890, 610, 0, 100)
+        ));
+
+        api.get("/api/donantes/importaciones", ctx -> ctx.json(importacionesFalsas));
+        api.get("/api/donantes/importaciones/{id}", ctx -> {
+            String id = ctx.pathParam("id");
+            Map<String, Object> imp = importacionesFalsas.stream()
+                    .filter(i -> id.equals(i.get("id")))
+                    .findFirst()
+                    .orElse(importacionesFalsas.get(0));
+            ctx.json(imp);
+        });
+        api.post("/api/donantes/importaciones", ctx -> {
+            String nombre = ctx.header("X-Filename") != null ? ctx.header("X-Filename") : "donantes.csv";
+            Map<String, Object> nueva = importacionFake("IMP-105", nombre, "EN_PROCESO", 10000, 7200, 6850, 310, 40, 72);
+            nueva.put("errores", List.of(Map.of("fila", 142, "valor", "ana.lopez@invalid", "motivo", "Documento vacío")));
+            importacionesFalsas.add(0, nueva);
+            ctx.status(202).json(nueva);
+        });
+
         return api;
+    }
+
+    private Map<String, Object> importacionFake(String id, String nombreArchivo, String estado, int total, int proc, int creados, int act, int desc, int pct) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("id", id);
+        map.put("nombreArchivo", nombreArchivo);
+        map.put("fecha", "03/11/2026 10:15");
+        map.put("estado", estado);
+        map.put("totalFilas", total);
+        map.put("procesadas", proc);
+        map.put("creados", creados);
+        map.put("actualizados", act);
+        map.put("descartadas", desc);
+        map.put("porcentaje", pct);
+        map.put("errores", List.of());
+        return map;
     }
 
     /** Una donacion como la devuelve GET /donaciones?entidadId=10 (necesidad null = se elimino). */
@@ -971,6 +1192,23 @@ class WebFlujoTest {
             body.write(foto.getValue());
             body.write("\r\n".getBytes(StandardCharsets.UTF_8));
         }
+        body.write(("--" + limite + "--\r\n").getBytes(StandardCharsets.UTF_8));
+        HttpRequest pedido = HttpRequest.newBuilder(URI.create(WEB + ruta))
+                .header("Content-Type", "multipart/form-data; boundary=" + limite)
+                .header("Cookie", cookie)
+                .POST(HttpRequest.BodyPublishers.ofByteArray(body.toByteArray()))
+                .build();
+        return navegador.send(pedido, HttpResponse.BodyHandlers.ofString());
+    }
+
+    private HttpResponse<String> postArchivo(String ruta, String campo, String nombreArchivo, byte[] contenido, String cookie) throws Exception {
+        String limite = "----donatrack" + System.nanoTime();
+        ByteArrayOutputStream body = new ByteArrayOutputStream();
+        body.write(("--" + limite + "\r\nContent-Disposition: form-data; name=\"" + campo + "\"; filename=\""
+                + nombreArchivo + "\"\r\nContent-Type: text/csv\r\n\r\n")
+                .getBytes(StandardCharsets.UTF_8));
+        body.write(contenido);
+        body.write("\r\n".getBytes(StandardCharsets.UTF_8));
         body.write(("--" + limite + "--\r\n").getBytes(StandardCharsets.UTF_8));
         HttpRequest pedido = HttpRequest.newBuilder(URI.create(WEB + ruta))
                 .header("Content-Type", "multipart/form-data; boundary=" + limite)
