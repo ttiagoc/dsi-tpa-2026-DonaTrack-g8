@@ -90,8 +90,7 @@ Hoy **ningún endpoint de `logistica-service` declara roles**, así que son púb
 ## 5. Despliegue (requerimiento 4)
 
 ### 5.1 Elección del proveedor
-- [ ] **[COMPLETAR]** Comparar al menos 2 opciones (lo pide la consigna) en: horas gratis por mes para **4 servicios**, red privada entre servicios, soporte HTTP/2 para gRPC, que el servicio se "duerma" y cuánto tarda en volver, límites de la base de datos.
-  - Opciones: Render / Railway + Neon / Supabase, Oracle / AWS / Azure free tier, DISILAB.
+- [x] Comparar opciones (verificado y documentado en [`documents/InformeOpcionesDespliegue.md`](../InformeOpcionesDespliegue.md)) evaluando las 5 alternativas: Railway + Neon, Oracle Cloud Always Free, Render + Supabase, Cloudflare Tunnels y DISILAB (UTN FRBA), analizando soporte gRPC HTTP/2, separación de nodos, persistencia de fotos y cold-starts.
 - [ ] La consigna prefiere el servicio principal y el extraído en **nodos diferentes**.
 - [ ] Todo el equipo tiene que tener acceso al despliegue.
 
@@ -122,7 +121,7 @@ Hoy **ningún endpoint de `logistica-service` declara roles**, así que son púb
 - [ ] Bocetos de las pantallas 15–19 en `documents/bocetos/`, **antes** de implementarlas. Seguir el flujo de [`AGENTS.md`](../../AGENTS.md#flujo-para-cada-pantalla-nueva): boceto (en lo posible en Figma), PNG con formato `punto-nombre.png` y después el código.
 - [ ] `Despliegue.puml` actualizado: nodos cloud, web-service, canal gRPC, base administrada.
 - [x] Justificación: gRPC vs GraphQL (por qué gRPC para comunicación entre servicios) en [`entregables/JustificacionGrpc.md`](../../entregables/JustificacionGrpc.md) y guía técnica completa en [`documents/GuiaImplementacionGrpc.md`](../GuiaImplementacionGrpc.md).
-- [ ] Comparación de proveedores cloud y topología elegida.
+- [x] Comparación de proveedores cloud y topología elegida en [`documents/InformeOpcionesDespliegue.md`](../InformeOpcionesDespliegue.md).
 - [ ] Diagrama de arquitectura actualizado (el del plan original tiene la flecha gRPC al revés y le falta web → notificaciones).
 
 ## 8. Cronograma
