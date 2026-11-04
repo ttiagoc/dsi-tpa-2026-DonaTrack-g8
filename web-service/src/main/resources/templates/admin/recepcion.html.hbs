@@ -33,70 +33,143 @@
     </div>
 
     <div class="seccion-form">
-      <h2 class="seccion-form__titulo">2. Donación y Rubro</h2>
-      <div class="grilla grilla--2">
-        <div class="campo{{#if errores.subcategoria}} campo--error{{/if}}">
-          <label for="subcategoria">Subcategoría del bien <span class="campo__requerido" aria-hidden="true">*</span></label>
-          <select id="subcategoria" name="subcategoria" required data-buscador="Buscá una subcategoría">
-            <option value="">Seleccioná subcategoría...</option>
-            {{#each catalogo}}
-              <optgroup label="{{nombre}}">
-                {{#each subcategorias}}
-                  <option value="{{this}}" {{#if (eq ../../form.subcategoria this)}}selected{{/if}}>{{this}}</option>
-                {{/each}}
-              </optgroup>
-            {{/each}}
-          </select>
-          {{#if errores.subcategoria}}<small class="campo__error">{{errores.subcategoria}}</small>{{/if}}
-        </div>
-
-        <div class="campo{{#if errores.descripcion}} campo--error{{/if}}">
-          <label for="descripcion">Descripción general</label>
-          <input type="text" id="descripcion" name="descripcion" value="{{#if form.descripcion}}{{form.descripcion}}{{else}}Recepción presencial en centro de acopio{{/if}}" placeholder="ej: Entrega presencial en depósito">
-          {{#if errores.descripcion}}<small class="campo__error">{{errores.descripcion}}</small>{{/if}}
-        </div>
+      <h2 class="seccion-form__titulo">2. Datos de la Entrega</h2>
+      <div class="campo{{#if errores.descripcion}} campo--error{{/if}}">
+        <label for="descripcion">Descripción general de la donación</label>
+        <input type="text" id="descripcion" name="descripcion" value="{{#if form.descripcion}}{{form.descripcion}}{{else}}Recepción presencial en centro de acopio{{/if}}" placeholder="ej: Entrega presencial de alimentos y mobiliario">
+        {{#if errores.descripcion}}<small class="campo__error">{{errores.descripcion}}</small>{{/if}}
       </div>
     </div>
 
     <div class="seccion-form">
-      <h2 class="seccion-form__titulo">3. Detalle de Bienes</h2>
-      <div class="grilla grilla--3">
-        <div class="campo{{#if errores.bienDescripcion}} campo--error{{/if}}">
-          <label for="bienDescripcion">Detalle del artículo <span class="campo__requerido" aria-hidden="true">*</span></label>
-          <input type="text" id="bienDescripcion" name="bienDescripcion" value="{{form.bienDescripcion}}" required placeholder="ej: Cajas de leche entera x 1 L">
-          {{#if errores.bienDescripcion}}<small class="campo__error">{{errores.bienDescripcion}}</small>{{/if}}
-        </div>
-        <div class="campo{{#if errores.cantidad}} campo--error{{/if}}">
-          <label for="cantidad">Cantidad de unidades <span class="campo__requerido" aria-hidden="true">*</span></label>
-          <input type="number" id="cantidad" name="cantidad" value="{{form.cantidad}}" required min="1" placeholder="120">
-          {{#if errores.cantidad}}<small class="campo__error">{{errores.cantidad}}</small>{{/if}}
-        </div>
-        <div class="campo{{#if errores.fechaVencimiento}} campo--error{{/if}}">
-          <label for="fechaVencimiento">Fecha de vencimiento (si aplica)</label>
-          <input type="date" id="fechaVencimiento" name="fechaVencimiento" value="{{form.fechaVencimiento}}">
-          {{#if errores.fechaVencimiento}}<small class="campo__error">{{errores.fechaVencimiento}}</small>{{/if}}
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--espacio-2);">
+        <div>
+          <h2 class="seccion-form__titulo" style="margin-bottom: var(--espacio-1);">3. Artículos / Bienes a Recibir</h2>
+          <p class="texto-suave" style="margin: 0;">
+            Podés cargar todos los artículos que entregue la persona. El sistema realizará la <strong>segmentación automática</strong> en donaciones independientes agrupadas por subcategoría, vencimiento y estado.
+          </p>
         </div>
       </div>
 
-      <div class="grilla grilla--3">
-        <div class="campo{{#if errores.pesoKg}} campo--error{{/if}}">
-          <label for="pesoKg">Peso por unidad (kg)</label>
-          <input type="number" id="pesoKg" name="pesoKg" value="{{#if form.pesoKg}}{{form.pesoKg}}{{else}}1.0{{/if}}" min="0.01" step="any" placeholder="1.0">
-          {{#if errores.pesoKg}}<small class="campo__error">{{errores.pesoKg}}</small>{{/if}}
-        </div>
-        <div class="campo{{#if errores.volumenM3}} campo--error{{/if}}">
-          <label for="volumenM3">Volumen por unidad (m³)</label>
-          <input type="number" id="volumenM3" name="volumenM3" value="{{#if form.volumenM3}}{{form.volumenM3}}{{else}}0.001{{/if}}" min="0.0001" step="any" placeholder="0.001">
-          {{#if errores.volumenM3}}<small class="campo__error">{{errores.volumenM3}}</small>{{/if}}
-        </div>
-        <div class="campo">
-          <label for="estadoBien">Estado de los bienes</label>
-          <select id="estadoBien" name="estadoBien">
-            <option value="NUEVO" {{#if (eq form.estadoBien "NUEVO")}}selected{{/if}}>Nuevo / Sellado</option>
-            <option value="USADO" {{#if (eq form.estadoBien "USADO")}}selected{{/if}}>Usado en buen estado</option>
-          </select>
-        </div>
+      <div id="contenedor-bienes" style="margin-top: var(--espacio-3);">
+        {{#if bienes}}
+          {{#each bienes}}
+            <div class="bien-item" data-indice="{{indice}}">
+              <div class="bien-item__encabezado">
+                <span class="bien-item__titulo">Artículo #{{indice}}</span>
+                <button type="button" class="boton boton--secundario boton--peligro boton--chico btn-quitar-bien">Quitar</button>
+              </div>
+              <div class="grilla grilla--3">
+                <div class="campo{{#if ../errores.subcategoria}} campo--error{{/if}}">
+                  <label>Subcategoría del bien <span class="campo__requerido" aria-hidden="true">*</span></label>
+                  <select name="subcategoria" required data-buscador="Buscá una subcategoría">
+                    <option value="">Seleccioná subcategoría...</option>
+                    {{#each ../catalogo}}
+                      <optgroup label="{{nombre}}">
+                        {{#each subcategorias}}
+                          <option value="{{this}}" {{#if (eq ../../subcategoria this)}}selected{{/if}}>{{this}}</option>
+                        {{/each}}
+                      </optgroup>
+                    {{/each}}
+                  </select>
+                  {{#if ../errores.subcategoria}}<small class="campo__error">{{../errores.subcategoria}}</small>{{/if}}
+                </div>
+                <div class="campo{{#if ../errores.bienDescripcion}} campo--error{{/if}}">
+                  <label>Detalle del artículo <span class="campo__requerido" aria-hidden="true">*</span></label>
+                  <input type="text" name="bienDescripcion" value="{{bienDescripcion}}" required placeholder="ej: Fideos secos x 500 g">
+                  {{#if ../errores.bienDescripcion}}<small class="campo__error">{{../errores.bienDescripcion}}</small>{{/if}}
+                </div>
+                <div class="campo{{#if ../errores.cantidad}} campo--error{{/if}}">
+                  <label>Cantidad de unidades <span class="campo__requerido" aria-hidden="true">*</span></label>
+                  <input type="number" name="cantidad" value="{{cantidad}}" required min="1" placeholder="50">
+                  {{#if ../errores.cantidad}}<small class="campo__error">{{../errores.cantidad}}</small>{{/if}}
+                </div>
+              </div>
+
+              <div class="grilla grilla--4" style="margin-top: var(--espacio-3);">
+                <div class="campo">
+                  <label>Fecha de vencimiento (si aplica)</label>
+                  <input type="date" name="fechaVencimiento" value="{{fechaVencimiento}}">
+                </div>
+                <div class="campo">
+                  <label>Peso por unidad (kg)</label>
+                  <input type="number" name="pesoKg" value="{{pesoKg}}" min="0.01" step="any" placeholder="1.0">
+                </div>
+                <div class="campo">
+                  <label>Volumen por unidad (m³)</label>
+                  <input type="number" name="volumenM3" value="{{volumenM3}}" min="0.0001" step="any" placeholder="0.001">
+                </div>
+                <div class="campo">
+                  <label>Estado de los bienes</label>
+                  <select name="estadoBien">
+                    <option value="NUEVO" {{#if (eq estadoBien "NUEVO")}}selected{{/if}}>Nuevo / Sellado</option>
+                    <option value="USADO" {{#if (eq estadoBien "USADO")}}selected{{/if}}>Usado en buen estado</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          {{/each}}
+        {{else}}
+          <div class="bien-item" data-indice="1">
+            <div class="bien-item__encabezado">
+              <span class="bien-item__titulo">Artículo #1</span>
+              <button type="button" class="boton boton--secundario boton--peligro boton--chico btn-quitar-bien" style="display: none;">Quitar</button>
+            </div>
+            <div class="grilla grilla--3">
+              <div class="campo{{#if errores.subcategoria}} campo--error{{/if}}">
+                <label>Subcategoría del bien <span class="campo__requerido" aria-hidden="true">*</span></label>
+                <select name="subcategoria" required data-buscador="Buscá una subcategoría">
+                  <option value="">Seleccioná subcategoría...</option>
+                  {{#each catalogo}}
+                    <optgroup label="{{nombre}}">
+                      {{#each subcategorias}}
+                        <option value="{{this}}" {{#if (eq ../../form.subcategoria this)}}selected{{/if}}>{{this}}</option>
+                      {{/each}}
+                    </optgroup>
+                  {{/each}}
+                </select>
+                {{#if errores.subcategoria}}<small class="campo__error">{{errores.subcategoria}}</small>{{/if}}
+              </div>
+              <div class="campo{{#if errores.bienDescripcion}} campo--error{{/if}}">
+                <label>Detalle del artículo <span class="campo__requerido" aria-hidden="true">*</span></label>
+                <input type="text" name="bienDescripcion" value="{{form.bienDescripcion}}" required placeholder="ej: Fideos secos x 500 g">
+                {{#if errores.bienDescripcion}}<small class="campo__error">{{errores.bienDescripcion}}</small>{{/if}}
+              </div>
+              <div class="campo{{#if errores.cantidad}} campo--error{{/if}}">
+                <label>Cantidad de unidades <span class="campo__requerido" aria-hidden="true">*</span></label>
+                <input type="number" name="cantidad" value="{{form.cantidad}}" required min="1" placeholder="50">
+                {{#if errores.cantidad}}<small class="campo__error">{{errores.cantidad}}</small>{{/if}}
+              </div>
+            </div>
+
+            <div class="grilla grilla--4" style="margin-top: var(--espacio-3);">
+              <div class="campo">
+                <label>Fecha de vencimiento (si aplica)</label>
+                <input type="date" name="fechaVencimiento" value="{{form.fechaVencimiento}}">
+              </div>
+              <div class="campo">
+                <label>Peso por unidad (kg)</label>
+                <input type="number" name="pesoKg" value="{{#if form.pesoKg}}{{form.pesoKg}}{{else}}1.0{{/if}}" min="0.01" step="any" placeholder="1.0">
+              </div>
+              <div class="campo">
+                <label>Volumen por unidad (m³)</label>
+                <input type="number" name="volumenM3" value="{{#if form.volumenM3}}{{form.volumenM3}}{{else}}0.001{{/if}}" min="0.0001" step="any" placeholder="0.001">
+              </div>
+              <div class="campo">
+                <label>Estado de los bienes</label>
+                <select name="estadoBien">
+                  <option value="NUEVO" {{#if (eq form.estadoBien "NUEVO")}}selected{{/if}}>Nuevo / Sellado</option>
+                  <option value="USADO" {{#if (eq form.estadoBien "USADO")}}selected{{/if}}>Usado en buen estado</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        {{/if}}
       </div>
+
+      <button type="button" class="boton boton--secundario" id="btn-agregar-bien" style="margin-top: var(--espacio-2);">
+        + Agregar otro artículo a la donación
+      </button>
     </div>
 
     <div class="acciones" style="margin-top: var(--espacio-5); justify-content: flex-end;">
@@ -168,6 +241,115 @@
     </div>
   </form>
 </dialog>
+
+{{!-- Plantilla para clonar dinámicamente nuevos artículos --}}
+<template id="template-bien">
+  <div class="bien-item" data-indice="__INDICE__">
+    <div class="bien-item__encabezado">
+      <span class="bien-item__titulo">Artículo #__INDICE__</span>
+      <button type="button" class="boton boton--secundario boton--peligro boton--chico btn-quitar-bien">Quitar</button>
+    </div>
+    <div class="grilla grilla--3">
+      <div class="campo">
+        <label>Subcategoría del bien <span class="campo__requerido" aria-hidden="true">*</span></label>
+        <select name="subcategoria" required data-buscador="Buscá una subcategoría">
+          <option value="">Seleccioná subcategoría...</option>
+          {{#each catalogo}}
+            <optgroup label="{{nombre}}">
+              {{#each subcategorias}}
+                <option value="{{this}}">{{this}}</option>
+              {{/each}}
+            </optgroup>
+          {{/each}}
+        </select>
+      </div>
+      <div class="campo">
+        <label>Detalle del artículo <span class="campo__requerido" aria-hidden="true">*</span></label>
+        <input type="text" name="bienDescripcion" required placeholder="ej: Fideos secos x 500 g">
+      </div>
+      <div class="campo">
+        <label>Cantidad de unidades <span class="campo__requerido" aria-hidden="true">*</span></label>
+        <input type="number" name="cantidad" required min="1" placeholder="50">
+      </div>
+    </div>
+
+    <div class="grilla grilla--4" style="margin-top: var(--espacio-3);">
+      <div class="campo">
+        <label>Fecha de vencimiento (si aplica)</label>
+        <input type="date" name="fechaVencimiento">
+      </div>
+      <div class="campo">
+        <label>Peso por unidad (kg)</label>
+        <input type="number" name="pesoKg" value="1.0" min="0.01" step="any" placeholder="1.0">
+      </div>
+      <div class="campo">
+        <label>Volumen por unidad (m³)</label>
+        <input type="number" name="volumenM3" value="0.001" min="0.0001" step="any" placeholder="0.001">
+      </div>
+      <div class="campo">
+        <label>Estado de los bienes</label>
+        <select name="estadoBien">
+          <option value="NUEVO">Nuevo / Sellado</option>
+          <option value="USADO">Usado en buen estado</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+(function () {
+  var contenedor = document.getElementById('contenedor-bienes');
+  var btnAgregar = document.getElementById('btn-agregar-bien');
+  var template = document.getElementById('template-bien');
+
+  function actualizarNumeracion() {
+    if (!contenedor) return;
+    var items = contenedor.querySelectorAll('.bien-item');
+    items.forEach(function (item, idx) {
+      var nro = idx + 1;
+      item.dataset.indice = nro;
+      var tit = item.querySelector('.bien-item__titulo');
+      if (tit) tit.textContent = 'Artículo #' + nro;
+      var btn = item.querySelector('.btn-quitar-bien');
+      if (btn) btn.style.display = items.length > 1 ? 'inline-flex' : 'none';
+    });
+  }
+
+  if (btnAgregar && template && contenedor) {
+    btnAgregar.addEventListener('click', function () {
+      var nuevoIndice = contenedor.querySelectorAll('.bien-item').length + 1;
+      var clon = template.content.cloneNode(true);
+      var item = clon.querySelector('.bien-item');
+      item.dataset.indice = nuevoIndice;
+      var tit = item.querySelector('.bien-item__titulo');
+      if (tit) tit.textContent = 'Artículo #' + nuevoIndice;
+
+      contenedor.appendChild(clon);
+      var agregado = contenedor.lastElementChild;
+      if (window.inicializarBuscadores) {
+        window.inicializarBuscadores(agregado);
+      }
+      actualizarNumeracion();
+      var primerCampo = agregado.querySelector('input[name="bienDescripcion"]');
+      if (primerCampo) primerCampo.focus();
+    });
+
+    contenedor.addEventListener('click', function (e) {
+      var btnQuitar = e.target.closest('.btn-quitar-bien');
+      if (btnQuitar) {
+        var item = btnQuitar.closest('.bien-item');
+        if (item && contenedor.querySelectorAll('.bien-item').length > 1) {
+          item.remove();
+          actualizarNumeracion();
+        }
+      }
+    });
+
+    actualizarNumeracion();
+  }
+})();
+</script>
 
 {{/partial}}
 {{> layouts/base}}

@@ -845,6 +845,14 @@ class WebFlujoTest {
         HttpResponse<String> respAltaDonacion = post("/admin/recepcion", formDonacionValido, adminCookie);
         assertEquals(302, respAltaDonacion.statusCode());
         assertEquals("/admin/deposito", respAltaDonacion.headers().firstValue("Location").orElse(null));
+
+        // Registro con múltiples bienes (para que el backend los segmente automáticamente)
+        String multiBody = "donanteId=1&descripcion=Donación mixta"
+                + "&subcategoria=Fideos&bienDescripcion=Fideos Matarazzo 500g&cantidad=20&fechaVencimiento=2028-05-01&pesoKg=0.5&volumenM3=0.001&estadoBien=NUEVO"
+                + "&subcategoria=Tomate&bienDescripcion=Puré de tomate 520g&cantidad=15&fechaVencimiento=2027-12-01&pesoKg=0.52&volumenM3=0.0008&estadoBien=NUEVO";
+        HttpResponse<String> respMulti = postRaw("/admin/recepcion", multiBody, adminCookie);
+        assertEquals(302, respMulti.statusCode());
+        assertEquals("/admin/deposito", respMulti.headers().firstValue("Location").orElse(null));
     }
 
     @Test
@@ -1161,6 +1169,16 @@ class WebFlujoTest {
 
     private HttpResponse<String> get(String ruta, String cookie) throws Exception {
         HttpRequest.Builder pedido = HttpRequest.newBuilder(URI.create(WEB + ruta)).GET();
+        if (cookie != null) {
+            pedido.header("Cookie", cookie);
+        }
+        return navegador.send(pedido.build(), HttpResponse.BodyHandlers.ofString());
+    }
+
+    private HttpResponse<String> postRaw(String ruta, String body, String cookie) throws Exception {
+        HttpRequest.Builder pedido = HttpRequest.newBuilder(URI.create(WEB + ruta))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.ofString(body));
         if (cookie != null) {
             pedido.header("Cookie", cookie);
         }

@@ -13,7 +13,10 @@
   }
 
   function crear(select) {
-    var id = select.id;
+    if (select.dataset.buscadorListo) return;
+    select.dataset.buscadorListo = 'true';
+    var id = select.id || ('buscador-' + Math.random().toString(36).substring(2, 9));
+    select.id = id;
     var envoltorio = document.createElement('div');
     envoltorio.className = 'buscador';
     var entrada = document.createElement('input');
@@ -163,6 +166,11 @@
       entrada.value = elegido();
     });
   }
+
+  window.inicializarBuscadores = function (raiz) {
+    var contenedor = raiz || document;
+    contenedor.querySelectorAll('select[data-buscador]').forEach(crear);
+  };
 
   document.querySelectorAll('select[data-buscador]').forEach(crear);
 })();

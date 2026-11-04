@@ -53,9 +53,10 @@ public class RecepcionAdminController {
     public void registrarDonacion(Context ctx) {
         Formulario form = new Formulario(ctx);
         String donanteIdStr = form.requerido("donanteId", "El donante");
-        String subcategoria = form.requerido("subcategoria", "La subcategoría");
-        String bienDescripcion = form.requerido("bienDescripcion", "El detalle del artículo");
-        String cantidadStr = form.requerido("cantidad", "La cantidad");
+        String descripcion = form.valor("descripcion");
+        if (descripcion == null || descripcion.isBlank()) {
+            descripcion = "Recepción presencial en centro de acopio";
+        }
 
         Long donanteId = null;
         if (donanteIdStr != null) {
@@ -66,53 +67,104 @@ public class RecepcionAdminController {
             }
         }
 
-        Long cantidad = null;
-        if (cantidadStr != null) {
-            try {
-                cantidad = Long.parseLong(cantidadStr);
-                if (cantidad <= 0) {
-                    form.error("cantidad", "La cantidad debe ser mayor a 0");
+        List<String> subcategorias = ctx.formParams("subcategoria");
+        List<String> descripciones = ctx.formParams("bienDescripcion");
+        List<String> cantidades = ctx.formParams("cantidad");
+        List<String> vencimientos = ctx.formParams("fechaVencimiento");
+        List<String> pesos = ctx.formParams("pesoKg");
+        List<String> volumenes = ctx.formParams("volumenM3");
+        List<String> estados = ctx.formParams("estadoBien");
+
+        int totalBienes = Math.max(descripciones.size(), subcategorias.size());
+        if (totalBienes == 0) {
+            form.error("bienDescripcion", "Tenés que ingresar al menos un artículo");
+        }
+
+        List<BienAltaRequest> bienes = new ArrayList<>();
+        List<Map<String, Object>> bienesParaVista = new ArrayList<>();
+
+        for (int i = 0; i < totalBienes; i++) {
+            String subcat = i < subcategorias.size() ? subcategorias.get(i) : "";
+            String bienDesc = i < descripciones.size() ? descripciones.get(i) : "";
+            String cantStr = i < cantidades.size() ? cantidades.get(i) : "";
+            String vencStr = i < vencimientos.size() ? vencimientos.get(i) : "";
+            String pesoStr = i < pesos.size() ? pesos.get(i) : "";
+            String volStr = i < volumenes.size() ? volumenes.get(i) : "";
+            String est = (i < estados.size() && estados.get(i) != null && !estados.get(i).isBlank()) ? estados.get(i) : "NUEVO";
+
+            Map<String, Object> itemVista = new java.util.LinkedHashMap<>();
+            itemVista.put("indice", i + 1);
+            itemVista.put("subcategoria", subcat);
+            itemVista.put("bienDescripcion", bienDesc);
+            itemVista.put("cantidad", cantStr);
+            itemVista.put("fechaVencimiento", vencStr);
+            itemVista.put("pesoKg", pesoStr != null && !pesoStr.isBlank() ? pesoStr : "1.0");
+            itemVista.put("volumenM3", volStr != null && !volStr.isBlank() ? volStr : "0.001");
+            itemVista.put("estadoBien", est);
+            bienesParaVista.add(itemVista);
+
+            if (subcat == null || subcat.isBlank()) {
+                form.error("subcategoria", "La subcategoría es obligatorio");
+            }
+            if (bienDesc == null || bienDesc.isBlank()) {
+                form.error("bienDescripcion", "El detalle del artículo es obligatorio");
+            }
+
+            Long cant = null;
+            if (cantStr == null || cantStr.isBlank()) {
+                form.error("cantidad", "La cantidad es obligatoria (artículo #" + (i + 1) + ")");
+            } else {
+                try {
+                    cant = Long.parseLong(cantStr);
+                    if (cant <= 0) {
+                        form.error("cantidad", "La cantidad debe ser mayor a 0 (artículo #" + (i + 1) + ")");
+                    }
+                } catch (NumberFormatException e) {
+                    form.error("cantidad", "La cantidad debe ser un número entero (artículo #" + (i + 1) + ")");
                 }
-            } catch (NumberFormatException e) {
-                form.error("cantidad", "La cantidad debe ser un número entero");
+            }
+
+            Double peso = parseDouble(pesoStr);
+            Double vol = parseDouble(volStr);
+            LocalDate venc = parseFecha(vencStr);
+
+            if (bienDesc != null && !bienDesc.isBlank() && subcat != null && !subcat.isBlank()) {
+                bienes.add(new BienAltaRequest(
+                        bienDesc,
+                        cant != null ? cant : 1L,
+                        peso != null ? peso : 1.0,
+                        vol != null ? vol : 0.001,
+                        est,
+                        venc,
+                        new SubcategoriaAltaRequest(subcat)
+                ));
             }
         }
 
-        Double pesoKg = parseDouble(form.valor("pesoKg"));
-        Double volumenM3 = parseDouble(form.valor("volumenM3"));
-        LocalDate fechaVencimiento = parseFecha(form.valor("fechaVencimiento"));
-        String estadoBien = form.valor("estadoBien") != null ? form.valor("estadoBien") : "NUEVO";
-        String descripcion = form.valor("descripcion");
-        if (descripcion == null || descripcion.isBlank()) {
-            descripcion = "Recepción presencial en centro de acopio";
-        }
-
-        if (form.tieneErrores()) {
+        if (form.tieneErrores() || bienes.isEmpty()) {
             ctx.status(400);
             Map<String, Object> modelo = form.enModelo(Modelo.base(ctx), "Revisá los datos ingresados.");
+            if (!bienesParaVista.isEmpty()) {
+                modelo.put("bienes", bienesParaVista);
+            }
             cargarListas(ctx, modelo);
             ctx.render(VISTA, modelo);
             return;
         }
 
         try {
-            BienAltaRequest bien = new BienAltaRequest(
-                    bienDescripcion,
-                    cantidad,
-                    pesoKg != null ? pesoKg : 1.0,
-                    volumenM3 != null ? volumenM3 : 0.001,
-                    estadoBien,
-                    fechaVencimiento,
-                    new SubcategoriaAltaRequest(subcategoria)
-            );
-            DonacionAltaRequest request = new DonacionAltaRequest(descripcion, donanteId, List.of(bien));
-            donaciones.registrarDonacionPresencial(ctx, request);
+            DonacionAltaRequest request = new DonacionAltaRequest(descripcion, donanteId, bienes);
+            List<ar.edu.utn.frba.ddsi.web.dto.donaciones.DonacionResponse> donacionesCreadas = donaciones.registrarDonacionPresencial(ctx, request);
 
-            Alertas.exito(ctx, "La donación fue recibida e ingresada al depósito con éxito.");
+            int creadas = (donacionesCreadas != null && !donacionesCreadas.isEmpty()) ? donacionesCreadas.size() : 1;
+            Alertas.exito(ctx, "Se registraron " + bienes.size() + " artículo(s) y se segmentaron en " + creadas + " donación(es) en depósito con éxito.");
             ctx.redirect("/admin/deposito");
         } catch (ApiException e) {
             ctx.status(400);
             Map<String, Object> modelo = form.enModelo(Modelo.base(ctx), e.getMessage());
+            if (!bienesParaVista.isEmpty()) {
+                modelo.put("bienes", bienesParaVista);
+            }
             cargarListas(ctx, modelo);
             ctx.render(VISTA, modelo);
         }

@@ -522,9 +522,14 @@ code {
 .grilla { display: grid; gap: var(--espacio-4); }
 .grilla--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .grilla--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grilla--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+@media (max-width: 900px) {
+  .grilla--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 
 @media (max-width: 720px) {
-  .grilla--2, .grilla--3 { grid-template-columns: 1fr; }
+  .grilla--2, .grilla--3, .grilla--4 { grid-template-columns: 1fr; }
 }
 
 /* ---- Formularios ---- */
@@ -781,6 +786,27 @@ code {
   display: flex;
   align-items: center;
   gap: var(--espacio-2);
+}
+
+.bien-item {
+  background: var(--color-superficie-variante, #f8fafc);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-mediano, 8px);
+  padding: var(--espacio-4);
+  margin-bottom: var(--espacio-4);
+}
+.bien-item__encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--espacio-3);
+  padding-bottom: var(--espacio-2);
+  border-bottom: 1px dashed var(--color-borde);
+}
+.bien-item__titulo {
+  font-weight: 600;
+  font-size: var(--texto-normal);
+  color: var(--color-primario);
 }
 
 .tarjeta--tabla { padding: 0; overflow: hidden; }
