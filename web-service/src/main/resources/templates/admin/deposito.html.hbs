@@ -14,10 +14,10 @@
 </div>
 
 <nav class="pestanas" aria-label="Filtro de donaciones">
-  <a class="pestana {{#if esTabEnDeposito}}pestana--activa{{/if}}" href="/admin/deposito?filtro=en_deposito">
+  <a class="pestana {{#if esTabEnDeposito}}pestana--activa{{/if}}" href="/admin/deposito?filtro=en_deposito" {{#if esTabEnDeposito}}aria-current="page"{{/if}}>
     En depósito <span class="pestana__badge">{{resumen.enDeposito}}</span>
   </a>
-  <a class="pestana {{#if esTabVencidas}}pestana--activa{{/if}}" href="/admin/deposito?filtro=vencidas">
+  <a class="pestana {{#if esTabVencidas}}pestana--activa{{/if}}" href="/admin/deposito?filtro=vencidas" {{#if esTabVencidas}}aria-current="page"{{/if}}>
     Vencidas <span class="pestana__badge">{{resumen.vencidas}}</span>
   </a>
 </nav>
@@ -26,17 +26,18 @@
   <section class="tarjeta tarjeta--tabla">
     <div class="tabla-contenedor">
       <table class="tabla">
+        <caption class="sr-only">Listado de donaciones en depósito</caption>
         <thead>
           <tr>
-            <th># ID</th>
-            <th>Subcategoría</th>
-            <th>Bienes y cantidad</th>
-            <th>Fecha de ingreso</th>
-            <th>Estado</th>
+            <th scope="col"># ID</th>
+            <th scope="col">Subcategoría</th>
+            <th scope="col">Bienes y cantidad</th>
+            <th scope="col">Fecha de ingreso</th>
+            <th scope="col">Estado</th>
             {{#if esTabVencidas}}
-              <th>Motivo de baja</th>
+              <th scope="col">Motivo de baja</th>
             {{else}}
-              <th><span class="sr-only">Acciones</span></th>
+              <th scope="col"><span class="sr-only">Acciones</span></th>
             {{/if}}
           </tr>
         </thead>
@@ -61,7 +62,7 @@
                 <td><span class="texto-suave">{{#if justificacion}}{{justificacion}}{{else}}Sin justificación registrada{{/if}}</span></td>
               {{else}}
                 <td class="tabla__accion">
-                  <a class="boton boton--secundario boton--peligro boton--chico" href="/admin/deposito?filtro=en_deposito&vencer={{id}}">Marcar vencida</a>
+                  <a class="boton boton--secundario boton--peligro boton--chico" href="/admin/deposito?filtro=en_deposito&vencer={{id}}">Marcar vencida <span class="sr-only">donación #{{id}}</span></a>
                 </td>
               {{/if}}
             </tr>

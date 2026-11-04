@@ -18,8 +18,15 @@
   <section class="tarjeta tarjeta--tabla">
     <div class="tabla-contenedor">
       <table class="tabla">
+        <caption class="sr-only">Donaciones asignadas a la entidad</caption>
         <thead>
-          <tr><th>Donación</th><th>Necesidad</th><th>Bienes</th><th>Estado</th><th><span class="sr-only">Acciones</span></th></tr>
+          <tr>
+            <th scope="col">Donación</th>
+            <th scope="col">Necesidad</th>
+            <th scope="col">Bienes</th>
+            <th scope="col">Estado</th>
+            <th scope="col"><span class="sr-only">Acciones</span></th>
+          </tr>
         </thead>
         <tbody>
           {{#each donaciones}}
@@ -41,7 +48,7 @@
                 <span class="tabla__secundario">{{detalle}}</span>
               </td>
               <td class="tabla__accion">
-                {{#if puedeConfirmar}}<a class="boton boton--chico" href="/entidad/donaciones/{{id}}/recepcion">Confirmar recepción</a>{{/if}}
+                {{#if puedeConfirmar}}<a class="boton boton--chico" href="/entidad/donaciones/{{id}}/recepcion">Confirmar recepción <span class="sr-only">de donación #{{id}}</span></a>{{/if}}
               </td>
             </tr>
           {{/each}}

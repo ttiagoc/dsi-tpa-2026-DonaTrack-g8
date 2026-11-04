@@ -22,14 +22,15 @@
   <section class="tarjeta tarjeta--tabla">
     <div class="tabla-contenedor">
       <table class="tabla">
+        <caption class="sr-only">Propuestas de asignación generadas por el motor de matchmaking</caption>
         <thead>
           <tr>
-            <th># ID</th>
-            <th>Donación</th>
-            <th>Bienes y cantidad</th>
-            <th>Fecha de cálculo</th>
-            <th>Sugerencias</th>
-            <th><span class="sr-only">Acciones</span></th>
+            <th scope="col"># ID</th>
+            <th scope="col">Donación</th>
+            <th scope="col">Bienes y cantidad</th>
+            <th scope="col">Fecha de cálculo</th>
+            <th scope="col">Sugerencias</th>
+            <th scope="col"><span class="sr-only">Acciones</span></th>
           </tr>
         </thead>
         <tbody>
@@ -44,7 +45,7 @@
               <td>{{fechaFormateada}}</td>
               <td><span class="etiqueta etiqueta--info">{{cantidadSugerencias}} {{#if (eq cantidadSugerencias 1)}}entidad sugerida{{else}}entidades sugeridas{{/if}}</span></td>
               <td class="tabla__accion">
-                <a class="boton boton--chico" href="/admin/matchmaking?propuesta={{id}}">Ver sugerencias</a>
+                <a class="boton boton--chico" href="/admin/matchmaking?propuesta={{id}}">Ver sugerencias <span class="sr-only">para donación #{{donacionId}}</span></a>
               </td>
             </tr>
           {{/each}}

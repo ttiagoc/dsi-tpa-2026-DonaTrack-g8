@@ -3,7 +3,7 @@
       El menu del perfil es un <details>: se abre y se cierra sin JavaScript. --}}
 <header class="barra">
   <label for="menu-toggle" class="barra__boton barra__hamburguesa" aria-label="Abrir o cerrar el menú">
-    <svg class="icono"><use href="#i-menu"/></svg>
+    <svg class="icono" aria-hidden="true"><use href="#i-menu"/></svg>
   </label>
   <details class="perfil">
     <summary class="perfil__boton">
@@ -12,7 +12,7 @@
         <span class="perfil__nombre">{{usuario.username}}</span>
         <span class="perfil__rol">{{usuario.rolEtiqueta}}</span>
       </span>
-      <svg class="icono"><use href="#i-abajo"/></svg>
+      <svg class="icono" aria-hidden="true"><use href="#i-abajo"/></svg>
     </summary>
     <div class="perfil__menu">
       {{!-- Cada rol puede sumar aca "Datos de ..." cuando exista esa pantalla. --}}

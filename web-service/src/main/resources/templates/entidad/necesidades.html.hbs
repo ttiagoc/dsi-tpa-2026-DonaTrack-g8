@@ -18,8 +18,16 @@
   <section class="tarjeta tarjeta--tabla">
     <div class="tabla-contenedor">
       <table class="tabla">
+        <caption class="sr-only">Necesidades solicitadas por la entidad</caption>
         <thead>
-          <tr><th>Subcategoría</th><th>Descripción</th><th>Frecuencia</th><th>Asignado</th><th>Estado</th><th><span class="sr-only">Acciones</span></th></tr>
+          <tr>
+            <th scope="col">Subcategoría</th>
+            <th scope="col">Descripción</th>
+            <th scope="col">Frecuencia</th>
+            <th scope="col">Asignado</th>
+            <th scope="col">Estado</th>
+            <th scope="col"><span class="sr-only">Acciones</span></th>
+          </tr>
         </thead>
         <tbody>
           {{#each necesidades}}
@@ -30,7 +38,7 @@
               <td>
                 <div class="progreso">
                   <span>{{cantidadAsignada}} de {{cantidad}} {{unidad}}</span>
-                  <div class="progreso__barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{porcentaje}}"><span style="width: {{porcentaje}}%"></span></div>
+                  <div class="progreso__barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{porcentaje}}" aria-label="Cobertura de {{subcategoria}}: {{cantidadAsignada}} de {{cantidad}} {{unidad}}"><span style="width: {{porcentaje}}%"></span></div>
                 </div>
               </td>
               <td>
@@ -40,7 +48,7 @@
                 <form method="post" action="/entidad/necesidades/{{id}}/eliminar" data-confirmar
                       data-nombre="{{subcategoria}}" data-detalle="{{frecuencia}} · {{cantidad}} {{unidad}}"
                       data-en-curso="{{donacionesEnCurso}}">
-                  <button type="submit" class="boton boton--secundario boton--peligro boton--chico">Eliminar</button>
+                  <button type="submit" class="boton boton--secundario boton--peligro boton--chico">Eliminar <span class="sr-only">necesidad de {{subcategoria}}</span></button>
                 </form>
               </td>
             </tr>

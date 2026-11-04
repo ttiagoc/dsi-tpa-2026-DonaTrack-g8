@@ -70,12 +70,13 @@
         <h3 style="font-size: var(--texto-base); margin-bottom: var(--espacio-2);">Filas descartadas con error</h3>
         <div class="tabla-contenedor" style="max-height: 180px; overflow-y: auto; border: 1px solid var(--color-borde); border-radius: var(--radio);">
           <table class="tabla" style="font-size: var(--texto-chico);">
+            <caption class="sr-only">Filas descartadas con error en la importación</caption>
             <thead>
               <tr>
-                <th style="width: 80px;">Fila</th>
-                <th>Dato / Identificador</th>
-                <th>Motivo del descarte</th>
-                <th style="width: 100px;">Acción</th>
+                <th scope="col" style="width: 80px;">Fila</th>
+                <th scope="col">Dato / Identificador</th>
+                <th scope="col">Motivo del descarte</th>
+                <th scope="col" style="width: 100px;">Acción</th>
               </tr>
             </thead>
             <tbody id="tabla-errores-cuerpo">
@@ -119,7 +120,7 @@
 
     <div class="acciones" style="margin-top: var(--espacio-4);">
       <button type="submit" class="boton boton--primario">
-        <svg class="icono"><use href="#i-subir"/></svg>
+        <svg class="icono" aria-hidden="true"><use href="#i-subir"/></svg>
         Comenzar importación masiva
       </button>
     </div>
@@ -133,16 +134,17 @@
   {{#if tieneImportaciones}}
     <div class="tabla-contenedor">
       <table class="tabla">
+        <caption class="sr-only">Historial de importaciones masivas de donantes</caption>
         <thead>
           <tr>
-            <th># ID / Archivo</th>
-            <th>Fecha y hora</th>
-            <th>Filas totales</th>
-            <th>Procesadas</th>
-            <th>Creados</th>
-            <th>Actualizados</th>
-            <th>Errores</th>
-            <th>Estado</th>
+            <th scope="col"># ID / Archivo</th>
+            <th scope="col">Fecha y hora</th>
+            <th scope="col">Filas totales</th>
+            <th scope="col">Procesadas</th>
+            <th scope="col">Creados</th>
+            <th scope="col">Actualizados</th>
+            <th scope="col">Errores</th>
+            <th scope="col">Estado</th>
           </tr>
         </thead>
         <tbody>

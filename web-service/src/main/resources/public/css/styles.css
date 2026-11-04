@@ -76,6 +76,27 @@ code {
 
 :focus-visible { outline: 3px solid var(--color-acento); outline-offset: 2px; }
 
+/* Enlace para saltar al contenido principal (accesibilidad por teclado) */
+.skip-link {
+  position: absolute;
+  top: -999px;
+  left: -999px;
+  z-index: 1000;
+  padding: var(--espacio-2) var(--espacio-4);
+  background: var(--color-primario-oscuro);
+  color: #ffffff;
+  border-radius: var(--radio);
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: var(--sombra);
+}
+.skip-link:focus-visible {
+  top: var(--espacio-3);
+  left: var(--espacio-3);
+  outline: 3px solid var(--color-acento);
+  outline-offset: 2px;
+}
+
 .contenedor {
   flex: 1;
   width: 100%;
@@ -336,13 +357,17 @@ code {
   .menu-lateral__cerrar { display: inline-flex; }
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
+.sr-only,
+.visually-hidden:where(:not(:focus-within, :active)) {
+  position: absolute !important;
+  clip-path: inset(50%) !important;
+  overflow: hidden !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  white-space: nowrap !important;
 }
 
 .barra {

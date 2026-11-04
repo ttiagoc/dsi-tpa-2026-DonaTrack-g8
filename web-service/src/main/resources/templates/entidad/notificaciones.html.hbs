@@ -12,10 +12,11 @@
   <section class="tarjeta tarjeta--tabla">
     <div class="tabla-contenedor">
       <table class="tabla">
+        <caption class="sr-only">Historial de notificaciones de la entidad</caption>
         <thead>
           <tr>
-            <th>Aviso</th>
-            <th class="tabla__corta" style="text-align: right;">Fecha</th>
+            <th scope="col">Aviso</th>
+            <th scope="col" class="tabla__corta" style="text-align: right;">Fecha</th>
           </tr>
         </thead>
         <tbody>
@@ -23,7 +24,7 @@
             <tr>
               <td>
                 <div style="display: flex; gap: var(--espacio-3); align-items: flex-start;">
-                  <span style="font-size: 1.25rem; line-height: 1;">🔔</span>
+                  <span style="font-size: 1.25rem; line-height: 1;" aria-hidden="true">🔔</span>
                   <div>
                     <div><strong>{{this.mensaje}}</strong></div>
                     {{#if this.tipoEvento}}

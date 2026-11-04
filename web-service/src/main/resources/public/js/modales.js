@@ -18,11 +18,26 @@
     });
   }
 
+  function prepararDialogs() {
+    elevarModalesAbiertos();
+    document.querySelectorAll('dialog.modal').forEach(function (dialog) {
+      if (!dialog._focusPreparado) {
+        dialog._focusPreparado = true;
+        dialog.addEventListener('close', function () {
+          if (dialog._disparador && typeof dialog._disparador.focus === 'function') {
+            dialog._disparador.focus();
+            dialog._disparador = null;
+          }
+        });
+      }
+    });
+  }
+
   // Ejecutar cuando el DOM esté listo
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', elevarModalesAbiertos);
+    document.addEventListener('DOMContentLoaded', prepararDialogs);
   } else {
-    elevarModalesAbiertos();
+    prepararDialogs();
   }
 
   // Delegación de eventos para data-abre y data-cierra
@@ -36,6 +51,7 @@
           return;
         }
         e.preventDefault();
+        modal._disparador = botonAbre;
         modal.showModal();
         return;
       }

@@ -39,7 +39,7 @@
         </div>
 
         <div class="progreso">
-          <div class="progreso__barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{this.porcentaje}}">
+          <div class="progreso__barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{this.porcentaje}}" aria-label="Progreso de la misión {{this.nombre}}: {{this.porcentaje}}%">
             <span style="width: {{this.porcentaje}}%;"></span>
           </div>
           <span class="texto-suave" style="font-size: var(--texto-chico);">Progreso: {{this.porcentaje}}%</span>
@@ -54,7 +54,7 @@
     <div class="grilla grilla--3">
       {{#each incentivos.insigniasObtenidas}}
         <article class="tarjeta" style="text-align: center; padding: var(--espacio-5);">
-          <div style="font-size: 2.5rem; margin-bottom: var(--espacio-2);">🎖️</div>
+          <div style="font-size: 2.5rem; margin-bottom: var(--espacio-2);" aria-hidden="true">🎖️</div>
           <h3 style="font-size: 1.05rem; margin: 0 0 var(--espacio-1);">{{this.nombre}}</h3>
           <p class="texto-suave" style="font-size: var(--texto-chico); margin: 0;">{{this.descripcion}}</p>
         </article>

@@ -18,14 +18,15 @@
   <section class="tarjeta tarjeta--tabla">
     <div class="tabla-contenedor">
       <table class="tabla">
+        <caption class="sr-only">Listado de camiones de la flota</caption>
         <thead>
           <tr>
-            <th>Patente</th>
-            <th>Chofer asignado</th>
-            <th>Carga máxima</th>
-            <th>Volumen</th>
-            <th>Altura</th>
-            <th><span class="sr-only">Acciones</span></th>
+            <th scope="col">Patente</th>
+            <th scope="col">Chofer asignado</th>
+            <th scope="col">Carga máxima</th>
+            <th scope="col">Volumen</th>
+            <th scope="col">Altura</th>
+            <th scope="col"><span class="sr-only">Acciones</span></th>
           </tr>
         </thead>
         <tbody>
@@ -38,8 +39,8 @@
               <td>{{altura}} m</td>
               <td class="tabla__accion">
                 <div class="acciones">
-                  <a class="boton boton--secundario boton--chico" href="/admin/camiones?editar={{id}}">Editar</a>
-                  <a class="boton boton--secundario boton--peligro boton--chico" href="/admin/camiones?eliminar={{id}}">Eliminar</a>
+                  <a class="boton boton--secundario boton--chico" href="/admin/camiones?editar={{id}}">Editar <span class="sr-only">camión {{patente}}</span></a>
+                  <a class="boton boton--secundario boton--peligro boton--chico" href="/admin/camiones?eliminar={{id}}">Eliminar <span class="sr-only">camión {{patente}}</span></a>
                 </div>
               </td>
             </tr>

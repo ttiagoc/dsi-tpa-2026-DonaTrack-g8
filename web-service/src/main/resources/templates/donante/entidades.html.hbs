@@ -11,13 +11,13 @@
     {{#each entidades}}
       <article class="card card--borde">
         <header class="card__header">
-          <h3>{{this.nombre}}</h3>
+          <h2 style="font-size: 1.2rem; margin: 0;">{{this.nombre}}</h2>
           <span class="badge badge--secundario">{{this.tipo}}</span>
         </header>
         <div class="card__cuerpo">
           <p><strong>Dirección:</strong> {{this.direccion}}</p>
           <hr style="margin: 0.75rem 0; opacity: 0.2;">
-          <h4>Necesidades solicitadas:</h4>
+          <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Necesidades solicitadas:</h3>
           {{#if this.necesidades}}
             <ul style="padding-left: 1.25rem;">
               {{#each this.necesidades}}
