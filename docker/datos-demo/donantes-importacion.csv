@@ -1,0 +1,6 @@
+tipo,tipoDocumento,documento,nombre,email,telefono
+HUMANA,DNI,30111222,Lucia Fernandez,lucia.fernandez@example.com,+5491140001111
+HUMANA,DNI,28999888,Martin Sosa,martin.sosa@example.com,
+JURIDICA,CUIT,30-71234567-8,Panaderia El Trigal,contacto@eltrigal.example.com,+5491140002222
+HUMANA,DNI,,Sin Documento,sin.documento@example.com,
+EMPRESA,CUIT,30-70000000-1,Tipo Invalido SRL,tipo.invalido@example.com,
