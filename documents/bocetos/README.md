@@ -6,6 +6,12 @@ Todos los PNG están en el mismo formato: 1280 px de ancho, con el `styles.css` 
 
 En [Figma](https://www.figma.com/design/1tzIHQUO6aSwCbdgtPuXgj) quedó una primera versión de las pantallas 1, 3, 4 y 10 que ya no está al día: los bocetos vigentes son estos PNG.
 
+## Componentes de interfaz (común a todos los roles)
+
+| Req | Pantalla | Ruta | Boceto |
+|---|---|---|---|
+| — | Biblioteca de componentes reutilizables (encabezado, filtros, listado, botones, estados) | — | [00-componentes.png](00-componentes.png) |
+
 ## Persona A: público y entidad beneficiaria
 
 | Req | Pantalla | Ruta | Boceto |

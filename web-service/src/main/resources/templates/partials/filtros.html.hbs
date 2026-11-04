@@ -1,0 +1,9 @@
+<form class="filtros" method="get" action="{{action}}" novalidate>
+  {{> @partial-block}}
+  <div class="filtros__acciones">
+    {{boton "confirmar" texto=(or botonTexto "Filtrar") type="submit"}}
+    {{#if limpiarHref}}
+      {{boton "cancelar" href=limpiarHref texto="Limpiar"}}
+    {{/if}}
+  </div>
+</form>

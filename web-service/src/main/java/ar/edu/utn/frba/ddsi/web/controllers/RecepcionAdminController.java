@@ -171,14 +171,43 @@ public class RecepcionAdminController {
     }
 
     public void crearDonanteHumana(Context ctx) {
+        crearDonante(ctx);
+    }
+
+    public void crearDonante(Context ctx) {
         Formulario form = new Formulario(ctx);
-        String nombre = form.requerido("nombre", "El nombre");
-        String apellido = form.requerido("apellido", "El apellido");
-        String dni = form.requerido("dni", "El DNI");
-        LocalDate fechaNacimiento = parseFecha(form.valor("fechaNacimiento"));
+        String tipoPersona = ctx.formParam("tipoPersona");
+        boolean esJuridica = "JURIDICA".equalsIgnoreCase(tipoPersona);
+
         String email = form.email("email", "Email", false);
         String telefono = form.telefono("telefono", "Teléfono", false);
         String direccion = form.valor("direccion");
+
+        String nombre = null;
+        String apellido = null;
+        String dni = null;
+        LocalDate fechaNacimiento = null;
+
+        String razonSocial = null;
+        String cuit = null;
+        String rubro = null;
+        String tipoOrg = null;
+        String repNombre = null;
+        String repApellido = null;
+
+        if (esJuridica) {
+            razonSocial = form.requerido("razonSocial", "La razón social");
+            cuit = form.requerido("cuit", "El CUIT");
+            rubro = form.valor("rubro");
+            tipoOrg = form.valor("tipoOrg");
+            repNombre = form.valor("representanteNombre");
+            repApellido = form.valor("representanteApellido");
+        } else {
+            nombre = form.requerido("nombre", "El nombre");
+            apellido = form.requerido("apellido", "El apellido");
+            dni = form.requerido("dni", "El DNI");
+            fechaNacimiento = parseFecha(form.valor("fechaNacimiento"));
+        }
 
         if (form.tieneErrores()) {
             ctx.status(400);
@@ -204,18 +233,40 @@ public class RecepcionAdminController {
                     ? new MedioContactoDto("EMAIL", "presencial@donatrack.org")
                     : contactos.get(0);
 
-            PersonaHumanaRequest request = new PersonaHumanaRequest(
-                    nombre,
-                    apellido,
-                    fechaNacimiento != null ? fechaNacimiento : LocalDate.of(1990, 1, 1),
-                    dni,
-                    "Otro",
-                    direccion != null ? direccion : "Sin dirección",
-                    contactos.isEmpty() ? List.of(contactoPred) : contactos,
-                    contactoPred
-            );
+            DonanteResponse nuevo;
+            if (esJuridica) {
+                List<ar.edu.utn.frba.ddsi.web.dto.donantes.PersonaJuridicaAdminRequest.RepresentanteDto> reps = new ArrayList<>();
+                if (repNombre != null && !repNombre.isBlank()) {
+                    reps.add(new ar.edu.utn.frba.ddsi.web.dto.donantes.PersonaJuridicaAdminRequest.RepresentanteDto(
+                            repNombre,
+                            repApellido != null ? repApellido : "",
+                            "Representante"));
+                }
+                ar.edu.utn.frba.ddsi.web.dto.donantes.PersonaJuridicaAdminRequest reqJuridica =
+                        new ar.edu.utn.frba.ddsi.web.dto.donantes.PersonaJuridicaAdminRequest(
+                                razonSocial,
+                                (rubro != null && !rubro.isBlank()) ? rubro : "General",
+                                (tipoOrg != null && !tipoOrg.isBlank()) ? tipoOrg : "ONG",
+                                cuit,
+                                reps,
+                                contactos.isEmpty() ? List.of(contactoPred) : contactos,
+                                contactoPred
+                        );
+                nuevo = donaciones.crearDonantePersonaJuridica(ctx, reqJuridica);
+            } else {
+                PersonaHumanaRequest reqHumana = new PersonaHumanaRequest(
+                        nombre,
+                        apellido,
+                        fechaNacimiento != null ? fechaNacimiento : LocalDate.of(1990, 1, 1),
+                        dni,
+                        "Otro",
+                        direccion != null ? direccion : "Sin dirección",
+                        contactos.isEmpty() ? List.of(contactoPred) : contactos,
+                        contactoPred
+                );
+                nuevo = donaciones.crearDonantePersonaHumana(ctx, reqHumana);
+            }
 
-            DonanteResponse nuevo = donaciones.crearDonantePersonaHumana(ctx, request);
             Alertas.exito(ctx, "Donante " + nuevo.nombre() + " registrado con éxito.");
             ctx.redirect(RUTA + "?donanteId=" + nuevo.id());
         } catch (ApiException e) {

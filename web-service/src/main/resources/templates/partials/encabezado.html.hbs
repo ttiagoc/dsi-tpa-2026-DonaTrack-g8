@@ -1,0 +1,11 @@
+<header class="encabezado-pagina">
+  <div>
+    <h1>{{titulo}}</h1>
+    {{#if bajada}}<p class="texto-suave">{{bajada}}</p>{{/if}}
+  </div>
+  {{#if accionHref}}
+    <div class="encabezado-pagina__accion">
+      {{boton "alta" href=accionHref texto=accionTexto modal=accionModal}}
+    </div>
+  {{/if}}
+</header>

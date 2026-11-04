@@ -150,6 +150,7 @@ public class Router {
         if (recepcionAdmin != null) {
             app.get("/admin/recepcion", recepcionAdmin::mostrarFormulario, ADMINISTRADOR);
             app.post("/admin/recepcion", recepcionAdmin::registrarDonacion, ADMINISTRADOR);
+            app.post("/admin/recepcion/donante", recepcionAdmin::crearDonante, ADMINISTRADOR);
             app.post("/admin/recepcion/donante-humana", recepcionAdmin::crearDonanteHumana, ADMINISTRADOR);
         }
         if (importacionesAdmin != null) {

@@ -1,12 +1,11 @@
 {{#partial "titulo"}}Camiones · DonaTrack{{/partial}}
 {{#partial "contenido"}}
-<header class="encabezado-pagina">
-  <div>
-    <h1>Camiones</h1>
-    <p class="texto-suave">Flota disponible para la logística de recolección y entrega de donaciones.</p>
-  </div>
-  <a class="boton" href="/admin/camiones?nuevo" data-abre="modal-camion">+ Nuevo camión</a>
-</header>
+{{> partials/encabezado
+    titulo="Camiones"
+    bajada="Flota disponible para la logística de recolección y entrega de donaciones."
+    accionHref="/admin/camiones?nuevo"
+    accionTexto="+ Nuevo camión"
+    accionModal="modal-camion"}}
 
 {{#if camiones}}
   <div class="resumen">
@@ -14,47 +13,41 @@
     <div class="resumen__item resumen__item--ok"><strong>{{resumen.cargaTotal}} kg</strong>Capacidad de carga total</div>
     <div class="resumen__item"><strong>{{resumen.volumenTotal}} m³</strong>Volumen total disponible</div>
   </div>
-
-  <section class="tarjeta tarjeta--tabla">
-    <div class="tabla-contenedor">
-      <table class="tabla">
-        <caption class="sr-only">Listado de camiones de la flota</caption>
-        <thead>
-          <tr>
-            <th scope="col">Patente</th>
-            <th scope="col">Chofer asignado</th>
-            <th scope="col">Carga máxima</th>
-            <th scope="col">Volumen</th>
-            <th scope="col">Altura</th>
-            <th scope="col"><span class="sr-only">Acciones</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          {{#each camiones}}
-            <tr>
-              <td class="tabla__corta"><strong>{{patente}}</strong></td>
-              <td>{{choferNombreCompleto}}</td>
-              <td>{{capacidadCarga}} kg</td>
-              <td>{{capacidadVolumen}} m³</td>
-              <td>{{altura}} m</td>
-              <td class="tabla__accion">
-                <div class="acciones">
-                  <a class="boton boton--secundario boton--chico" href="/admin/camiones?editar={{id}}">Editar <span class="sr-only">camión {{patente}}</span></a>
-                  <a class="boton boton--secundario boton--peligro boton--chico" href="/admin/camiones?eliminar={{id}}">Eliminar <span class="sr-only">camión {{patente}}</span></a>
-                </div>
-              </td>
-            </tr>
-          {{/each}}
-        </tbody>
-      </table>
-    </div>
-  </section>
-{{else}}
-  <section class="tarjeta vacio">
-    <strong>Todavía no hay camiones registrados en la flota.</strong>
-    Con el botón “Nuevo camión” podés dar de alta la primera unidad de transporte.
-  </section>
 {{/if}}
+
+{{#> partials/listado
+    coleccion=camiones
+    vacioTitulo="Todavía no hay camiones registrados en la flota."
+    vacioBajada="Con el botón “Nuevo camión” podés dar de alta la primera unidad de transporte."}}
+  <table class="tabla">
+    <caption class="sr-only">Listado de camiones de la flota</caption>
+    <thead>
+      <tr>
+        <th scope="col">Patente</th>
+        <th scope="col">Chofer asignado</th>
+        <th scope="col">Carga máxima</th>
+        <th scope="col">Volumen</th>
+        <th scope="col">Altura</th>
+        <th scope="col"><span class="sr-only">Acciones</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each camiones}}
+        <tr>
+          <td class="tabla__corta"><strong>{{patente}}</strong></td>
+          <td>{{choferNombreCompleto}}</td>
+          <td>{{capacidadCarga}} kg</td>
+          <td>{{capacidadVolumen}} m³</td>
+          <td>{{altura}} m</td>
+          {{#> partials/acciones-fila}}
+            {{boton "editar" href=(concat "/admin/camiones?editar=" id) sr=(concat "camión " patente)}}
+            {{boton "eliminar" href=(concat "/admin/camiones?eliminar=" id) sr=(concat "camión " patente)}}
+          {{/partials/acciones-fila}}
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+{{/partials/listado}}
 
 {{!-- Modal de Alta / Edición --}}
 <dialog class="modal" id="modal-camion" aria-labelledby="titulo-camion" {{#if abrirModal}}open{{/if}}>
@@ -104,7 +97,7 @@
       </div>
     </div>
     <div class="modal__acciones">
-      <a class="boton boton--secundario" href="/admin/camiones" data-cierra>Cancelar</a>
+      {{boton "cancelar" href="/admin/camiones" cierra=true}}
       <button type="submit" class="boton">{{#if camionId}}Actualizar camión{{else}}Guardar camión{{/if}}</button>
     </div>
   </form>
@@ -112,24 +105,16 @@
 
 {{!-- Modal de Confirmación de Baja --}}
 {{#if abrirEliminar}}
-<dialog class="modal" id="modal-eliminar" aria-labelledby="titulo-eliminar" open>
-  <form method="post" action="/admin/camiones/{{camionAEliminar.id}}/eliminar">
-    <div class="modal__encabezado">
-      <h2 id="titulo-eliminar">¿Eliminar camión?</h2>
-      <a class="modal__cerrar" href="/admin/camiones" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></a>
-    </div>
-    <div class="modal__cuerpo">
-      <p>Estás a punto de dar de baja el camión patente <strong>{{camionAEliminar.patente}}</strong> (Chofer: {{camionAEliminar.choferNombreCompleto}}).</p>
-      <p class="texto-suave">El vehículo dejará de estar disponible para la planificación de nuevas rutas de entrega.</p>
-    </div>
-    <div class="modal__acciones">
-      <a class="boton boton--secundario" href="/admin/camiones" data-cierra autofocus>Cancelar</a>
-      <button type="submit" class="boton boton--peligro">Eliminar camión</button>
-    </div>
-  </form>
-</dialog>
+  {{> partials/modal-confirmar
+      abrir=true
+      id="modal-eliminar"
+      action=(concat "/admin/camiones/" camionAEliminar.id "/eliminar")
+      titulo="¿Eliminar camión?"
+      mensaje=(concat "Estás a punto de dar de baja el camión patente <strong>" camionAEliminar.patente "</strong> (Chofer: " camionAEliminar.choferNombreCompleto ").")
+      detalle="El vehículo dejará de estar disponible para la planificación de nuevas rutas de entrega."
+      cancelarHref="/admin/camiones"
+      confirmarTexto="Eliminar camión"}}
 {{/if}}
 
 {{/partial}}
 {{> layouts/base}}
-

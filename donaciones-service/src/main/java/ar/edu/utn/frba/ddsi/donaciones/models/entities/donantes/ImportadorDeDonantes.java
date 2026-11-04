@@ -21,54 +21,53 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
+import ar.edu.utn.frba.ddsi.common.security.Rol;
 import ar.edu.utn.frba.ddsi.donaciones.config.RestDonacionesConfig;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.NotificacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.importacion.FilaErrorDto;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.usuarios.Usuario;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoOrganizacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
+import ar.edu.utn.frba.ddsi.donaciones.models.repositories.UsuarioRepository;
 
 @Component
 public class ImportadorDeDonantes {
 
     private final DonanteRepository donanteRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
     private final RestTemplate restTemplate;
     private final RestDonacionesConfig config;
 
-    private final AtomicInteger contador = new AtomicInteger(104);
+    private final AtomicInteger contador = new AtomicInteger(100);
     private final Map<String, ImportacionTarea> tareasPorId = new ConcurrentHashMap<>();
     private final List<ImportacionTarea> tareas = new CopyOnWriteArrayList<>();
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    public ImportadorDeDonantes(DonanteRepository donanteRepository, RestTemplate restTemplate,
+    @Autowired
+    public ImportadorDeDonantes(DonanteRepository donanteRepository,
+            UsuarioRepository usuarioRepository,
+            PasswordEncoder passwordEncoder,
+            RestTemplate restTemplate,
             RestDonacionesConfig config) {
         this.donanteRepository = donanteRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
         this.restTemplate = restTemplate;
         this.config = config;
-        inicializarHistorialDemo();
     }
 
-    private void inicializarHistorialDemo() {
-        ImportacionTarea t1 = new ImportacionTarea(
-                "IMP-104", "padron_donantes_caba.csv", "03/11/2026 10:15", "COMPLETADA",
-                12500, 12500, 11890, 610, 0
-        );
-        ImportacionTarea t2 = new ImportacionTarea(
-                "IMP-103", "donantes_interior_octubre.csv", "01/11/2026 16:30", "COMPLETADA",
-                15200, 15200, 14850, 340, 10
-        );
-        ImportacionTarea t3 = new ImportacionTarea(
-                "IMP-102", "donantes_empresas_q3.csv", "25/10/2026 14:00", "COMPLETADA",
-                5100, 5100, 5098, 2, 0
-        );
-        registrarTarea(t1);
-        registrarTarea(t2);
-        registrarTarea(t3);
+    public ImportadorDeDonantes(DonanteRepository donanteRepository, RestTemplate restTemplate,
+            RestDonacionesConfig config) {
+        this(donanteRepository, null, null, restTemplate, config);
     }
 
     private void registrarTarea(ImportacionTarea tarea) {
@@ -227,6 +226,7 @@ public class ImportadorDeDonantes {
             return false;
         } else {
             donanteRepository.save(humanaNueva);
+            crearUsuarioSiNoExiste(emailVal, humanaNueva.getId());
             String nombreAMostrar = humanaNueva.getNombre()
                     + (humanaNueva.getApellido().isEmpty() ? "" : " " + humanaNueva.getApellido());
             notificarAltaAsync(emailVal, nombreAMostrar);
@@ -247,8 +247,25 @@ public class ImportadorDeDonantes {
             return false;
         } else {
             donanteRepository.save(juridicaNueva);
+            crearUsuarioSiNoExiste(emailVal, juridicaNueva.getId());
             notificarAltaAsync(emailVal, juridicaNueva.getRazonSocial());
             return true;
+        }
+    }
+
+    private void crearUsuarioSiNoExiste(String email, Long donanteId) {
+        if (usuarioRepository == null || passwordEncoder == null || email == null || donanteId == null) {
+            return;
+        }
+        try {
+            if (usuarioRepository.buscarPorUsername(email).isEmpty()) {
+                String passTemp = "DonaTrack" + (int)(Math.random() * 9000 + 1000);
+                String hash = passwordEncoder.encode(passTemp);
+                Usuario usuario = new Usuario(email, hash, Rol.DONANTE, donanteId);
+                usuarioRepository.save(usuario);
+            }
+        } catch (Exception e) {
+            System.err.println("No se pudo crear usuario para el donante importado: " + e.getMessage());
         }
     }
 
@@ -385,6 +402,7 @@ public class ImportadorDeDonantes {
             donanteRepository.save(humana);
         } else {
             donanteRepository.save(humanaNueva);
+            crearUsuarioSiNoExiste(emailVal, humanaNueva.getId());
             String nombreAMostrar = humanaNueva.getNombre()
                     + (humanaNueva.getApellido().isEmpty() ? "" : " " + humanaNueva.getApellido());
             try {
@@ -416,6 +434,7 @@ public class ImportadorDeDonantes {
             donanteRepository.save(juridica);
         } else {
             donanteRepository.save(juridicaNueva);
+            crearUsuarioSiNoExiste(emailVal, juridicaNueva.getId());
             try {
                 String url = config.getNotificacionesUrl() + "/notificaciones";
                 NotificacionRequest request = new NotificacionRequest(

@@ -137,6 +137,32 @@ public List<DonacionResponse> misDonaciones(Context ctx) {
 - Errores: 403 → página 403; 404 → página 404; API caída → página 503; el resto → página 500.
   Para mostrar un 404 propio desde un controller: `throw new NoEncontradoException("No existe la donación 3")`.
 
+## Componentes de interfaz
+
+Para garantizar la consistencia visual y de accesibilidad en todo el sitio, se dispone de una biblioteca de componentes estandarizados:
+
+### Helpers de Handlebars
+- **`{{boton "<tipo>" ...}}`**: Genera botones `<button>` o enlaces `<a>` consistentes según su función semántica:
+  - `alta`: Botón primario para altas en encabezados (`+ Nuevo...`, incluye ícono `i-mas`).
+  - `pagina`: Botón primario de acción de página (`Ejecutar matchmaking`, etc.).
+  - `ver`: Acción secundaria compacta de fila (`Ver...`, incluye ícono `i-ojo`).
+  - `editar`: Acción secundaria compacta de fila (`Editar`, incluye ícono `i-lapiz`).
+  - `eliminar`: Acción de peligro compacta de fila (`Eliminar`, incluye ícono `i-basura`).
+  - `confirmar`: Botón primario de envío de formulario.
+  - `confirmar-peligro`: Botón de peligro de confirmación en modal.
+  - `cancelar`: Botón secundario para cancelar/cerrar modal (`data-cierra`).
+  - Parámetros opcionales: `href="..."` (renderiza `<a>`), `modal="..."` (agrega `data-abre`), `sr="..."` (agrega texto accesible `<span class="sr-only">`), `cargando="..."` (texto al enviar para doble clic/spinner).
+- **`{{estado <valor>}}`**: Renderiza una etiqueta `<span class="etiqueta ...">` con texto legible y color según el estado (`EN_DEPOSITO`, `ASIGNADA`, `ENTREGADA`, etc.).
+- **`{{fecha <valor> [hora=true]}}`**: Formatea fechas en `dd/MM/yyyy` (o con `HH:mm` si `hora=true`).
+- **`{{concat a b ...}}`**: Helper utilitario para concatenar strings en subexpresiones.
+
+### Partials de estructura
+- **`{{> partials/encabezado titulo="..." bajada="..." accion=accionAlta}}`**: Encabezado de página con título `<h1>`, bajada explicativa y botón de acción alineado a la derecha.
+- **`{{#> partials/filtros limpiar="/ruta"}} ...campos... {{/partials/filtros}}`**: Formulario GET para filtros alineados en fila con botones "Filtrar" y "Limpiar".
+- **`{{#> partials/listado items=coleccion caption="Descripción" vacio=vacio}} ...tabla... {{/partials/listado}}`**: Contenedor estándar con tabla accesible (`caption`, `scope`) o mensaje amigable de lista vacía si la colección está vacía.
+- **`{{#> partials/acciones-fila}} ...botones... {{/partials/acciones-fila}}`**: Contenedor `.tabla__acciones` para alinear botones de acción de fila a la derecha.
+- **`{{> partials/modal-confirmar id="..." titulo="..." mensaje="..." accion="..." boton="..."}}`**: Modal estándar de confirmación de acciones destructivas o irreversibles.
+
 ## CSS
 
 `public/css/styles.css` tiene las variables (`--color-primario`, `--espacio-4`, ...) y estas clases:

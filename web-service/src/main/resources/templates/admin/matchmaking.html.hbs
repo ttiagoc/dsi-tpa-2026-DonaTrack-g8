@@ -5,60 +5,56 @@
     <h1>Matchmaking y Asignaciones</h1>
     <p class="texto-suave">Asignación inteligente de donaciones en depósito a entidades beneficiarias según compatibilidad y necesidad.</p>
   </div>
-  <form method="post" action="/admin/matchmaking/ejecutar">
-    <button type="submit" class="boton">
-      <svg class="icono" style="margin-right: var(--espacio-1);"><use href="#i-rayo"/></svg> Ejecutar matchmaking
-    </button>
-  </form>
+  <div class="encabezado-pagina__accion">
+    <form method="post" action="/admin/matchmaking/ejecutar">
+      <button type="submit" class="boton" data-cargando="Ejecutando matchmaking…">
+        <svg class="icono" aria-hidden="true"><use href="#i-rayo"/></svg> Ejecutar matchmaking
+      </button>
+    </form>
+  </div>
 </header>
 
 <div class="resumen">
   <div class="resumen__item resumen__item--pendiente"><strong>{{resumen.pendientes}}</strong>Propuestas pendientes</div>
   <div class="resumen__item resumen__item--info"><strong>{{resumen.candidatas}}</strong>Entidades candidatas</div>
-  <div class="resumen__item resumen__item--ok"><strong>{{resumen.compatibilidad}}</strong>Compatibilidad promedio</div>
+  <div class="resumen__item resumen__item--ok"><strong>{{resumen.totalSugerencias}}</strong>Recomendaciones generadas</div>
 </div>
 
-{{#if propuestas}}
-  <section class="tarjeta tarjeta--tabla">
-    <div class="tabla-contenedor">
-      <table class="tabla">
-        <caption class="sr-only">Propuestas de asignación generadas por el motor de matchmaking</caption>
-        <thead>
-          <tr>
-            <th scope="col"># ID</th>
-            <th scope="col">Donación</th>
-            <th scope="col">Bienes y cantidad</th>
-            <th scope="col">Fecha de cálculo</th>
-            <th scope="col">Sugerencias</th>
-            <th scope="col"><span class="sr-only">Acciones</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          {{#each propuestas}}
-            <tr>
-              <td class="tabla__corta"><strong>#{{id}}</strong></td>
-              <td>
-                Donación #{{donacionId}}
-                {{#if subcategoria}}<span class="tabla__secundario">{{subcategoria}}{{#if categoria}} · {{categoria}}{{/if}}</span>{{/if}}
-              </td>
-              <td>{{bienesResumen}}</td>
-              <td>{{fechaFormateada}}</td>
-              <td><span class="etiqueta etiqueta--info">{{cantidadSugerencias}} {{#if (eq cantidadSugerencias 1)}}entidad sugerida{{else}}entidades sugeridas{{/if}}</span></td>
-              <td class="tabla__accion">
-                <a class="boton boton--chico" href="/admin/matchmaking?propuesta={{id}}">Ver sugerencias <span class="sr-only">para donación #{{donacionId}}</span></a>
-              </td>
-            </tr>
-          {{/each}}
-        </tbody>
-      </table>
-    </div>
-  </section>
-{{else}}
-  <section class="tarjeta vacio">
-    <strong>No hay propuestas de matchmaking pendientes de resolución.</strong>
-    Hacé clic en “Ejecutar matchmaking” para procesar las donaciones en depósito y generar nuevas recomendaciones de asignación.
-  </section>
-{{/if}}
+{{#> partials/listado
+    coleccion=propuestas
+    vacioTitulo="No hay propuestas de matchmaking pendientes de resolución."
+    vacioBajada="Hacé clic en “Ejecutar matchmaking” para procesar las donaciones en depósito y generar nuevas recomendaciones de asignación."}}
+  <table class="tabla">
+    <caption class="sr-only">Propuestas de asignación generadas por el motor de matchmaking</caption>
+    <thead>
+      <tr>
+        <th scope="col"># ID</th>
+        <th scope="col">Donación</th>
+        <th scope="col">Bienes y cantidad</th>
+        <th scope="col">Fecha de cálculo</th>
+        <th scope="col">Sugerencias</th>
+        <th scope="col"><span class="sr-only">Acciones</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each propuestas}}
+        <tr>
+          <td class="tabla__corta"><strong>#{{id}}</strong></td>
+          <td>
+            Donación #{{donacionId}}
+            {{#if subcategoria}}<span class="tabla__secundario">{{subcategoria}}{{#if categoria}} · {{categoria}}{{/if}}</span>{{/if}}
+          </td>
+          <td>{{bienesResumen}}</td>
+          <td>{{fechaFormateada}}</td>
+          <td><span class="etiqueta etiqueta--info">{{cantidadSugerencias}} {{#if (eq cantidadSugerencias 1)}}entidad sugerida{{else}}entidades sugeridas{{/if}}</span></td>
+          {{#> partials/acciones-fila}}
+            {{boton "ver" href=(concat "/admin/matchmaking?propuesta=" id) texto="Ver sugerencias" sr=(concat "para donación #" donacionId)}}
+          {{/partials/acciones-fila}}
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+{{/partials/listado}}
 
 {{#if abrirModalSugerencias}}
 <dialog class="modal" id="modal-sugerencias" open aria-labelledby="titulo-sugerencias">
@@ -97,11 +93,11 @@
       <p class="nota">Al asignar la donación, cambiará a estado <strong>Asignación Realizada</strong> y quedará lista para ser planificada en una ruta de transporte.</p>
     </div>
     <div class="modal__acciones" style="justify-content: space-between;">
-      <button type="submit" class="boton boton--secundario boton--peligro" formaction="/admin/matchmaking/propuestas/{{propuestaSeleccionada.id}}/rechazar">Descartar propuesta</button>
+      {{boton "eliminar" formaction=(concat "/admin/matchmaking/propuestas/" propuestaSeleccionada.id "/rechazar") texto="Descartar propuesta" type="submit"}}
       <div style="display: flex; gap: var(--espacio-2);">
-        <a class="boton boton--secundario" href="/admin/matchmaking" data-cierra>Cancelar</a>
+        {{boton "cancelar" href="/admin/matchmaking" cierra=true}}
         {{#if propuestaSeleccionada.entidadesSugeridas}}
-          <button type="submit" class="boton">Confirmar asignación</button>
+          {{boton "confirmar" texto="Confirmar asignación" type="submit"}}
         {{/if}}
       </div>
     </div>
@@ -111,4 +107,3 @@
 
 {{/partial}}
 {{> layouts/base}}
-

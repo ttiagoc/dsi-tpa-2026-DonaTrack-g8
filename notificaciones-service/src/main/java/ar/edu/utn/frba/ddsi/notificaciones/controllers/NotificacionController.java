@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.common.controllers.JavalinController;
+import ar.edu.utn.frba.ddsi.common.security.Autorizacion;
+import ar.edu.utn.frba.ddsi.common.security.Rol;
 import ar.edu.utn.frba.ddsi.notificaciones.dto.NotificacionRequest;
 import ar.edu.utn.frba.ddsi.notificaciones.models.entities.Notificador;
 import ar.edu.utn.frba.ddsi.notificaciones.models.entities.Notificacion;
@@ -31,18 +33,23 @@ public class NotificacionController implements JavalinController {
         });
 
         app.get("/api/notificaciones", ctx -> {
-          String destinatarioIdStr = ctx.queryParam("destinatarioId");
-          String tipoDestinatario = ctx.queryParam("tipoDestinatario");
+            String destinatarioIdStr = ctx.queryParam("destinatarioId");
+            String tipoDestinatario = ctx.queryParam("tipoDestinatario");
 
-          List<Notificacion> resultado;
-          if(destinatarioIdStr != null && tipoDestinatario != null){
-            Long destinatarioId = Long.parseLong(destinatarioIdStr);
-            resultado = notificacionRepository.findByDestinatario(destinatarioId, tipoDestinatario);
-          } else {
-            resultado = notificacionRepository.findAll();
-          }
+            List<Notificacion> resultado;
+            if (destinatarioIdStr != null && tipoDestinatario != null) {
+                Long destinatarioId = Long.parseLong(destinatarioIdStr);
+                Rol rolRequerido = "ENTIDAD".equalsIgnoreCase(tipoDestinatario)
+                        ? Rol.ENTIDAD_BENEFICIARIA
+                        : Rol.DONANTE;
+                Autorizacion.exigirPropietario(ctx, rolRequerido, destinatarioId);
+                resultado = notificacionRepository.findByDestinatario(destinatarioId, tipoDestinatario);
+            } else {
+                Autorizacion.exigir(Autorizacion.esPrivilegiado(ctx));
+                resultado = notificacionRepository.findAll();
+            }
 
-          ctx.json(resultado);
-        });
+            ctx.json(resultado);
+        }, Rol.DONANTE, Rol.ENTIDAD_BENEFICIARIA, Rol.ADMINISTRADOR, Rol.SISTEMA);
     }
 }

@@ -1,0 +1,12 @@
+{{#if coleccion}}
+  <section class="tarjeta tarjeta--tabla">
+    <div class="tabla-contenedor">
+      {{> @partial-block}}
+    </div>
+  </section>
+{{else}}
+  <section class="tarjeta vacio">
+    {{#if vacioTitulo}}<strong>{{vacioTitulo}}</strong>{{/if}}
+    {{#if vacioBajada}}{{vacioBajada}}{{/if}}
+  </section>
+{{/if}}

@@ -515,6 +515,21 @@ code {
 .boton--chico { padding: var(--espacio-1) var(--espacio-3); font-size: var(--texto-chico); }
 .boton--ancho { width: 100%; }
 
+.boton--cargando {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.boton--cargando .icono {
+  animation: girar 0.8s linear infinite;
+}
+
+@keyframes girar {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .acciones { display: flex; flex-wrap: wrap; gap: var(--espacio-3); }
 
 /* ---- Tarjetas ---- */
@@ -675,6 +690,7 @@ code {
 }
 
 .etiqueta--pendiente { background: #fdf3dc; color: #7a5410; }
+.etiqueta--ok { background: var(--color-primario-suave); color: var(--color-primario-oscuro); }
 .etiqueta--info { background: var(--color-info-suave); color: var(--color-info); }
 .etiqueta--error { background: var(--color-error-suave); color: var(--color-error); }
 .etiqueta--neutra { background: var(--color-fondo); color: var(--color-texto-suave); border: 1px solid var(--color-borde); }
@@ -691,6 +707,7 @@ code {
 
 .encabezado-pagina h1 { margin-bottom: var(--espacio-1); }
 .encabezado-pagina p { margin: 0; }
+.encabezado-pagina__accion { display: flex; align-items: center; gap: var(--espacio-3); }
 
 .resumen { display: flex; flex-wrap: wrap; gap: var(--espacio-3); margin-bottom: var(--espacio-5); }
 
@@ -840,6 +857,14 @@ code {
 .tarjeta--tabla .tabla tr:last-child td { border-bottom: 0; }
 .tabla__accion { text-align: right; width: 1%; white-space: nowrap; }
 .tabla__accion form { margin: 0; }
+.tabla__acciones {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--espacio-2);
+  white-space: nowrap;
+}
+.tabla__acciones form { margin: 0; display: inline-flex; }
 .tabla__corta { white-space: nowrap; }
 .tabla__secundario { display: block; color: var(--color-texto-suave); font-size: var(--texto-chico); }
 /* texto largo en una linea con "…" (el completo va en title) */
@@ -865,6 +890,46 @@ code {
 /* Accion de peligro con borde (por ejemplo "Eliminar" en una fila) */
 .boton--secundario.boton--peligro { background: transparent; color: var(--color-error); }
 .boton--secundario.boton--peligro:hover { background: var(--color-error-suave); color: #8c1d17; }
+
+/* ---- Filtros en listados ---- */
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espacio-3);
+  margin-bottom: var(--espacio-4);
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  padding: var(--espacio-3) var(--espacio-4);
+}
+
+.filtros .campo {
+  margin-bottom: 0;
+  flex: 1 1 200px;
+}
+
+.filtros__acciones {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+}
+
+/* ---- Paginación en tablas ---- */
+.paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--espacio-3) var(--espacio-4);
+  border-top: 1px solid var(--color-borde);
+  font-size: var(--texto-chico);
+  color: var(--color-texto-suave);
+}
+
+.paginacion__controles {
+  display: flex;
+  gap: var(--espacio-2);
+}
 
 /* ---- Detalle (lista de datos "etiqueta: valor") ---- */
 .detalle { display: grid; grid-template-columns: max-content 1fr; gap: var(--espacio-2) var(--espacio-4); margin: 0 0 var(--espacio-5); }

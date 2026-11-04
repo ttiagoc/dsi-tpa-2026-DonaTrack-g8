@@ -37,9 +37,24 @@ public class JavalinHandlebars implements FileRenderer {
     public JavalinHandlebars() {
         ClassPathTemplateLoader loader = new ClassPathTemplateLoader("/templates", EXTENSION);
         loader.setCharset(StandardCharsets.UTF_8);
-        this.handlebars = new Handlebars(new ClassPathTemplateLoader("/templates", EXTENSION))
+        this.handlebars = new Handlebars(loader)
                 .with(new ConcurrentMapTemplateCache());
         this.handlebars.registerHelpers(ConditionalHelpers.class);
+        this.handlebars.registerHelper("boton", new BotonHelper());
+        this.handlebars.registerHelper("estado", new EstadoHelper());
+        this.handlebars.registerHelper("fecha", new FechaHelper());
+        this.handlebars.registerHelper("concat", (context, options) -> {
+            StringBuilder sb = new StringBuilder();
+            if (context != null) sb.append(context);
+            for (Object param : options.params) {
+                if (param != null) sb.append(param);
+            }
+            return new Handlebars.SafeString(sb.toString());
+        });
+    }
+
+    public Handlebars getHandlebars() {
+        return handlebars;
     }
 
     @NotNull

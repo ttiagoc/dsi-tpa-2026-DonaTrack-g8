@@ -1,11 +1,8 @@
 {{#partial "titulo"}}Importación Masiva de Donantes · DonaTrack{{/partial}}
 {{#partial "contenido"}}
-<header class="encabezado-pagina">
-  <div>
-    <h1>Importación Masiva de Donantes</h1>
-    <p class="texto-suave">Carga de donantes por lote mediante archivos CSV (&gt;10.000 filas). El procesamiento se realiza en segundo plano.</p>
-  </div>
-</header>
+{{> partials/encabezado
+    titulo="Importación Masiva de Donantes"
+    bajada="Carga de donantes por lote mediante archivos CSV (>10.000 filas). El procesamiento se realiza en segundo plano."}}
 
 <div class="resumen">
   <div class="resumen__item"><strong>{{resumen.total}}</strong>Importaciones realizadas</div>
@@ -119,7 +116,7 @@
     </div>
 
     <div class="acciones" style="margin-top: var(--espacio-4);">
-      <button type="submit" class="boton boton--primario">
+      <button type="submit" class="boton" data-cargando="Subiendo y procesando CSV…">
         <svg class="icono" aria-hidden="true"><use href="#i-subir"/></svg>
         Comenzar importación masiva
       </button>
@@ -167,7 +164,7 @@
                   <span class="etiqueta etiqueta--info">En proceso ({{porcentaje}}%)</span>
                 {{/if}}
                 {{#if esCompletada}}
-                  <span class="etiqueta">Completada</span>
+                  <span class="etiqueta etiqueta--ok">Completada</span>
                 {{/if}}
                 {{#if esFallida}}
                   <span class="etiqueta etiqueta--error">Fallida</span>

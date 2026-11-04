@@ -72,6 +72,12 @@ La Persona A protege la API REST de donaciones con JWT y roles (contrato, matriz
 | 18 | `/admin/camiones` | `GET/POST/PUT/DELETE /api/camiones` (logística) | — |
 | 19 | `/admin/importaciones` | `ImportadorDeDonantes` (clase de dominio, sin endpoint) | Endpoint + procesamiento asíncrono |
 
+- [x] Biblioteca de componentes reutilizables de UI (`TipoBoton`, `BotonHelper`, `EstadoHelper`, `FechaHelper`, `concat`, y partials `encabezado`, `listado`, `acciones-fila`, `filtros`, `modal-confirmar`).
+- [x] Migración y estandarización completa de pantallas de administración (`camiones`, `deposito`, `matchmaking`, `recepcion`, `importaciones`) con componentes reutilizables.
+- [x] Alta rápida de personas jurídicas en modal de recepción y vinculación con API `POST /api/donantes/persona-juridica`.
+- [x] Otorgar usuario con credenciales a donantes importados por CSV (`ImportadorDeDonantes`) y limpieza de datos simulados fijos en estadísticas y tareas.
+- [x] Prevención de doble clic e indicador de carga con spinner accesible (`cargando.js` y `.boton--cargando`).
+
 ### 4.0 Proteger la API de logística
 Logística utiliza `common-lib`, implementando el mismo `AutenticacionHandler` que donaciones para proteger endpoints con JWT y API Key:
 - [x] `/api/camiones/*` y la planificación de rutas (`/api/rutas/planificaciones`) protegidos con `ADMINISTRADOR` y `SISTEMA`. Lo llama el `web-service` con el JWT del admin.

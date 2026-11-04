@@ -1,0 +1,19 @@
+{{#if abrir}}
+<dialog class="modal" id="{{id}}" aria-labelledby="titulo-{{id}}" open>
+  <form method="post" action="{{action}}" accept-charset="UTF-8">
+    <div class="modal__encabezado">
+      <h2 id="titulo-{{id}}">{{titulo}}</h2>
+      <a class="modal__cerrar" href="{{cancelarHref}}" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></a>
+    </div>
+    <div class="modal__cuerpo">
+      {{#if mensaje}}<p>{{{mensaje}}}</p>{{/if}}
+      {{#if detalle}}<p class="texto-suave">{{detalle}}</p>{{/if}}
+      {{#if htmlMensaje}}{{{htmlMensaje}}}{{/if}}
+    </div>
+    <div class="modal__acciones">
+      {{boton "cancelar" href=cancelarHref autofocus=true cierra=true}}
+      {{boton "confirmar_peligro" texto=confirmarTexto type="submit"}}
+    </div>
+  </form>
+</dialog>
+{{/if}}

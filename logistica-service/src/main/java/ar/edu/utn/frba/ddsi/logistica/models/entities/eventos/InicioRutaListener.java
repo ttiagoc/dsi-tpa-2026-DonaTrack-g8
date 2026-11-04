@@ -53,7 +53,7 @@ public class InicioRutaListener implements ListenerLogistica<EventoInicioRuta> {
                     for (MedioContacto contacto : contactos) {
                         String mensaje = "Tu entrega ya está en camino. Seguí el recorrido del camión con el mapa interactivo: "
                                 + mapaUrl;
-                        enviarNotificacionAsync(contacto, mensaje);
+                        enviarNotificacionAsync(contacto, mensaje, "EN_CAMINO", "ENTIDAD", entidadId, null);
                     }
                 }
             } catch (Exception e) {
@@ -68,9 +68,9 @@ public class InicioRutaListener implements ListenerLogistica<EventoInicioRuta> {
                         Long donanteId = responseDonacion.donanteId();
                         MedioContacto contactoDonante = donacionesGrpcClient.obtenerContactoDonante(donanteId);
                         if (contactoDonante != null) {
-                            String mensaje = "Tu donación ya está en camino. Seguí el recorrido del camión con el mapa interactivo: "
+                            String mensaje = "Tu donación #" + donacionId + " ya está en camino. Seguí el recorrido del camión con el mapa interactivo: "
                                     + mapaUrl;
-                            enviarNotificacionAsync(contactoDonante, mensaje);
+                            enviarNotificacionAsync(contactoDonante, mensaje, "EN_CAMINO", "DONANTE", donanteId, donacionId);
                         }
                     }
                 } catch (Exception e) {
@@ -82,11 +82,15 @@ public class InicioRutaListener implements ListenerLogistica<EventoInicioRuta> {
         }
     }
 
-    private void enviarNotificacionAsync(MedioContacto contacto, String mensaje) {
+    private void enviarNotificacionAsync(MedioContacto contacto, String mensaje, String tipoEvento, String tipoDestinatario, Long destinatarioId, Long donacionId) {
         NotificacionRequest request = new NotificacionRequest(
                 contacto.getValor(),
                 contacto.getTipoContacto(),
-                mensaje);
+                mensaje,
+                tipoEvento,
+                tipoDestinatario,
+                destinatarioId,
+                donacionId);
         String notificacionesUrl = config.getNotificacionesUrl() + "/notificaciones";
         CompletableFuture.runAsync(() -> {
             try {

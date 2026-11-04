@@ -25,11 +25,24 @@ public class MatchmakingAdminController {
         Map<String, Object> modelo = Modelo.base(ctx);
         List<PropuestaMatchmakingResponse> propuestas = donaciones.obtenerPropuestasPendientes(ctx);
 
+        long candidatas = propuestas != null
+                ? propuestas.stream()
+                        .filter(p -> p.entidadesSugeridas() != null)
+                        .flatMap(p -> p.entidadesSugeridas().stream())
+                        .map(PropuestaMatchmakingResponse.EntidadSugeridaDto::id)
+                        .distinct()
+                        .count()
+                : 0;
+
+        long totalSugerencias = propuestas != null
+                ? propuestas.stream().mapToInt(PropuestaMatchmakingResponse::cantidadSugerencias).sum()
+                : 0;
+
         modelo.put("propuestas", propuestas);
         modelo.put("resumen", Map.of(
-                "pendientes", propuestas.size(),
-                "candidatas", 12,
-                "compatibilidad", "85%"
+                "pendientes", propuestas != null ? propuestas.size() : 0,
+                "candidatas", candidatas,
+                "totalSugerencias", totalSugerencias
         ));
 
         String propuestaParam = ctx.queryParam("propuesta");
