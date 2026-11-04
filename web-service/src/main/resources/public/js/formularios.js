@@ -44,11 +44,17 @@
       }
     }
     if (campo.type === 'number') {
-      if (!/^-?\d+$/.test(valor)) {
-        return MENSAJES.entero;
+      var numVal = valor.replace(',', '.');
+      var permiteDecimales = campo.step === 'any' || (campo.step && campo.step.indexOf('.') !== -1);
+      var regex = permiteDecimales ? /^-?\d+(\.\d+)?$/ : /^-?\d+$/;
+      if (!regex.test(numVal)) {
+        return permiteDecimales ? 'Ingresá un número válido' : MENSAJES.entero;
       }
-      if (campo.min !== '' && Number(valor) < Number(campo.min)) {
+      if (campo.min !== '' && Number(numVal) < Number(campo.min)) {
         return campo.min === '1' ? 'Tiene que ser un número mayor a 0' : 'Tiene que ser al menos ' + campo.min;
+      }
+      if (campo.max !== '' && Number(numVal) > Number(campo.max)) {
+        return 'Tiene que ser como máximo ' + campo.max;
       }
     }
     if (campo.minLength > 0 && valor.length < campo.minLength) {

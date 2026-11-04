@@ -57,9 +57,9 @@
 
 {{!-- Modal de Alta / Edición --}}
 <dialog class="modal" id="modal-camion" aria-labelledby="titulo-camion" {{#if abrirModal}}open{{/if}}>
-  <form method="post" action="{{#if esNuevo}}/admin/camiones{{else}}/admin/camiones/{{camionId}}/editar{{/if}}" accept-charset="UTF-8" novalidate>
+  <form method="post" action="{{#if camionId}}/admin/camiones/{{camionId}}/editar{{else}}/admin/camiones{{/if}}" accept-charset="UTF-8" novalidate>
     <div class="modal__encabezado">
-      <h2 id="titulo-camion">{{#if esNuevo}}Nuevo camión{{else}}Editar camión{{/if}}</h2>
+      <h2 id="titulo-camion">{{#if camionId}}Editar camión{{else}}Nuevo camión{{/if}}</h2>
       <a class="modal__cerrar" href="/admin/camiones" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></a>
     </div>
     <div class="modal__cuerpo">
@@ -104,7 +104,7 @@
     </div>
     <div class="modal__acciones">
       <a class="boton boton--secundario" href="/admin/camiones" data-cierra>Cancelar</a>
-      <button type="submit" class="boton">{{#if esNuevo}}Guardar camión{{else}}Actualizar camión{{/if}}</button>
+      <button type="submit" class="boton">{{#if camionId}}Actualizar camión{{else}}Guardar camión{{/if}}</button>
     </div>
   </form>
 </dialog>

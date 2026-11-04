@@ -193,7 +193,7 @@ public class RecepcionAdminController {
     private Double parseDouble(String valor) {
         if (valor == null || valor.isBlank()) return null;
         try {
-            return Double.parseDouble(valor);
+            return Double.parseDouble(valor.trim().replace(',', '.'));
         } catch (NumberFormatException e) {
             return null;
         }

@@ -33,6 +33,8 @@ public class CamionesAdminController {
         String editarParam = ctx.queryParam("editar");
         String eliminarParam = ctx.queryParam("eliminar");
 
+        modelo.put("esNuevo", editarParam == null || editarParam.isBlank());
+
         if (nuevoParam != null) {
             modelo.put("abrirModal", true);
             modelo.put("esNuevo", true);

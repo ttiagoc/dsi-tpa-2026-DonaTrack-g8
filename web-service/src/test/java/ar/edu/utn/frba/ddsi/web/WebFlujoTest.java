@@ -658,6 +658,8 @@ class WebFlujoTest {
         HttpResponse<String> listado = get("/admin/camiones", adminCookie);
         assertEquals(200, listado.statusCode());
         assertTrue(listado.body().contains("Camiones"));
+        assertTrue(listado.body().contains("action=\"/admin/camiones\""));
+        assertFalse(listado.body().contains("action=\"/admin/camiones//editar\""));
 
         // Alta inválida (sin patente)
         Map<String, String> formInvalido = new LinkedHashMap<>();
@@ -838,7 +840,7 @@ class WebFlujoTest {
         formDonacionValido.put("bienDescripcion", "Cajas de leche entera x 1 L");
         formDonacionValido.put("cantidad", "50");
         formDonacionValido.put("pesoKg", "1.0");
-        formDonacionValido.put("volumenM3", "0.001");
+        formDonacionValido.put("volumenM3", "0.02");
         formDonacionValido.put("estadoBien", "NUEVO");
         HttpResponse<String> respAltaDonacion = post("/admin/recepcion", formDonacionValido, adminCookie);
         assertEquals(302, respAltaDonacion.statusCode());
@@ -864,6 +866,8 @@ class WebFlujoTest {
         assertEquals(200, pantalla.statusCode());
         assertTrue(pantalla.body().contains("Importación Masiva de Donantes"));
         assertTrue(pantalla.body().contains("Historial de importaciones"));
+        assertTrue(pantalla.body().contains("admin"));
+        assertFalse(pantalla.body().contains("Registrarme"));
 
         // Subir archivo CSV
         String csv = "TipoPersona,TipoDoc,Documento,Nombre,Email,Telefono\nHUMANA,,11222333,Ana Lopez,humana@test.com,\n";
@@ -1047,7 +1051,7 @@ class WebFlujoTest {
             ctx.status(201).json(donante);
         });
         api.post("/api/donaciones", ctx -> {
-            ctx.status(201).json(Map.of("id", 401L, "estadoActual", "EN_DEPOSITO"));
+            ctx.status(201).json(List.of(Map.of("id", 401L, "estadoActual", "EN_DEPOSITO")));
         });
 
         List<Map<String, Object>> importacionesFalsas = new ArrayList<>(List.of(

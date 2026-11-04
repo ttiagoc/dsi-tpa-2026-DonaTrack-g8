@@ -6,6 +6,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.List;
 import java.util.function.Supplier;
 
 import ar.edu.utn.frba.ddsi.web.exceptions.AccesoDenegadoException;
@@ -19,6 +20,7 @@ import io.javalin.http.Context;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -78,6 +80,28 @@ public abstract class ApiClient {
     protected <T> T post(Context ctx, String ruta, Object body, Class<T> tipo) {
         String json = aJson(body);
         return leer(enviarAutenticado(ctx, () -> conJson(request(ruta), "POST", json)), tipo);
+    }
+
+    protected <T> List<T> postList(Context ctx, String ruta, Object body, Class<T> tipoElemento) {
+        String json = aJson(body);
+        HttpResponse<String> respuesta = enviarAutenticado(ctx, () -> conJson(request(ruta), "POST", json));
+        verificar(respuesta);
+        String cuerpo = respuesta.body();
+        if (cuerpo == null || cuerpo.isBlank()) {
+            return List.of();
+        }
+        try {
+            JsonNode nodo = mapper.readTree(cuerpo);
+            if (nodo.isArray()) {
+                JavaType listType = mapper.getTypeFactory().constructCollectionType(List.class, tipoElemento);
+                return mapper.readValue(cuerpo, listType);
+            } else {
+                T item = mapper.readValue(cuerpo, tipoElemento);
+                return List.of(item);
+            }
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Respuesta inesperada de la API: " + cuerpo, e);
+        }
     }
 
     protected <T> T postCsv(Context ctx, String ruta, byte[] bytes, String filename, Class<T> tipo) {

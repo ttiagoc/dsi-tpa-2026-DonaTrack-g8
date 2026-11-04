@@ -151,8 +151,8 @@ public class DonacionesApiClient extends ApiClient {
         return post(ctx, "/donantes/persona-humana", request, DonanteResponse.class);
     }
 
-    public DonacionResponse registrarDonacionPresencial(Context ctx, DonacionAltaRequest request) {
-        return post(ctx, "/donaciones", request, DonacionResponse.class);
+    public List<DonacionResponse> registrarDonacionPresencial(Context ctx, DonacionAltaRequest request) {
+        return postList(ctx, "/donaciones", request, DonacionResponse.class);
     }
 
     // ---- Administracion: Importacion Masiva CSV (C, req. 19) ----

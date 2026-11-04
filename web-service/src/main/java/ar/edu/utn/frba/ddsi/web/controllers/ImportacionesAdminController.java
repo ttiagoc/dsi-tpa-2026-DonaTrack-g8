@@ -54,13 +54,11 @@ public class ImportacionesAdminController {
                 "enProceso", totalEnProceso
         );
 
-        Map<String, Object> modelo = Map.of(
-                "importaciones", importaciones,
-                "tieneImportaciones", !importaciones.isEmpty(),
-                "importacionActiva", importacionActiva != null ? importacionActiva : false,
-                "resumen", resumen,
-                "rutaActual", "/admin/importaciones"
-        );
+        Map<String, Object> modelo = Modelo.base(ctx);
+        modelo.put("importaciones", importaciones);
+        modelo.put("tieneImportaciones", !importaciones.isEmpty());
+        modelo.put("importacionActiva", importacionActiva != null ? importacionActiva : false);
+        modelo.put("resumen", resumen);
 
         ctx.render("admin/importaciones.html.hbs", modelo);
     }

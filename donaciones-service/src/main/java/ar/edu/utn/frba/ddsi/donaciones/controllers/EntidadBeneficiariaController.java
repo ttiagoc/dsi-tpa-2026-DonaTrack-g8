@@ -1,6 +1,7 @@
 package ar.edu.utn.frba.ddsi.donaciones.controllers;
 
 import static ar.edu.utn.frba.ddsi.common.security.Rol.ADMINISTRADOR;
+import static ar.edu.utn.frba.ddsi.common.security.Rol.DONANTE;
 import static ar.edu.utn.frba.ddsi.common.security.Rol.ENTIDAD_BENEFICIARIA;
 import static ar.edu.utn.frba.ddsi.common.security.Rol.SISTEMA;
 
@@ -27,7 +28,7 @@ public class EntidadBeneficiariaController implements JavalinController {
     public void registerRoutes(Javalin app) {
         app.get("/api/entidad-beneficiaria", ctx -> {
             ctx.json(entidadBeneficiariaService.obtenerTodas());
-        }, ADMINISTRADOR);
+        }, DONANTE, ENTIDAD_BENEFICIARIA, ADMINISTRADOR);
 
         app.get("/api/entidad-beneficiaria/{id}", ctx -> {
             Long id = Long.parseLong(ctx.pathParam("id"));
