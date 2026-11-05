@@ -42,6 +42,10 @@ public class EntidadBeneficiaria {
 
   private String direccion;
 
+  // donde queda la direccion, segun Georef (mapa de entregas). Nulas si todavia no se pudo geocodificar
+  private Double latitud;
+  private Double longitud;
+
   @Embedded
   @AttributeOverrides({
       @AttributeOverride(name = "valor", column = @Column(name = "telefono_valor")),
@@ -66,6 +70,22 @@ public class EntidadBeneficiaria {
     this.telefono = new MedioContacto(valorTelefono, TipoContacto.SMS);
     this.correoRepresentantes = correoRepresentantes;
     this.necesidades = new ArrayList<>();
+  }
+
+  /** Cambia la direccion y olvida la ubicacion anterior, que ya no le corresponde. */
+  public void mudarseA(String direccion) {
+    this.direccion = direccion;
+    this.latitud = null;
+    this.longitud = null;
+  }
+
+  public void ubicarEn(double latitud, double longitud) {
+    this.latitud = latitud;
+    this.longitud = longitud;
+  }
+
+  public boolean estaUbicada() {
+    return latitud != null && longitud != null;
   }
 
   public void registrarNecesidad(Necesidad necesidad) {

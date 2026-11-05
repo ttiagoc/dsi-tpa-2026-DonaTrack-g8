@@ -164,7 +164,8 @@ public class DonacionServiceImpl implements DonacionService {
                 .map(entregas -> {
                     EntidadBeneficiaria entidad = entregas.get(0).getEntidadBeneficiariaAsignada();
                     return new EntidadConEntregasResponse(entidad.getId(), entidad.getRazonSocial(),
-                            entidad.getDireccion(), entregas.stream().map(this::toEntregaPublica).toList());
+                            entidad.getDireccion(), entidad.getLatitud(), entidad.getLongitud(),
+                            entregas.stream().map(this::toEntregaPublica).toList());
                 })
                 .toList();
     }

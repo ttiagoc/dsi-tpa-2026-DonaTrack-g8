@@ -1,6 +1,8 @@
 package ar.edu.utn.frba.ddsi.web.clients;
 
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +19,7 @@ import ar.edu.utn.frba.ddsi.web.dto.catalogo.UsosCatalogoResponse;
 import ar.edu.utn.frba.ddsi.web.dto.catalogo.Rubro;
 import ar.edu.utn.frba.ddsi.web.dto.catalogo.SubcategoriaResponse;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.DonacionAltaRequest;
+import ar.edu.utn.frba.ddsi.web.dto.donaciones.DireccionUbicada;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.DonacionResponse;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.EntidadConEntregas;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.EstadoDonacionRequest;
@@ -105,6 +108,12 @@ public class DonacionesApiClient extends ApiClient {
 
     public EntidadConEntregas[] entregasPorEntidad() {
         return getPublico("/donaciones/entregadas", EntidadConEntregas[].class);
+    }
+
+    /** Busca la direccion en Georef (a traves de la API). ApiException 400 si no existe, 503 si Georef no responde. */
+    public DireccionUbicada ubicarDireccion(String direccion) {
+        return getPublico("/direcciones/ubicar?direccion=" + URLEncoder.encode(direccion, StandardCharsets.UTF_8),
+                DireccionUbicada.class);
     }
 
     // ---- Necesidades de la entidad logueada (A, req. 10) ----

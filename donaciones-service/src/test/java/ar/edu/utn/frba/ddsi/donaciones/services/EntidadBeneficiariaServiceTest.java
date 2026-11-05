@@ -6,7 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -32,6 +34,10 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.SubcategoriaRepository;
+import ar.edu.utn.frba.ddsi.donaciones.services.geocodificacion.Coordenadas;
+import ar.edu.utn.frba.ddsi.donaciones.services.geocodificacion.DireccionInvalidaException;
+import ar.edu.utn.frba.ddsi.donaciones.services.geocodificacion.Geocodificador;
+import ar.edu.utn.frba.ddsi.donaciones.services.geocodificacion.GeocodificadorNoDisponibleException;
 import ar.edu.utn.frba.ddsi.donaciones.services.impl.EntidadBeneficiariaServiceImpl;
 
 @DisplayName("Tests del EntidadBeneficiariaService")
@@ -39,6 +45,7 @@ class EntidadBeneficiariaServiceTest {
 
     private EntidadBeneficiariaRepository entidadRepository;
     private SubcategoriaRepository subcategoriaRepository;
+    private Geocodificador geocodificador;
     private EntidadBeneficiariaServiceImpl entidadService;
 
     @BeforeEach
@@ -46,7 +53,10 @@ class EntidadBeneficiariaServiceTest {
         entidadRepository = mock(EntidadBeneficiariaRepository.class);
         subcategoriaRepository = mock(SubcategoriaRepository.class);
 
-        entidadService = new EntidadBeneficiariaServiceImpl(entidadRepository, subcategoriaRepository);
+        geocodificador = mock(Geocodificador.class);
+        when(geocodificador.ubicar(anyString())).thenReturn(new Coordenadas(-34.5986, -58.4202));
+
+        entidadService = new EntidadBeneficiariaServiceImpl(entidadRepository, subcategoriaRepository, geocodificador);
     }
 
     @Test
@@ -161,5 +171,85 @@ class EntidadBeneficiariaServiceTest {
 
         Exception ex = assertThrows(BusinessException.class, () -> entidadService.registrarNecesidad(1L, request));
         assertTrue(ex.getMessage().contains("periodo"));
+    }
+
+    // ---- Direccion verificada y ubicada con Georef (mapa de entregas) ----
+
+    private EntidadBeneficiariaRequest requestEn(String direccion) {
+        return new EntidadBeneficiariaRequest("Comedor Los Niños", direccion, "11223344",
+                List.of(new MedioContactoRequest("EMAIL", "entidad@org.com")));
+    }
+
+    private void guardarDevuelveLaMisma() {
+        when(entidadRepository.save(any(EntidadBeneficiaria.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    }
+
+    @Test
+    @DisplayName("Al crear la entidad guarda donde queda su direccion")
+    void crearGuardaLaUbicacion() {
+        guardarDevuelveLaMisma();
+
+        entidadService.crear(requestEn("Medrano 951, Almagro, CABA"));
+
+        verify(entidadRepository).save(org.mockito.ArgumentMatchers.argThat(e ->
+                e.getLatitud() == -34.5986 && e.getLongitud() == -58.4202));
+    }
+
+    @Test
+    @DisplayName("No se crea la entidad si su direccion no existe")
+    void crearConDireccionInexistente() {
+        when(geocodificador.ubicar("Calle Inventada 99999, CABA"))
+                .thenThrow(DireccionInvalidaException.inexistente("Calle Inventada 99999, CABA"));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> entidadService.crear(requestEn("Calle Inventada 99999, CABA")));
+
+        assertTrue(ex.getMessage().startsWith("La dirección"), "la web lo marca en el campo dirección");
+        verify(entidadRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Si Georef no responde, la entidad se crea igual, sin ubicacion")
+    void crearSinGeoref() {
+        guardarDevuelveLaMisma();
+        when(geocodificador.ubicar(anyString())).thenThrow(new GeocodificadorNoDisponibleException("sin red", null));
+
+        entidadService.crear(requestEn("Medrano 951, Almagro, CABA"));
+
+        verify(entidadRepository).save(org.mockito.ArgumentMatchers.argThat(e -> !e.estaUbicada()));
+    }
+
+    @Test
+    @DisplayName("Al cambiar la direccion se vuelve a ubicar; si no cambia, no se consulta Georef")
+    void actualizarDireccion() {
+        guardarDevuelveLaMisma();
+        EntidadBeneficiaria entidad = new EntidadBeneficiaria("Comedor", "Medrano 951, Almagro, CABA", "1145678901", List.of());
+        entidad.ubicarEn(-34.5986, -58.4202);
+        when(entidadRepository.findById(1L)).thenReturn(Optional.of(entidad));
+
+        entidadService.actualizar(1L, requestEn("Medrano 951, Almagro, CABA"));
+        verify(geocodificador, never()).ubicar(anyString());
+
+        when(geocodificador.ubicar("Av. Rivadavia 6500, Flores, CABA")).thenReturn(new Coordenadas(-34.6283, -58.4639));
+        entidadService.actualizar(1L, requestEn("Av. Rivadavia 6500, Flores, CABA"));
+        assertEquals(-34.6283, entidad.getLatitud());
+        assertEquals(-58.4639, entidad.getLongitud());
+    }
+
+    @Test
+    @DisplayName("Ubica las entidades que todavia no tienen ubicacion y saltea las que no se encuentran")
+    void ubicarPendientes() {
+        guardarDevuelveLaMisma();
+        EntidadBeneficiaria yaUbicada = new EntidadBeneficiaria("A", "Medrano 951, Almagro, CABA", "1", List.of());
+        yaUbicada.ubicarEn(-34.6, -58.4);
+        EntidadBeneficiaria sinUbicar = new EntidadBeneficiaria("B", "Av. Rivadavia 6500, Flores, CABA", "1", List.of());
+        EntidadBeneficiaria inexistente = new EntidadBeneficiaria("C", "Calle 123", "1", List.of());
+        when(entidadRepository.findAll()).thenReturn(List.of(yaUbicada, sinUbicar, inexistente));
+        when(geocodificador.ubicar("Calle 123")).thenThrow(DireccionInvalidaException.incompleta());
+
+        assertEquals(1, entidadService.ubicarPendientes());
+        assertTrue(sinUbicar.estaUbicada());
+        assertFalse(inexistente.estaUbicada());
+        verify(geocodificador, never()).ubicar("Medrano 951, Almagro, CABA");
     }
 }

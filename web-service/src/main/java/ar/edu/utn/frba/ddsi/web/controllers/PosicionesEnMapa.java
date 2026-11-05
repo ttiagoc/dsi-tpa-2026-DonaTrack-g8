@@ -4,19 +4,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * El mapa de entregas es ilustrativo (los profes permitieron mockearlo): no hay coordenadas reales.
- * Cada entidad cae siempre en el mismo punto, calculado a partir de su id, dentro de la parte "de tierra"
- * del dibujo (public/img/mapa-ilustrativo.svg: el rio ocupa el 20 % derecho), arriba de la leyenda
- * y sin pisar a las demas.
- * Las posiciones son porcentajes del ancho y del alto del mapa.
+ * Respaldo para las entidades que todavia no tienen coordenadas (Georef no respondio o la direccion es de antes de
+ * que se verificaran): cada una cae siempre en el mismo punto de la Ciudad de Buenos Aires, calculado a partir de
+ * su id, y sin pisar a las demas. El mapa avisa que esas ubicaciones son aproximadas.
+ * El rectangulo queda lejos del Rio de la Plata y de la General Paz para que ningun marcador caiga en el agua
+ * ni fuera de la ciudad. El mapa (Leaflet + OpenStreetMap) se dibuja con estas latitudes y longitudes.
  */
 final class PosicionesEnMapa {
 
-    record Punto(double x, double y) {
+    record Punto(double latitud, double longitud) {
     }
 
-    private static final double X_MIN = 8, X_MAX = 74, Y_MIN = 14, Y_MAX = 82;
-    private static final double DISTANCIA_MINIMA = 9;
+    static final double LAT_MIN = -34.650, LAT_MAX = -34.575, LNG_MIN = -58.495, LNG_MAX = -58.410;
+    /** Unos 800 m: separados alcanza para distinguirlos con el zoom que abarca a todos. */
+    static final double DISTANCIA_MINIMA = 0.008;
     private static final int INTENTOS = 40;
 
     private PosicionesEnMapa() {
@@ -43,14 +44,18 @@ final class PosicionesEnMapa {
         h ^= h >>> 29;
         double a = (h & 0xFFFF) / 65535.0;
         double b = ((h >>> 16) & 0xFFFF) / 65535.0;
-        return new Punto(redondear(X_MIN + a * (X_MAX - X_MIN)), redondear(Y_MIN + b * (Y_MAX - Y_MIN)));
+        return new Punto(redondear(LAT_MIN + a * (LAT_MAX - LAT_MIN)), redondear(LNG_MIN + b * (LNG_MAX - LNG_MIN)));
+    }
+
+    static double distancia(Punto a, Punto b) {
+        return Math.hypot(a.latitud() - b.latitud(), a.longitud() - b.longitud());
     }
 
     private static boolean muyCerca(Punto punto, List<Punto> otros) {
-        return otros.stream().anyMatch(o -> Math.hypot(o.x() - punto.x(), o.y() - punto.y()) < DISTANCIA_MINIMA);
+        return otros.stream().anyMatch(o -> distancia(o, punto) < DISTANCIA_MINIMA);
     }
 
     private static double redondear(double valor) {
-        return Math.round(valor * 10) / 10.0;
+        return Math.round(valor * 1_000_000) / 1_000_000.0;
     }
 }

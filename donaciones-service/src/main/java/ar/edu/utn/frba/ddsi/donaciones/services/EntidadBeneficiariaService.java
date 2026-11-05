@@ -27,4 +27,7 @@ public interface EntidadBeneficiariaService {
     void eliminarNecesidad(Long entidadId, Long necesidadId);
 
     List<MedioContacto> obtenerContactos(Long id);
+
+    /** Geocodifica las entidades que todavia no tienen ubicacion. Devuelve cuantas se ubicaron. */
+    int ubicarPendientes();
 }

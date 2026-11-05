@@ -99,6 +99,7 @@ public class Router {
         app.get("/", home::index);
         app.get("/legal", home::legal);
         app.get("/mapa", mapa::mostrar);
+        app.get("/direcciones/ubicar", mapa::ubicarDireccion); // mapa del formulario de registro de la entidad
         app.get("/login", sesion::mostrarLogin);
         app.post("/login", sesion::login);
         app.post("/logout", sesion::logout);

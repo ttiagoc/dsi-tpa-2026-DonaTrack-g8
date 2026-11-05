@@ -96,13 +96,16 @@ También existe **Carlos Gómez** (DNI 25444333): un donante que cargó el admin
 2. ✅ Arriba: "4 donaciones entregadas" y "4 entidades". En el mapa hay un marcador por entidad.
 3. Hacer clic en cada marcador. ✅ El panel muestra la entidad, su dirección y lo que recibió.
    Hogar, Escuela y Merendero tienen fotos; el Comedor no, porque todavía no confirmó la recepción de los pañales.
-4. ⚠️ El mapa es ilustrativo: las posiciones no son las direcciones reales (Correcciones, punto 8).
+4. El mapa es de OpenStreetMap (Leaflet, como el de seguimiento) y cada entidad aparece en su dirección, geocodificada con Georef. Si una entidad todavía no se pudo ubicar, su marcador tiene borde punteado y la leyenda avisa que es aproximado (Correcciones, punto 8).
 
 ### 4.3 Registro (req. 3)
 1. **Registrarme** → elegir persona, empresa u organización, o entidad beneficiaria.
 2. Probar los errores: dejar campos vacíos, poner una contraseña de menos de 8 caracteres, contraseñas que no coinciden y el usuario
    `ana` (ya existe). ✅ Cada error se marca en su campo y no se pierde lo escrito.
 3. Registrar una cuenta válida (por ejemplo, el usuario `prueba1`). ✅ Entra directo al panel de su rol.
+4. En el registro de entidad beneficiaria, completar calle, altura, localidad y provincia (por ejemplo, Av. Rivadavia 6500, Flores,
+   Ciudad Autónoma de Buenos Aires). ✅ Debajo aparece el mapa con el punto y el nombre que le da Georef. Cambiar la altura por
+   99999. ✅ El recuadro se pone en rojo y dice que la dirección no existe; si se intenta registrar igual, el servidor la rechaza.
 
 ### 4.4 Inicio de sesión y permisos (req. 4)
 1. Ingresar con `ana` / `clave-mal`. ✅ "Usuario o contraseña incorrectos", sin decir cuál de los dos.

@@ -98,7 +98,7 @@ public class PostgresE2EVerificationTest {
         // -------------------------------------------------------------------------
         System.out.println("[Paso 4] Registrando Entidad Beneficiaria y Necesidades...");
         JsonNode entidad = post(DONACIONES_URL + "/entidad-beneficiaria", """
-                {"razonSocial":"Comedor Escobar Sonrisas %s","direccion":"Calle Falsa 123, Escobar",
+                {"razonSocial":"Comedor Escobar Sonrisas %s","direccion":"Av. 25 de Mayo 500, Escobar, Buenos Aires",
                  "telefono":"1122334455",
                  "correoRepresentantes":[{"tipo":"EMAIL","valor":"comedor%s@org.com"}]}
                 """.formatted(timestamp, timestamp), 201);
@@ -146,7 +146,7 @@ public class PostgresE2EVerificationTest {
 
         JsonNode ruta = post(LOGISTICA_URL + "/rutas", """
                 {"fecha":"2026-10-02","idCamion":%d,
-                 "paradas":[{"orden":1,"destino":"Calle Falsa 123, Escobar","entidad":%d,"entregas":[%d]}]}
+                 "paradas":[{"orden":1,"destino":"Av. 25 de Mayo 500, Escobar, Buenos Aires","entidad":%d,"entregas":[%d]}]}
                 """.formatted(camionId, entidadId, donacionId), 201);
         long rutaId = ruta.get("id").asLong();
         long paradaId = ruta.get("paradas").get(0).get("id").asLong();

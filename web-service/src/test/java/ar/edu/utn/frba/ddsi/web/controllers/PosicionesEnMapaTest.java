@@ -9,7 +9,7 @@ import java.util.stream.LongStream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("Posiciones de los marcadores del mapa ilustrativo")
+@DisplayName("Ubicaciones de las entidades en el mapa de entregas")
 class PosicionesEnMapaTest {
 
     private final List<Long> ids = LongStream.rangeClosed(1, 15).boxed().toList();
@@ -23,17 +23,19 @@ class PosicionesEnMapaTest {
     }
 
     @Test
-    @DisplayName("Quedan en la parte de tierra del dibujo y no se pisan")
+    @DisplayName("Quedan dentro de la Ciudad de Buenos Aires y no se pisan")
     void quedanAdentroYSeparadas() {
         List<PosicionesEnMapa.Punto> puntos = PosicionesEnMapa.ubicar(ids);
         for (PosicionesEnMapa.Punto p : puntos) {
-            assertTrue(p.x() >= 8 && p.x() <= 74, "x fuera del mapa o sobre el rio: " + p);
-            assertTrue(p.y() >= 14 && p.y() <= 82, "y fuera del mapa: " + p);
+            assertTrue(p.latitud() >= PosicionesEnMapa.LAT_MIN && p.latitud() <= PosicionesEnMapa.LAT_MAX,
+                    "latitud fuera de la ciudad: " + p);
+            assertTrue(p.longitud() >= PosicionesEnMapa.LNG_MIN && p.longitud() <= PosicionesEnMapa.LNG_MAX,
+                    "longitud fuera de la ciudad: " + p);
         }
         for (int i = 0; i < puntos.size(); i++) {
             for (int j = i + 1; j < puntos.size(); j++) {
-                double distancia = Math.hypot(puntos.get(i).x() - puntos.get(j).x(), puntos.get(i).y() - puntos.get(j).y());
-                assertTrue(distancia >= 9, "se pisan " + puntos.get(i) + " y " + puntos.get(j));
+                assertTrue(PosicionesEnMapa.distancia(puntos.get(i), puntos.get(j)) >= PosicionesEnMapa.DISTANCIA_MINIMA,
+                        "se pisan " + puntos.get(i) + " y " + puntos.get(j));
             }
         }
     }

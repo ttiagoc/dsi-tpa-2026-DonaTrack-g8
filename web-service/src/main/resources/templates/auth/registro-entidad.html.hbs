@@ -1,4 +1,7 @@
 {{#partial "titulo"}}Registro de entidad beneficiaria · DonaTrack{{/partial}}
+{{#partial "head"}}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+{{/partial}}
 {{#partial "contenido"}}
 <section class="tarjeta formulario">
   <p><a href="/registro">← Elegir otro tipo de cuenta</a></p>
@@ -8,15 +11,45 @@
     <fieldset class="formulario__grupo">
       <legend>Datos de la entidad</legend>
       {{> partials/campo nombre="razonSocial" etiqueta="Nombre o razón social" valor=form.razonSocial errorCampo=errores.razonSocial requerido=true autocomplete="organization"}}
-      {{> partials/campo nombre="direccion" etiqueta="Dirección" valor=form.direccion errorCampo=errores.direccion requerido=true autocomplete="street-address" ayuda="Es donde se entregan las donaciones."}}
       <div class="grilla grilla--2">
         {{> partials/campo nombre="telefono" etiqueta="Teléfono" tipo="tel" valor=form.telefono errorCampo=errores.telefono requerido=true autocomplete="tel"}}
         {{> partials/campo nombre="correoRepresentante" etiqueta="Email del representante" tipo="email" valor=form.correoRepresentante errorCampo=errores.correoRepresentante requerido=true autocomplete="email"}}
       </div>
     </fieldset>
+
+    {{!-- La direccion se busca en el mapa mientras se escribe (public/js/direccion.js). Sin JavaScript se
+         verifica igual al registrar: si no existe, vuelve con el error en el recuadro de abajo. --}}
+    <fieldset class="formulario__grupo direccion{{#if errores.direccion}} direccion--error{{/if}}" data-direccion>
+      <legend>Dirección de entrega</legend>
+      <p class="campo__ayuda">Es donde se entregan las donaciones. La buscamos en el mapa para que verifiques que sea la correcta.</p>
+      <div class="grilla direccion__calle">
+        {{> partials/campo nombre="calle" etiqueta="Calle" valor=form.calle errorCampo=errores.calle requerido=true autocomplete="address-line1"}}
+        {{> partials/campo nombre="altura" etiqueta="Altura" valor=form.altura errorCampo=errores.altura requerido=true}}
+      </div>
+      <div class="grilla grilla--2">
+        {{> partials/campo nombre="localidad" etiqueta="Localidad o barrio" valor=form.localidad errorCampo=errores.localidad requerido=true autocomplete="address-level2"}}
+        <div class="campo{{#if errores.provincia}} campo--error{{/if}}">
+          <label for="provincia">Provincia <span class="campo__requerido" aria-hidden="true">*</span></label>
+          <select id="provincia" name="provincia" required autocomplete="address-level1"
+                  {{#if errores.provincia}}aria-invalid="true" aria-describedby="provincia-error"{{/if}}>
+            <option value="">Elegí la provincia</option>
+            {{#each provincias}}<option{{#if elegida}} selected{{/if}}>{{nombre}}</option>{{/each}}
+          </select>
+          {{#if errores.provincia}}<small class="campo__error" id="provincia-error">{{errores.provincia}}</small>{{/if}}
+        </div>
+      </div>
+      <div class="direccion__mapa" data-direccion-mapa></div>
+      <p class="direccion__estado" role="status" data-direccion-estado
+         {{#if errores.direccion}}id="direccion-error"{{/if}}>{{#if errores.direccion}}{{errores.direccion}}{{else}}Completá la calle, la altura, la localidad y la provincia para ver la dirección en el mapa.{{/if}}</p>
+    </fieldset>
+
     {{> partials/form-cuenta}}
     <button type="submit" class="boton boton--ancho">Registrar entidad</button>
   </form>
 </section>
+{{/partial}}
+{{#partial "scripts"}}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="/js/direccion.js"></script>
 {{/partial}}
 {{> layouts/base}}

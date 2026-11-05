@@ -3,6 +3,7 @@ package ar.edu.utn.frba.ddsi.web.controllers;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import org.springframework.stereotype.Component;
@@ -96,7 +97,7 @@ public class RegistroController {
     public void registrarEntidad(Context ctx) {
         Formulario form = new Formulario(ctx);
         String razonSocial = form.requerido("razonSocial", "La razón social");
-        String direccion = form.requerido("direccion", "La dirección");
+        String direccion = leerDireccion(form);
         String telefono = form.telefono("telefono", "El teléfono", true);
         String correo = form.email("correoRepresentante", "El correo del representante", true);
         String username = form.requerido("username", "El usuario");
@@ -105,6 +106,29 @@ public class RegistroController {
         registrar(ctx, form, VISTA_ENTIDAD, () -> auth.registrarEntidadBeneficiaria(
                 new RegistroEntidadBeneficiariaRequest(username, password, new EntidadBeneficiariaRequest(
                         razonSocial, direccion, telefono, List.of(new MedioContactoRequest("EMAIL", correo))))));
+    }
+
+    /** Calle, altura, localidad y provincia por separado; la API recibe el texto armado y lo verifica con Georef. */
+    private String leerDireccion(Formulario form) {
+        String calle = obligatorio(form, "calle", "Escribí la calle");
+        String altura = obligatorio(form, "altura", "Escribí la altura");
+        String localidad = obligatorio(form, "localidad", "Escribí la localidad o el barrio");
+        String provincia = obligatorio(form, "provincia", "Elegí la provincia");
+        if (altura != null && !altura.matches("\\d{1,5}")) {
+            form.error("altura", "Ingresá solo el número de la calle, por ejemplo 6500");
+        }
+        if (provincia != null && !DireccionPostal.PROVINCIAS.contains(provincia)) {
+            form.error("provincia", "Elegí una provincia de la lista");
+        }
+        return DireccionPostal.componer(calle, altura, localidad, provincia);
+    }
+
+    private String obligatorio(Formulario form, String campo, String mensaje) {
+        String valor = form.valor(campo);
+        if (valor == null) {
+            form.error(campo, mensaje);
+        }
+        return valor;
     }
 
     // ---- Comun a los tres formularios ----
@@ -122,6 +146,12 @@ public class RegistroController {
         } catch (ApiException e) {
             if (!e.esErrorDelUsuario()) {
                 throw e;
+            }
+            // la API verifica la direccion con Georef: si no existe, el error va marcado en ese campo
+            if (e.getMessage() != null && e.getMessage().startsWith("La dirección")) {
+                form.error("direccion", e.getMessage());
+                mostrarError(ctx, form, vista, "Revisá los campos marcados.");
+                return;
             }
             mostrarError(ctx, form, vista, e.getMessage());
         }
@@ -171,10 +201,17 @@ public class RegistroController {
     }
 
     private void mostrarFormulario(Context ctx, String vista) {
-        ctx.render(vista, new Formulario(ctx).enModelo(Modelo.base(ctx), null));
+        Formulario form = new Formulario(ctx);
+        ctx.render(vista, conProvincias(form, form.enModelo(Modelo.base(ctx), null)));
     }
 
     private void mostrarError(Context ctx, Formulario form, String vista, String error) {
-        ctx.status(400).render(vista, form.enModelo(Modelo.base(ctx), error));
+        ctx.status(400).render(vista, conProvincias(form, form.enModelo(Modelo.base(ctx), error)));
+    }
+
+    // el select de provincia de la direccion de la entidad, con la que se habia elegido
+    private Map<String, Object> conProvincias(Formulario form, Map<String, Object> modelo) {
+        modelo.put("provincias", DireccionPostal.opciones(form.valor("provincia")));
+        return modelo;
     }
 }

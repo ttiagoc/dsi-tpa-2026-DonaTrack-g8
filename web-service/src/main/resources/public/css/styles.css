@@ -1120,10 +1120,17 @@ code {
   outline-offset: 2px;
 }
 
-/* ---- Mapa de entregas (req. 2): dibujo de fondo + marcadores en % + detalle al costado ---- */
+/* ---- Mapa de entregas (req. 2): OpenStreetMap (Leaflet) + marcadores + detalle al costado ---- */
 .mapa-pagina { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--espacio-4); align-items: start; }
-.mapa { position: relative; overflow: hidden; height: 460px; padding: 0; }
-.mapa__fondo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
+.mapa { position: relative; overflow: hidden; padding: 0; }
+.mapa__lienzo { display: none; }
+/* sin JavaScript (o si Leaflet no carga) los marcadores son una lista de links */
+.mapa__lista { display: flex; flex-wrap: wrap; gap: var(--espacio-4) var(--espacio-5); margin: 0; padding: var(--espacio-5) var(--espacio-4) var(--espacio-7); list-style: none; }
+.mapa__lista li { display: flex; align-items: center; gap: var(--espacio-3); }
+.mapa__lista .mapa__marcador { position: static; transform: rotate(-45deg); }
+.mapa-pagina--js .mapa__lienzo { display: block; height: 460px; }
+.mapa-pagina--js .mapa__lista { display: none; }
+.mapa__icono { background: none; border: 0; }
 .mapa__marcador {
   position: absolute;
   display: flex;
@@ -1141,8 +1148,20 @@ code {
 .mapa__marcador span { transform: rotate(45deg); color: #fff; font-size: 0.85rem; font-weight: 700; }
 .mapa__marcador[aria-current="true"] { z-index: 1; width: 42px; height: 42px; background: var(--color-acento); }
 .mapa__marcador[aria-current="true"] span { color: var(--color-texto); }
+/* entidad sin coordenadas todavia: el punto no es su direccion real */
+.mapa__marcador--aproximado { border-style: dashed; opacity: 0.8; }
+.mapa__leyenda-muestra {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: var(--espacio-1);
+  border: 2px dashed var(--color-primario);
+  border-radius: 50%;
+  vertical-align: -1px;
+}
 .mapa__leyenda {
   position: absolute;
+  z-index: 1000; /* arriba de las capas de Leaflet */
   left: var(--espacio-3);
   bottom: var(--espacio-3);
   padding: var(--espacio-1) var(--espacio-2);
@@ -1162,7 +1181,26 @@ code {
 
 @media (max-width: 900px) {
   .mapa-pagina { grid-template-columns: 1fr; }
-  .mapa { height: 360px; }
+  .mapa-pagina--js .mapa__lienzo { height: 360px; }
+}
+
+/* ---- Direccion en campos separados + mapa para verificarla (registro de entidad, public/js/direccion.js) ---- */
+.direccion__calle { grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); }
+.direccion__mapa { display: none; height: 240px; margin-top: var(--espacio-2); border: 1px solid var(--color-borde); border-radius: var(--radio); }
+.direccion--encontrada .direccion__mapa { display: block; }
+.direccion__marcador { width: 30px; height: 30px; }
+.direccion__estado {
+  margin: var(--espacio-3) 0 0;
+  padding: var(--espacio-2) var(--espacio-3);
+  border-radius: var(--radio);
+  background: var(--color-fondo);
+  color: var(--color-texto-suave);
+  font-size: var(--texto-chico);
+}
+.direccion--encontrada .direccion__estado { background: var(--color-exito-suave); color: var(--color-texto); }
+.direccion--error .direccion__estado { background: var(--color-error-suave); color: var(--color-error); font-weight: 600; }
+@media (max-width: 600px) {
+  .direccion__calle { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
 }
 
 /* ---- Modal (<dialog>): alta, edicion y confirmaciones ---- */

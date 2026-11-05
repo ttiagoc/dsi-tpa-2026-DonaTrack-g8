@@ -116,8 +116,8 @@ Tests: `WebFlujoTest` (13) levanta la web contra una API falsa y recorre landing
 | Req | Pantalla | Backend existente | Backend a agregar |
 |---|---|---|---|
 | 1 | ✅ Landing `/` + `/legal` | — | — |
-| 2 | ✅ Mapa público `/mapa` (mapa ilustrativo mockeado, un marcador por entidad, detalle con fotos) | — | ✅ `GET /api/donaciones/entregadas` (público): entregas agrupadas por entidad, con bienes y fotos, sin datos del donante |
-| 3 | ✅ Registro `/registro` (persona, empresa u organización, entidad) | (Tarea 0) | — |
+| 2 | ✅ Mapa público `/mapa` (OpenStreetMap con Leaflet, un marcador por entidad en su dirección geocodificada con Georef, detalle con fotos) | — | ✅ `GET /api/donaciones/entregadas` (público): entregas agrupadas por entidad, con bienes, fotos y coordenadas, sin datos del donante. La dirección de la entidad se verifica con Georef al registrarla |
+| 3 | ✅ Registro `/registro` (persona, empresa u organización, entidad; la dirección de la entidad va en campos separados y se verifica en un mapa) | (Tarea 0) | ✅ `GET /api/direcciones/ubicar` (público): ubica una dirección con Georef |
 | 4 | ✅ Login `/login` | (Tarea 0) | — |
 | 10 | ✅ `/entidad/necesidades` (alta + listado, recurrente vs extraordinaria) | `GET/POST/DELETE /api/entidad-beneficiaria/{id}/necesidades` | — |
 | 11 | ✅ `/entidad/donaciones` (estado de las asignadas) | — | ✅ `GET /api/donaciones?entidadId=X`. B suma sus filtros (`donanteId`, `estado`...) al mismo endpoint |

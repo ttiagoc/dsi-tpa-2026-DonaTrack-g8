@@ -19,13 +19,14 @@ En [Figma](https://www.figma.com/design/1tzIHQUO6aSwCbdgtPuXgj) quedó una prime
 | 1 | Landing | `/` | [01-landing.png](01-landing.png) |
 | 1 | Términos y privacidad (sin sesión) | `/legal` | [01b-terminos.png](01b-terminos.png) |
 | 1 | Términos y privacidad (con sesión: misma página, layout con menú lateral) | `/legal` | [01c-terminos-con-sesion.png](01c-terminos-con-sesion.png) |
-| 2 | Mapa de entregas (mapa ilustrativo, con una entidad elegida) | `/mapa` | [02-mapa.png](02-mapa.png) |
+| 2 | Mapa de entregas (OpenStreetMap con Leaflet, cada entidad en su dirección, con una entidad elegida) | `/mapa` | [02-mapa.png](02-mapa.png) |
 | 2 | Mapa de entregas: sin entregas todavía | `/mapa` | [02b-mapa-vacio.png](02b-mapa-vacio.png) |
 | 2 | Mapa de entregas con sesión (misma página, layout con menú lateral; link en la sección "Plataforma" del menú) | `/mapa` | [02c-mapa-con-sesion.png](02c-mapa-con-sesion.png) |
 | 3 | Registro: elegir tipo de cuenta | `/registro` | [03-registro-selector.png](03-registro-selector.png) |
 | 3 | Registro de persona | `/registro/persona-humana` | [03a-registro-persona-humana.png](03a-registro-persona-humana.png) |
 | 3 | Registro de empresa u organización | `/registro/persona-juridica` | [03b-registro-persona-juridica.png](03b-registro-persona-juridica.png) |
-| 3 | Registro de entidad beneficiaria | `/registro/entidad` | [03c-registro-entidad.png](03c-registro-entidad.png) |
+| 3 | Registro de entidad beneficiaria (dirección en campos separados, verificada en el mapa) | `/registro/entidad` | [03c-registro-entidad.png](03c-registro-entidad.png) |
+| 3 | Registro de entidad beneficiaria: la dirección no existe | `/registro/entidad` | [03d-registro-entidad-direccion-no-encontrada.png](03d-registro-entidad-direccion-no-encontrada.png) |
 | 4 | Ingresar | `/login` | [04-login.png](04-login.png) |
 | 10 | Necesidades: listado | `/entidad/necesidades` | [10-necesidades.png](10-necesidades.png) |
 | 10 | Necesidades: modal de alta con errores (cantidad + "¿En qué se mide?") | `/entidad/necesidades` | [10b-necesidades-alta.png](10b-necesidades-alta.png) |

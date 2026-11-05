@@ -357,6 +357,14 @@ Se eliminó toda la lógica de insignias y misiones: no estaba contemplado en la
 Si el equipo prefiere no tocar el dominio antes de la entrega, la alternativa mínima es usar Leaflet con las posiciones calculadas
 alrededor del centro de CABA. Así los dos mapas al menos se ven iguales.
 
+**Hecho:** `/mapa` usa Leaflet + OpenStreetMap y el SVG se borró. Las entidades se geocodifican con Georef al registrarse
+o al cambiar la dirección (`GeorefGeocodificador`, en donaciones-service): si la dirección no existe se rechaza y el error se
+marca en el campo; si Georef no responde se registra igual y queda sin ubicar. Al arrancar, el servicio ubica las que falten
+(`UbicadorDeEntidades`). Las que no tienen coordenadas caen en un punto aproximado (`PosicionesEnMapa`), marcado en el mapa.
+En el registro, la dirección de la entidad se carga en campos separados (calle, altura, localidad y provincia) y se muestra en un
+mapa mientras se escribe (`public/js/direccion.js` → `GET /direcciones/ubicar`), para verificar que sea la calle correcta.
+No se hizo el `public/js/mapa.js` compartido (paso 3). Falta recapturar los bocetos 02, 02b y 02c.
+
 ---
 
 ## 9. Requisitos incompletos

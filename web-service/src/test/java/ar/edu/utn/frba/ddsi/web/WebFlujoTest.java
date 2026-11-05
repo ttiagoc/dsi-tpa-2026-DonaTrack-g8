@@ -409,10 +409,10 @@ class WebFlujoTest {
     @Test
     @DisplayName("Mapa: un marcador por entidad con su detalle y las fotos de las entregas")
     void mapaConEntregas() throws Exception {
-        entregas.add(entidadConEntregas(6, "Comedor San Martín", List.of(
+        entregas.add(entidadConEntregas(6, "Comedor San Martín", -34.6283, -58.4639, List.of(
                 entrega(2, "Arroz largo fino 1 kg", 60, List.of("/fotos/a.png", "/fotos/b.png")),
                 entrega(3, "Leche entera 1 L", 12, List.of()))));
-        entregas.add(entidadConEntregas(9, "Escuela Rural 10", List.of(
+        entregas.add(entidadConEntregas(9, "Escuela Rural 10", null, null, List.of(
                 entrega(7, "Kits escolares", 50, List.of("/fotos/c.png")))));
 
         String pagina = get("/mapa", null).body();
@@ -427,7 +427,11 @@ class WebFlujoTest {
         assertTrue(pagina.contains("Entregada el 01/11 · Alimentos"));
         assertTrue(pagina.contains("<img src=\"/fotos/a.png\""));
         assertTrue(pagina.contains("· sin fotos todavía"));
-        assertTrue(pagina.contains("Mapa ilustrativo"));
+        assertTrue(pagina.contains("leaflet.js"), "los marcadores van a un mapa de OpenStreetMap");
+        assertTrue(pagina.contains("data-lat=\"-34.6283\" data-lng=\"-58.4639\""), "la entidad geocodificada va en su direccion");
+        assertTrue(pagina.contains("mapa__marcador mapa__marcador--aproximado\" href=\"#entidad-9\""),
+                "la que no tiene coordenadas cae en un punto aproximado, marcado como tal");
+        assertTrue(pagina.contains("Ubicación aproximada"));
     }
 
     @Test
@@ -643,6 +647,82 @@ class WebFlujoTest {
         HttpResponse<String> respuesta = post("/registro/persona-humana", formularioPersona("repetido"), null);
         assertEquals(400, respuesta.statusCode());
         assertTrue(respuesta.body().contains("El nombre de usuario repetido ya esta en uso"));
+    }
+
+    private Map<String, String> formularioEntidad(String calle, String altura) {
+        Map<String, String> campos = new LinkedHashMap<>();
+        campos.put("razonSocial", "Comedor Los Pibes");
+        campos.put("calle", calle);
+        campos.put("altura", altura);
+        campos.put("localidad", "Flores");
+        campos.put("provincia", "Ciudad Autónoma de Buenos Aires");
+        campos.put("telefono", "1145678901");
+        campos.put("correoRepresentante", "comedor@mail.com");
+        campos.put("username", "comedor");
+        campos.put("password", "clave-segura");
+        campos.put("password2", "clave-segura");
+        return campos;
+    }
+
+    @Test
+    @DisplayName("Registro de entidad: la direccion se carga en campos separados y la API la recibe armada")
+    void registroEntidadArmaLaDireccion() throws Exception {
+        String formulario = get("/registro/entidad", null).body();
+        assertTrue(formulario.contains("id=\"calle\"") && formulario.contains("id=\"altura\"")
+                && formulario.contains("id=\"localidad\"") && formulario.contains("id=\"provincia\""));
+        assertTrue(formulario.contains("<option>Tierra del Fuego</option>"));
+        assertTrue(formulario.contains("/js/direccion.js"), "el mapa para verificar la dirección");
+
+        HttpResponse<String> respuesta = post("/registro/entidad", formularioEntidad("Av. Rivadavia, ", "6500"), null);
+
+        assertEquals(302, respuesta.statusCode());
+        assertEquals("Av. Rivadavia 6500, Flores, Ciudad Autónoma de Buenos Aires",
+                ultimoRegistro.get().get("entidad").get("direccion").asText(), "las comas de lo escrito se sacan");
+    }
+
+    @Test
+    @DisplayName("Registro de entidad: valida la altura y la provincia sin llamar a la API")
+    void registroEntidadValidaLaDireccion() throws Exception {
+        Map<String, String> campos = formularioEntidad("Av. Rivadavia", "seis mil");
+        campos.put("provincia", "Narnia");
+
+        HttpResponse<String> respuesta = post("/registro/entidad", campos, null);
+
+        assertEquals(400, respuesta.statusCode());
+        assertTrue(respuesta.body().contains("Ingresá solo el número de la calle"));
+        assertTrue(respuesta.body().contains("Elegí una provincia de la lista"));
+        assertEquals(null, ultimoRegistro.get(), "no deberia haber llamado a la API");
+    }
+
+    @Test
+    @DisplayName("Registro de entidad: si la API no encuentra la direccion, el error queda en el recuadro de la direccion")
+    void registroEntidadDireccionInexistente() throws Exception {
+        HttpResponse<String> respuesta = post("/registro/entidad", formularioEntidad("Calle Inventada", "99999"), null);
+
+        assertEquals(400, respuesta.statusCode());
+        assertTrue(respuesta.body().contains("direccion direccion--error"));
+        assertTrue(respuesta.body().contains("id=\"direccion-error\""));
+        assertTrue(respuesta.body().contains("no existe o no la encontramos"));
+        assertTrue(respuesta.body().contains("value=\"Calle Inventada\"") && respuesta.body().contains("value=\"99999\""),
+                "se conserva lo escrito");
+        assertTrue(respuesta.body().contains("<option selected>Ciudad Autónoma de Buenos Aires</option>"));
+    }
+
+    @Test
+    @DisplayName("Ubicar direccion: devuelve el punto, o el mensaje si no existe o falta algo")
+    void ubicarDireccion() throws Exception {
+        HttpResponse<String> encontrada = get("/direcciones/ubicar?calle=Av.%20Rivadavia&altura=6500&localidad=Flores"
+                + "&provincia=Ciudad%20Aut%C3%B3noma%20de%20Buenos%20Aires", null);
+        assertEquals(200, encontrada.statusCode());
+        JsonNode punto = mapper.readTree(encontrada.body());
+        assertEquals(-34.6271, punto.get("latitud").asDouble());
+        assertEquals("AV RIVADAVIA 6500, Comuna 7, Ciudad Autónoma de Buenos Aires", punto.get("normalizada").asText());
+
+        HttpResponse<String> inexistente = get("/direcciones/ubicar?calle=Inventada&altura=1&localidad=Flores&provincia=CABA", null);
+        assertEquals(400, inexistente.statusCode());
+        assertTrue(mapper.readTree(inexistente.body()).get("mensaje").asText().contains("no existe"));
+
+        assertEquals(400, get("/direcciones/ubicar?calle=Av.%20Rivadavia", null).statusCode(), "faltan datos");
     }
 
     @Test
@@ -1047,6 +1127,31 @@ class WebFlujoTest {
             ctx.json(Map.of("usuarioId", 1, "username", "donante", "rol", "DONANTE", "perfilId", 10));
         });
 
+        // la API verifica la direccion con Georef: una inventada se rechaza con un mensaje sobre la direccion
+        api.post("/api/auth/registro/entidad-beneficiaria", ctx -> {
+            JsonNode body = mapper.readTree(ctx.body());
+            String direccion = body.get("entidad").get("direccion").asText();
+            if (direccion.contains("Inventada")) {
+                ctx.status(400).json(Map.of("error", "bad_request", "message",
+                        "La dirección \"" + direccion + "\" no existe o no la encontramos."));
+                return;
+            }
+            ultimoRegistro.set(body);
+            ctx.status(201).json(sesion(body.get("username").asText(), "ENTIDAD_BENEFICIARIA", "access-viejo", "refresh-ok"));
+        });
+
+        // la API ubica la direccion con Georef; aca solo se conoce Av. Rivadavia 6500
+        api.get("/api/direcciones/ubicar", ctx -> {
+            String direccion = ctx.queryParam("direccion");
+            if (direccion == null || !direccion.startsWith("Av. Rivadavia 6500, Flores, ")) {
+                ctx.status(400).json(Map.of("error", "bad_request", "message",
+                        "La dirección \"" + direccion + "\" no existe o no la encontramos."));
+                return;
+            }
+            ctx.json(Map.of("latitud", -34.6271, "longitud", -58.4578,
+                    "normalizada", "AV RIVADAVIA 6500, Comuna 7, Ciudad Autónoma de Buenos Aires"));
+        });
+
         api.post("/api/auth/registro/persona-humana", ctx -> {
             JsonNode body = mapper.readTree(ctx.body());
             ultimoRegistro.set(body);
@@ -1299,9 +1404,16 @@ class WebFlujoTest {
         return donacion;
     }
 
-    private Map<String, Object> entidadConEntregas(long id, String razonSocial, List<Map<String, Object>> deLaEntidad) {
-        return Map.of("entidadId", id, "razonSocial", razonSocial, "direccion", "San Martín 1234",
-                "entregas", deLaEntidad);
+    private Map<String, Object> entidadConEntregas(long id, String razonSocial, Double latitud, Double longitud,
+            List<Map<String, Object>> deLaEntidad) {
+        Map<String, Object> entidad = new LinkedHashMap<>();
+        entidad.put("entidadId", id);
+        entidad.put("razonSocial", razonSocial);
+        entidad.put("direccion", "San Martín 1234, CABA");
+        entidad.put("latitud", latitud); // nulas: la API todavia no la pudo geocodificar
+        entidad.put("longitud", longitud);
+        entidad.put("entregas", deLaEntidad);
+        return entidad;
     }
 
     private Map<String, Object> entrega(long donacionId, String bien, long cantidad, List<String> fotos) {

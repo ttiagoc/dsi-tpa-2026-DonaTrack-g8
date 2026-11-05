@@ -1,6 +1,7 @@
 package ar.edu.utn.frba.ddsi.donaciones.services.impl;
 
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -26,17 +27,61 @@ import ar.edu.utn.frba.ddsi.donaciones.models.enums.UnidadDeMedida;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.EntidadBeneficiariaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.SubcategoriaRepository;
 import ar.edu.utn.frba.ddsi.donaciones.services.EntidadBeneficiariaService;
+import ar.edu.utn.frba.ddsi.donaciones.services.geocodificacion.Coordenadas;
+import ar.edu.utn.frba.ddsi.donaciones.services.geocodificacion.Geocodificador;
+import ar.edu.utn.frba.ddsi.donaciones.services.geocodificacion.GeocodificadorNoDisponibleException;
 
 @Service
 public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaService {
 
+    private static final Logger LOG = Logger.getLogger(EntidadBeneficiariaServiceImpl.class.getName());
+
     private final EntidadBeneficiariaRepository entidadBeneficiariaRepository;
     private final SubcategoriaRepository subcategoriaRepository;
+    private final Geocodificador geocodificador;
 
     public EntidadBeneficiariaServiceImpl(EntidadBeneficiariaRepository entidadBeneficiariaRepository,
-            SubcategoriaRepository subcategoriaRepository) {
+            SubcategoriaRepository subcategoriaRepository, Geocodificador geocodificador) {
         this.entidadBeneficiariaRepository = entidadBeneficiariaRepository;
         this.subcategoriaRepository = subcategoriaRepository;
+        this.geocodificador = geocodificador;
+    }
+
+    /**
+     * Verifica que la direccion exista y guarda donde queda. Si la direccion no existe, el alta o la edicion
+     * se rechaza (DireccionInvalidaException). Si Georef no responde no se bloquea a la entidad: queda sin
+     * ubicar y se reintenta con {@link #ubicarPendientes()}.
+     */
+    private void ubicar(EntidadBeneficiaria entidad) {
+        try {
+            Coordenadas coordenadas = geocodificador.ubicar(entidad.getDireccion());
+            entidad.ubicarEn(coordenadas.latitud(), coordenadas.longitud());
+        } catch (GeocodificadorNoDisponibleException e) {
+            LOG.warning("No se pudo verificar la dirección de " + entidad.getRazonSocial() + ": " + e.getMessage());
+        }
+    }
+
+    @Override
+    public int ubicarPendientes() {
+        int ubicadas = 0;
+        for (EntidadBeneficiaria entidad : entidadBeneficiariaRepository.findAll()) {
+            if (entidad.estaUbicada()) {
+                continue;
+            }
+            try {
+                Coordenadas coordenadas = geocodificador.ubicar(entidad.getDireccion());
+                entidad.ubicarEn(coordenadas.latitud(), coordenadas.longitud());
+                this.guardar(entidad);
+                ubicadas++;
+            } catch (GeocodificadorNoDisponibleException e) {
+                LOG.warning("Georef no responde; las entidades sin ubicar se reintentan en el próximo arranque");
+                break;
+            } catch (BusinessException e) {
+                // cargada antes de que se verificaran las direcciones: queda fuera del mapa hasta que la corrijan
+                LOG.warning("Entidad " + entidad.getId() + ": " + e.getMessage());
+            }
+        }
+        return ubicadas;
     }
 
     public List<EntidadBeneficiariaResponse> obtenerTodas() {
@@ -76,6 +121,7 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
 
     public EntidadBeneficiariaResponse crear(EntidadBeneficiariaRequest request) {
         EntidadBeneficiaria entidad = toEntidadBeneficiaria(request);
+        ubicar(entidad);
         return toEntidadBeneficiariaResponse(this.guardar(entidad));
     }
 
@@ -137,8 +183,10 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
         if (request.razonSocial() != null && !request.razonSocial().isBlank()) {
             entidad.setRazonSocial(request.razonSocial());
         }
-        if (request.direccion() != null && !request.direccion().isBlank()) {
-            entidad.setDireccion(request.direccion());
+        if (request.direccion() != null && !request.direccion().isBlank()
+                && !request.direccion().equals(entidad.getDireccion())) {
+            entidad.mudarseA(request.direccion());
+            ubicar(entidad);
         }
         if (request.telefono() != null && !request.telefono().isBlank()) {
             entidad.setTelefono(new MedioContacto(request.telefono(), TipoContacto.SMS));

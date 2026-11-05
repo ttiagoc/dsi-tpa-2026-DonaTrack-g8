@@ -1,4 +1,7 @@
 {{#partial "titulo"}}Mapa de entregas · DonaTrack{{/partial}}
+{{#partial "head"}}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+{{/partial}}
 {{#partial "contenido"}}
 <header class="encabezado-pagina">
   <div>
@@ -13,21 +16,29 @@
     <div class="resumen__item"><strong>{{totalEntidades}}</strong>Entidades</div>
   </div>
 
-  {{!-- Sin JavaScript, cada marcador es un link a su detalle y se ven todos los detalles uno abajo del otro --}}
+  {{!-- Con JavaScript los marcadores pasan a un mapa de OpenStreetMap (Leaflet, como el de seguimiento).
+       Sin JavaScript (o si Leaflet no carga) quedan como una lista de links y se ven todos los detalles. --}}
   <div class="mapa-pagina" data-mapa>
     <section class="tarjeta mapa" aria-label="Mapa de entregas">
-      <img class="mapa__fondo" src="/img/mapa-ilustrativo.svg" alt="">
-      {{#each entidades}}
-        <a class="mapa__marcador" href="#entidad-{{id}}" data-detalle="entidad-{{id}}" style="left: {{x}}%; top: {{y}}%"
-           aria-label="{{razonSocial}}: {{etiquetaCantidad}}" {{#if elegida}}aria-current="true"{{/if}}><span>{{cantidad}}</span></a>
-      {{/each}}
-      <span class="mapa__leyenda">Mapa ilustrativo: las ubicaciones son aproximadas</span>
+      <div class="mapa__lienzo" data-mapa-lienzo></div>
+      <ul class="mapa__lista">
+        {{#each entidades}}
+          <li>
+            <a class="mapa__marcador{{#if aproximada}} mapa__marcador--aproximado{{/if}}" href="#entidad-{{id}}" data-detalle="entidad-{{id}}" data-lat="{{latitud}}" data-lng="{{longitud}}"
+               aria-label="{{razonSocial}}: {{etiquetaCantidad}}" {{#if elegida}}aria-current="true"{{/if}}><span>{{cantidad}}</span></a>
+            {{razonSocial}}
+          </li>
+        {{/each}}
+      </ul>
+      {{#if hayAproximadas}}
+        <span class="mapa__leyenda"><span class="mapa__leyenda-muestra" aria-hidden="true"></span>Ubicación aproximada: todavía no pudimos verificar la dirección</span>
+      {{/if}}
     </section>
     <div class="mapa-detalles" aria-live="polite">
       {{#each entidades}}
         <article class="tarjeta mapa-detalle{{#if elegida}} mapa-detalle--elegido{{/if}}" id="entidad-{{id}}" tabindex="-1">
           <h2>{{razonSocial}}</h2>
-          <p class="texto-suave">{{direccion}} · Recibió {{etiquetaCantidad}}</p>
+          <p class="texto-suave">{{direccion}}{{#if aproximada}} (ubicación aproximada en el mapa){{/if}} · Recibió {{etiquetaCantidad}}</p>
           <ul class="mapa-detalle__entregas">
             {{#each entregas}}
               <li>
@@ -53,18 +64,43 @@
 {{/if}}
 {{/partial}}
 {{#partial "scripts"}}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
-  // Con JavaScript se ve un solo detalle a la vez: el del marcador elegido.
+  // Con Leaflet: mapa real, un marcador por entidad y un solo detalle a la vez (el del marcador elegido).
   (function () {
     var mapa = document.querySelector('[data-mapa]');
-    if (!mapa) return;
+    if (!mapa || !window.L) return;
     mapa.classList.add('mapa-pagina--js');
-    var marcadores = mapa.querySelectorAll('.mapa__marcador');
+
+    var lienzo = L.map(mapa.querySelector('[data-mapa-lienzo]'), { scrollWheelZoom: false });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(lienzo);
+
+    var marcadores = Array.prototype.slice.call(mapa.querySelectorAll('.mapa__marcador'));
+    var enMapa = new Map();
+    var puntos = [];
+    marcadores.forEach(function (marcador) {
+      var punto = [parseFloat(marcador.dataset.lat), parseFloat(marcador.dataset.lng)];
+      // el mismo <a> es el ícono: conserva el link, el aria-label y el foco con teclado
+      var icono = L.divIcon({ className: 'mapa__icono', html: marcador, iconSize: null });
+      var elegido = marcador.getAttribute('aria-current') === 'true';
+      enMapa.set(marcador, L.marker(punto, { icon: icono, keyboard: false, zIndexOffset: elegido ? 1000 : 0 }).addTo(lienzo));
+      puntos.push(punto);
+    });
+    lienzo.fitBounds(puntos, { padding: [50, 50], maxZoom: 15 });
+
     marcadores.forEach(function (marcador) {
       marcador.addEventListener('click', function (e) {
         e.preventDefault();
-        marcadores.forEach(function (m) { m.removeAttribute('aria-current'); });
+        marcadores.forEach(function (m) {
+          m.removeAttribute('aria-current');
+          enMapa.get(m).setZIndexOffset(0);
+        });
         marcador.setAttribute('aria-current', 'true');
+        enMapa.get(marcador).setZIndexOffset(1000);
+        lienzo.panTo(enMapa.get(marcador).getLatLng());
         mapa.querySelectorAll('.mapa-detalle').forEach(function (d) {
           d.classList.toggle('mapa-detalle--elegido', d.id === marcador.dataset.detalle);
         });
