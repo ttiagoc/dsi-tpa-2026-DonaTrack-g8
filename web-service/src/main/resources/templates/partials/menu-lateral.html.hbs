@@ -23,36 +23,46 @@
   <nav class="menu-lateral__links" aria-label="Páginas del rol">
     {{#if usuario.esEntidad}}
       {{!-- --- Entidad beneficiaria (A) --- --}}
-      <p class="menu-lateral__seccion">Mi entidad</p>
+      <p class="menu-lateral__seccion">Panel</p>
       <a href="/entidad" title="Inicio" {{#if (eq rutaActual "/entidad")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-inicio"/></svg> <span>Inicio</span></a>
-      <a href="/entidad/necesidades" title="Necesidades" {{#if (eq rutaActual "/entidad/necesidades")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-lista"/></svg> <span>Necesidades</span></a>
+
+      <p class="menu-lateral__seccion">Necesidades</p>
+      <a href="/entidad/necesidades" title="Mis necesidades" {{#if (eq rutaActual "/entidad/necesidades")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-lista"/></svg> <span>Mis necesidades</span></a>
+
       <p class="menu-lateral__seccion">Donaciones</p>
       <a href="/entidad/donaciones" title="Asignadas" {{#if (eq rutaActual "/entidad/donaciones")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-paquete"/></svg> <span>Asignadas</span></a>
-      {{!-- Persona B: "Seguimiento" (req. 14) va aca, con el icono #i-mapa --}}
       <a href="/entidad/seguimiento" title="Seguimiento" {{#if (eq rutaActual "/entidad/seguimiento")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-mapa"/></svg> <span>Seguimiento</span></a>
     {{/if}}
     {{#if usuario.esDonante}}
-    {{!-- --- Donante (B) --- --}}
-        <p class="menu-lateral__seccion">Mi actividad</p>
-        <a href="/donante" title="Inicio" {{#if (eq rutaActual "/donante")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-inicio"/></svg> <span>Inicio</span></a>
-        <a href="/donante/donaciones" title="Mis donaciones" {{#if (eq rutaActual "/donante/donaciones")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-paquete"/></svg> <span>Mis donaciones</span></a>
-        <a href="/donante/entidades" title="Entidades" {{#if (eq rutaActual "/donante/entidades")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-edificio"/></svg> <span>Entidades</span></a>
-        <a href="/donante/seguimiento" title="Seguimiento" {{#if (eq rutaActual "/donante/seguimiento")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-mapa"/></svg> <span>Seguimiento</span></a>
+      {{!-- --- Donante (B) --- --}}
+      <p class="menu-lateral__seccion">Panel</p>
+      <a href="/donante" title="Inicio" {{#if (eq rutaActual "/donante")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-inicio"/></svg> <span>Inicio</span></a>
+
+      <p class="menu-lateral__seccion">Donaciones</p>
+      <a href="/donante/entidades" title="Entidades" {{#if (eq rutaActual "/donante/entidades")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-edificio"/></svg> <span>Entidades</span></a>
+      <a href="/donante/donaciones" title="Mis donaciones" {{#if (eq rutaActual "/donante/donaciones")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-paquete"/></svg> <span>Mis donaciones</span></a>
+      <a href="/donante/seguimiento" title="Seguimiento" {{#if (eq rutaActual "/donante/seguimiento")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-mapa"/></svg> <span>Seguimiento</span></a>
     {{/if}}
     {{#if usuario.esChofer}}
       {{!-- --- Chofer / Logística --- --}}
-      <p class="menu-lateral__seccion">Logística</p>
+      <p class="menu-lateral__seccion">Panel</p>
       <a href="/chofer" title="Hoja de ruta" {{#if (eq rutaActual "/chofer")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-camion"/></svg> <span>Hoja de ruta</span></a>
     {{/if}}
     {{#if usuario.esAdmin}}
       {{!-- --- Administrador (C) --- --}}
-      <p class="menu-lateral__seccion">Administración</p>
+      <p class="menu-lateral__seccion">Panel</p>
       <a href="/admin" title="Inicio" {{#if (eq rutaActual "/admin")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-inicio"/></svg> <span>Inicio</span></a>
-      <a href="/admin/camiones" title="Camiones" {{#if (eq rutaActual "/admin/camiones")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-camion"/></svg> <span>Camiones</span></a>
-      <a href="/admin/rutas" title="Rutas y entregas" {{#if (eq rutaActual "/admin/rutas")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-mapa"/></svg> <span>Rutas y entregas</span></a>
-      <a href="/admin/deposito" title="Depósito y Vencidas" {{#if (eq rutaActual "/admin/deposito")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-caja"/></svg> <span>Depósito</span></a>
-      <a href="/admin/matchmaking" title="Matchmaking" {{#if (eq rutaActual "/admin/matchmaking")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-conexiones"/></svg> <span>Matchmaking</span></a>
+
+      <p class="menu-lateral__seccion">Donaciones</p>
       <a href="/admin/recepcion" title="Recepción" {{#if (eq rutaActual "/admin/recepcion")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-recibir"/></svg> <span>Recepción</span></a>
+      <a href="/admin/deposito" title="Depósito" {{#if (eq rutaActual "/admin/deposito")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-caja"/></svg> <span>Depósito</span></a>
+      <a href="/admin/matchmaking" title="Matchmaking" {{#if (eq rutaActual "/admin/matchmaking")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-conexiones"/></svg> <span>Matchmaking</span></a>
+
+      <p class="menu-lateral__seccion">Logística</p>
+      <a href="/admin/rutas" title="Rutas y entregas" {{#if (eq rutaActual "/admin/rutas")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-mapa"/></svg> <span>Rutas y entregas</span></a>
+      <a href="/admin/camiones" title="Camiones" {{#if (eq rutaActual "/admin/camiones")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-camion"/></svg> <span>Camiones</span></a>
+
+      <p class="menu-lateral__seccion">Configuración</p>
       <a href="/admin/categorias" title="Categorías" {{#if (eq rutaActual "/admin/categorias")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-lista"/></svg> <span>Categorías</span></a>
       <a href="/admin/importaciones" title="Importar CSV" {{#if (eq rutaActual "/admin/importaciones")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-subir"/></svg> <span>Importar CSV</span></a>
     {{/if}}
