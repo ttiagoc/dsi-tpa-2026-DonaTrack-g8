@@ -43,7 +43,13 @@ public class ComponentesTemplateTest {
         String result = renderString("{{{boton 'alta' href='/admin/camiones?nuevo' texto='+ Nuevo camión' modal='modal-camion'}}}", Map.of());
         assertTrue(result.contains("<a class=\"boton\" href=\"/admin/camiones?nuevo\" data-abre=\"modal-camion\">"));
         assertTrue(result.contains("#i-mas"));
-        assertTrue(result.contains("+ Nuevo camión"));
+        // El helper limpia el '+' redundante si ya lleva el icono de alta i-mas
+        assertTrue(result.contains("Nuevo camión"));
+        assertFalse(result.contains("+ Nuevo camión"));
+
+        String resultDefault = renderString("{{{boton 'alta'}}}", Map.of());
+        assertTrue(resultDefault.contains("Nuevo"));
+        assertFalse(resultDefault.contains("+ Nuevo"));
     }
 
     @Test
@@ -110,12 +116,13 @@ public class ComponentesTemplateTest {
 
     @Test
     void testPartialEncabezado() throws IOException {
-        String template = "{{> partials/encabezado titulo='Flota' bajada='Gestión de camiones' accionHref='/admin/camiones?nuevo' accionTexto='+ Nuevo camión' accionModal='modal-camion'}}";
+        String template = "{{> partials/encabezado titulo='Flota' bajada='Gestión de camiones' accionHref='/admin/camiones?nuevo' accionTexto='Nuevo camión' accionModal='modal-camion'}}";
         String result = renderString(template, Map.of());
         assertTrue(result.contains("<header class=\"encabezado-pagina\">"));
         assertTrue(result.contains("<h1>Flota</h1>"));
         assertTrue(result.contains("Gestión de camiones"));
-        assertTrue(result.contains("+ Nuevo camión"));
+        assertTrue(result.contains("Nuevo camión"));
+        assertFalse(result.contains("+ Nuevo camión"));
         assertTrue(result.contains("data-abre=\"modal-camion\""));
     }
 

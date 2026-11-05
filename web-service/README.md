@@ -143,7 +143,7 @@ Para garantizar la consistencia visual y de accesibilidad en todo el sitio, se d
 
 ### Helpers de Handlebars
 - **`{{boton "<tipo>" ...}}`**: Genera botones `<button>` o enlaces `<a>` consistentes según su función semántica:
-  - `alta`: Botón primario para altas en encabezados (`+ Nuevo...`, incluye ícono `i-mas`).
+  - `alta`: Botón primario para altas en encabezados (`Nuevo...`, incluye ícono `i-mas`).
   - `pagina`: Botón primario de acción de página (`Ejecutar matchmaking`, etc.).
   - `ver`: Acción secundaria compacta de fila (`Ver...`, incluye ícono `i-ojo`).
   - `editar`: Acción secundaria compacta de fila (`Editar`, incluye ícono `i-lapiz`).

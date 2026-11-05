@@ -90,6 +90,13 @@ public class BotonHelper implements Helper<Object> {
 
     private void appendContenido(StringBuilder sb, String icono, String texto, String sr) {
         if (icono != null && !icono.isBlank()) {
+            if ("i-mas".equals(icono) && texto != null) {
+                if (texto.startsWith("+ ")) {
+                    texto = texto.substring(2).trim();
+                } else if (texto.startsWith("+")) {
+                    texto = texto.substring(1).trim();
+                }
+            }
             sb.append("<svg class=\"icono\" aria-hidden=\"true\"><use href=\"#")
               .append(escapeHtml(icono))
               .append("\"/></svg>");
@@ -107,7 +114,7 @@ public class BotonHelper implements Helper<Object> {
 
     private String defaultTexto(TipoBoton tipo) {
         return switch (tipo) {
-            case ALTA -> "+ Nuevo";
+            case ALTA -> "Nuevo";
             case VER -> "Ver";
             case EDITAR -> "Editar";
             case ELIMINAR -> "Eliminar";
