@@ -360,6 +360,19 @@ def main():
     camion2 = new_camion('AF456DE', 18.0, 3.2, 4500.0, 'Marta', 'Ledesma')
     camion3 = new_camion('AD789FG', 12.0, 2.9, 3000.0, 'Ruben', 'Acosta')
 
+    step("Cuentas de acceso para choferes")
+    def new_usuario_chofer(camion, username):
+        invoke_api('POST', f"{DONACIONES_URL}/auth/chofer", {
+            'camionId': camion['id'],
+            'username': username,
+            'password': PASSWORD
+        }, token=admin_token)
+        ok(f"Usuario {username} vinculado al camión {camion['patente']}")
+
+    new_usuario_chofer(camion2, 'chofer1')
+    new_usuario_chofer(camion1, 'chofer2')
+    new_usuario_chofer(camion3, 'chofer3')
+
     def parada(orden, entidad, donaciones):
         return {'orden': orden, 'destino': entidad['direccion'], 'entidad': entidad['id'], 'entregas': donaciones}
 
@@ -401,13 +414,10 @@ def main():
         parada(1, hogar, [dAnaCalzado['Calzado']])
     ])
     set_estado_ruta(ruta0, 'EN_TRASLADO')
-    invoke_api('POST', f"{LOGISTICA_URL}/rutas/{ruta0['id']}/paradas/{ruta0['paradas'][0]['id']}/fallos", {}, token=admin_token)
-    set_estado_ruta(ruta0, 'FINALIZADA')
-    invoke_api('PUT', f"{DONACIONES_URL}/donaciones/{dAnaCalzado['Calzado']}/estado", {
-        'estado': 'ENTREGA_FALLIDA',
-        'justificacion': 'El hogar estaba cerrado al llegar el camion. Se reprograma la entrega.'
+    invoke_api('POST', f"{LOGISTICA_URL}/rutas/{ruta0['id']}/paradas/{ruta0['paradas'][0]['id']}/fallos", {
+        'motivo': 'El hogar estaba cerrado al llegar el camion. Se reprograma la entrega.'
     }, token=admin_token)
-    ok(f"Donación #{dAnaCalzado['Calzado']} (calzado) en ENTREGA_FALLIDA")
+    ok(f"Donación #{dAnaCalzado['Calzado']} (calzado) en ENTREGA_FALLIDA y Ruta #{ruta0['id']} finalizada")
 
     step("Ruta de hoy: camión en camino (seguimiento en vivo)")
     ruta2 = new_ruta(fecha(0), camion2, [
@@ -500,6 +510,9 @@ def main():
     hogar      Jabón recibido con fotos; calzado con entrega fallida.
     escuela    Lápices recibidos; cuadernos listos para la ruta de mañana.
     merendero  Conservas recibidas; arroz en camino.
+    chofer1    Marta Ledesma (camión AF456DE): hoja de ruta EN_TRASLADO hoy con 2 paradas pendientes.
+    chofer2    Esteban Quiroga (camión AE123BC): sin ruta activa hoy (disponible para nuevas planificaciones).
+    chofer3    Rubén Acosta (camión AD789FG): hoja de ruta PLANIFICADA mañana lista para iniciar recorrido.
     """)
 
 if __name__ == '__main__':

@@ -112,10 +112,14 @@ public class DonacionServiceImpl implements DonacionService {
 
         TipoEstadoDonacion nuevoEstado = toTipoEstadoDonacion(request.estado());
         if (nuevoEstado == TipoEstadoDonacion.ASIGNACION_REALIZADA) {
-            throw new BusinessException(
-                    "Una donacion se asigna aceptando una propuesta de matchmaking, no cambiando su estado");
-        }
-        if (nuevoEstado == TipoEstadoDonacion.ENTREGA_FALLIDA) {
+            if (donacion.estadoActual() == TipoEstadoDonacion.ENTREGA_FALLIDA) {
+                donacion.reprogramarEntrega(request.justificacion());
+                donacion = this.guardar(donacion);
+            } else {
+                throw new BusinessException(
+                        "Una donacion se asigna aceptando una propuesta de matchmaking, no cambiando su estado");
+            }
+        } else if (nuevoEstado == TipoEstadoDonacion.ENTREGA_FALLIDA) {
             gestorDeEventos.notificarEntregaFallida(id, request.justificacion());
             donacion = donacionRepository.findById(id).orElseThrow();
         } else if (nuevoEstado == TipoEstadoDonacion.EN_DEPOSITO) {
@@ -142,11 +146,14 @@ public class DonacionServiceImpl implements DonacionService {
 
         List<DonacionAsignadaResponse> donacionesAsignadas = new ArrayList<>();
         for (Donacion donacion : donaciones) {
+            EntidadBeneficiaria entidad = donacion.getEntidadBeneficiariaAsignada();
             donacionesAsignadas.add(new DonacionAsignadaResponse(
                     donacion.getId(),
                     donacion.calcularPesoTotal(),
                     donacion.calcularVolumenTotal(),
-                    donacion.obtenerDireccion()));
+                    donacion.obtenerDireccion(),
+                    entidad != null ? entidad.getId() : null,
+                    entidad != null ? entidad.getRazonSocial() : null));
         }
 
         return donacionesAsignadas;

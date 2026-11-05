@@ -16,7 +16,7 @@ import io.javalin.http.Context;
  */
 public class Formulario {
 
-    private static final Set<String> SECRETOS = Set.of("password", "password2");
+    private static final Set<String> SECRETOS = Set.of("password", "password2", "choferPassword");
     private static final Pattern EMAIL = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
     private static final Pattern TELEFONO = Pattern.compile("^\\+?[0-9\\s()\\-]+$");
     public static final String ERROR_EMAIL = "Ingresá un email válido, por ejemplo nombre@dominio.com";

@@ -1,0 +1,129 @@
+{{#partial "titulo"}}Rutas y entregas · DonaTrack{{/partial}}
+{{#partial "contenido"}}
+<header class="encabezado-pagina">
+  <div>
+    <h1>Rutas y entregas</h1>
+    <p class="texto-suave">Planificación automática de hojas de ruta por capacidad de flota y seguimiento operativo.</p>
+  </div>
+  <div class="encabezado-pagina__accion">
+    <form method="post" action="/admin/rutas/planificar">
+      <button type="submit" class="boton" data-cargando="Planificando rutas…">
+        <svg class="icono" aria-hidden="true"><use href="#i-rayo"/></svg> Planificar rutas
+      </button>
+    </form>
+  </div>
+</header>
+
+<div class="resumen" aria-label="Resumen de logística">
+  <div class="resumen__item resumen__item--pendiente"><strong>{{resumen.sinRuta}}</strong>Donaciones sin ruta</div>
+  <div class="resumen__item resumen__item--info"><strong>{{resumen.planificadas}}</strong>Rutas planificadas</div>
+  <div class="resumen__item resumen__item--ok"><strong>{{resumen.enTraslado}}</strong>Camiones en traslado</div>
+  <div class="resumen__item"><strong>{{resumen.finalizadas}}</strong>Rutas finalizadas</div>
+</div>
+
+<nav class="pestanas" aria-label="Filtro de estado de rutas">
+  <a class="pestana {{#if esTabTodas}}pestana--activa{{/if}}" href="/admin/rutas?estado=todas" {{#if esTabTodas}}aria-current="page"{{/if}}>
+    Todas <span class="pestana__badge">{{resumen.todas}}</span>
+  </a>
+  <a class="pestana {{#if esTabPlanificadas}}pestana--activa{{/if}}" href="/admin/rutas?estado=planificadas" {{#if esTabPlanificadas}}aria-current="page"{{/if}}>
+    Planificadas <span class="pestana__badge">{{resumen.planificadas}}</span>
+  </a>
+  <a class="pestana {{#if esTabEnTraslado}}pestana--activa{{/if}}" href="/admin/rutas?estado=en_traslado" {{#if esTabEnTraslado}}aria-current="page"{{/if}}>
+    En traslado <span class="pestana__badge">{{resumen.enTraslado}}</span>
+  </a>
+  <a class="pestana {{#if esTabFinalizadas}}pestana--activa{{/if}}" href="/admin/rutas?estado=finalizadas" {{#if esTabFinalizadas}}aria-current="page"{{/if}}>
+    Finalizadas <span class="pestana__badge">{{resumen.finalizadas}}</span>
+  </a>
+</nav>
+
+{{#> partials/listado
+    coleccion=rutas
+    vacioTitulo="No hay hojas de ruta para el filtro seleccionado."
+    vacioBajada="Una vez aceptadas las propuestas en Matchmaking, usá “Planificar rutas” para asignar las donaciones a los camiones disponibles."}}
+  <table class="tabla">
+    <caption class="sr-only">Hojas de ruta de entrega</caption>
+    <thead>
+      <tr>
+        <th scope="col"># Ruta</th>
+        <th scope="col">Fecha</th>
+        <th scope="col">Camión y chofer</th>
+        <th scope="col">Paradas</th>
+        <th scope="col">Donaciones</th>
+        <th scope="col">Estado</th>
+        <th scope="col" class="tabla__accion"><span class="sr-only">Acciones</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each rutas}}
+        <tr>
+          <td class="tabla__corta"><strong>#{{id}}</strong></td>
+          <td class="tabla__corta">{{fechaFormateada}}</td>
+          <td>
+            <strong>{{patenteCamion}}</strong>
+            <span class="tabla__secundario">{{choferNombreCompleto}}{{#if choferCuenta}} ({{choferCuenta}}){{/if}}</span>
+          </td>
+          <td>{{paradasTexto}}</td>
+          <td>{{resumenEntregas}}</td>
+          <td class="tabla__corta">{{estado estado}}</td>
+          {{#> partials/acciones-fila}}
+            {{boton "ver" href=(concat "/admin/rutas?estado=" ../estadoFiltro "&ver=" id) texto="Hoja de ruta" sr=(concat "de la ruta #" id)}}
+          {{/partials/acciones-fila}}
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+{{/partials/listado}}
+
+{{#if abrirModalRuta}}
+<dialog class="modal modal--xl" id="modal-ruta" open aria-labelledby="modal-ruta-titulo">
+  <div class="modal__encabezado">
+    <div>
+      <h2 id="modal-ruta-titulo">Hoja de ruta #{{rutaSeleccionada.id}} · Camión {{rutaSeleccionada.patenteCamion}}</h2>
+      <p class="texto-suave" style="font-size: var(--texto-chico); margin: 4px 0 0;">
+        Chofer: {{rutaSeleccionada.choferNombreCompleto}}{{#if rutaSeleccionada.choferCuenta}} (<code>{{rutaSeleccionada.choferCuenta}}</code>){{/if}}
+        · Fecha: {{rutaSeleccionada.fechaFormateada}}
+        · {{estado rutaSeleccionada.estado}}
+      </p>
+    </div>
+    <a class="modal__cerrar" href="/admin/rutas?estado={{estadoFiltro}}" data-cierra aria-label="Cerrar">
+      <svg class="icono" aria-hidden="true"><use href="#i-cerrar"/></svg>
+    </a>
+  </div>
+  <div class="modal__cuerpo">
+    {{#if rutaSeleccionada.paradas}}
+      <ol class="paradas-lista">
+        {{#each rutaSeleccionada.paradas}}
+          <li class="parada-item {{#if esActiva}}parada-item--activa{{/if}}{{#if esEntregada}}parada-item--entregada{{/if}}{{#if esFallida}}parada-item--fallida{{/if}}">
+            <div class="parada-item__izquierda">
+              <span class="parada-item__numero">{{orden}}</span>
+              <div class="parada-item__cuerpo">
+                <p class="parada-item__titulo">
+                  {{entidadNombre}}
+                  {{estado estado}}
+                </p>
+                <p class="parada-item__direccion">{{destino}}</p>
+                {{#if bultos}}
+                  <ul class="parada-item__bultos">
+                    {{#each bultos}}
+                      <li><span class="etiqueta etiqueta--neutra">{{this}}</span></li>
+                    {{/each}}
+                  </ul>
+                {{/if}}
+              </div>
+            </div>
+          </li>
+        {{/each}}
+      </ol>
+    {{else}}
+      <p class="texto-suave">Esta hoja de ruta no tiene paradas cargadas.</p>
+    {{/if}}
+    <p class="nota">El chofer asignado gestiona el inicio del viaje y la confirmación de cada parada desde su portal (<code>/chofer</code>).</p>
+  </div>
+  <div class="modal__acciones">
+    {{boton "cancelar" href=(concat "/admin/rutas?estado=" estadoFiltro) texto="Cerrar" cierra=true autofocus=true}}
+  </div>
+</dialog>
+{{/if}}
+{{/partial}}
+{{> layouts/base}}
+

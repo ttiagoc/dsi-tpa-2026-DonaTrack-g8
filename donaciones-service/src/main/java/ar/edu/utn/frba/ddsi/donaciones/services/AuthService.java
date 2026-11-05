@@ -1,5 +1,8 @@
 package ar.edu.utn.frba.ddsi.donaciones.services;
 
+import java.util.List;
+
+import ar.edu.utn.frba.ddsi.donaciones.dto.auth.CuentaChoferRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.auth.LoginRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.auth.RefreshRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.auth.RegistroEntidadBeneficiariaRequest;
@@ -25,6 +28,12 @@ public interface AuthService {
 
     /** Crea el usuario de un donante que ya existe (lo usa la importacion CSV). */
     UsuarioResponse crearUsuarioParaDonante(Long donanteId, String username, String password);
+
+    /** Crea o actualiza el usuario CHOFER asociado a un camion (perfilId = camionId). */
+    UsuarioResponse configurarUsuarioChofer(CuentaChoferRequest request);
+
+    /** Lista los usuarios activos con rol CHOFER para vincularlos con sus camiones. */
+    List<UsuarioResponse> listarUsuariosChofer();
 
     /** Crea el administrador inicial si todavia no existe un usuario con ese nombre. */
     void crearAdministradorSiNoExiste(String username, String password);

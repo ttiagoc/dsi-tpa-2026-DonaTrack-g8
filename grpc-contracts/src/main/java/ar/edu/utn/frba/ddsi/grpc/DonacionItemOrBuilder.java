@@ -37,4 +37,22 @@ public interface DonacionItemOrBuilder extends
    */
   com.google.protobuf.ByteString
       getDireccionBytes();
+
+  /**
+   * <code>int64 entidad_id = 5;</code>
+   * @return The entidadId.
+   */
+  long getEntidadId();
+
+  /**
+   * <code>string entidad_nombre = 6;</code>
+   * @return The entidadNombre.
+   */
+  java.lang.String getEntidadNombre();
+  /**
+   * <code>string entidad_nombre = 6;</code>
+   * @return The bytes for entidadNombre.
+   */
+  com.google.protobuf.ByteString
+      getEntidadNombreBytes();
 }

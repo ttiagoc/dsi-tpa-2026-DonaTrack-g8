@@ -9,6 +9,7 @@ import io.javalin.security.RouteRole;
 public enum Rol implements RouteRole {
     DONANTE,
     ENTIDAD_BENEFICIARIA,
+    CHOFER,
     ADMINISTRADOR,
     SISTEMA
 }

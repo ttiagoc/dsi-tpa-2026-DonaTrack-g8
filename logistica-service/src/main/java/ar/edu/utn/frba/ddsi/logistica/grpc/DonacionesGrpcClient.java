@@ -39,11 +39,15 @@ public class DonacionesGrpcClient {
 
             List<DonacionDTO> dtos = new ArrayList<>();
             for (DonacionItem item : response.getDonacionesList()) {
+                Long entidadId = item.getEntidadId() != 0L ? item.getEntidadId() : null;
+                String entidadNombre = !item.getEntidadNombre().isBlank() ? item.getEntidadNombre() : null;
                 dtos.add(new DonacionDTO(
                         item.getId(),
                         item.getPeso(),
                         item.getVolumen(),
-                        item.getDireccion()));
+                        item.getDireccion(),
+                        entidadId,
+                        entidadNombre));
             }
             return dtos;
         } catch (Exception e) {

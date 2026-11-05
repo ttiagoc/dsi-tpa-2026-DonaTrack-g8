@@ -78,6 +78,7 @@ La Persona A protege la API REST de donaciones con JWT y roles (contrato, matriz
 - [x] Otorgar usuario con credenciales a donantes importados por CSV (`ImportadorDeDonantes`) y limpieza de datos simulados fijos en estadísticas y tareas.
 - [x] Prevención de doble clic e indicador de carga con spinner accesible (`cargando.js` y `.boton--cargando`).
 - [x] ABM de categorías y subcategorías (`/admin/categorias`, no lo pide la consigna pero sin él el catálogo solo se cargaba con el script de datos demo): alta y edición en modales; baja solo de lo que ninguna donación ni necesidad usa (borrar una categoría borra sus subcategorías). Backend nuevo (rol `ADMINISTRADOR`): `PUT` y `DELETE` de `/api/categorias/{id}` y `/api/subcategorias/{id}`, más `GET .../usos`. Bocetos `15c` a `15g`.
+- [x] Cierre del ciclo de vida logístico y rol `CHOFER` (detalle en [`documents/PlanCicloDeVidaDonacion.md`](../PlanCicloDeVidaDonacion.md)): planificación de hojas de ruta en `/admin/rutas` (bocetos `20a` y `20b`), vinculación de cuenta de chofer en `/admin/camiones` (boceto `18b`), portal operativo del chofer en `/chofer` con mapa, inicio de recorrido, confirmación y reporte de no recepción (bocetos `18d` y `18e`), y gestión de entregas fallidas en `/admin/deposito?filtro=fallidas` (bocetos `16` y `16c`).
 
 ### 4.0 Proteger la API de logística
 Logística utiliza `common-lib`, implementando el mismo `AutenticacionHandler` que donaciones para proteger endpoints con JWT y API Key:

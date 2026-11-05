@@ -25,6 +25,7 @@
       <tr>
         <th scope="col">Patente</th>
         <th scope="col">Chofer asignado</th>
+        <th scope="col">Usuario chofer</th>
         <th scope="col">Carga máxima</th>
         <th scope="col">Volumen</th>
         <th scope="col">Altura</th>
@@ -36,6 +37,7 @@
         <tr>
           <td class="tabla__corta"><strong>{{patente}}</strong></td>
           <td>{{choferNombreCompleto}}</td>
+          <td>{{#if choferUsername}}<code>{{choferUsername}}</code>{{else}}<span class="texto-suave">Sin cuenta</span>{{/if}}</td>
           <td>{{capacidadCarga}} kg</td>
           <td>{{capacidadVolumen}} m³</td>
           <td>{{altura}} m</td>
@@ -54,14 +56,14 @@
   <form method="post" action="{{#if camionId}}/admin/camiones/{{camionId}}/editar{{else}}/admin/camiones{{/if}}" accept-charset="UTF-8" novalidate>
     <div class="modal__encabezado">
       <h2 id="titulo-camion">{{#if camionId}}Editar camión{{else}}Nuevo camión{{/if}}</h2>
-      <a class="modal__cerrar" href="/admin/camiones" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></a>
+      <a class="modal__cerrar" href="/admin/camiones" data-cierra aria-label="Cerrar"><svg class="icono" aria-hidden="true"><use href="#i-cerrar"/></svg></a>
     </div>
     <div class="modal__cuerpo">
       {{#if errorGeneral}}<div class="alerta alerta--error" role="alert">{{errorGeneral}}</div>{{/if}}
 
       <div class="campo{{#if errores.patente}} campo--error{{/if}}">
         <label for="patente">Patente <span class="campo__requerido" aria-hidden="true">*</span></label>
-        <input type="text" id="patente" name="patente" value="{{form.patente}}" required autofocus placeholder="ej: AF 123 CD">
+        <input type="text" id="patente" name="patente" value="{{form.patente}}" required autofocus autocorrect="off" autocapitalize="characters" spellcheck="false" placeholder="ej: AF 123 CD">
         {{#if errores.patente}}<small class="campo__error">{{errores.patente}}</small>{{/if}}
       </div>
 
@@ -95,6 +97,23 @@
           {{#if errores.choferApellido}}<small class="campo__error">{{errores.choferApellido}}</small>{{/if}}
         </div>
       </div>
+
+      <fieldset class="formulario__grupo" style="margin-bottom: 0; padding-top: var(--espacio-3);">
+        <legend>Cuenta de acceso del chofer (opcional)</legend>
+        <p class="texto-suave" style="font-size: var(--texto-chico); margin-bottom: var(--espacio-3);">Permite que el chofer ingrese a su hoja de ruta (<code>/chofer</code>) desde el celular o navegador.</p>
+        <div class="grilla grilla--2">
+          <div class="campo{{#if errores.choferUsername}} campo--error{{/if}}" style="margin-bottom: 0;">
+            <label for="choferUsername">Usuario</label>
+            <input type="text" id="choferUsername" name="choferUsername" value="{{form.choferUsername}}" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Ej: chofer1">
+            {{#if errores.choferUsername}}<small class="campo__error">{{errores.choferUsername}}</small>{{/if}}
+          </div>
+          <div class="campo{{#if errores.choferPassword}} campo--error{{/if}}" style="margin-bottom: 0;">
+            <label for="choferPassword">Contraseña</label>
+            <input type="password" id="choferPassword" name="choferPassword" minlength="8" autocomplete="new-password" placeholder="{{#if tieneCuentaChofer}}Vacío = mantener actual{{else}}Mínimo 8 caracteres{{/if}}">
+            {{#if errores.choferPassword}}<small class="campo__error">{{errores.choferPassword}}</small>{{/if}}
+          </div>
+        </div>
+      </fieldset>
     </div>
     <div class="modal__acciones">
       {{boton "cancelar" href="/admin/camiones" cierra=true}}

@@ -115,7 +115,8 @@ class DonacionesGrpcIntegrationTest {
                 DonacionesGrpcServiceGrpc.newBlockingStub(channel).withInterceptors(clientAuthInterceptor);
 
         when(donacionService.obtenerDonacionesSegunEstado("ASIGNADA", 10, 0))
-                .thenReturn(List.of(new DonacionAsignadaResponse(1L, 10.5, 0.5, "Av. Siempre Viva 742")));
+                .thenReturn(List.of(new DonacionAsignadaResponse(
+                        1L, 10.5, 0.5, "Av. Siempre Viva 742", 15L, "Comedor San Martín")));
 
         ListarDonacionesPorEstadoRequest request = ListarDonacionesPorEstadoRequest.newBuilder()
                 .setEstado("ASIGNADA")
@@ -129,6 +130,8 @@ class DonacionesGrpcIntegrationTest {
         assertEquals(1, response.getDonacionesCount());
         assertEquals(1L, response.getDonaciones(0).getId());
         assertEquals("Av. Siempre Viva 742", response.getDonaciones(0).getDireccion());
+        assertEquals(15L, response.getDonaciones(0).getEntidadId());
+        assertEquals("Comedor San Martín", response.getDonaciones(0).getEntidadNombre());
     }
 
     @Test

@@ -78,6 +78,22 @@ public class EstadoHelper implements Helper<Object> {
                 texto = "Vencida";
                 clase = "etiqueta etiqueta--error";
             }
+            case "PLANIFICADA" -> {
+                texto = "Planificada";
+                clase = "etiqueta etiqueta--pendiente";
+            }
+            case "FINALIZADA" -> {
+                texto = "Finalizada";
+                clase = "etiqueta etiqueta--ok";
+            }
+            case "PENDIENTE" -> {
+                texto = "Pendiente";
+                clase = "etiqueta etiqueta--neutra";
+            }
+            case "NO_RECIBIDA" -> {
+                texto = "No recibida";
+                clase = "etiqueta etiqueta--error";
+            }
             default -> {
                 texto = raw;
                 clase = "etiqueta etiqueta--neutra";

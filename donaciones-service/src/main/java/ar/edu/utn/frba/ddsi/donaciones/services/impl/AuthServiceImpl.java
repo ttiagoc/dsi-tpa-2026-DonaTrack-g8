@@ -16,6 +16,7 @@ import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.common.security.JwtUtil;
 import ar.edu.utn.frba.ddsi.common.security.Rol;
 import ar.edu.utn.frba.ddsi.donaciones.config.RestDonacionesConfig;
+import ar.edu.utn.frba.ddsi.donaciones.dto.auth.CuentaChoferRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.auth.LoginRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.auth.RefreshRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.auth.RegistroEntidadBeneficiariaRequest;
@@ -165,6 +166,48 @@ public class AuthServiceImpl implements AuthService {
             throw new ResourceNotFoundException("No se encontro un donante con el id: " + donanteId);
         }
         return toUsuarioResponse(guardar(username, password, Rol.DONANTE, donanteId));
+    }
+
+    @Override
+    public UsuarioResponse configurarUsuarioChofer(CuentaChoferRequest request) {
+        if (request == null || request.camionId() == null) {
+            throw new BusinessException("El id del camion es obligatorio para configurar el chofer");
+        }
+        if (request.username() == null || request.username().isBlank()) {
+            throw new BusinessException("El nombre de usuario del chofer es obligatorio");
+        }
+        String nuevoUsername = Usuario.normalizar(request.username());
+        var existenteOpt = usuarioRepository.buscarPorRolYPerfilId(Rol.CHOFER, request.camionId());
+
+        if (existenteOpt.isEmpty()) {
+            validarCredencialesNuevas(nuevoUsername, request.password());
+            return toUsuarioResponse(guardar(nuevoUsername, request.password(), Rol.CHOFER, request.camionId()));
+        }
+
+        Usuario existente = existenteOpt.get();
+        if (!existente.getUsername().equals(nuevoUsername)) {
+            if (usuarioRepository.existeUsername(nuevoUsername)) {
+                throw new BusinessException("El nombre de usuario " + nuevoUsername + " ya esta en uso");
+            }
+            existente.setUsername(nuevoUsername);
+        }
+        if (request.password() != null && !request.password().isBlank()) {
+            if (request.password().length() < LONGITUD_MINIMA_PASSWORD) {
+                throw new BusinessException(
+                        "La contrasenia debe tener al menos " + LONGITUD_MINIMA_PASSWORD + " caracteres");
+            }
+            existente.setPasswordHash(passwordEncoder.encode(request.password()));
+        }
+        existente.setActivo(true);
+        return toUsuarioResponse(usuarioRepository.save(existente));
+    }
+
+    @Override
+    public List<UsuarioResponse> listarUsuariosChofer() {
+        return usuarioRepository.listarPorRol(Rol.CHOFER).stream()
+                .filter(Usuario::isActivo)
+                .map(this::toUsuarioResponse)
+                .toList();
     }
 
     @Override

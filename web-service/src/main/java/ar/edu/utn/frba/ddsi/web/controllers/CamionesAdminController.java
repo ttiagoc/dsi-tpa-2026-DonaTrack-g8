@@ -5,9 +5,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import ar.edu.utn.frba.ddsi.web.clients.AuthApiClient;
 import ar.edu.utn.frba.ddsi.web.clients.LogisticaApiClient;
+import ar.edu.utn.frba.ddsi.web.dto.auth.UsuarioSesion;
 import ar.edu.utn.frba.ddsi.web.dto.camiones.CamionRequest;
 import ar.edu.utn.frba.ddsi.web.dto.camiones.CamionResponse;
 import ar.edu.utn.frba.ddsi.web.dto.camiones.ChoferDto;
@@ -20,11 +23,19 @@ public class CamionesAdminController {
 
     private static final String VISTA = "admin/camiones.html.hbs";
     private static final String RUTA = "/admin/camiones";
+    private static final int MIN_PASSWORD_CHOFER = 8;
 
     private final LogisticaApiClient logistica;
+    private final AuthApiClient auth;
+
+    @Autowired
+    public CamionesAdminController(LogisticaApiClient logistica, @Autowired(required = false) AuthApiClient auth) {
+        this.logistica = logistica;
+        this.auth = auth;
+    }
 
     public CamionesAdminController(LogisticaApiClient logistica) {
-        this.logistica = logistica;
+        this(logistica, null);
     }
 
     public void listar(Context ctx) {
@@ -34,6 +45,7 @@ public class CamionesAdminController {
         String eliminarParam = ctx.queryParam("eliminar");
 
         modelo.put("esNuevo", editarParam == null || editarParam.isBlank());
+        Map<Long, String> choferesPorCamion = obtenerUsuariosChofer(ctx);
 
         if (nuevoParam != null) {
             modelo.put("abrirModal", true);
@@ -55,6 +67,11 @@ public class CamionesAdminController {
                     valoresForm.put("choferNombre", camion.chofer().nombre());
                     valoresForm.put("choferApellido", camion.chofer().apellido());
                 }
+                String cuentaExistente = choferesPorCamion.get(id);
+                if (cuentaExistente != null && !cuentaExistente.isBlank()) {
+                    valoresForm.put("choferUsername", cuentaExistente);
+                    modelo.put("tieneCuentaChofer", true);
+                }
                 modelo.put("form", valoresForm);
             } catch (Exception e) {
                 Alertas.error(ctx, "No se pudo cargar el camión para editar.");
@@ -70,32 +87,40 @@ public class CamionesAdminController {
             }
         }
 
-        mostrar(ctx, modelo);
+        mostrar(ctx, modelo, choferesPorCamion);
     }
 
     public void crear(Context ctx) {
         Formulario form = new Formulario(ctx);
         CamionRequest request = validarFormulario(form);
+        String choferUsername = form.valor("choferUsername");
+        String choferPassword = form.valor("choferPassword");
+        validarCuentaChofer(form, choferUsername, choferPassword, false);
 
         if (form.tieneErrores()) {
             ctx.status(400);
-            Map<String, Object> modelo = form.enModelo(Modelo.base(ctx), "Revisá los datos ingresados.");
+            Map<String, Object> modelo = form.enModelo(Modelo.base(ctx), null);
+            modelo.put("errorGeneral", "Revisá los datos ingresados.");
             modelo.put("abrirModal", true);
             modelo.put("esNuevo", true);
-            mostrar(ctx, modelo);
+            mostrar(ctx, modelo, obtenerUsuariosChofer(ctx));
             return;
         }
 
         try {
-            logistica.crearCamion(ctx, request);
+            CamionResponse creado = logistica.crearCamion(ctx, request);
+            if (auth != null && choferUsername != null && !choferUsername.isBlank() && creado != null && creado.id() != null) {
+                auth.configurarUsuarioChofer(ctx, creado.id(), choferUsername, choferPassword);
+            }
             Alertas.exito(ctx, "Se registró el camión " + request.patente() + " correctamente.");
             ctx.redirect(RUTA);
         } catch (ApiException e) {
             ctx.status(400);
-            Map<String, Object> modelo = form.enModelo(Modelo.base(ctx), e.getMessage());
+            Map<String, Object> modelo = form.enModelo(Modelo.base(ctx), null);
+            modelo.put("errorGeneral", e.getMessage());
             modelo.put("abrirModal", true);
             modelo.put("esNuevo", true);
-            mostrar(ctx, modelo);
+            mostrar(ctx, modelo, obtenerUsuariosChofer(ctx));
         }
     }
 
@@ -103,28 +128,40 @@ public class CamionesAdminController {
         Long id = Long.parseLong(ctx.pathParam("id"));
         Formulario form = new Formulario(ctx);
         CamionRequest request = validarFormulario(form);
+        Map<Long, String> choferesPorCamion = obtenerUsuariosChofer(ctx);
+        boolean yaTieneCuenta = choferesPorCamion.containsKey(id);
+        String choferUsername = form.valor("choferUsername");
+        String choferPassword = form.valor("choferPassword");
+        validarCuentaChofer(form, choferUsername, choferPassword, yaTieneCuenta);
 
         if (form.tieneErrores()) {
             ctx.status(400);
-            Map<String, Object> modelo = form.enModelo(Modelo.base(ctx), "Revisá los datos ingresados.");
+            Map<String, Object> modelo = form.enModelo(Modelo.base(ctx), null);
+            modelo.put("errorGeneral", "Revisá los datos ingresados.");
             modelo.put("abrirModal", true);
             modelo.put("esNuevo", false);
             modelo.put("camionId", id);
-            mostrar(ctx, modelo);
+            modelo.put("tieneCuentaChofer", yaTieneCuenta);
+            mostrar(ctx, modelo, choferesPorCamion);
             return;
         }
 
         try {
             logistica.actualizarCamion(ctx, id, request);
+            if (auth != null && choferUsername != null && !choferUsername.isBlank()) {
+                auth.configurarUsuarioChofer(ctx, id, choferUsername, choferPassword);
+            }
             Alertas.exito(ctx, "Se actualizó el camión " + request.patente() + " correctamente.");
             ctx.redirect(RUTA);
         } catch (ApiException e) {
             ctx.status(400);
-            Map<String, Object> modelo = form.enModelo(Modelo.base(ctx), e.getMessage());
+            Map<String, Object> modelo = form.enModelo(Modelo.base(ctx), null);
+            modelo.put("errorGeneral", e.getMessage());
             modelo.put("abrirModal", true);
             modelo.put("esNuevo", false);
             modelo.put("camionId", id);
-            mostrar(ctx, modelo);
+            modelo.put("tieneCuentaChofer", yaTieneCuenta);
+            mostrar(ctx, modelo, choferesPorCamion);
         }
     }
 
@@ -139,17 +176,27 @@ public class CamionesAdminController {
         ctx.redirect(RUTA);
     }
 
-    private void mostrar(Context ctx, Map<String, Object> modelo) {
-        List<CamionResponse> camiones = logistica.listarCamiones(ctx);
+    private void mostrar(Context ctx, Map<String, Object> modelo, Map<Long, String> choferesPorCamion) {
+        List<CamionResponse> camionesRaw = logistica.listarCamiones(ctx);
+        List<CamionFila> camiones = camionesRaw.stream()
+                .map(c -> new CamionFila(
+                        c.id(),
+                        c.patente(),
+                        c.choferNombreCompleto(),
+                        choferesPorCamion.get(c.id()),
+                        c.capacidadCarga(),
+                        c.capacidadVolumen(),
+                        c.altura()))
+                .toList();
         modelo.put("camiones", camiones);
 
-        long total = camiones.size();
-        double cargaTotal = camiones.stream()
+        long total = camionesRaw.size();
+        double cargaTotal = camionesRaw.stream()
                 .map(CamionResponse::capacidadCarga)
                 .filter(Objects::nonNull)
                 .mapToDouble(Double::doubleValue)
                 .sum();
-        double volumenTotal = camiones.stream()
+        double volumenTotal = camionesRaw.stream()
                 .map(CamionResponse::capacidadVolumen)
                 .filter(Objects::nonNull)
                 .mapToDouble(Double::doubleValue)
@@ -162,6 +209,38 @@ public class CamionesAdminController {
         modelo.put("resumen", resumen);
 
         ctx.render(VISTA, modelo);
+    }
+
+    private Map<Long, String> obtenerUsuariosChofer(Context ctx) {
+        if (auth == null) {
+            return Map.of();
+        }
+        try {
+            Map<Long, String> mapa = new LinkedHashMap<>();
+            for (UsuarioSesion u : auth.listarUsuariosChofer(ctx)) {
+                if (u != null && u.perfilId() != null && u.username() != null) {
+                    mapa.put(u.perfilId(), u.username());
+                }
+            }
+            return mapa;
+        } catch (Exception e) {
+            return Map.of();
+        }
+    }
+
+    private void validarCuentaChofer(Formulario form, String username, String password, boolean yaTieneCuenta) {
+        boolean tieneUser = username != null && !username.isBlank();
+        boolean tienePass = password != null && !password.isBlank();
+
+        if (!tieneUser && tienePass) {
+            form.error("choferUsername", "Indicá el usuario de acceso del chofer");
+        }
+        if (tieneUser && !yaTieneCuenta && !tienePass) {
+            form.error("choferPassword", "Indicá una contraseña para crear la cuenta del chofer");
+        }
+        if (tienePass && password.length() < MIN_PASSWORD_CHOFER) {
+            form.error("choferPassword", "Tiene que tener al menos 8 caracteres");
+        }
     }
 
     private CamionRequest validarFormulario(Formulario form) {
@@ -197,6 +276,16 @@ public class CamionesAdminController {
             form.error(campo, etiqueta + " debe ser un número válido");
             return null;
         }
+    }
+
+    public record CamionFila(
+            Long id,
+            String patente,
+            String choferNombreCompleto,
+            String choferUsername,
+            Double capacidadCarga,
+            Double capacidadVolumen,
+            Double altura) {
     }
 }
 

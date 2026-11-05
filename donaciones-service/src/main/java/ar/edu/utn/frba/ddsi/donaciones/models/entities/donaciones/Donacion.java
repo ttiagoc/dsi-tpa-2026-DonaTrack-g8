@@ -237,6 +237,16 @@ public class Donacion {
     this.registrarEstado(LocalDateTime.now(), TipoEstadoDonacion.EN_DEPOSITO, justificacion);
   }
 
+  public void reprogramarEntrega(String justificacion) {
+    if (this.estadoActual != TipoEstadoDonacion.ENTREGA_FALLIDA || this.entidadBeneficiariaAsignada == null) {
+      throw new BusinessException("Solo se puede reprogramar una donacion con entrega fallida que tenga entidad asignada");
+    }
+    String detalle = (justificacion != null && !justificacion.isBlank())
+        ? justificacion
+        : "Envio reprogramado para proxima ruta hacia " + this.entidadBeneficiariaAsignada.getRazonSocial();
+    this.registrarEstado(LocalDateTime.now(), TipoEstadoDonacion.ASIGNACION_REALIZADA, detalle);
+  }
+
   public Double calcularPesoTotal() {
     return this.bienes.stream()
         .mapToDouble(bien -> bien.calcularPesoTotal())

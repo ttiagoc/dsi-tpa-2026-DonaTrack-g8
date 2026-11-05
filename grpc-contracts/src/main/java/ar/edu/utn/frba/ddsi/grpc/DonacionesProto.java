@@ -97,56 +97,57 @@ public final class DonacionesProto {
       "\n\020donaciones.proto\022\031ar.edu.utn.frba.ddsi" +
       ".grpc\"Q\n ListarDonacionesPorEstadoReques" +
       "t\022\016\n\006estado\030\001 \001(\t\022\r\n\005limit\030\002 \001(\005\022\016\n\006offs" +
-      "et\030\003 \001(\005\"L\n\014DonacionItem\022\n\n\002id\030\001 \001(\003\022\014\n\004" +
+      "et\030\003 \001(\005\"x\n\014DonacionItem\022\n\n\002id\030\001 \001(\003\022\014\n\004" +
       "peso\030\002 \001(\001\022\017\n\007volumen\030\003 \001(\001\022\021\n\tdireccion" +
-      "\030\004 \001(\t\"`\n!ListarDonacionesPorEstadoRespo" +
-      "nse\022;\n\ndonaciones\030\001 \003(\0132\'.ar.edu.utn.frb" +
-      "a.ddsi.grpc.DonacionItem\"c\n\037ActualizarEs" +
-      "tadoDonacionRequest\022\023\n\013donacion_id\030\001 \001(\003" +
-      "\022\024\n\014nuevo_estado\030\002 \001(\t\022\025\n\rjustificacion\030" +
-      "\003 \001(\t\"B\n ActualizarEstadoDonacionRespons" +
-      "e\022\r\n\005exito\030\001 \001(\010\022\017\n\007mensaje\030\002 \001(\t\"y\n!Con" +
-      "firmarEntregaDonacionesRequest\022\022\n\nentida" +
-      "d_id\030\001 \001(\003\022\024\n\014donacion_ids\030\002 \003(\003\022\026\n\016pate" +
-      "nte_camion\030\003 \001(\t\022\022\n\nfecha_hora\030\004 \001(\t\"D\n\"" +
-      "ConfirmarEntregaDonacionesResponse\022\r\n\005ex" +
-      "ito\030\001 \001(\010\022\017\n\007mensaje\030\002 \001(\t\"4\n\036ObtenerCon" +
-      "tactosEntidadRequest\022\022\n\nentidad_id\030\001 \001(\003" +
-      "\"4\n\014ContactoItem\022\r\n\005valor\030\001 \001(\t\022\025\n\rtipo_" +
-      "contacto\030\002 \001(\t\"]\n\037ObtenerContactosEntida" +
-      "dResponse\022:\n\tcontactos\030\001 \003(\0132\'.ar.edu.ut" +
-      "n.frba.ddsi.grpc.ContactoItem\"-\n\026Obtener" +
-      "DonacionRequest\022\023\n\013donacion_id\030\001 \001(\003\"{\n\027" +
-      "DonacionDetalleResponse\022\n\n\002id\030\001 \001(\003\022\022\n\nd" +
-      "onante_id\030\002 \001(\003\022\033\n\023entidad_asignada_id\030\003" +
-      " \001(\003\022\016\n\006estado\030\004 \001(\t\022\023\n\013descripcion\030\005 \001(" +
-      "\t\"3\n\035ObtenerContactoDonanteRequest\022\022\n\ndo" +
-      "nante_id\030\001 \001(\003\"?\n\027ContactoDonanteRespons" +
-      "e\022\r\n\005valor\030\001 \001(\t\022\025\n\rtipo_contacto\030\002 \001(\t2" +
-      "\370\006\n\025DonacionesGrpcService\022\226\001\n\031ListarDona" +
-      "cionesPorEstado\022;.ar.edu.utn.frba.ddsi.g" +
-      "rpc.ListarDonacionesPorEstadoRequest\032<.a" +
-      "r.edu.utn.frba.ddsi.grpc.ListarDonacione" +
-      "sPorEstadoResponse\022\223\001\n\030ActualizarEstadoD" +
-      "onacion\022:.ar.edu.utn.frba.ddsi.grpc.Actu" +
-      "alizarEstadoDonacionRequest\032;.ar.edu.utn" +
-      ".frba.ddsi.grpc.ActualizarEstadoDonacion" +
-      "Response\022\231\001\n\032ConfirmarEntregaDonaciones\022" +
-      "<.ar.edu.utn.frba.ddsi.grpc.ConfirmarEnt" +
-      "regaDonacionesRequest\032=.ar.edu.utn.frba." +
-      "ddsi.grpc.ConfirmarEntregaDonacionesResp" +
-      "onse\022\220\001\n\027ObtenerContactosEntidad\0229.ar.ed" +
-      "u.utn.frba.ddsi.grpc.ObtenerContactosEnt" +
-      "idadRequest\032:.ar.edu.utn.frba.ddsi.grpc." +
-      "ObtenerContactosEntidadResponse\022x\n\017Obten" +
-      "erDonacion\0221.ar.edu.utn.frba.ddsi.grpc.O" +
-      "btenerDonacionRequest\0322.ar.edu.utn.frba." +
-      "ddsi.grpc.DonacionDetalleResponse\022\206\001\n\026Ob" +
-      "tenerContactoDonante\0228.ar.edu.utn.frba.d" +
-      "dsi.grpc.ObtenerContactoDonanteRequest\0322" +
-      ".ar.edu.utn.frba.ddsi.grpc.ContactoDonan" +
-      "teResponseB.\n\031ar.edu.utn.frba.ddsi.grpcB" +
-      "\017DonacionesProtoP\001b\006proto3"
+      "\030\004 \001(\t\022\022\n\nentidad_id\030\005 \001(\003\022\026\n\016entidad_no" +
+      "mbre\030\006 \001(\t\"`\n!ListarDonacionesPorEstadoR" +
+      "esponse\022;\n\ndonaciones\030\001 \003(\0132\'.ar.edu.utn" +
+      ".frba.ddsi.grpc.DonacionItem\"c\n\037Actualiz" +
+      "arEstadoDonacionRequest\022\023\n\013donacion_id\030\001" +
+      " \001(\003\022\024\n\014nuevo_estado\030\002 \001(\t\022\025\n\rjustificac" +
+      "ion\030\003 \001(\t\"B\n ActualizarEstadoDonacionRes" +
+      "ponse\022\r\n\005exito\030\001 \001(\010\022\017\n\007mensaje\030\002 \001(\t\"y\n" +
+      "!ConfirmarEntregaDonacionesRequest\022\022\n\nen" +
+      "tidad_id\030\001 \001(\003\022\024\n\014donacion_ids\030\002 \003(\003\022\026\n\016" +
+      "patente_camion\030\003 \001(\t\022\022\n\nfecha_hora\030\004 \001(\t" +
+      "\"D\n\"ConfirmarEntregaDonacionesResponse\022\r" +
+      "\n\005exito\030\001 \001(\010\022\017\n\007mensaje\030\002 \001(\t\"4\n\036Obtene" +
+      "rContactosEntidadRequest\022\022\n\nentidad_id\030\001" +
+      " \001(\003\"4\n\014ContactoItem\022\r\n\005valor\030\001 \001(\t\022\025\n\rt" +
+      "ipo_contacto\030\002 \001(\t\"]\n\037ObtenerContactosEn" +
+      "tidadResponse\022:\n\tcontactos\030\001 \003(\0132\'.ar.ed" +
+      "u.utn.frba.ddsi.grpc.ContactoItem\"-\n\026Obt" +
+      "enerDonacionRequest\022\023\n\013donacion_id\030\001 \001(\003" +
+      "\"{\n\027DonacionDetalleResponse\022\n\n\002id\030\001 \001(\003\022" +
+      "\022\n\ndonante_id\030\002 \001(\003\022\033\n\023entidad_asignada_" +
+      "id\030\003 \001(\003\022\016\n\006estado\030\004 \001(\t\022\023\n\013descripcion\030" +
+      "\005 \001(\t\"3\n\035ObtenerContactoDonanteRequest\022\022" +
+      "\n\ndonante_id\030\001 \001(\003\"?\n\027ContactoDonanteRes" +
+      "ponse\022\r\n\005valor\030\001 \001(\t\022\025\n\rtipo_contacto\030\002 " +
+      "\001(\t2\370\006\n\025DonacionesGrpcService\022\226\001\n\031Listar" +
+      "DonacionesPorEstado\022;.ar.edu.utn.frba.dd" +
+      "si.grpc.ListarDonacionesPorEstadoRequest" +
+      "\032<.ar.edu.utn.frba.ddsi.grpc.ListarDonac" +
+      "ionesPorEstadoResponse\022\223\001\n\030ActualizarEst" +
+      "adoDonacion\022:.ar.edu.utn.frba.ddsi.grpc." +
+      "ActualizarEstadoDonacionRequest\032;.ar.edu" +
+      ".utn.frba.ddsi.grpc.ActualizarEstadoDona" +
+      "cionResponse\022\231\001\n\032ConfirmarEntregaDonacio" +
+      "nes\022<.ar.edu.utn.frba.ddsi.grpc.Confirma" +
+      "rEntregaDonacionesRequest\032=.ar.edu.utn.f" +
+      "rba.ddsi.grpc.ConfirmarEntregaDonaciones" +
+      "Response\022\220\001\n\027ObtenerContactosEntidad\0229.a" +
+      "r.edu.utn.frba.ddsi.grpc.ObtenerContacto" +
+      "sEntidadRequest\032:.ar.edu.utn.frba.ddsi.g" +
+      "rpc.ObtenerContactosEntidadResponse\022x\n\017O" +
+      "btenerDonacion\0221.ar.edu.utn.frba.ddsi.gr" +
+      "pc.ObtenerDonacionRequest\0322.ar.edu.utn.f" +
+      "rba.ddsi.grpc.DonacionDetalleResponse\022\206\001" +
+      "\n\026ObtenerContactoDonante\0228.ar.edu.utn.fr" +
+      "ba.ddsi.grpc.ObtenerContactoDonanteReque" +
+      "st\0322.ar.edu.utn.frba.ddsi.grpc.ContactoD" +
+      "onanteResponseB.\n\031ar.edu.utn.frba.ddsi.g" +
+      "rpcB\017DonacionesProtoP\001b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -163,7 +164,7 @@ public final class DonacionesProto {
     internal_static_ar_edu_utn_frba_ddsi_grpc_DonacionItem_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_ar_edu_utn_frba_ddsi_grpc_DonacionItem_descriptor,
-        new java.lang.String[] { "Id", "Peso", "Volumen", "Direccion", });
+        new java.lang.String[] { "Id", "Peso", "Volumen", "Direccion", "EntidadId", "EntidadNombre", });
     internal_static_ar_edu_utn_frba_ddsi_grpc_ListarDonacionesPorEstadoResponse_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_ar_edu_utn_frba_ddsi_grpc_ListarDonacionesPorEstadoResponse_fieldAccessorTable = new

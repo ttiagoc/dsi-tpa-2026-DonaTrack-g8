@@ -13,6 +13,7 @@ public record UsuarioVista(
         String iniciales,
         boolean esDonante,
         boolean esEntidad,
+        boolean esChofer,
         boolean esAdmin) {
 
     public static UsuarioVista de(UsuarioSesion usuario) {
@@ -20,7 +21,7 @@ public record UsuarioVista(
         return new UsuarioVista(usuario.usuarioId(), usuario.username(), rol.name(), usuario.perfilId(),
                 rol.panel(), rol.etiqueta(), iniciales(usuario.username()),
                 rol == RolUsuario.DONANTE, rol == RolUsuario.ENTIDAD_BENEFICIARIA,
-                rol == RolUsuario.ADMINISTRADOR);
+                rol == RolUsuario.CHOFER, rol == RolUsuario.ADMINISTRADOR);
     }
 
     /** "comedor.sanmartin" -> "CS"; "ana" -> "A". Va en el avatar de la barra superior. */
