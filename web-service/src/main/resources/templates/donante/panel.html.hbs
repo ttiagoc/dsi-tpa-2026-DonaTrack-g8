@@ -2,10 +2,29 @@
 {{#partial "contenido"}}
 <section class="seccion">
   <h1>Hola, {{usuario.username}}</h1>
-  <p class="texto-suave">Desde acá vas a poder gestionar tus donaciones.</p>
-  {{!-- Persona B: pantallas del donante (registrar donación, mis donaciones, seguimiento, notificaciones) --}}
-  <div class="tarjeta tarjeta--vacia">
-    <p>Próximamente: registrar donaciones y seguir su estado.</p>
+  <p class="texto-suave">Panel del donante.</p>
+  {{!-- Persona B: pantallas del donante (req. 5 a 9) --}}
+  <div class="grilla grilla--2">
+    <a class="tarjeta tarjeta--opcion" href="/donante/donaciones">
+      <h2>Mis donaciones</h2>
+      <p>Revisá lo que donaste y filtralo por estado, categoría o subcategoría.</p>
+      <span class="tarjeta__accion">Ver mis donaciones →</span>
+    </a>
+    <a class="tarjeta tarjeta--opcion" href="/donante/seguimiento">
+      <h2>Seguimiento</h2>
+      <p>Seguí en el mapa los camiones que llevan tus donaciones a las entidades.</p>
+      <span class="tarjeta__accion">Ver seguimiento →</span>
+    </a>
+    <a class="tarjeta tarjeta--opcion" href="/donante/entidades">
+      <h2>Entidades</h2>
+      <p>Conocé las organizaciones que reciben donaciones y qué les hace falta.</p>
+      <span class="tarjeta__accion">Ver entidades →</span>
+    </a>
+    <a class="tarjeta tarjeta--opcion" href="/donante/notificaciones">
+      <h2>Notificaciones</h2>
+      <p>Enterate cuando una donación tuya se asigna, se entrega o cuando subís de categoría.</p>
+      <span class="tarjeta__accion">Ver notificaciones →</span>
+    </a>
   </div>
 </section>
 {{/partial}}

@@ -5,8 +5,8 @@ import org.springframework.stereotype.Component;
 import io.javalin.http.Context;
 
 /**
- * Pagina de entrada de cada rol despues del login. Por ahora solo saludan:
- * B completa /donante, C completa /admin y A completa /entidad.
+ * Pagina de entrada de cada rol despues del login: un saludo y una tarjeta por cada pantalla del rol
+ * (las mismas que el menu lateral). B: /donante, C: /admin, A: /entidad.
  */
 @Component
 public class PanelController {

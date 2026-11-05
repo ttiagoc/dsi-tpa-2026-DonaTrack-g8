@@ -1,11 +1,40 @@
 {{#partial "titulo"}}Administración · DonaTrack{{/partial}}
 {{#partial "contenido"}}
 <section class="seccion">
-  <h1>Administración</h1>
-  <p class="texto-suave">Sesión iniciada como {{usuario.username}}.</p>
-  {{!-- Persona C: pantallas de administración --}}
-  <div class="tarjeta tarjeta--vacia">
-    <p>Próximamente: gestión de categorías, donantes, entidades y logística.</p>
+  <h1>Hola, {{usuario.username}}</h1>
+  <p class="texto-suave">Panel de administración.</p>
+  {{!-- Persona C: pantallas de administración (req. 15 a 19) --}}
+  <div class="grilla grilla--3">
+    <a class="tarjeta tarjeta--opcion" href="/admin/recepcion">
+      <h2>Recepción</h2>
+      <p>Registrá las donaciones que llegan al depósito y asocialas a su donante. Si el donante no existe, lo cargás ahí mismo.</p>
+      <span class="tarjeta__accion">Registrar donación →</span>
+    </a>
+    <a class="tarjeta tarjeta--opcion" href="/admin/deposito">
+      <h2>Depósito</h2>
+      <p>Mirá las donaciones disponibles y marcá como vencidas las que ya no se pueden entregar.</p>
+      <span class="tarjeta__accion">Ver depósito →</span>
+    </a>
+    <a class="tarjeta tarjeta--opcion" href="/admin/matchmaking">
+      <h2>Matchmaking</h2>
+      <p>Ejecutá los algoritmos de selección y elegí la entidad beneficiaria de cada donación pendiente.</p>
+      <span class="tarjeta__accion">Asignar donaciones →</span>
+    </a>
+    <a class="tarjeta tarjeta--opcion" href="/admin/camiones">
+      <h2>Camiones</h2>
+      <p>Administrá los camiones disponibles para las entregas.</p>
+      <span class="tarjeta__accion">Ver camiones →</span>
+    </a>
+    <a class="tarjeta tarjeta--opcion" href="/admin/categorias">
+      <h2>Categorías</h2>
+      <p>Cargá y editá las categorías y subcategorías de bienes que se pueden donar.</p>
+      <span class="tarjeta__accion">Ver catálogo →</span>
+    </a>
+    <a class="tarjeta tarjeta--opcion" href="/admin/importaciones">
+      <h2>Importar CSV</h2>
+      <p>Importá donantes ya registrados desde un archivo CSV para darles un usuario.</p>
+      <span class="tarjeta__accion">Importar donantes →</span>
+    </a>
   </div>
 </section>
 {{/partial}}
