@@ -979,6 +979,42 @@ code {
 }
 .fotos__lista small { display: block; overflow: hidden; color: var(--color-texto-suave); font-size: var(--texto-chico); text-overflow: ellipsis; white-space: nowrap; }
 
+/* ---- Campo de archivo único / CSV (ej. importación masiva) ---- */
+.zona-archivo {
+  position: relative;
+  border: 2px dashed var(--color-borde);
+  border-radius: var(--radio);
+  background: var(--color-fondo);
+  padding: var(--espacio-6) var(--espacio-4);
+  text-align: center;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.zona-archivo:hover,
+.zona-archivo--encima {
+  border-color: var(--color-primario);
+  background: var(--color-primario-suave);
+}
+.campo--error .zona-archivo {
+  border-color: var(--color-error);
+}
+.zona-archivo--seleccionado {
+  border: 2px solid var(--color-primario);
+  background: var(--color-primario-suave);
+  padding: var(--espacio-4) var(--espacio-5);
+  box-shadow: 0 1px 3px rgba(31, 122, 90, 0.08);
+}
+.campo--archivo-js .zona-archivo input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.campo--archivo-js:focus-within .zona-archivo {
+  outline: 3px solid var(--color-acento);
+  outline-offset: 2px;
+}
+
 /* ---- Mapa de entregas (req. 2): dibujo de fondo + marcadores en % + detalle al costado ---- */
 .mapa-pagina { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--espacio-4); align-items: start; }
 .mapa { position: relative; overflow: hidden; height: 460px; padding: 0; }

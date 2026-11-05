@@ -11,7 +11,7 @@
 </div>
 
 {{#if importacionActiva}}
-  <section class="tarjeta" id="importacion-activa" data-id="{{importacionActiva.id}}" style="margin-bottom: var(--espacio-5); border-left: 4px solid var(--color-primario);">
+  <section class="tarjeta" id="importacion-activa" data-id="{{importacionActiva.id}}" data-en-proceso="{{#if importacionActiva.esEnProceso}}true{{else}}false{{/if}}" data-estado="{{importacionActiva.estado}}" style="margin-bottom: var(--espacio-5); border-left: 4px solid var(--color-primario);">
     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--espacio-3);">
       <div>
         {{#if importacionActiva.esEnProceso}}
@@ -21,7 +21,7 @@
           </span>
         {{/if}}
         {{#if importacionActiva.esCompletada}}
-          <span id="progreso-estado" class="etiqueta" style="margin-bottom: var(--espacio-2); display: inline-block;">
+          <span id="progreso-estado" class="etiqueta etiqueta--ok" style="margin-bottom: var(--espacio-2); display: inline-block;">
             Completada
           </span>
         {{/if}}
@@ -97,14 +97,57 @@
   <h2 style="font-size: var(--texto-grande); margin-bottom: var(--espacio-2);">Nueva importación</h2>
   <p class="texto-suave" style="margin-bottom: var(--espacio-4);">Seleccioná un archivo CSV para importar donantes individuales u organizaciones de forma masiva.</p>
 
-  <form method="post" action="/admin/importaciones" enctype="multipart/form-data">
-    <div class="campo">
-      <label class="fotos" for="archivo" style="padding: var(--espacio-6) var(--espacio-4); display: block; text-align: center;">
-        <svg class="icono" style="width: 36px; height: 36px; color: var(--color-primario); margin: 0 auto var(--espacio-2); display: block;"><use href="#i-subir"/></svg>
-        <strong style="font-size: var(--texto-base); margin-bottom: var(--espacio-1);">Arrastrá tu archivo CSV acá o hacé clic para buscarlo</strong>
-        <span class="texto-suave">Formato delimitado por comas (.csv) hasta 50 MB / más de 10.000 filas.</span>
-        <input type="file" id="archivo" name="archivo" accept=".csv,text/csv" required style="margin-top: var(--espacio-3);">
-      </label>
+  <form method="post" action="/admin/importaciones" enctype="multipart/form-data" novalidate id="form-importacion">
+    <div class="campo" id="campo-csv">
+      <div class="zona-archivo" id="zona-csv" tabindex="0" role="button" aria-label="Seleccionar archivo CSV para importar">
+        <input type="file" id="archivo" name="archivo" accept=".csv,text/csv" required
+               data-max-mb="50"
+               data-mensaje-requerido="Seleccioná un archivo CSV para comenzar la importación">
+
+        <!-- Estado vacío: invitar a arrastrar o buscar archivo -->
+        <div class="zona-archivo__vacio" id="zona-csv-vacio">
+          <svg class="icono" style="width: 40px; height: 40px; color: var(--color-primario); margin: 0 auto var(--espacio-2); display: block;"><use href="#i-subir"/></svg>
+          <strong style="font-size: var(--texto-base); display: block; margin-bottom: var(--espacio-1); color: var(--color-primario);">Arrastrá tu archivo CSV acá o hacé clic para buscarlo</strong>
+          <span class="texto-suave" style="display: block; font-size: var(--texto-chico); margin-bottom: var(--espacio-3);">Formato delimitado por comas (.csv) hasta 50 MB / más de 10.000 filas.</span>
+          <span class="boton boton--secundario boton--chico" style="pointer-events: none; display: inline-flex; align-items: center; gap: 6px;">
+            <svg class="icono" style="width: 16px; height: 16px;"><use href="#i-archivo"/></svg>
+            Seleccionar archivo
+          </span>
+        </div>
+
+        <!-- Estado con archivo seleccionado: se resalta claramente -->
+        <div class="zona-archivo__seleccionado" id="zona-csv-seleccionado" style="display: none;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--espacio-4); flex-wrap: wrap; text-align: left;">
+            <div style="display: flex; align-items: center; gap: var(--espacio-4); min-width: 0;">
+              <div style="width: 52px; height: 52px; border-radius: var(--radio); background: var(--color-primario); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(31, 122, 90, 0.25);">
+                <svg class="icono" style="width: 28px; height: 28px;"><use href="#i-archivo"/></svg>
+              </div>
+              <div style="min-width: 0;">
+                <div style="display: flex; align-items: center; gap: var(--espacio-2); margin-bottom: 3px; flex-wrap: wrap;">
+                  <span class="etiqueta etiqueta--ok" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; font-weight: 700;">
+                    <svg class="icono" style="width: 12px; height: 12px; stroke-width: 3;"><use href="#i-tilde"/></svg>
+                    Archivo listo para importar
+                  </span>
+                  <span class="texto-suave" id="csv-tamano" style="font-size: var(--texto-chico); font-weight: 600;"></span>
+                </div>
+                <strong id="csv-nombre" style="font-size: 1.15rem; color: var(--color-texto); word-break: break-all; display: block; line-height: 1.3;"></strong>
+                <span class="texto-suave" style="font-size: var(--texto-chico); display: block; margin-top: 2px;">
+                  Archivo CSV cargado correctamente. Presioná <strong>Comenzar importación masiva</strong> para iniciar el procesamiento.
+                </span>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: var(--espacio-2); flex-shrink: 0;">
+              <button type="button" class="boton boton--secundario boton--chico" id="btn-cambiar-csv" style="background: var(--color-superficie);">
+                <svg class="icono" style="width: 16px; height: 16px;"><use href="#i-lapiz"/></svg>
+                Cambiar archivo
+              </button>
+              <button type="button" class="boton boton--secundario boton--peligro boton--chico" id="btn-quitar-csv" title="Quitar archivo seleccionado" aria-label="Quitar archivo seleccionado" style="background: var(--color-superficie); padding: var(--espacio-1) var(--espacio-2);">
+                <svg class="icono" style="width: 16px; height: 16px;"><use href="#i-cerrar"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div style="background: var(--color-superficie); border: 1px solid var(--color-borde); border-radius: var(--radio); padding: var(--espacio-3) var(--espacio-4); margin: var(--espacio-4) 0; font-size: var(--texto-chico);">
@@ -187,15 +230,122 @@
 {{#partial "scripts"}}
 <script>
 (function () {
+  var campo = document.getElementById('campo-csv');
+  if (!campo) return;
+  var zona = document.getElementById('zona-csv');
+  var input = document.getElementById('archivo');
+  var vacio = document.getElementById('zona-csv-vacio');
+  var seleccionado = document.getElementById('zona-csv-seleccionado');
+  var nombreTxt = document.getElementById('csv-nombre');
+  var tamanoTxt = document.getElementById('csv-tamano');
+  var btnCambiar = document.getElementById('btn-cambiar-csv');
+  var btnQuitar = document.getElementById('btn-quitar-csv');
+
+  campo.classList.add('campo--archivo-js');
+
+  function formatearTamano(bytes) {
+    if (!bytes || bytes === 0) return '0 B';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+  }
+
+  function actualizarVista() {
+    var archivo = input.files && input.files[0];
+    if (archivo) {
+      nombreTxt.textContent = archivo.name;
+      tamanoTxt.textContent = '· ' + formatearTamano(archivo.size);
+      vacio.style.display = 'none';
+      seleccionado.style.display = 'block';
+      zona.classList.add('zona-archivo--seleccionado');
+      zona.setAttribute('aria-label', 'Archivo seleccionado: ' + archivo.name);
+    } else {
+      nombreTxt.textContent = '';
+      tamanoTxt.textContent = '';
+      seleccionado.style.display = 'none';
+      vacio.style.display = 'block';
+      zona.classList.remove('zona-archivo--seleccionado');
+      zona.setAttribute('aria-label', 'Seleccionar archivo CSV para importar');
+    }
+  }
+
+  input.addEventListener('change', function () {
+    actualizarVista();
+  });
+
+  zona.addEventListener('click', function (e) {
+    if (e.target.closest('#btn-cambiar-csv') || e.target.closest('#btn-quitar-csv')) {
+      return;
+    }
+    if (!input.files || input.files.length === 0) {
+      input.click();
+    }
+  });
+
+  zona.addEventListener('keydown', function (e) {
+    if ((e.key === 'Enter' || e.key === ' ') && (!input.files || input.files.length === 0)) {
+      e.preventDefault();
+      input.click();
+    }
+  });
+
+  if (btnCambiar) {
+    btnCambiar.addEventListener('click', function (e) {
+      e.stopPropagation();
+      input.click();
+    });
+  }
+
+  if (btnQuitar) {
+    btnQuitar.addEventListener('click', function (e) {
+      e.stopPropagation();
+      input.value = '';
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      actualizarVista();
+      zona.focus();
+    });
+  }
+
+  zona.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    zona.classList.add('zona-archivo--encima');
+  });
+
+  zona.addEventListener('dragleave', function () {
+    zona.classList.remove('zona-archivo--encima');
+  });
+
+  zona.addEventListener('drop', function (e) {
+    e.preventDefault();
+    zona.classList.remove('zona-archivo--encima');
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      input.files = e.dataTransfer.files;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      actualizarVista();
+    }
+  });
+
+  actualizarVista();
+})();
+
+(function () {
   var activa = document.getElementById('importacion-activa');
   if (!activa) return;
   var id = activa.dataset.id;
   if (!id) return;
 
+  // Si la importación ya terminó (COMPLETADA o FALLIDA), no hacemos polling
+  if (activa.dataset.enProceso !== 'true') return;
+
+  var finalizado = false;
   var intervalo = setInterval(function () {
+    if (finalizado) return;
+
     fetch('/admin/importaciones/' + id + '/estado')
       .then(function (res) { return res.json(); })
       .then(function (data) {
+        if (finalizado) return;
+
         var barra = document.getElementById('progreso-barra');
         var pctTexto = document.getElementById('progreso-porcentaje');
         var filasTexto = document.getElementById('progreso-filas');
@@ -214,14 +364,16 @@
         if (statDesc) statDesc.textContent = data.descartadas;
 
         if (data.estado !== 'EN_PROCESO') {
+          finalizado = true;
           clearInterval(intervalo);
           if (estadoBadge) {
-            estadoBadge.className = data.estado === 'COMPLETADA' ? 'etiqueta' : 'etiqueta etiqueta--error';
+            estadoBadge.className = data.estado === 'COMPLETADA' ? 'etiqueta etiqueta--ok' : 'etiqueta etiqueta--error';
             estadoBadge.textContent = data.estado === 'COMPLETADA' ? 'Completada' : 'Fallida';
           }
+          // Recarga una única vez para refrescar el resumen y la tabla de historial
           setTimeout(function () {
             window.location.href = '/admin/importaciones?activa=' + id;
-          }, 1500);
+          }, 1200);
         }
       })
       .catch(function (err) {
