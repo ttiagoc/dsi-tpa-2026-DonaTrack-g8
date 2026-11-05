@@ -27,7 +27,7 @@ Al terminar, tildar el boceto y la pantalla en el plan que corresponda.
 
 ## Convenciones de pantallas
 - **Navegación con sesión** (ver `documents/bocetos/10-necesidades.png` y `10e-menu-perfil.png`):
-  - **Menú lateral fijo** a la izquierda con las páginas del rol, agrupadas en secciones y con ícono. Cada rol tiene su bloque (A: entidad, B: donante, C: administrador). Al final, la sección común "Plataforma" (Mapa de entregas).
+  - **Menú lateral fijo** a la izquierda con las páginas del rol, agrupadas en secciones y con ícono. Cada rol tiene su bloque (A: entidad, B: donante, C: administrador). Al final, la sección común "Plataforma": Notificaciones (la de cada rol; el administrador no tiene) y Mapa de entregas.
   - En la cabecera del menú, a la derecha del logo, el botón para achicarlo y dejar solo los íconos y el logo (el navegador recuerda la preferencia). Achicado, el botón para agrandarlo queda sobre el borde del menú.
   - **Barra superior** solo con el perfil (avatar, nombre y rol), que despliega un menú con "Salir" (y "Datos de ..." cuando exista esa pantalla). Sin título: el de cada página va en su `<h1>`.
   - **Footer** ("Términos y privacidad") al pie de la columna del contenido, el mismo que sin sesión.

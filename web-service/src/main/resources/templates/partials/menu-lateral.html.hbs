@@ -30,7 +30,6 @@
       <a href="/entidad/donaciones" title="Asignadas" {{#if (eq rutaActual "/entidad/donaciones")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-paquete"/></svg> <span>Asignadas</span></a>
       {{!-- Persona B: "Seguimiento" (req. 14) va aca, con el icono #i-mapa --}}
       <a href="/entidad/seguimiento" title="Seguimiento" {{#if (eq rutaActual "/entidad/seguimiento")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-mapa"/></svg> <span>Seguimiento</span></a>
-      <a href="/entidad/notificaciones" title="Notificaciones" {{#if (eq rutaActual "/entidad/notificaciones")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-campana"/></svg> <span>Notificaciones</span></a>
     {{/if}}
     {{#if usuario.esDonante}}
     {{!-- --- Donante (B) --- --}}
@@ -39,7 +38,6 @@
         <a href="/donante/donaciones" title="Mis donaciones" {{#if (eq rutaActual "/donante/donaciones")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-paquete"/></svg> <span>Mis donaciones</span></a>
         <a href="/donante/entidades" title="Entidades" {{#if (eq rutaActual "/donante/entidades")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-edificio"/></svg> <span>Entidades</span></a>
         <a href="/donante/seguimiento" title="Seguimiento" {{#if (eq rutaActual "/donante/seguimiento")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-mapa"/></svg> <span>Seguimiento</span></a>
-        <a href="/donante/notificaciones" title="Notificaciones" {{#if (eq rutaActual "/donante/notificaciones")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-campana"/></svg> <span>Notificaciones</span></a>
     {{/if}}
     {{#if usuario.esAdmin}}
       {{!-- --- Administrador (C) --- --}}
@@ -52,8 +50,15 @@
       <a href="/admin/categorias" title="Categorías" {{#if (eq rutaActual "/admin/categorias")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-lista"/></svg> <span>Categorías</span></a>
       <a href="/admin/importaciones" title="Importar CSV" {{#if (eq rutaActual "/admin/importaciones")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-subir"/></svg> <span>Importar CSV</span></a>
     {{/if}}
-    {{!-- paginas comunes a todos los roles (los terminos van en el footer) --}}
+    {{!-- paginas comunes a todos los roles (los terminos van en el footer).
+          Notificaciones va aca aunque la ruta sea de cada rol (el admin no tiene). --}}
     <p class="menu-lateral__seccion">Plataforma</p>
+    {{#if usuario.esEntidad}}
+      <a href="/entidad/notificaciones" title="Notificaciones" {{#if (eq rutaActual "/entidad/notificaciones")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-campana"/></svg> <span>Notificaciones</span></a>
+    {{/if}}
+    {{#if usuario.esDonante}}
+      <a href="/donante/notificaciones" title="Notificaciones" {{#if (eq rutaActual "/donante/notificaciones")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-campana"/></svg> <span>Notificaciones</span></a>
+    {{/if}}
     <a href="/mapa" title="Mapa de entregas" {{#if (eq rutaActual "/mapa")}}aria-current="page"{{/if}}><svg class="icono" aria-hidden="true"><use href="#i-mapa-entregas"/></svg> <span>Mapa de entregas</span></a>
   </nav>
 </aside>
