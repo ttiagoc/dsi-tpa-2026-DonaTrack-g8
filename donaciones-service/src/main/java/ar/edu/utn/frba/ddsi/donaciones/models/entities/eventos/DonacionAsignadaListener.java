@@ -8,6 +8,7 @@ import org.springframework.web.client.RestTemplate;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.donaciones.config.RestDonacionesConfig;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.NotificacionRequest;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
 import jakarta.annotation.PostConstruct;
@@ -34,19 +35,48 @@ public class DonacionAsignadaListener implements ListenerDonaciones<EventoDonaci
     @Override
     public void ejecutar(EventoDonacionAsignada ev) {
         Donante donante = ev.getDonante();
-        enviarNotificacionAsync(donante.getContactoPredeterminado(), "Tu donación ha sido asignada.");
-
         EntidadBeneficiaria entidad = ev.getEntidad();
-        for (MedioContacto contacto : entidad.getCorreoRepresentantes()) {
-            enviarNotificacionAsync(contacto, "Una donación te ha sido asignada.");
+        Donacion donacion = ev.getDonacion();
+        Long donacionId = donacion != null ? donacion.getId() : null;
+
+        if (donante != null) {
+            String nombreEntidad = entidad != null ? entidad.getRazonSocial() : "una entidad beneficiaria";
+            String mensajeDonante = "Tu donación" + (donacionId != null ? " #" + donacionId : "")
+                    + " ha sido asignada a " + nombreEntidad + ".";
+            enviarNotificacionAsync(
+                    donante.getContactoPredeterminado(),
+                    mensajeDonante,
+                    "DONACION_ASIGNADA",
+                    "DONANTE",
+                    donante.getId(),
+                    donacionId);
+        }
+
+        if (entidad != null) {
+            String mensajeEntidad = "Se te ha asignado la donación" + (donacionId != null ? " #" + donacionId : "")
+                    + " para cubrir tus necesidades.";
+            for (MedioContacto contacto : entidad.getCorreoRepresentantes()) {
+                enviarNotificacionAsync(
+                        contacto,
+                        mensajeEntidad,
+                        "DONACION_ASIGNADA",
+                        "ENTIDAD",
+                        entidad.getId(),
+                        donacionId);
+            }
         }
     }
 
-    private void enviarNotificacionAsync(MedioContacto contacto, String mensaje) {
+    private void enviarNotificacionAsync(MedioContacto contacto, String mensaje, String tipoEvento, String tipoDestinatario, Long destinatarioId, Long donacionId) {
+        if (contacto == null) return;
         NotificacionRequest request = new NotificacionRequest(
                 contacto.getValor(),
                 contacto.getTipoContacto(),
-                mensaje);
+                mensaje,
+                tipoEvento,
+                tipoDestinatario,
+                destinatarioId,
+                donacionId);
         String url = config.getNotificacionesUrl() + "/notificaciones";
         CompletableFuture.runAsync(() -> {
             try {

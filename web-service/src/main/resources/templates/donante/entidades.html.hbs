@@ -1,37 +1,126 @@
-{{#partial "titulo"}}Catálogo de Entidades — DonaTrack{{/partial}}
+{{#partial "titulo"}}Entidades Beneficiarias · DonaTrack{{/partial}}
 
 {{#partial "contenido"}}
-<section class="panel">
-  <div class="panel__encabezado">
-    <h1>Entidades Beneficiarias</h1>
-    <p>Conocé las organizaciones que reciben donaciones y cuáles son sus necesidades actuales.</p>
+{{> partials/encabezado
+    titulo="Entidades Beneficiarias"
+    bajada="Conocé las organizaciones que reciben donaciones y cuáles son sus necesidades actuales."}}
+
+{{!-- Formulario de Filtros --}}
+{{#> partials/filtros action="/donante/entidades" limpiarHref="/donante/entidades"}}
+  <div class="campo">
+    <label for="busqueda">Búsqueda</label>
+    <input type="search" id="busqueda" name="busqueda" placeholder="Buscar por nombre o dirección…" value="{{busqueda}}">
   </div>
 
-  <div class="grid grid--3">
-    {{#each entidades}}
-      <article class="card card--borde">
-        <header class="card__header">
-          <h2 style="font-size: 1.2rem; margin: 0;">{{this.nombre}}</h2>
-          <span class="badge badge--secundario">{{this.tipo}}</span>
-        </header>
-        <div class="card__cuerpo">
-          <p><strong>Dirección:</strong> {{this.direccion}}</p>
-          <hr style="margin: 0.75rem 0; opacity: 0.2;">
-          <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Necesidades solicitadas:</h3>
-          {{#if this.necesidades}}
-            <ul style="padding-left: 1.25rem;">
-              {{#each this.necesidades}}
-                <li>{{this.descripcion}} ({{this.cantidad}} un.)</li>
-              {{/each}}
-            </ul>
-          {{else}}
-            <p class="texto--apagado" style="font-size: 0.9rem;">Sin necesidades urgentes registradas.</p>
-          {{/if}}
-        </div>
-      </article>
-    {{/each}}
+  <div class="campo">
+    <label for="categoria">Categoría de necesidad</label>
+    <select name="categoria" id="categoria">
+      <option value="">Todas las categorías</option>
+      {{#each categorias}}
+        <option value="{{this.nombre}}" {{#if (eq ../categoriaSeleccionada this.nombre)}}selected{{/if}}>{{this.nombre}}</option>
+      {{/each}}
+    </select>
   </div>
-</section>
+{{/partials/filtros}}
+
+{{!-- Listado de Entidades --}}
+{{#> partials/listado
+    coleccion=entidades
+    vacioTitulo=vacioTitulo
+    vacioBajada=vacioBajada}}
+  <table class="tabla">
+    <caption class="sr-only">Listado de organizaciones beneficiarias y sus necesidades</caption>
+    <thead>
+      <tr>
+        <th scope="col">Entidad</th>
+        <th scope="col">Contacto</th>
+        <th scope="col">Necesidades vigentes</th>
+        <th scope="col" style="text-align: right;"><span class="sr-only">Acciones</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each entidades}}
+        <tr>
+          <td>
+            <strong>{{this.razonSocial}}</strong>
+            {{#if this.direccion}}
+              <div class="tabla__secundario">{{this.direccion}}</div>
+            {{/if}}
+          </td>
+          <td>
+            {{#if this.telefono}}<div>{{this.telefono}}</div>{{/if}}
+            {{#each this.correos}}
+              <div class="tabla__secundario">{{this}}</div>
+            {{/each}}
+            {{#unless this.telefono}}
+              {{#unless this.correos}}
+                <span class="tabla__secundario">Sin contacto</span>
+              {{/unless}}
+            {{/unless}}
+          </td>
+          <td>
+            {{#if this.primerasNecesidades}}
+              <div style="display: flex; flex-wrap: wrap; gap: var(--espacio-1); align-items: center;">
+                {{#each this.primerasNecesidades}}
+                  <span class="etiqueta etiqueta--info" title="{{this.descripcion}}">
+                    {{this.descripcion}} ({{this.cantidad}} un.)
+                  </span>
+                {{/each}}
+                {{#if this.tieneMasNecesidades}}
+                  <span class="etiqueta etiqueta--neutra">+{{this.masNecesidades}} más</span>
+                {{/if}}
+              </div>
+            {{else}}
+              <span class="tabla__secundario">Sin necesidades registradas</span>
+            {{/if}}
+          </td>
+          {{#> partials/acciones-fila}}
+            {{#if this.necesidades}}
+              {{boton "ver" texto="Ver necesidades" modal=(concat "modal-necesidades-" this.id)}}
+            {{/if}}
+          {{/partials/acciones-fila}}
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+{{/partials/listado}}
+
+{{!-- Modales con el detalle completo de necesidades por entidad --}}
+{{#each entidades}}
+  {{#if this.necesidades}}
+    <dialog class="modal" id="modal-necesidades-{{this.id}}" aria-labelledby="titulo-necesidades-{{this.id}}">
+      <div class="modal__encabezado">
+        <h2 id="titulo-necesidades-{{this.id}}">Necesidades · {{this.razonSocial}}</h2>
+        <button type="button" class="modal__cerrar" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></button>
+      </div>
+      <div class="modal__cuerpo">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th scope="col">Descripción</th>
+              <th scope="col">Categoría</th>
+              <th scope="col">Cantidad</th>
+              <th scope="col">Período</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each this.necesidades}}
+              <tr>
+                <td><strong>{{this.descripcion}}</strong></td>
+                <td>{{this.categoria}}</td>
+                <td>{{this.cantidad}} {{#if this.unidad}}{{this.unidad}}{{else}}un.{{/if}}</td>
+                <td>{{#if this.periodo}}{{this.periodo}}{{else}}Única vez{{/if}}</td>
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+      <div class="modal__acciones">
+        {{boton "cancelar" texto="Cerrar" cierra=true autofocus=true}}
+      </div>
+    </dialog>
+  {{/if}}
+{{/each}}
 {{/partial}}
 
 {{> layouts/base}}

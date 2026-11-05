@@ -32,16 +32,22 @@ public class AusenciaPlataformaListener implements ListenerDonaciones<EventoAuse
     @Override
     public void ejecutar(EventoAusenciaPlataforma ev) {
         Donante donante = ev.getDonante();
+        if (donante == null) return;
         MedioContacto contacto = donante.getContactoPredeterminado();
         String mensaje = "¡Te extrañamos! Hace más de 20 días que no registrás actividad en DonaTrack. Tu ayuda hace la diferencia, sumate con una nueva donación.";
-        enviarNotificacionAsync(contacto, mensaje);
+        enviarNotificacionAsync(contacto, mensaje, "AUSENCIA", "DONANTE", donante.getId(), null);
     }
 
-    private void enviarNotificacionAsync(MedioContacto contacto, String mensaje) {
+    private void enviarNotificacionAsync(MedioContacto contacto, String mensaje, String tipoEvento, String tipoDestinatario, Long destinatarioId, Long donacionId) {
+        if (contacto == null) return;
         NotificacionRequest request = new NotificacionRequest(
                 contacto.getValor(),
                 contacto.getTipoContacto(),
-                mensaje);
+                mensaje,
+                tipoEvento,
+                tipoDestinatario,
+                destinatarioId,
+                donacionId);
         String url = config.getNotificacionesUrl() + "/notificaciones";
         CompletableFuture.runAsync(() -> {
             try {

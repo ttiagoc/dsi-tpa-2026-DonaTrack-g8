@@ -47,6 +47,10 @@ package "Microservicio Notificaciones" {
     enviarEmail(destino: String, mensaje: String) : void
   }
 
+  class SmtpEmailAdapter implements ProveedorEmail {
+    enviarEmail(destino: String, mensaje: String) : void
+  }
+
   class TwilioAdapter implements ProveedorSMS, ProveedorWhatsapp {
     enviarSMS(destino: String, mensaje: String) : void
     enviarWhatsapp(destino: String, mensaje: String) : void

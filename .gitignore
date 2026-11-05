@@ -46,6 +46,9 @@ build/
 .DS_Store
 
 ### Env Vars ###
+.env
+.env.*
+!.env.example
 **/src/main/resources/application.yaml
 
 ### Herramientas locales (no forman parte de la entrega) ###

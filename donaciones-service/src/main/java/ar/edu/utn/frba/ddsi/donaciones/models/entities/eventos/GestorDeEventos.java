@@ -84,4 +84,13 @@ public class GestorDeEventos {
 
         eventManager.emitir(new EventoEntregaFallida(donacion, motivo));
     }
+
+    public void emitirRecepcionConfirmada(Donacion donacion) {
+        if (donacion != null) {
+            eventManager.emitir(new EventoRecepcionConfirmada(
+                    donacion,
+                    donacion.getDonante(),
+                    donacion.getEntidadBeneficiariaAsignada()));
+        }
+    }
 }

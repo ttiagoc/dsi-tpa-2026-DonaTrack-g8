@@ -220,6 +220,6 @@ public class MotorDeMatchmaking {
 
     private void ejecutarNotificaciones(Donacion donacion, EntidadBeneficiaria entidad) {
         eventManager
-                .emitir(new EventoDonacionAsignada(donacion.getDonante(), entidad));
+                .emitir(new EventoDonacionAsignada(donacion, donacion.getDonante(), entidad));
     }
 }

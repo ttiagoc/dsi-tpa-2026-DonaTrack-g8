@@ -57,6 +57,13 @@ public class CategoriaServiceImpl implements CategoriaService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<SubcategoriaResponse> obtenerTodasLasSubcategorias() {
+        return subcategoriaRepository.findAll().stream()
+                .map(this::toSubcategoriaResponse)
+                .collect(Collectors.toList());
+    }
+
     public SubcategoriaResponse crearSubcategoria(Long categoriaId, SubcategoriaRequest request) {
         Categoria categoria = buscarCategoria(categoriaId);
         if (request.nombre() == null || request.nombre().isBlank()) {

@@ -15,5 +15,7 @@ public interface CategoriaService {
 
     List<SubcategoriaResponse> obtenerSubcategorias(Long categoriaId);
 
+    List<SubcategoriaResponse> obtenerTodasLasSubcategorias();
+
     SubcategoriaResponse crearSubcategoria(Long categoriaId, SubcategoriaRequest request);
 }

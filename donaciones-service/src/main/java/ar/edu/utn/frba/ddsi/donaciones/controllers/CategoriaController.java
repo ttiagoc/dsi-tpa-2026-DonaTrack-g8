@@ -25,6 +25,10 @@ public class CategoriaController implements JavalinController {
             ctx.json(categoriaService.obtenerTodas());
         });
 
+        app.get("/api/subcategorias", ctx -> {
+            ctx.json(categoriaService.obtenerTodasLasSubcategorias());
+        });
+
         app.post("/api/categorias", ctx -> {
             CategoriaRequest request = ctx.bodyAsClass(CategoriaRequest.class);
             ctx.status(201).json(categoriaService.crear(request));

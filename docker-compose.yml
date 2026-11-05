@@ -88,6 +88,9 @@ services:
       NOTIFICACIONES_DB_URL: jdbc:postgresql://postgres:5432/notificaciones
       NOTIFICACIONES_DB_USERNAME: postgres
       NOTIFICACIONES_DB_PASSWORD: postgres
+      SMTP_HOST: ${SMTP_HOST:-smtp-relay.brevo.com}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
     depends_on:
       postgres:
         condition: service_healthy

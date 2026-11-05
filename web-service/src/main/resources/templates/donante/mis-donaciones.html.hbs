@@ -1,7 +1,7 @@
 {{#partial "titulo"}}Mis donaciones · DonaTrack{{/partial}}
 
 {{#partial "contenido"}}
-{{> partials/encabezado titulo="Mis donaciones" bajada="Revisá el historial de tus donaciones realizadas y filtralas por estado o categoría."}}
+{{> partials/encabezado titulo="Mis donaciones" bajada="Revisá el historial de tus donaciones realizadas y filtralas por estado, categoría o subcategoría."}}
 
 {{!-- Formulario de Filtros --}}
 {{#> partials/filtros action="/donante/donaciones" limpiarHref="/donante/donaciones"}}
@@ -28,53 +28,57 @@
       {{/each}}
     </select>
   </div>
+
+  <div class="campo">
+    <label for="subcategoriaIds">Subcategoría</label>
+    <select name="subcategoriaIds" id="subcategoriaIds" data-buscador="Buscá una subcategoría">
+      <option value="">Todas las subcategorías</option>
+      {{#each subcategorias}}
+        <option value="{{this.id}}" {{#if this.seleccionada}}selected{{/if}}>{{this.nombre}}{{#if this.categoria}} ({{this.categoria}}){{/if}}</option>
+      {{/each}}
+    </select>
+  </div>
 {{/partials/filtros}}
 
 {{!-- Tabla de Donaciones --}}
-{{#if donaciones}}
-  <section class="tarjeta tarjeta--tabla">
-    <div class="tabla-contenedor">
-      <table class="tabla">
-        <caption class="sr-only">Historial de donaciones del donante</caption>
-        <thead>
-          <tr>
-            <th scope="col">Donación</th>
-            <th scope="col">Fecha</th>
-            <th scope="col">Estado</th>
-            <th scope="col">Bienes / Artículos</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{#each donaciones}}
-            <tr>
-              <td class="tabla__corta"><strong>#{{this.id}}</strong></td>
-              <td class="tabla__corta">
-                {{#if this.fecha}}
-                  {{fecha this.fecha}}
-                {{else}}
-                  <span class="tabla__secundario">Reciente</span>
-                {{/if}}
-              </td>
-              <td class="tabla__corta">
-                {{{estado this.estadoActual}}}
-              </td>
-              <td>
-                {{#each this.bienes}}
-                  <div><strong>{{this.cantidad}}x</strong> {{this.descripcion}}</div>
-                {{/each}}
-              </td>
-            </tr>
-          {{/each}}
-        </tbody>
-      </table>
-    </div>
-  </section>
-{{else}}
-  <section class="tarjeta vacio">
-    <strong>No se encontraron donaciones.</strong>
-    No hay donaciones registradas con los filtros seleccionados.
-  </section>
-{{/if}}
+{{#> partials/listado
+    coleccion=donaciones
+    vacioTitulo=vacioTitulo
+    vacioBajada=vacioBajada}}
+  <table class="tabla">
+    <caption class="sr-only">Historial de donaciones del donante</caption>
+    <thead>
+      <tr>
+        <th scope="col">Donación</th>
+        <th scope="col">Fecha</th>
+        <th scope="col">Estado</th>
+        <th scope="col">Bienes / Artículos</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each donaciones}}
+        <tr>
+          <td class="tabla__corta"><strong>#{{this.id}}</strong></td>
+          <td class="tabla__corta">
+            {{#if this.fecha}}
+              {{fecha this.fecha}}
+            {{else}}
+              <span class="tabla__secundario">Reciente</span>
+            {{/if}}
+          </td>
+          <td class="tabla__corta">
+            {{{estado this.estadoActual}}}
+          </td>
+          <td>
+            {{#each this.bienes}}
+              <div><strong>{{this.cantidad}}x</strong> {{this.descripcion}}</div>
+            {{/each}}
+          </td>
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+{{/partials/listado}}
 {{/partial}}
 
 {{> layouts/base}}

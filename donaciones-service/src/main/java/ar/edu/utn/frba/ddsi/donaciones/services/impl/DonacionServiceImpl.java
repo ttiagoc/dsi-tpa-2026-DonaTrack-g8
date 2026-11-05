@@ -198,7 +198,9 @@ public class DonacionServiceImpl implements DonacionService {
         Donacion donacion = donacionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro una donacion con el id: " + id));
         donacion.confirmarRecepcion(request.fotosUrl());
-        return this.toDonacionResponse(this.guardar(donacion));
+        Donacion guardada = this.guardar(donacion);
+        gestorDeEventos.emitirRecepcionConfirmada(guardada);
+        return this.toDonacionResponse(guardada);
     }
 
     public void confirmarEntregaExitosa(ConfirmacionEntregaExitosaRequest request) {

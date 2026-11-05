@@ -7,3 +7,8 @@ twilio:
 resend:
   apiKey: xxxxxxxxxxxxxxx
   from: xxxxxxxxxxx
+
+smtp:
+  username: tu-cuenta@gmail.com
+  password: xxxx xxxx xxxx xxxx # Contraseña de aplicación de 16 caracteres de Google
+

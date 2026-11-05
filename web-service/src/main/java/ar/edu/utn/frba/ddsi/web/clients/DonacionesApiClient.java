@@ -4,6 +4,7 @@ import java.net.http.HttpClient;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -95,11 +96,27 @@ public class DonacionesApiClient extends ApiClient {
     }
 
     public List<Map<String, Object>> buscarDonaciones(Context ctx, Long donanteId, String estado, Long categoriaId) {
+        return buscarDonaciones(ctx, donanteId, estado, categoriaId, null);
+    }
+
+    public List<Map<String, Object>> buscarDonaciones(Context ctx, Long donanteId, String estado, Long categoriaId, List<Long> subcategoriaIds) {
         StringBuilder query = new StringBuilder("/donaciones?");
         if (donanteId != null) query.append("donanteId=").append(donanteId).append("&");
         if (estado != null && !estado.isBlank()) query.append("estado=").append(estado).append("&");
         if (categoriaId != null) query.append("categoriaId=").append(categoriaId).append("&");
+        if (subcategoriaIds != null && !subcategoriaIds.isEmpty()) {
+            query.append("subcategoriaIds=")
+                    .append(subcategoriaIds.stream().map(String::valueOf).collect(Collectors.joining(",")))
+                    .append("&");
+        }
         return get(ctx, query.toString(), new TypeReference<List<Map<String, Object>>>() {});
+    }
+
+    public List<SubcategoriaResponse> obtenerSubcategorias(Context ctx, Long categoriaId) {
+        if (categoriaId != null) {
+            return get(ctx, "/categorias/" + categoriaId + "/subcategorias", new TypeReference<List<SubcategoriaResponse>>() {});
+        }
+        return get(ctx, "/subcategorias", new TypeReference<List<SubcategoriaResponse>>() {});
     }
     public List<Map<String, Object>> obtenerCategorias(Context ctx) {
         return get(ctx, "/categorias", new TypeReference<List<Map<String, Object>>>() {});

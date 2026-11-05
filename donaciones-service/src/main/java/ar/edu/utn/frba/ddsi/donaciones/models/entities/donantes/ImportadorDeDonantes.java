@@ -223,13 +223,14 @@ public class ImportadorDeDonantes {
             humana.setDni(humanaNueva.getDni());
             actualizarContactos(humana.getContactos(), emailVal, telefonoVal);
             donanteRepository.save(humana);
+            crearUsuarioSiNoExiste(emailVal, humana.getId());
             return false;
         } else {
             donanteRepository.save(humanaNueva);
             crearUsuarioSiNoExiste(emailVal, humanaNueva.getId());
             String nombreAMostrar = humanaNueva.getNombre()
                     + (humanaNueva.getApellido().isEmpty() ? "" : " " + humanaNueva.getApellido());
-            notificarAltaAsync(emailVal, nombreAMostrar);
+            notificarAltaAsync(emailVal, nombreAMostrar, humanaNueva.getId());
             return true;
         }
     }
@@ -244,11 +245,12 @@ public class ImportadorDeDonantes {
             juridica.setCuit(juridicaNueva.getCuit());
             actualizarContactos(juridica.getContactos(), emailVal, telefonoVal);
             donanteRepository.save(juridica);
+            crearUsuarioSiNoExiste(emailVal, juridica.getId());
             return false;
         } else {
             donanteRepository.save(juridicaNueva);
             crearUsuarioSiNoExiste(emailVal, juridicaNueva.getId());
-            notificarAltaAsync(emailVal, juridicaNueva.getRazonSocial());
+            notificarAltaAsync(emailVal, juridicaNueva.getRazonSocial(), juridicaNueva.getId());
             return true;
         }
     }
@@ -269,14 +271,18 @@ public class ImportadorDeDonantes {
         }
     }
 
-    private void notificarAltaAsync(String emailVal, String nombre) {
+    private void notificarAltaAsync(String emailVal, String nombre, Long donanteId) {
         CompletableFuture.runAsync(() -> {
             try {
                 String url = config.getNotificacionesUrl() + "/notificaciones";
                 NotificacionRequest request = new NotificacionRequest(
                         emailVal,
                         TipoContacto.EMAIL,
-                        "¡Bienvenido a DonaTrack, " + nombre + "! Tu cuenta ha sido registrada con éxito.");
+                        "¡Bienvenido a DonaTrack, " + nombre + "! Tu cuenta ha sido registrada con éxito.",
+                        "ALTA_IMPORTACION",
+                        "DONANTE",
+                        donanteId,
+                        null);
                 restTemplate.postForObject(url, request, Void.class);
             } catch (Exception ignored) {}
         });
@@ -400,6 +406,7 @@ public class ImportadorDeDonantes {
             humana.setDni(humanaNueva.getDni());
             actualizarContactos(humana.getContactos(), emailVal, obtenerTelefonoVal(humanaNueva.getContactos()));
             donanteRepository.save(humana);
+            crearUsuarioSiNoExiste(emailVal, humana.getId());
         } else {
             donanteRepository.save(humanaNueva);
             crearUsuarioSiNoExiste(emailVal, humanaNueva.getId());
@@ -410,7 +417,11 @@ public class ImportadorDeDonantes {
                 NotificacionRequest request = new NotificacionRequest(
                         emailVal,
                         TipoContacto.EMAIL,
-                        "¡Bienvenido a DonaTrack, " + nombreAMostrar + "! Tu cuenta ha sido registrada con éxito.");
+                        "¡Bienvenido a DonaTrack, " + nombreAMostrar + "! Tu cuenta ha sido registrada con éxito.",
+                        "ALTA_IMPORTACION",
+                        "DONANTE",
+                        humanaNueva.getId(),
+                        null);
                 restTemplate.postForObject(url, request, Void.class);
             } catch (Exception e) {
                 System.err.println("Error notificando alta de donante humano: " + e.getMessage());
@@ -432,6 +443,7 @@ public class ImportadorDeDonantes {
             juridica.setCuit(juridicaNueva.getCuit());
             actualizarContactos(juridica.getContactos(), emailVal, obtenerTelefonoVal(juridicaNueva.getContactos()));
             donanteRepository.save(juridica);
+            crearUsuarioSiNoExiste(emailVal, juridica.getId());
         } else {
             donanteRepository.save(juridicaNueva);
             crearUsuarioSiNoExiste(emailVal, juridicaNueva.getId());
@@ -441,7 +453,11 @@ public class ImportadorDeDonantes {
                         emailVal,
                         TipoContacto.EMAIL,
                         "¡Bienvenido a DonaTrack, " + juridicaNueva.getRazonSocial()
-                                + "! Tu cuenta ha sido registrada con éxito.");
+                                + "! Tu cuenta ha sido registrada con éxito.",
+                        "ALTA_IMPORTACION",
+                        "DONANTE",
+                        juridicaNueva.getId(),
+                        null);
                 restTemplate.postForObject(url, request, Void.class);
             } catch (Exception e) {
                 System.err.println("Error notificando alta de donante jurídico: " + e.getMessage());
