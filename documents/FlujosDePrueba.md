@@ -42,6 +42,9 @@ la sesión es una cookie.
 | `hogar` | `demo1234` | Entidad beneficiaria | Hogar de Ancianos Santa Ana |
 | `escuela` | `demo1234` | Entidad beneficiaria | Escuela Comunitaria N 12 |
 | `merendero` | `demo1234` | Entidad beneficiaria | Merendero Rayito de Sol |
+| `chofer1` | `demo1234` | Chofer · Logística | Marta Ledesma (camión `AF456DE`, hoy con hoja de ruta en traslado) |
+| `chofer2` | `demo1234` | Chofer · Logística | Esteban Quiroga (camión `AE123BC`, disponible para nuevas rutas) |
+| `chofer3` | `demo1234` | Chofer · Logística | Rubén Acosta (camión `AD789FG`, con hoja de ruta planificada) |
 
 También existe **Carlos Gómez** (DNI 25444333): un donante que cargó el admin en una donación presencial. **No tiene usuario**.
 
@@ -234,31 +237,25 @@ volver a entrar como `bruno` → **Incentivos**. ✅ "Donante solidario" 3/3 cum
 
 ---
 
-## 8. Flujo completo de punta a punta
+## 8. Flujo completo de punta a punta (100 % desde la web)
 
-Para mostrar el circuito entero con una donación nueva. Usar dos ventanas: una como `admin` y otra como la entidad o el donante.
+Para mostrar el circuito entero de una donación nueva sin tocar consola ni APIs manuales:
 
-1. **admin** → Recepción: registrar 30 "Conservas" a nombre de **Bruno Díaz**.
-2. **admin** → Matchmaking → **Ejecutar matchmaking** → **Ver sugerencias** de la donación nueva → asignarla a **Merendero Rayito de Sol**.
-3. **merendero** → Donaciones asignadas: ✅ la nueva aparece como asignada.
-4. **bruno** → Mis donaciones: ✅ la ve con estado "Asignación realizada". → Incentivos: ✅ 3 donaciones, "Donante solidario" cumplida.
-5. La logística (rutas, salida del camión y entrega) no tiene pantallas: se hace por la API de `logistica-service`.
-   Para seguir el circuito, en PowerShell (reemplazar `<ID>` por el número de la donación nueva):
+1. **admin** → **Recepción** (`/admin/recepcion`): registrar 30 "Conservas" a nombre de **Bruno Díaz**.
+2. **admin** → **Matchmaking** (`/admin/matchmaking`) → **Ejecutar matchmaking** → **Ver sugerencias** de la donación nueva → asignarla a **Merendero Rayito de Sol**.
+3. **merendero** → **Asignadas** (`/entidad/donaciones`): ✅ la nueva aparece como asignada ("Esperando el envío").
+4. **bruno** → **Mis donaciones** (`/donante/donaciones`): ✅ la ve con estado "Asignación realizada".
+5. **admin** → **Rutas y entregas** (`/admin/rutas`) → hacer clic en **Planificar rutas**. ✅ El planificador agrupa las donaciones asignadas sin ruta por entidad y capacidad de flota, creando una nueva hoja de ruta `PLANIFICADA` (por ejemplo, en el camión `AE123BC` de `chofer2`). Hacer clic en **Hoja de ruta** para ver sus paradas.
+6. **chofer2** (o el chofer del camión asignado) → ingresar en `/login` → cae en **Hoja de ruta** (`/chofer`):
+   - Hacer clic en **Comenzar recorrido**. ✅ La ruta pasa a `En traslado`, el camión inicializa su posición GPS en el Depósito (`Av. Medrano 951`) y las donaciones pasan a `En traslado`.
+   - **merendero** y **bruno** → **Seguimiento**: ✅ ven el camión activo en el mapa interactivo.
+   - En `/chofer`, hacer clic en **Confirmar entrega** en la parada de Merendero Rayito de Sol → **Confirmar entrega** en el modal. ✅ El GPS del camión avanza a la sede, la donación pasa a `Entregada` y, al no quedar paradas pendientes, la hoja de ruta pasa sola a `Finalizada` y se abre el modal de ruta completada (`¡Ruta completada!`).
+7. **merendero** → **Asignadas** (`/entidad/donaciones`) → **Confirmar recepción** con una foto. ✅ La donación pasa a "Recibida" y aparece con su foto en el **Mapa de entregas** público (`/mapa`).
 
-   ```powershell
-   $t = (Invoke-RestMethod -Method Post http://localhost:8080/api/auth/login -ContentType 'application/json' -Body '{"username":"admin","password":"admin1234"}').accessToken
-   $h = @{ Authorization = "Bearer $t" }
-   $ruta = Invoke-RestMethod -Method Post http://localhost:8081/api/rutas -Headers $h -ContentType 'application/json' -Body '{"fecha":"2026-11-05","idCamion":1,"paradas":[{"orden":1,"destino":"Av. Eva Peron 4200, Parque Avellaneda, CABA","entidad":4,"entregas":[<ID>]}]}'
-   Invoke-RestMethod -Method Put "http://localhost:8081/api/rutas/$($ruta.id)/estado" -Headers $h -ContentType 'application/json' -Body '"EN_TRASLADO"'
-   Invoke-RestMethod -Method Post http://localhost:8081/api/camiones/ubicacion/AE123BC -Headers $h -ContentType 'application/json' -Body '{"latitud":-34.64,"longitud":-58.47,"velocidad":25}'
-   ```
-   ✅ **merendero** y **bruno** → Seguimiento: el camión AE123BC aparece en camino.
-
-   ```powershell
-   Invoke-RestMethod -Method Post "http://localhost:8081/api/rutas/$($ruta.id)/paradas/$($ruta.paradas[0].id)/confirmaciones" -Headers $h
-   ```
-   ✅ **merendero** → Donaciones asignadas: "Entregada · falta confirmar".
-6. **merendero** → Confirmar recepción con una foto. ✅ La donación pasa a "Recibida" y aparece en el **Mapa de entregas** público.
+### 8.1 Flujo alternativo: Entrega fallida y reprogramación
+1. Como **chofer1** (`/chofer`), en una parada pendiente hacer clic en **No recibida**, escribir el motivo (ej. *"Sede cerrada al llegar el camión"*) y confirmar. ✅ La donación pasa por gRPC a `Entrega fallida` conservando el motivo.
+2. Como **admin** → **Depósito** → pestaña **Entregas fallidas** (`/admin/deposito?filtro=fallidas`): ✅ aparece la donación `#8` (y cualquier otra fallida) con la entidad destino y el motivo reportado por el chofer.
+3. Hacer clic en **Reprogramar envío** (vuelve a `Asignación realizada` para entrar en la próxima planificación en `/admin/rutas`) o en **Volver a depósito** (vuelve al stock general `En depósito` para nuevo matchmaking).
 
 ## 9. Volver a empezar
 

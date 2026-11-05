@@ -121,4 +121,24 @@ class LogisticaAuthTest {
         HttpResponse<String> resSistema = http.send(reqSistema, HttpResponse.BodyHandlers.ofString());
         assertEquals(204, resSistema.statusCode());
     }
+
+    @Test
+    @DisplayName("Chofer solo puede consultar la ruta activa de su propio camión (perfilId = camionId)")
+    void seguridadChoferPropietarioDeCamion() throws Exception {
+        String tokenChoferCamion2 = jwtUtil.generarAccessToken(new UsuarioAutenticado(20L, "chofer1", Rol.CHOFER, 2L));
+
+        // Su propio camión (id=2, sin rutas cargadas -> 204 No Content)
+        HttpRequest reqPropio = HttpRequest.newBuilder(URI.create(BASE + "/rutas/camion/2/activa"))
+                .header("Authorization", "Bearer " + tokenChoferCamion2)
+                .GET().build();
+        HttpResponse<String> resPropio = http.send(reqPropio, HttpResponse.BodyHandlers.ofString());
+        assertEquals(204, resPropio.statusCode());
+
+        // Otro camión (id=99 -> 403 Forbidden)
+        HttpRequest reqAjeno = HttpRequest.newBuilder(URI.create(BASE + "/rutas/camion/99/activa"))
+                .header("Authorization", "Bearer " + tokenChoferCamion2)
+                .GET().build();
+        HttpResponse<String> resAjeno = http.send(reqAjeno, HttpResponse.BodyHandlers.ofString());
+        assertEquals(403, resAjeno.statusCode());
+    }
 }

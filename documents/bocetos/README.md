@@ -58,14 +58,20 @@ En [Figma](https://www.figma.com/design/1tzIHQUO6aSwCbdgtPuXgj) quedó una prime
 | 15 | Donantes: confirmar eliminación | `/admin/donantes?eliminar={id}` | [15l-donantes-eliminar.png](15l-donantes-eliminar.png) |
 | 15 | Donantes: no se puede eliminar (tiene donaciones) | `/admin/donantes?eliminar={id}` | [15m-donantes-no-se-puede-eliminar.png](15m-donantes-no-se-puede-eliminar.png) |
 | 15 | Donantes: búsqueda sin resultados | `/admin/donantes?q=...` | [15n-donantes-sin-resultados.png](15n-donantes-sin-resultados.png) |
-| 16 | Depósito: stock disponible y vencidas | `/admin/deposito` | [16-deposito.png](16-deposito.png) |
+| 16 | Depósito: stock disponible, vencidas y entregas fallidas | `/admin/deposito` | [16-deposito.png](16-deposito.png) |
 | 16 | Depósito: modal para marcar donación como vencida | `/admin/deposito` | [16b-deposito-vencer.png](16b-deposito-vencer.png) |
+| 16 | Depósito: pestaña de entregas fallidas (reprogramar envío o volver a depósito) | `/admin/deposito?filtro=fallidas` | [16c-deposito-fallidas.png](16c-deposito-fallidas.png) |
 | 17 | Matchmaking: propuestas de asignación pendientes | `/admin/matchmaking` | [17-matchmaking.png](17-matchmaking.png) |
 | 17 | Matchmaking: modal interactivo de selección de entidad sugerida | `/admin/matchmaking` | [17b-matchmaking-sugerencias.png](17b-matchmaking-sugerencias.png) |
 | 18 | Camiones: listado de flota | `/admin/camiones` | [18-camiones.png](18-camiones.png) |
-| 18 | Camiones: modal de alta y edición | `/admin/camiones` | [18b-camiones-alta.png](18b-camiones-alta.png) |
+| 18 | Camiones: modal de alta y edición (con cuenta de acceso opcional para el chofer) | `/admin/camiones` | [18b-camiones-alta.png](18b-camiones-alta.png) |
 | 18 | Camiones: modal de confirmación de eliminación | `/admin/camiones` | [18c-camiones-eliminar.png](18c-camiones-eliminar.png) |
+| 18 | Chofer: hoja de ruta activa con mapa de recorrido y paradas | `/chofer` | [18d-chofer-hoja-de-ruta.png](18d-chofer-hoja-de-ruta.png) |
+| 18 | Chofer: modal de confirmación de entrega en parada | `/chofer?confirmarParada={id}` | [18e-chofer-confirmar-entrega.png](18e-chofer-confirmar-entrega.png) |
+| 18 | Chofer: modal de ruta completada al finalizar todas las paradas | `/chofer?completada={id}` | [18f-chofer-ruta-completada.png](18f-chofer-ruta-completada.png) |
 | 19 | Importación masiva: carga de donantes CSV (>10.000 filas) e historial | `/admin/importaciones` | [19-importaciones.png](19-importaciones.png) |
 | 19 | Importación masiva: progreso en segundo plano y detalle de errores | `/admin/importaciones` | [19b-importaciones-progreso.png](19b-importaciones-progreso.png) |
+| 20 | Rutas y entregas: planificación automática por lotes y listado de hojas de ruta | `/admin/rutas` | [20a-rutas-listado.png](20a-rutas-listado.png) |
+| 20 | Rutas y entregas: modal de detalle de hoja de ruta | `/admin/rutas?ver={id}` | [20b-rutas-hoja-de-ruta.png](20b-rutas-hoja-de-ruta.png) |
 
 Convención de nombres: `<req>[letra]-<pantalla>.png`. B y C agregan sus tablas (pantallas 5–9, 13–14 y 15–19) en este mismo archivo.

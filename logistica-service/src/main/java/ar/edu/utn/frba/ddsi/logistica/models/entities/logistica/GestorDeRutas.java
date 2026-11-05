@@ -45,4 +45,19 @@ public class GestorDeRutas {
                 LocalDateTime.now());
         System.out.println("Reporte de entrega exitosa transmitido a Donaciones vía gRPC para Parada ID: " + paradaAfectada.getOrden());
     }
+
+    public void registrarEntregaFallida(Parada paradaAfectada, String motivo) {
+        String justificacion = (motivo != null && !motivo.isBlank())
+                ? motivo
+                : "Entrega no recibida en la parada #" + paradaAfectada.getOrden();
+        if (paradaAfectada.getDonacionIds() == null) {
+            return;
+        }
+        for (Long donacionId : paradaAfectada.getDonacionIds()) {
+            donacionesGrpcClient.actualizarEstado(
+                    donacionId,
+                    "ENTREGA_FALLIDA",
+                    justificacion);
+        }
+    }
 }

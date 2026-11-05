@@ -2,79 +2,135 @@
 {{#partial "contenido"}}
 {{> partials/encabezado
     titulo="Depósito y Vencimientos"
-    bajada="Control de stock de donaciones recibidas y gestión de caducidades."}}
+    bajada="Control de stock recibido, caducidades y entregas fallidas devueltas al depósito."}}
 
-<div class="resumen">
+<div class="resumen" aria-label="Resumen del depósito">
   <div class="resumen__item"><strong>{{resumen.enDeposito}}</strong>Donaciones en depósito</div>
   <div class="resumen__item resumen__item--ok"><strong>{{resumen.unidades}}</strong>Unidades almacenadas</div>
-  <div class="resumen__item resumen__item--alerta"><strong>{{resumen.vencidas}}</strong>Donaciones vencidas</div>
+  <div class="resumen__item"><strong>{{resumen.vencidas}}</strong>Donaciones vencidas</div>
+  <div class="resumen__item resumen__item--alerta"><strong>{{resumen.fallidas}}</strong>Entregas fallidas</div>
 </div>
 
-<nav class="pestanas" aria-label="Filtro de donaciones">
+<nav class="pestanas" aria-label="Filtro de donaciones en depósito">
   <a class="pestana {{#if esTabEnDeposito}}pestana--activa{{/if}}" href="/admin/deposito?filtro=en_deposito" {{#if esTabEnDeposito}}aria-current="page"{{/if}}>
     En depósito <span class="pestana__badge">{{resumen.enDeposito}}</span>
   </a>
   <a class="pestana {{#if esTabVencidas}}pestana--activa{{/if}}" href="/admin/deposito?filtro=vencidas" {{#if esTabVencidas}}aria-current="page"{{/if}}>
     Vencidas <span class="pestana__badge">{{resumen.vencidas}}</span>
   </a>
+  <a class="pestana {{#if esTabFallidas}}pestana--activa{{/if}}" href="/admin/deposito?filtro=fallidas" {{#if esTabFallidas}}aria-current="page"{{/if}}>
+    Entregas fallidas <span class="pestana__badge">{{resumen.fallidas}}</span>
+  </a>
 </nav>
 
-{{#> partials/listado
-    coleccion=donaciones
-    vacioTitulo="No hay donaciones en depósito actualmente."
-    vacioBajada="Las donaciones físicas recibidas en depósito figurarán aquí disponibles para asignación y entrega."}}
-  <table class="tabla">
-    <caption class="sr-only">Listado de donaciones en depósito</caption>
-    <thead>
-      <tr>
-        <th scope="col"># ID</th>
-        <th scope="col">Subcategoría</th>
-        <th scope="col">Bienes y cantidad</th>
-        <th scope="col">Fecha de ingreso</th>
-        <th scope="col">Estado</th>
-        {{#if esTabVencidas}}
-          <th scope="col">Motivo de baja</th>
-        {{else}}
-          <th scope="col"><span class="sr-only">Acciones</span></th>
-        {{/if}}
-      </tr>
-    </thead>
-    <tbody>
-      {{#each donaciones}}
+{{#if esTabFallidas}}
+  {{#> partials/listado
+      coleccion=donaciones
+      vacioTitulo="No hay entregas fallidas pendientes de resolución."
+      vacioBajada="Cuando un chofer reporte que no pudo entregar en destino, la donación aparecerá acá para reprogramar su envío o reingresarla al depósito."}}
+    <table class="tabla">
+      <caption class="sr-only">Listado de donaciones con entrega fallida</caption>
+      <thead>
         <tr>
-          <td class="tabla__corta"><strong>#{{id}}</strong></td>
-          <td>
-            {{subcategoria}}
-            {{#if categoria}}<span class="tabla__secundario">{{categoria}}</span>{{/if}}
-          </td>
-          <td>{{bienesResumen}}</td>
-          <td>{{fecha fechaFormateada}}</td>
-          <td>
-            {{#if esVencida}}
-              {{estado "VENCIDA"}}
-            {{else}}
-              {{estado "EN_DEPOSITO"}}
-            {{/if}}
-          </td>
-          {{#if ../esTabVencidas}}
-            <td><span class="texto-suave">{{#if justificacion}}{{justificacion}}{{else}}Sin justificación registrada{{/if}}</span></td>
+          <th scope="col"># ID</th>
+          <th scope="col">Subcategoría y destino</th>
+          <th scope="col">Bienes y cantidad</th>
+          <th scope="col">Motivo reportado</th>
+          <th scope="col">Estado</th>
+          <th scope="col" class="tabla__accion"><span class="sr-only">Acciones</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each donaciones}}
+          <tr>
+            <td class="tabla__corta"><strong>#{{id}}</strong></td>
+            <td>
+              <strong>{{subcategoria}}</strong>
+              {{#if entidadAsignadaNombre}}
+                <span class="tabla__secundario">Asignada a: {{entidadAsignadaNombre}}</span>
+              {{else if categoria}}
+                <span class="tabla__secundario">{{categoria}}</span>
+              {{/if}}
+            </td>
+            <td>{{bienesResumen}}</td>
+            <td>{{#if justificacion}}{{justificacion}}{{else}}<span class="texto-suave">Sin motivo detallado</span>{{/if}}</td>
+            <td class="tabla__corta">{{estado "ENTREGA_FALLIDA"}}</td>
+            <td class="tabla__accion">
+              <div class="tabla__acciones">
+                <form method="post" action="/admin/deposito/{{id}}/reprogramar">
+                  <button type="submit" class="boton boton--chico" data-cargando="Reprogramando…">Reprogramar envío</button>
+                </form>
+                <form method="post" action="/admin/deposito/{{id}}/reingresar">
+                  <button type="submit" class="boton boton--secundario boton--chico" data-cargando="Reingresando…">Volver a depósito</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  {{/partials/listado}}
+  {{#if donaciones}}
+    <p class="nota"><strong>Reprogramar envío</strong> mantiene la entidad asignada para incluir la donación en la próxima planificación de rutas. <strong>Volver a depósito</strong> la devuelve al stock general para nuevo matchmaking.</p>
+  {{/if}}
+{{else}}
+  {{#> partials/listado
+      coleccion=donaciones
+      vacioTitulo="No hay donaciones en esta vista actualmente."
+      vacioBajada="Las donaciones físicas recibidas en depósito figurarán aquí disponibles para asignación, entrega o control de vencimiento."}}
+    <table class="tabla">
+      <caption class="sr-only">Listado de donaciones en depósito</caption>
+      <thead>
+        <tr>
+          <th scope="col"># ID</th>
+          <th scope="col">Subcategoría</th>
+          <th scope="col">Bienes y cantidad</th>
+          <th scope="col">Fecha de ingreso</th>
+          <th scope="col">Estado</th>
+          {{#if esTabVencidas}}
+            <th scope="col">Motivo de baja</th>
           {{else}}
-            {{#> partials/acciones-fila}}
-              {{boton "eliminar" href=(concat "/admin/deposito?filtro=en_deposito&vencer=" id) texto="Marcar vencida" sr=(concat "donación #" id)}}
-            {{/partials/acciones-fila}}
+            <th scope="col"><span class="sr-only">Acciones</span></th>
           {{/if}}
         </tr>
-      {{/each}}
-    </tbody>
-  </table>
-{{/partials/listado}}
+      </thead>
+      <tbody>
+        {{#each donaciones}}
+          <tr>
+            <td class="tabla__corta"><strong>#{{id}}</strong></td>
+            <td>
+              {{subcategoria}}
+              {{#if categoria}}<span class="tabla__secundario">{{categoria}}</span>{{/if}}
+            </td>
+            <td>{{bienesResumen}}</td>
+            <td>{{fecha fechaFormateada}}</td>
+            <td>
+              {{#if esVencida}}
+                {{estado "VENCIDA"}}
+              {{else}}
+                {{estado "EN_DEPOSITO"}}
+              {{/if}}
+            </td>
+            {{#if ../esTabVencidas}}
+              <td><span class="texto-suave">{{#if justificacion}}{{justificacion}}{{else}}Sin justificación registrada{{/if}}</span></td>
+            {{else}}
+              {{#> partials/acciones-fila}}
+                {{boton "eliminar" href=(concat "/admin/deposito?filtro=en_deposito&vencer=" id) texto="Marcar vencida" sr=(concat "donación #" id)}}
+              {{/partials/acciones-fila}}
+            {{/if}}
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  {{/partials/listado}}
+{{/if}}
 
 {{#if abrirModalVencer}}
 <dialog class="modal" id="modal-vencer" open aria-labelledby="titulo-vencer">
   <form method="post" action="/admin/deposito/{{donacionAVencer.id}}/vencer" accept-charset="UTF-8" novalidate>
     <div class="modal__encabezado">
       <h2 id="titulo-vencer">¿Marcar donación como vencida?</h2>
-      <a class="modal__cerrar" href="/admin/deposito{{#if filtro}}?filtro={{filtro}}{{/if}}" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></a>
+      <a class="modal__cerrar" href="/admin/deposito{{#if filtro}}?filtro={{filtro}}{{/if}}" data-cierra aria-label="Cerrar"><svg class="icono" aria-hidden="true"><use href="#i-cerrar"/></svg></a>
     </div>
     <div class="modal__cuerpo">
       {{#if errorGeneral}}<div class="alerta alerta--error" role="alert">{{errorGeneral}}</div>{{/if}}

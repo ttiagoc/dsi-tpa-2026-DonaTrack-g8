@@ -9,9 +9,15 @@ public record ParadaResponse(
     String destino,
     Long entidad,
     List<Long> entregas,
-    EstadoParada estado
+    EstadoParada estado,
+    Double latitud,
+    Double longitud
 ) {
+    public ParadaResponse(Long id, Integer orden, String destino, Long entidad, List<Long> entregas, EstadoParada estado) {
+        this(id, orden, destino, entidad, entregas, estado, null, null);
+    }
+
     public ParadaResponse(Long id, Integer orden, String destino, Long entidad, List<Long> entregas) {
-        this(id, orden, destino, entidad, entregas, EstadoParada.PENDIENTE);
+        this(id, orden, destino, entidad, entregas, EstadoParada.PENDIENTE, null, null);
     }
 }

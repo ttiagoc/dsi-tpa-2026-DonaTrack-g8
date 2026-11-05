@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static ar.edu.utn.frba.ddsi.common.security.Rol.ADMINISTRADOR;
+import static ar.edu.utn.frba.ddsi.common.security.Rol.CHOFER;
 import static ar.edu.utn.frba.ddsi.common.security.Rol.DONANTE;
 import static ar.edu.utn.frba.ddsi.common.security.Rol.ENTIDAD_BENEFICIARIA;
 import static ar.edu.utn.frba.ddsi.common.security.Rol.SISTEMA;
@@ -70,15 +71,16 @@ public class DonacionController implements JavalinController {
         // publico (req. 2, mapa de entregas): las donaciones entregadas por entidad, sin datos del donante.
         app.get("/api/donaciones/entregadas", ctx -> ctx.json(donacionService.obtenerEntregasPorEntidad()));
 
-        // la ve su donante, la entidad a la que se asigno, el administrador y los servicios
+        // la ve su donante, la entidad a la que se asigno, el chofer en reparto, el administrador y los servicios
         app.get("/api/donaciones/{id}", ctx -> {
             Long id = Long.parseLong(ctx.pathParam("id"));
             DonacionResponse donacion = donacionService.obtenerPorId(id);
             Autorizacion.exigir(Autorizacion.esPrivilegiado(ctx)
+                    || Autorizacion.usuario(ctx).rol() == CHOFER
                     || Autorizacion.esPropietario(ctx, DONANTE, donacion.donanteId())
                     || Autorizacion.esPropietario(ctx, ENTIDAD_BENEFICIARIA, donacion.entidadAsignadaId()));
             ctx.json(donacion);
-        }, DONANTE, ENTIDAD_BENEFICIARIA, ADMINISTRADOR, SISTEMA);
+        }, DONANTE, ENTIDAD_BENEFICIARIA, CHOFER, ADMINISTRADOR, SISTEMA);
 
         // un donante solo registra donaciones a su nombre; el administrador, a nombre de cualquiera
         app.post("/api/donaciones", ctx -> {

@@ -24,10 +24,12 @@ import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.exceptions.NoAutenticadoException;
 import ar.edu.utn.frba.ddsi.common.security.JwtUtil;
 import ar.edu.utn.frba.ddsi.common.security.Rol;
+import ar.edu.utn.frba.ddsi.donaciones.dto.auth.CuentaChoferRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.auth.LoginRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.auth.RefreshRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.auth.RegistroPersonaHumanaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.auth.SesionResponse;
+import ar.edu.utn.frba.ddsi.donaciones.dto.auth.UsuarioResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.DonanteResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaHumanaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.usuarios.Usuario;
@@ -58,8 +60,10 @@ class AuthServiceTest {
 
         when(usuarioRepository.save(any())).thenAnswer(invocacion -> {
             Usuario usuario = invocacion.getArgument(0);
-            usuario.setId((long) guardados.size() + 1);
-            guardados.add(usuario);
+            if (usuario.getId() == null) {
+                usuario.setId((long) guardados.size() + 1);
+                guardados.add(usuario);
+            }
             return usuario;
         });
         when(usuarioRepository.buscarPorUsername(any())).thenAnswer(invocacion -> guardados.stream()
@@ -67,6 +71,17 @@ class AuthServiceTest {
                 .findFirst());
         when(usuarioRepository.existeUsername(any())).thenAnswer(invocacion -> guardados.stream()
                 .anyMatch(u -> u.getUsername().equals(Usuario.normalizar(invocacion.getArgument(0)))));
+        when(usuarioRepository.buscarPorRolYPerfilId(any(), any())).thenAnswer(invocacion -> {
+            Rol rol = invocacion.getArgument(0);
+            Long perfilId = invocacion.getArgument(1);
+            return guardados.stream()
+                    .filter(u -> u.getRol() == rol && perfilId.equals(u.getPerfilId()))
+                    .findFirst();
+        });
+        when(usuarioRepository.listarPorRol(any())).thenAnswer(invocacion -> {
+            Rol rol = invocacion.getArgument(0);
+            return guardados.stream().filter(u -> u.getRol() == rol).toList();
+        });
         when(donanteService.crearPersonaHumana(any())).thenReturn(new DonanteResponse(42L, "Persona Humana", "x"));
     }
 
@@ -169,5 +184,34 @@ class AuthServiceTest {
         assertEquals(7L, authService.crearUsuarioParaDonante(7L, "importado", "temporal-123").perfilId());
         assertThrows(RuntimeException.class, () -> authService.crearUsuarioParaDonante(8L, "otro", "temporal-123"));
         assertEquals(Optional.of(7L), guardados.stream().map(Usuario::getPerfilId).findFirst());
+    }
+
+    @Test
+    @DisplayName("Configurar usuario chofer crea cuenta vinculada al camion, permite login y actualiza credenciales")
+    void configurarUsuarioChofer() {
+        UsuarioResponse creado = authService.configurarUsuarioChofer(
+                new CuentaChoferRequest(5L, "Chofer1", "demo1234"));
+
+        assertEquals("chofer1", creado.username());
+        assertEquals(Rol.CHOFER, creado.rol());
+        assertEquals(5L, creado.perfilId());
+
+        SesionResponse sesion = authService.login(new LoginRequest("chofer1", "demo1234"));
+        assertEquals(Rol.CHOFER, jwtUtil.leerAccessToken(sesion.accessToken()).rol());
+        assertEquals(5L, jwtUtil.leerAccessToken(sesion.accessToken()).perfilId());
+
+        // Actualizar usuario y clave del mismo camion reutiliza la cuenta existente
+        UsuarioResponse actualizado = authService.configurarUsuarioChofer(
+                new CuentaChoferRequest(5L, "chofer-norte", "nueva-clave-123"));
+        assertEquals(1, guardados.size());
+        assertEquals("chofer-norte", actualizado.username());
+        assertEquals("chofer-norte",
+                authService.login(new LoginRequest("chofer-norte", "nueva-clave-123")).usuario().username());
+        assertEquals(1, authService.listarUsuariosChofer().size());
+
+        // Rechaza renombrar a un usuario ya usado por otra cuenta
+        authService.crearAdministradorSiNoExiste("admin", "admin1234");
+        assertThrows(BusinessException.class, () -> authService.configurarUsuarioChofer(
+                new CuentaChoferRequest(5L, "admin", null)));
     }
 }

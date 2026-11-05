@@ -268,6 +268,15 @@ $camion1 = New-Camion 'AE123BC' 30.0 3.8 8000.0 'Esteban' 'Quiroga'
 $camion2 = New-Camion 'AF456DE' 18.0 3.2 4500.0 'Marta'   'Ledesma'
 $camion3 = New-Camion 'AD789FG' 12.0 2.9 3000.0 'Ruben'   'Acosta'
 
+Write-Step 'Cuentas de acceso para choferes'
+function New-UsuarioChofer($camion, $username) {
+    Invoke-Api POST "$DonacionesUrl/auth/chofer" @{ camionId = $camion.id; username = $username; password = $Password } $admin | Out-Null
+    Write-Ok "Usuario $username vinculado al camion $($camion.patente)"
+}
+New-UsuarioChofer $camion2 'chofer1'
+New-UsuarioChofer $camion1 'chofer2'
+New-UsuarioChofer $camion3 'chofer3'
+
 function Parada($orden, $entidad, [long[]]$donaciones) {
     @{ orden = $orden; destino = $entidad.direccion; entidad = $entidad.id; entregas = $donaciones }
 }
@@ -296,11 +305,9 @@ Write-Ok "Ruta #$($ruta1.id) ($($camion1.patente)): 4 paradas entregadas y ruta 
 Write-Step 'Ruta con entrega fallida'
 $ruta0 = New-Ruta (Fecha -2) $camion3 @((Parada 1 $hogar @($dAnaCalzado['Calzado'])))
 Set-EstadoRuta $ruta0 'EN_TRASLADO'
-Invoke-Api POST "$LogisticaUrl/rutas/$($ruta0.id)/paradas/$($ruta0.paradas[0].id)/fallos" $null $admin | Out-Null
-Set-EstadoRuta $ruta0 'FINALIZADA'
-Invoke-Api PUT "$DonacionesUrl/donaciones/$($dAnaCalzado['Calzado'])/estado" @{
-    estado = 'ENTREGA_FALLIDA'; justificacion = 'El hogar estaba cerrado al llegar el camion. Se reprograma la entrega.' } $admin | Out-Null
-Write-Ok "Donacion #$($dAnaCalzado['Calzado']) (calzado) en ENTREGA_FALLIDA"
+Invoke-Api POST "$LogisticaUrl/rutas/$($ruta0.id)/paradas/$($ruta0.paradas[0].id)/fallos" @{
+    motivo = 'El hogar estaba cerrado al llegar el camion. Se reprograma la entrega.' } $admin | Out-Null
+Write-Ok "Donacion #$($dAnaCalzado['Calzado']) (calzado) en ENTREGA_FALLIDA y Ruta #$($ruta0.id) finalizada"
 
 Write-Step 'Ruta de hoy: camion en camino (seguimiento en vivo)'
 $ruta2 = New-Ruta (Fecha 0) $camion2 @(
@@ -369,4 +376,7 @@ Write-Host @"
     hogar      Jabon recibido con fotos; calzado con entrega fallida.
     escuela    Lapices recibidos; cuadernos listos para la ruta de manana.
     merendero  Conservas recibidas; arroz en camino.
+    chofer1    Marta Ledesma (camion AF456DE): hoja de ruta EN_TRASLADO hoy con 2 paradas pendientes.
+    chofer2    Esteban Quiroga (camion AE123BC): sin ruta activa hoy (disponible para nuevas planificaciones).
+    chofer3    Ruben Acosta (camion AD789FG): hoja de ruta PLANIFICADA manana lista para iniciar recorrido.
 "@

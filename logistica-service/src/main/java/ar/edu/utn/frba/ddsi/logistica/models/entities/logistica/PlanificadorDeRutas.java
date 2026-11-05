@@ -2,8 +2,10 @@ package ar.edu.utn.frba.ddsi.logistica.models.entities.logistica;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
@@ -13,6 +15,7 @@ import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.CamionPlanificacionReque
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.DireccionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.planificacion.EjecutarPlanificacionRequest;
 import ar.edu.utn.frba.ddsi.logistica.grpc.DonacionesGrpcClient;
+import ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoRuta;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
 
@@ -41,6 +44,8 @@ public class PlanificadorDeRutas {
             return;
         }
 
+        Set<Long> yaPlanificadas = obtenerDonacionesEnRutasActivas();
+
         int offset = 0;
         int camionIndex = 0;
 
@@ -49,19 +54,46 @@ public class PlanificadorDeRutas {
                 break;
             }
 
-            List<DonacionDTO> loteDonaciones = getLote(offset);
-            if (loteDonaciones.isEmpty()) {
+            List<DonacionDTO> loteCrudo = getLote(offset);
+            if (loteCrudo.isEmpty()) {
                 break;
             }
 
-            int toIndex = Math.min(camionIndex + TAMANO_LOTE_CAMIONES, camionesDisponibles.size());
-            List<Camion> loteCamiones = camionesDisponibles.subList(camionIndex, toIndex);
+            List<DonacionDTO> loteDonaciones = loteCrudo.stream()
+                    .filter(d -> d.getId() != null && !yaPlanificadas.contains(d.getId()))
+                    .collect(Collectors.toList());
 
-            gestorPlanificacionRutas.solicitarPlanificacion(loteDonaciones, loteCamiones);
+            if (!loteDonaciones.isEmpty()) {
+                int toIndex = Math.min(camionIndex + TAMANO_LOTE_CAMIONES, camionesDisponibles.size());
+                List<Camion> loteCamiones = camionesDisponibles.subList(camionIndex, toIndex);
 
+                gestorPlanificacionRutas.solicitarPlanificacion(loteDonaciones, loteCamiones);
+                camionIndex += TAMANO_LOTE_CAMIONES;
+            }
+
+            if (loteCrudo.size() < TAMANO_LOTE_DONACIONES) {
+                break;
+            }
             offset += TAMANO_LOTE_DONACIONES;
-            camionIndex += TAMANO_LOTE_CAMIONES;
         }
+    }
+
+    private Set<Long> obtenerDonacionesEnRutasActivas() {
+        Set<Long> ids = new HashSet<>();
+        List<Ruta> rutas = rutaRepository.findAll();
+        if (rutas == null) {
+            return ids;
+        }
+        for (Ruta r : rutas) {
+            if (r.getEstado() != EstadoRuta.FINALIZADA && r.getParadas() != null) {
+                for (Parada p : r.getParadas()) {
+                    if (p.getDonacionIds() != null) {
+                        ids.addAll(p.getDonacionIds());
+                    }
+                }
+            }
+        }
+        return ids;
     }
 
     public void ejecutarPlanificacion(EjecutarPlanificacionRequest request) {

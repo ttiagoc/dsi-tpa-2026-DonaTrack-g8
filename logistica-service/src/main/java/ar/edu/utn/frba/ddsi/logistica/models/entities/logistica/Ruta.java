@@ -21,6 +21,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
 
+import ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoParada;
 import ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoRuta;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -87,5 +88,10 @@ public class Ruta {
 
     public void finalizar() {
         this.estado = EstadoRuta.FINALIZADA;
+    }
+
+    public boolean todasLasParadasResueltas() {
+        return this.paradas != null && !this.paradas.isEmpty()
+                && this.paradas.stream().noneMatch(p -> p.getEstado() == EstadoParada.PENDIENTE);
     }
 }

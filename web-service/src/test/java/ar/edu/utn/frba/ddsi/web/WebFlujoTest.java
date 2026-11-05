@@ -35,10 +35,12 @@ import ar.edu.utn.frba.ddsi.web.clients.LogisticaApiClient;
 import ar.edu.utn.frba.ddsi.web.config.WebConfig;
 import ar.edu.utn.frba.ddsi.web.controllers.CamionesAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.CategoriasAdminController;
+import ar.edu.utn.frba.ddsi.web.controllers.ChoferWebController;
 import ar.edu.utn.frba.ddsi.web.controllers.DepositoAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.DonantesAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.MatchmakingAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.RecepcionAdminController;
+import ar.edu.utn.frba.ddsi.web.controllers.RutasAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.ImportacionesAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.DonacionesAsignadasController;
 import ar.edu.utn.frba.ddsi.web.controllers.HomeController;
@@ -91,6 +93,9 @@ class WebFlujoTest {
     // ultimo pedido del ABM de categorias a la API falsa
     private final AtomicReference<JsonNode> ultimaCategoria = new AtomicReference<>();
     private final AtomicReference<String> ultimaSubcategoria = new AtomicReference<>();
+    private final List<Map<String, Object>> choferesFalsos = new ArrayList<>();
+    private final List<Map<String, Object>> rutasFalsas = new ArrayList<>();
+    private final AtomicReference<String> ultimoMotivoFallo = new AtomicReference<>();
 
     @TempDir
     Path carpetaFotos;
@@ -112,17 +117,19 @@ class WebFlujoTest {
                 HttpClient.newHttpClient(), ApiClient.crearObjectMapper(), auth);
         LogisticaApiClient logistica = new LogisticaApiClient("http://localhost:" + PUERTO_API + "/api",
                 HttpClient.newHttpClient(), ApiClient.crearObjectMapper(), auth);
-        CamionesAdminController camionesAdmin = new CamionesAdminController(logistica);
+        CamionesAdminController camionesAdmin = new CamionesAdminController(logistica, auth);
         DepositoAdminController depositoAdmin = new DepositoAdminController(donaciones);
         MatchmakingAdminController matchmakingAdmin = new MatchmakingAdminController(donaciones);
         RecepcionAdminController recepcionAdmin = new RecepcionAdminController(donaciones);
         ImportacionesAdminController importacionesAdmin = new ImportacionesAdminController(donaciones);
         CategoriasAdminController categoriasAdmin = new CategoriasAdminController(donaciones);
+        RutasAdminController rutasAdmin = new RutasAdminController(logistica, donaciones, auth);
+        ChoferWebController choferWeb = new ChoferWebController(logistica, donaciones);
         Router router = new Router(new AutorizacionMiddleware(), new HomeController(), new SesionController(auth),
                 new RegistroController(auth), new PanelController(), new NecesidadesController(donaciones),
                 new DonacionesAsignadasController(donaciones), new RecepcionController(donaciones, fotos),
-                new MapaController(donaciones), null, camionesAdmin, depositoAdmin, matchmakingAdmin, recepcionAdmin, importacionesAdmin, categoriasAdmin,
-                new DonantesAdminController(donaciones));
+                new MapaController(donaciones), null, camionesAdmin, depositoAdmin, matchmakingAdmin, recepcionAdmin,
+                importacionesAdmin, categoriasAdmin, new DonantesAdminController(donaciones), rutasAdmin, choferWeb);
 
         web = new Server(router, config, fotos).crear();
         // ruta solo para el test: una llamada autenticada a la API, para probar el refresh del token
@@ -201,6 +208,7 @@ class WebFlujoTest {
     void cadaRolEnSuPanel() throws Exception {
         assertEquals("/entidad", login("entidad", "clave-segura").headers().firstValue("Location").orElse(null));
         assertEquals("/admin", login("admin", "clave-segura").headers().firstValue("Location").orElse(null));
+        assertEquals("/chofer", login("chofer", "clave-segura").headers().firstValue("Location").orElse(null));
     }
 
     @Test
@@ -1240,6 +1248,150 @@ class WebFlujoTest {
         assertTrue(estadoJson.body().contains("EN_PROCESO"));
     }
 
+    @Test
+    @DisplayName("Admin camiones con cuenta chofer y gestión de rutas de reparto")
+    void camionesConCuentaChoferYRutasAdminFlujo() throws Exception {
+        String adminCookie = cookie(login("admin", "clave-segura"));
+
+        // Seguridad de /admin/rutas
+        assertEquals(302, get("/admin/rutas", null).statusCode());
+        assertEquals(403, get("/admin/rutas", cookie(login("donante", "clave-segura"))).statusCode());
+        assertEquals(403, get("/admin/rutas", cookie(login("chofer", "clave-segura"))).statusCode());
+
+        // Alta de camión configurando cuenta de acceso para el chofer
+        Map<String, String> formCamion = new LinkedHashMap<>();
+        formCamion.put("patente", "AF 123 CD");
+        formCamion.put("capacidadCarga", "4500");
+        formCamion.put("capacidadVolumen", "30");
+        formCamion.put("altura", "2.8");
+        formCamion.put("choferNombre", "Carlos");
+        formCamion.put("choferApellido", "Gómez");
+        formCamion.put("choferUsername", "chofer1");
+        formCamion.put("choferPassword", "demo1234");
+        HttpResponse<String> respAlta = post("/admin/camiones", formCamion, adminCookie);
+        assertEquals(302, respAlta.statusCode());
+
+        HttpResponse<String> camionesHtml = get("/admin/camiones", adminCookie);
+        assertTrue(camionesHtml.body().contains("<code>chofer1</code>"));
+
+        // Ejecutar planificación de rutas y abrir modal de hoja de ruta
+        donacionesAsignadas.add(donacion(132, "ASIGNACION_REALIZADA", List.of(), "Frazadas", "Refugio"));
+        HttpResponse<String> respPlan = post("/admin/rutas/planificar", Map.of(), adminCookie);
+        assertEquals(302, respPlan.statusCode());
+        assertEquals("/admin/rutas", respPlan.headers().firstValue("Location").orElse(null));
+
+        HttpResponse<String> rutasHtml = get("/admin/rutas?ver=1", adminCookie);
+        assertEquals(200, rutasHtml.statusCode());
+        assertTrue(rutasHtml.body().contains("Rutas y entregas"));
+        assertTrue(rutasHtml.body().contains("Hoja de ruta #1"));
+        assertTrue(rutasHtml.body().contains("Comedor Los Bajitos"));
+        assertTrue(rutasHtml.body().contains("<code>chofer1</code>"));
+    }
+
+    @Test
+    @DisplayName("Chofer: seguridad por rol, hoja de ruta, inicio de recorrido, confirmación y fallo con motivo")
+    void choferHojaDeRutaFlujo() throws Exception {
+        assertEquals(302, get("/chofer", null).statusCode());
+        assertEquals(403, get("/chofer", cookie(login("donante", "clave-segura"))).statusCode());
+        assertEquals(403, get("/chofer", cookie(login("entidad", "clave-segura"))).statusCode());
+        assertEquals(403, get("/chofer", cookie(login("admin", "clave-segura"))).statusCode());
+
+        String choferCookie = cookie(login("chofer", "clave-segura"));
+
+        // Sin ruta activa muestra tarjeta de estado vacío
+        HttpResponse<String> vacia = get("/chofer", choferCookie);
+        assertEquals(200, vacia.statusCode());
+        assertTrue(vacia.body().contains("No tenés una hoja de ruta activa"));
+
+        // Con una ruta PLANIFICADA de 2 paradas asignada a su camión (id=1)
+        donacionesAsignadas.add(donacion(132, "LISTA_PARA_ENTREGAR", List.of(), "Frazadas", "Refugio"));
+        rutasFalsas.add(crearRutaFalsa(1L, 1L, "PLANIFICADA"));
+
+        HttpResponse<String> planificada = get("/chofer", choferCookie);
+        assertEquals(200, planificada.statusCode());
+        assertTrue(planificada.body().contains("<h1>Hoja de ruta</h1>"));
+        assertFalse(planificada.body().contains("Mi hoja de ruta"));
+        assertTrue(planificada.body().contains("AF 123 CD"));
+        assertTrue(planificada.body().contains("Comenzar recorrido"));
+
+        // Iniciar recorrido pasa a EN_TRASLADO
+        HttpResponse<String> respIniciar = post("/chofer/rutas/1/iniciar", Map.of(), choferCookie);
+        assertEquals(302, respIniciar.statusCode());
+        assertEquals("EN_TRASLADO", rutasFalsas.get(0).get("estado"));
+
+        // Abrir modal de confirmación de la parada 11 y confirmarla
+        HttpResponse<String> modalConfirmar = get("/chofer?confirmarParada=11", choferCookie);
+        assertTrue(modalConfirmar.body().contains("Confirmar entrega en Parada #1"));
+        HttpResponse<String> respConfirmar = post("/chofer/rutas/1/paradas/11/confirmar", Map.of(), choferCookie);
+        assertEquals(302, respConfirmar.statusCode());
+        assertEquals("/chofer", respConfirmar.headers().firstValue("Location").orElse(null));
+
+        // Reportar fallo sin motivo devuelve 400 con el modal abierto
+        HttpResponse<String> falloSinMotivo = post("/chofer/rutas/1/paradas/12/fallar", Map.of("motivo", ""), choferCookie);
+        assertEquals(400, falloSinMotivo.statusCode());
+        assertTrue(falloSinMotivo.body().contains("id=\"modal-fallar-entrega\""));
+        assertTrue(falloSinMotivo.body().contains("El motivo es obligatorio"));
+
+        // Reportar fallo con motivo en la última parada finaliza la ruta y redirige al modal de ruta completada
+        HttpResponse<String> falloOk = post("/chofer/rutas/1/paradas/12/fallar",
+                Map.of("motivo", "Comedor cerrado sin referente"), choferCookie);
+        assertEquals(302, falloOk.statusCode());
+        assertEquals("/chofer?completada=1", falloOk.headers().firstValue("Location").orElse(null));
+        assertEquals("Comedor cerrado sin referente", ultimoMotivoFallo.get());
+
+        HttpResponse<String> modalCompletadaMixta = get("/chofer?completada=1", choferCookie);
+        assertEquals(200, modalCompletadaMixta.statusCode());
+        assertTrue(modalCompletadaMixta.body().contains("id=\"modal-ruta-completada\""));
+        assertTrue(modalCompletadaMixta.body().contains("¡Ruta #1 completada!"));
+        assertTrue(modalCompletadaMixta.body().contains("1 entregada · 1 no recibida"));
+
+        // Segunda ruta con todas las paradas entregadas muestra el modal de todas las paradas completadas
+        rutasFalsas.add(crearRutaFalsa(2L, 1L, "EN_TRASLADO"));
+        assertEquals(302, post("/chofer/rutas/2/paradas/11/confirmar", Map.of(), choferCookie).statusCode());
+        HttpResponse<String> finRuta2 = post("/chofer/rutas/2/paradas/12/confirmar", Map.of(), choferCookie);
+        assertEquals(302, finRuta2.statusCode());
+        assertEquals("/chofer?completada=2", finRuta2.headers().firstValue("Location").orElse(null));
+
+        HttpResponse<String> modalTodasEntregadas = get("/chofer?completada=2", choferCookie);
+        assertEquals(200, modalTodasEntregadas.statusCode());
+        assertTrue(modalTodasEntregadas.body().contains("id=\"modal-ruta-completada\""));
+        assertTrue(modalTodasEntregadas.body().contains("¡Ruta #2 completada!"));
+        assertTrue(modalTodasEntregadas.body().contains("Completaste todas las paradas del recorrido asignado a tu camión."));
+        assertTrue(modalTodasEntregadas.body().contains("2 paradas resueltas (2 entregadas)"));
+    }
+
+    @Test
+    @DisplayName("Admin depósito: pestaña de entregas fallidas permite reprogramar envío o volver a depósito")
+    void depositoEntregasFallidasFlujo() throws Exception {
+        String adminCookie = cookie(login("admin", "clave-segura"));
+
+        Map<String, Object> fallida = new LinkedHashMap<>(
+                donacion(305, "ENTREGA_FALLIDA", List.of(), "Frazadas", "Refugio"));
+        fallida.put("entidadAsignadaId", 10L);
+        fallida.put("justificacion", "Comedor cerrado sin referente");
+        donacionesAsignadas.add(fallida);
+
+        HttpResponse<String> pestanaFallidas = get("/admin/deposito?filtro=fallidas", adminCookie);
+        assertEquals(200, pestanaFallidas.statusCode());
+        assertTrue(pestanaFallidas.body().contains("#305"));
+        assertTrue(pestanaFallidas.body().contains("Comedor Los Bajitos"));
+        assertTrue(pestanaFallidas.body().contains("Comedor cerrado sin referente"));
+        assertTrue(pestanaFallidas.body().contains("Reprogramar envío"));
+        assertTrue(pestanaFallidas.body().contains("Volver a depósito"));
+
+        // Reprogramar pasa a ASIGNACION_REALIZADA
+        HttpResponse<String> respReprog = post("/admin/deposito/305/reprogramar", Map.of(), adminCookie);
+        assertEquals(302, respReprog.statusCode());
+        assertEquals("ASIGNACION_REALIZADA", fallida.get("estadoActual"));
+
+        // Si vuelve a fallar, reingresar la devuelve a EN_DEPOSITO
+        fallida.put("estadoActual", "ENTREGA_FALLIDA");
+        HttpResponse<String> respReing = post("/admin/deposito/305/reingresar", Map.of(), adminCookie);
+        assertEquals(302, respReing.statusCode());
+        assertEquals("/admin/deposito?filtro=en_deposito", respReing.headers().firstValue("Location").orElse(null));
+        assertEquals("EN_DEPOSITO", fallida.get("estadoActual"));
+    }
+
     // ---- API falsa ----
 
     private Javalin crearApiFalsa() {
@@ -1255,10 +1407,26 @@ class WebFlujoTest {
             String rol = switch (username) {
                 case "entidad" -> "ENTIDAD_BENEFICIARIA";
                 case "admin" -> "ADMINISTRADOR";
+                case "chofer" -> "CHOFER";
                 default -> "DONANTE";
             };
             String refresh = "vencido".equals(username) ? "refresh-malo" : "refresh-ok";
             ctx.json(sesion(username, rol, "access-viejo", refresh));
+        });
+
+        api.get("/api/auth/choferes", ctx -> ctx.json(choferesFalsos));
+        api.post("/api/auth/chofer", ctx -> {
+            JsonNode body = mapper.readTree(ctx.body());
+            long camionId = body.get("camionId").asLong();
+            String username = body.get("username").asText();
+            choferesFalsos.removeIf(u -> ((Number) u.get("perfilId")).longValue() == camionId);
+            Map<String, Object> creado = Map.of(
+                    "usuarioId", choferesFalsos.size() + 20L,
+                    "username", username,
+                    "rol", "CHOFER",
+                    "perfilId", camionId);
+            choferesFalsos.add(creado);
+            ctx.status(200).json(creado);
         });
 
         api.post("/api/auth/refresh", ctx -> {
@@ -1370,6 +1538,9 @@ class WebFlujoTest {
             ctx.json(Map.of("id", 2, "nombre", body.get("nombre").asText(), "categoriaId", 1, "categoria", "Alimentos"));
         });
 
+        api.get("/api/entidad-beneficiaria", ctx -> ctx.json(List.of(
+                Map.of("id", 10, "razonSocial", "Comedor Los Bajitos", "direccion", "Av. San Martín 2341"),
+                Map.of("id", 12, "razonSocial", "Hogar Santa Rita", "direccion", "Belgrano 450"))));
         api.get("/api/entidad-beneficiaria/10/necesidades", ctx -> ctx.json(necesidades));
         api.post("/api/entidad-beneficiaria/10/necesidades", ctx -> {
             JsonNode body = mapper.readTree(ctx.body());
@@ -1454,14 +1625,73 @@ class WebFlujoTest {
                     "chofer", Map.of("nombre", "Carlos", "apellido", "Gómez")));
         });
         api.post("/api/camiones", ctx -> {
-            ctx.status(201).json(Map.of("id", 1L, "patente", "AF 123 CD", "capacidadVolumen", 30.0, "altura", 2.8, "capacidadCarga", 4500.0,
-                    "chofer", Map.of("nombre", "Carlos", "apellido", "Gómez")));
+            Map<String, Object> nuevo = Map.of("id", 1L, "patente", "AF 123 CD", "capacidadVolumen", 30.0,
+                    "altura", 2.8, "capacidadCarga", 4500.0,
+                    "chofer", Map.of("nombre", "Carlos", "apellido", "Gómez"));
+            camionesFalsos.removeIf(c -> ((Number) c.get("id")).longValue() == 1L);
+            camionesFalsos.add(nuevo);
+            ctx.status(201).json(nuevo);
         });
         api.put("/api/camiones/{id}", ctx -> {
             ctx.json(Map.of("id", Long.parseLong(ctx.pathParam("id")), "patente", "AF 123 CD", "capacidadVolumen", 35.0, "altura", 3.0, "capacidadCarga", 5000.0,
                     "chofer", Map.of("nombre", "Carlos", "apellido", "Gómez")));
         });
-        api.delete("/api/camiones/{id}", ctx -> ctx.status(204));
+        api.delete("/api/camiones/{id}", ctx -> {
+            long id = Long.parseLong(ctx.pathParam("id"));
+            camionesFalsos.removeIf(c -> ((Number) c.get("id")).longValue() == id);
+            ctx.status(204);
+        });
+
+        // Rutas de logística
+        api.get("/api/rutas", ctx -> ctx.json(rutasFalsas));
+        api.post("/api/rutas/planificaciones", ctx -> {
+            if (!donacionesAsignadas.isEmpty()) {
+                rutasFalsas.add(crearRutaFalsa(rutasFalsas.size() + 1L, 1L, "PLANIFICADA"));
+            }
+            ctx.status(204);
+        });
+        api.get("/api/rutas/camion/{id}", ctx -> {
+            long camionId = Long.parseLong(ctx.pathParam("id"));
+            ctx.json(rutasFalsas.stream()
+                    .filter(r -> ((Number) r.get("camionId")).longValue() == camionId)
+                    .toList());
+        });
+        api.get("/api/rutas/camion/{id}/activa", ctx -> {
+            long camionId = Long.parseLong(ctx.pathParam("id"));
+            rutasFalsas.stream()
+                    .filter(r -> ((Number) r.get("camionId")).longValue() == camionId)
+                    .filter(r -> !"FINALIZADA".equals(r.get("estado")))
+                    .findFirst()
+                    .ifPresentOrElse(ctx::json, () -> ctx.status(204));
+        });
+        api.get("/api/rutas/{id}", ctx -> {
+            long id = Long.parseLong(ctx.pathParam("id"));
+            rutasFalsas.stream()
+                    .filter(r -> ((Number) r.get("id")).longValue() == id)
+                    .findFirst()
+                    .ifPresentOrElse(ctx::json, () -> ctx.status(404).json(Map.of("message", "No existe la ruta")));
+        });
+        api.put("/api/rutas/{id}/estado", ctx -> {
+            long id = Long.parseLong(ctx.pathParam("id"));
+            String nuevoEstado = ctx.body().replace("\"", "").trim();
+            rutasFalsas.stream()
+                    .filter(r -> ((Number) r.get("id")).longValue() == id)
+                    .findFirst()
+                    .ifPresent(r -> r.put("estado", nuevoEstado));
+            ctx.status(204);
+        });
+        api.post("/api/rutas/{rutaId}/paradas/{paradaId}/confirmaciones", ctx -> {
+            actualizarEstadoParadaFalsa(Long.parseLong(ctx.pathParam("rutaId")),
+                    Long.parseLong(ctx.pathParam("paradaId")), "ENTREGADA");
+            ctx.status(204);
+        });
+        api.post("/api/rutas/{rutaId}/paradas/{paradaId}/fallos", ctx -> {
+            JsonNode body = mapper.readTree(ctx.body());
+            ultimoMotivoFallo.set(body.has("motivo") ? body.get("motivo").asText() : null);
+            actualizarEstadoParadaFalsa(Long.parseLong(ctx.pathParam("rutaId")),
+                    Long.parseLong(ctx.pathParam("paradaId")), "NO_RECIBIDA");
+            ctx.status(204);
+        });
 
         // Matchmaking
         api.get("/api/matchmaking/pendientes", ctx -> ctx.json(propuestasFalsas));
@@ -1592,8 +1822,63 @@ class WebFlujoTest {
     }
 
     private Map<String, Object> sesion(String username, String rol, String access, String refresh) {
+        long perfilId = "CHOFER".equals(rol) ? 1L : 10L;
         return Map.of("accessToken", access, "refreshToken", refresh,
-                "usuario", Map.of("usuarioId", 1, "username", username, "rol", rol, "perfilId", 10));
+                "usuario", Map.of("usuarioId", 1, "username", username, "rol", rol, "perfilId", perfilId));
+    }
+
+    private Map<String, Object> crearRutaFalsa(long rutaId, long camionId, String estado) {
+        Map<String, Object> p1 = new LinkedHashMap<>();
+        p1.put("id", 11L);
+        p1.put("orden", 1);
+        p1.put("destino", "Av. San Martín 2341, Paternal, CABA");
+        p1.put("entidad", 10L);
+        p1.put("entregas", List.of(132L));
+        p1.put("estado", "PENDIENTE");
+        p1.put("latitud", -34.6012);
+        p1.put("longitud", -58.4682);
+
+        Map<String, Object> p2 = new LinkedHashMap<>();
+        p2.put("id", 12L);
+        p2.put("orden", 2);
+        p2.put("destino", "Belgrano 450, Balvanera, CABA");
+        p2.put("entidad", 12L);
+        p2.put("entregas", List.of(132L));
+        p2.put("estado", "PENDIENTE");
+        p2.put("latitud", -34.6128);
+        p2.put("longitud", -58.3731);
+
+        Map<String, Object> ruta = new LinkedHashMap<>();
+        ruta.put("id", rutaId);
+        ruta.put("fecha", "2026-11-06");
+        ruta.put("estado", estado);
+        ruta.put("patenteCamion", "AF 123 CD");
+        ruta.put("paradas", new ArrayList<>(List.of(p1, p2)));
+        ruta.put("choferNombre", "Carlos");
+        ruta.put("choferApellido", "Gómez");
+        ruta.put("camionId", camionId);
+        ruta.put("camionLatitud", -34.5986);
+        ruta.put("camionLongitud", -58.4202);
+        return ruta;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void actualizarEstadoParadaFalsa(long rutaId, long paradaId, String nuevoEstado) {
+        rutasFalsas.stream()
+                .filter(r -> ((Number) r.get("id")).longValue() == rutaId)
+                .findFirst()
+                .ifPresent(r -> {
+                    List<Map<String, Object>> paradas = (List<Map<String, Object>>) r.get("paradas");
+                    paradas.stream()
+                            .filter(p -> ((Number) p.get("id")).longValue() == paradaId)
+                            .findFirst()
+                            .ifPresent(p -> p.put("estado", nuevoEstado));
+                    boolean todasResueltas = paradas.stream()
+                            .noneMatch(p -> "PENDIENTE".equals(p.get("estado")));
+                    if (todasResueltas) {
+                        r.put("estado", "FINALIZADA");
+                    }
+                });
     }
 
     // ---- "Navegador" ----

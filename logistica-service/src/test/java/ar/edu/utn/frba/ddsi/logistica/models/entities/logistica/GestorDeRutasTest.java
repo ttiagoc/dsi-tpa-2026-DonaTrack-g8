@@ -76,4 +76,18 @@ class GestorDeRutasTest {
 
         verify(donacionesGrpcClient, times(1)).confirmarEntrega(eq(entidadId), eq(donacionIds), eq("ABC123D"), any());
     }
+
+    @Test
+    @DisplayName("Debería registrar entrega fallida propagando ENTREGA_FALLIDA y el motivo vía gRPC")
+    void registrarEntregaFallida() {
+        Parada parada = mock(Parada.class);
+        when(parada.getDonacionIds()).thenReturn(List.of(201L, 202L));
+
+        gestorDeRutas.registrarEntregaFallida(parada, "Comedor cerrado sin referente");
+
+        verify(donacionesGrpcClient, times(1))
+                .actualizarEstado(201L, "ENTREGA_FALLIDA", "Comedor cerrado sin referente");
+        verify(donacionesGrpcClient, times(1))
+                .actualizarEstado(202L, "ENTREGA_FALLIDA", "Comedor cerrado sin referente");
+    }
 }

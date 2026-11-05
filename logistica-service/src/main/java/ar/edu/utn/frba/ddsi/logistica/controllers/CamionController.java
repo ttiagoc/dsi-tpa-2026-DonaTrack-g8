@@ -4,7 +4,9 @@ import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.common.controllers.JavalinController;
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
+import ar.edu.utn.frba.ddsi.common.security.Autorizacion;
 import static ar.edu.utn.frba.ddsi.common.security.Rol.ADMINISTRADOR;
+import static ar.edu.utn.frba.ddsi.common.security.Rol.CHOFER;
 import static ar.edu.utn.frba.ddsi.common.security.Rol.SISTEMA;
 import ar.edu.utn.frba.ddsi.logistica.dto.camion.CamionRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionRequest;
@@ -28,8 +30,9 @@ public class CamionController implements JavalinController {
 
         app.get("/api/camiones/{id}", ctx -> {
             Long id = Long.parseLong(ctx.pathParam("id"));
+            Autorizacion.exigirPropietario(ctx, CHOFER, id);
             ctx.json(camionService.obtenerPorId(id));
-        }, ADMINISTRADOR, SISTEMA);
+        }, CHOFER, ADMINISTRADOR, SISTEMA);
 
         app.post("/api/camiones", ctx -> {
             CamionRequest request = ctx.bodyAsClass(CamionRequest.class);

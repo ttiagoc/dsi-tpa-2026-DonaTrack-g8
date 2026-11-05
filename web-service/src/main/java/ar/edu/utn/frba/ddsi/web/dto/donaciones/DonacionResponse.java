@@ -13,6 +13,7 @@ public record DonacionResponse(
         List<Bien> bienes,
         String estadoActual,
         LocalDateTime fecha,
+        Long entidadAsignadaId,
         String subcategoria,
         String categoria,
         LocalDateTime fechaAsignacion,
@@ -21,6 +22,56 @@ public record DonacionResponse(
         List<String> fotosRecepcion,
         String justificacion,
         Long donanteId) {
+
+    public DonacionResponse(
+            Long id,
+            List<Bien> bienes,
+            String estadoActual,
+            LocalDateTime fecha,
+            String subcategoria,
+            String categoria,
+            LocalDateTime fechaAsignacion,
+            LocalDateTime fechaEstado,
+            Necesidad necesidad,
+            List<String> fotosRecepcion,
+            String justificacion) {
+        this(id, bienes, estadoActual, fecha, null, subcategoria, categoria, fechaAsignacion, fechaEstado,
+                necesidad, fotosRecepcion, justificacion, null);
+    }
+
+    public DonacionResponse(
+            Long id,
+            List<Bien> bienes,
+            String estadoActual,
+            LocalDateTime fecha,
+            String subcategoria,
+            String categoria,
+            LocalDateTime fechaAsignacion,
+            LocalDateTime fechaEstado,
+            Necesidad necesidad,
+            List<String> fotosRecepcion,
+            String justificacion,
+            Long donanteId) {
+        this(id, bienes, estadoActual, fecha, null, subcategoria, categoria, fechaAsignacion, fechaEstado,
+                necesidad, fotosRecepcion, justificacion, donanteId);
+    }
+
+    public DonacionResponse(
+            Long id,
+            List<Bien> bienes,
+            String estadoActual,
+            LocalDateTime fecha,
+            Long entidadAsignadaId,
+            String subcategoria,
+            String categoria,
+            LocalDateTime fechaAsignacion,
+            LocalDateTime fechaEstado,
+            Necesidad necesidad,
+            List<String> fotosRecepcion,
+            String justificacion) {
+        this(id, bienes, estadoActual, fecha, entidadAsignadaId, subcategoria, categoria, fechaAsignacion, fechaEstado,
+                necesidad, fotosRecepcion, justificacion, null);
+    }
 
     public record Bien(String descripcion, Long cantidad) {
     }
@@ -59,5 +110,9 @@ public record DonacionResponse(
 
     public boolean esVencida() {
         return "VENCIDA".equalsIgnoreCase(estadoActual);
+    }
+
+    public boolean esEntregaFallida() {
+        return "ENTREGA_FALLIDA".equalsIgnoreCase(estadoActual);
     }
 }

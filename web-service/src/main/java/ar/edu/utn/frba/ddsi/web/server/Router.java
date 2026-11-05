@@ -1,6 +1,7 @@
 package ar.edu.utn.frba.ddsi.web.server;
 
 import static ar.edu.utn.frba.ddsi.web.sesion.RolUsuario.ADMINISTRADOR;
+import static ar.edu.utn.frba.ddsi.web.sesion.RolUsuario.CHOFER;
 import static ar.edu.utn.frba.ddsi.web.sesion.RolUsuario.DONANTE;
 import static ar.edu.utn.frba.ddsi.web.sesion.RolUsuario.ENTIDAD_BENEFICIARIA;
 
@@ -10,9 +11,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ar.edu.utn.frba.ddsi.web.controllers.CamionesAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.CategoriasAdminController;
+import ar.edu.utn.frba.ddsi.web.controllers.ChoferWebController;
 import ar.edu.utn.frba.ddsi.web.controllers.DepositoAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.MatchmakingAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.RecepcionAdminController;
+import ar.edu.utn.frba.ddsi.web.controllers.RutasAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.ImportacionesAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.DonacionesAsignadasController;
 import ar.edu.utn.frba.ddsi.web.controllers.DonanteWebController;
@@ -52,6 +55,8 @@ public class Router {
     private final ImportacionesAdminController importacionesAdmin;
     private final CategoriasAdminController categoriasAdmin;
     private final DonantesAdminController donantesAdmin;
+    private final RutasAdminController rutasAdmin;
+    private final ChoferWebController choferWeb;
 
     @Autowired
     public Router(AutorizacionMiddleware autorizacion, HomeController home, SesionController sesion,
@@ -64,7 +69,9 @@ public class Router {
             @Autowired(required = false) RecepcionAdminController recepcionAdmin,
             @Autowired(required = false) ImportacionesAdminController importacionesAdmin,
             @Autowired(required = false) CategoriasAdminController categoriasAdmin,
-            @Autowired(required = false) DonantesAdminController donantesAdmin) {
+            @Autowired(required = false) DonantesAdminController donantesAdmin,
+            @Autowired(required = false) RutasAdminController rutasAdmin,
+            @Autowired(required = false) ChoferWebController choferWeb) {
 
         this.autorizacion = autorizacion;
         this.home = home;
@@ -83,13 +90,31 @@ public class Router {
         this.importacionesAdmin = importacionesAdmin;
         this.categoriasAdmin = categoriasAdmin;
         this.donantesAdmin = donantesAdmin;
+        this.rutasAdmin = rutasAdmin;
+        this.choferWeb = choferWeb;
+    }
+
+    public Router(AutorizacionMiddleware autorizacion, HomeController home, SesionController sesion,
+            RegistroController registro, PanelController panel, NecesidadesController necesidades,
+            DonacionesAsignadasController donacionesAsignadas, RecepcionController recepcion, MapaController mapa,
+            DonanteWebController donanteWeb,
+            CamionesAdminController camionesAdmin,
+            DepositoAdminController depositoAdmin,
+            MatchmakingAdminController matchmakingAdmin,
+            RecepcionAdminController recepcionAdmin,
+            ImportacionesAdminController importacionesAdmin,
+            CategoriasAdminController categoriasAdmin) {
+        this(autorizacion, home, sesion, registro, panel, necesidades, donacionesAsignadas, recepcion, mapa,
+                donanteWeb, camionesAdmin, depositoAdmin, matchmakingAdmin, recepcionAdmin, importacionesAdmin,
+                categoriasAdmin, null, null, null);
     }
 
   // Sobrecarga para tests
     public Router(AutorizacionMiddleware autorizacion, HomeController home, SesionController sesion,
                   RegistroController registro, PanelController panel, NecesidadesController necesidades,
                   DonacionesAsignadasController donacionesAsignadas, RecepcionController recepcion, MapaController mapa) {
-      this(autorizacion, home, sesion, registro, panel, necesidades, donacionesAsignadas, recepcion, mapa, null, null, null, null, null, null, null, null);
+      this(autorizacion, home, sesion, registro, panel, necesidades, donacionesAsignadas, recepcion, mapa,
+              null, null, null, null, null, null, null, null, null, null);
     }
 
     public void registrar(Javalin app) {
@@ -137,6 +162,14 @@ public class Router {
           app.get("/donante/seguimiento", donanteWeb::seguimientoDonante, DONANTE);
         }
 
+        // --- Chofer (Logística) ---
+        if (choferWeb != null) {
+            app.get("/chofer", choferWeb::hojaDeRuta, CHOFER);
+            app.post("/chofer/rutas/{rutaId}/iniciar", choferWeb::iniciarRuta, CHOFER);
+            app.post("/chofer/rutas/{rutaId}/paradas/{paradaId}/confirmar", choferWeb::confirmarParada, CHOFER);
+            app.post("/chofer/rutas/{rutaId}/paradas/{paradaId}/fallar", choferWeb::fallarParada, CHOFER);
+        }
+
         // --- Administrador (C) ---
         app.get("/admin", panel::admin, ADMINISTRADOR);
         if (camionesAdmin != null) {
@@ -145,9 +178,15 @@ public class Router {
             app.post("/admin/camiones/{id}/editar", camionesAdmin::actualizar, ADMINISTRADOR);
             app.post("/admin/camiones/{id}/eliminar", camionesAdmin::eliminar, ADMINISTRADOR);
         }
+        if (rutasAdmin != null) {
+            app.get("/admin/rutas", rutasAdmin::listar, ADMINISTRADOR);
+            app.post("/admin/rutas/planificar", rutasAdmin::planificar, ADMINISTRADOR);
+        }
         if (depositoAdmin != null) {
             app.get("/admin/deposito", depositoAdmin::listar, ADMINISTRADOR);
             app.post("/admin/deposito/{id}/vencer", depositoAdmin::marcarVencida, ADMINISTRADOR);
+            app.post("/admin/deposito/{id}/reprogramar", depositoAdmin::reprogramar, ADMINISTRADOR);
+            app.post("/admin/deposito/{id}/reingresar", depositoAdmin::reingresar, ADMINISTRADOR);
         }
         if (matchmakingAdmin != null) {
             app.get("/admin/matchmaking", matchmakingAdmin::listar, ADMINISTRADOR);

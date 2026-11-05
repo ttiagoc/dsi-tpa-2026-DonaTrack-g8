@@ -40,7 +40,7 @@ public class Usuario {
     @Column(nullable = false, length = 30)
     private Rol rol;
 
-    // id del Donante o de la EntidadBeneficiaria segun el rol; null para el administrador
+    // id del Donante, de la EntidadBeneficiaria o del Camion (CHOFER) segun el rol; null para el administrador
     @Column(name = "perfil_id")
     private Long perfilId;
 
@@ -51,7 +51,7 @@ public class Usuario {
             throw new BusinessException("El nombre de usuario no puede estar vacio");
         }
         if (rol == null || rol == Rol.SISTEMA) {
-            throw new BusinessException("Un usuario debe ser donante, entidad beneficiaria o administrador");
+            throw new BusinessException("Un usuario debe ser donante, entidad beneficiaria, chofer o administrador");
         }
         if (rol != Rol.ADMINISTRADOR && perfilId == null) {
             throw new BusinessException("Un usuario " + rol + " debe estar asociado a su perfil");

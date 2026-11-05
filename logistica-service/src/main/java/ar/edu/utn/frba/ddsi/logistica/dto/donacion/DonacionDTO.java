@@ -14,4 +14,10 @@ public class DonacionDTO {
     private Double peso;
     private Double volumen;
     private String direccion;
+    private Long entidadId;
+    private String entidadNombre;
+
+    public DonacionDTO(Long id, Double peso, Double volumen, String direccion) {
+        this(id, peso, volumen, direccion, null, null);
+    }
 }

@@ -18,6 +18,7 @@ private static final long serialVersionUID = 0L;
   }
   private DonacionItem() {
     direccion_ = "";
+    entidadNombre_ = "";
   }
 
   @java.lang.Override
@@ -112,6 +113,56 @@ private static final long serialVersionUID = 0L;
     }
   }
 
+  public static final int ENTIDAD_ID_FIELD_NUMBER = 5;
+  private long entidadId_ = 0L;
+  /**
+   * <code>int64 entidad_id = 5;</code>
+   * @return The entidadId.
+   */
+  @java.lang.Override
+  public long getEntidadId() {
+    return entidadId_;
+  }
+
+  public static final int ENTIDAD_NOMBRE_FIELD_NUMBER = 6;
+  @SuppressWarnings("serial")
+  private volatile java.lang.Object entidadNombre_ = "";
+  /**
+   * <code>string entidad_nombre = 6;</code>
+   * @return The entidadNombre.
+   */
+  @java.lang.Override
+  public java.lang.String getEntidadNombre() {
+    java.lang.Object ref = entidadNombre_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      entidadNombre_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string entidad_nombre = 6;</code>
+   * @return The bytes for entidadNombre.
+   */
+  @java.lang.Override
+  public com.google.protobuf.ByteString
+      getEntidadNombreBytes() {
+    java.lang.Object ref = entidadNombre_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      entidadNombre_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -138,6 +189,12 @@ private static final long serialVersionUID = 0L;
     if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(direccion_)) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 4, direccion_);
     }
+    if (entidadId_ != 0L) {
+      output.writeInt64(5, entidadId_);
+    }
+    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(entidadNombre_)) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 6, entidadNombre_);
+    }
     getUnknownFields().writeTo(output);
   }
 
@@ -161,6 +218,13 @@ private static final long serialVersionUID = 0L;
     }
     if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(direccion_)) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, direccion_);
+    }
+    if (entidadId_ != 0L) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeInt64Size(5, entidadId_);
+    }
+    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(entidadNombre_)) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, entidadNombre_);
     }
     size += getUnknownFields().getSerializedSize();
     memoizedSize = size;
@@ -187,6 +251,10 @@ private static final long serialVersionUID = 0L;
             other.getVolumen())) return false;
     if (!getDireccion()
         .equals(other.getDireccion())) return false;
+    if (getEntidadId()
+        != other.getEntidadId()) return false;
+    if (!getEntidadNombre()
+        .equals(other.getEntidadNombre())) return false;
     if (!getUnknownFields().equals(other.getUnknownFields())) return false;
     return true;
   }
@@ -209,6 +277,11 @@ private static final long serialVersionUID = 0L;
         java.lang.Double.doubleToLongBits(getVolumen()));
     hash = (37 * hash) + DIRECCION_FIELD_NUMBER;
     hash = (53 * hash) + getDireccion().hashCode();
+    hash = (37 * hash) + ENTIDAD_ID_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+        getEntidadId());
+    hash = (37 * hash) + ENTIDAD_NOMBRE_FIELD_NUMBER;
+    hash = (53 * hash) + getEntidadNombre().hashCode();
     hash = (29 * hash) + getUnknownFields().hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -344,6 +417,8 @@ private static final long serialVersionUID = 0L;
       peso_ = 0D;
       volumen_ = 0D;
       direccion_ = "";
+      entidadId_ = 0L;
+      entidadNombre_ = "";
       return this;
     }
 
@@ -388,6 +463,12 @@ private static final long serialVersionUID = 0L;
       }
       if (((from_bitField0_ & 0x00000008) != 0)) {
         result.direccion_ = direccion_;
+      }
+      if (((from_bitField0_ & 0x00000010) != 0)) {
+        result.entidadId_ = entidadId_;
+      }
+      if (((from_bitField0_ & 0x00000020) != 0)) {
+        result.entidadNombre_ = entidadNombre_;
       }
     }
 
@@ -449,6 +530,14 @@ private static final long serialVersionUID = 0L;
         bitField0_ |= 0x00000008;
         onChanged();
       }
+      if (other.getEntidadId() != 0L) {
+        setEntidadId(other.getEntidadId());
+      }
+      if (!other.getEntidadNombre().isEmpty()) {
+        entidadNombre_ = other.entidadNombre_;
+        bitField0_ |= 0x00000020;
+        onChanged();
+      }
       this.mergeUnknownFields(other.getUnknownFields());
       onChanged();
       return this;
@@ -495,6 +584,16 @@ private static final long serialVersionUID = 0L;
               bitField0_ |= 0x00000008;
               break;
             } // case 34
+            case 40: {
+              entidadId_ = input.readInt64();
+              bitField0_ |= 0x00000010;
+              break;
+            } // case 40
+            case 50: {
+              entidadNombre_ = input.readStringRequireUtf8();
+              bitField0_ |= 0x00000020;
+              break;
+            } // case 50
             default: {
               if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                 done = true; // was an endgroup tag
@@ -676,6 +775,110 @@ private static final long serialVersionUID = 0L;
       checkByteStringIsUtf8(value);
       direccion_ = value;
       bitField0_ |= 0x00000008;
+      onChanged();
+      return this;
+    }
+
+    private long entidadId_ ;
+    /**
+     * <code>int64 entidad_id = 5;</code>
+     * @return The entidadId.
+     */
+    @java.lang.Override
+    public long getEntidadId() {
+      return entidadId_;
+    }
+    /**
+     * <code>int64 entidad_id = 5;</code>
+     * @param value The entidadId to set.
+     * @return This builder for chaining.
+     */
+    public Builder setEntidadId(long value) {
+
+      entidadId_ = value;
+      bitField0_ |= 0x00000010;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>int64 entidad_id = 5;</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearEntidadId() {
+      bitField0_ = (bitField0_ & ~0x00000010);
+      entidadId_ = 0L;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object entidadNombre_ = "";
+    /**
+     * <code>string entidad_nombre = 6;</code>
+     * @return The entidadNombre.
+     */
+    public java.lang.String getEntidadNombre() {
+      java.lang.Object ref = entidadNombre_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        entidadNombre_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string entidad_nombre = 6;</code>
+     * @return The bytes for entidadNombre.
+     */
+    public com.google.protobuf.ByteString
+        getEntidadNombreBytes() {
+      java.lang.Object ref = entidadNombre_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        entidadNombre_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string entidad_nombre = 6;</code>
+     * @param value The entidadNombre to set.
+     * @return This builder for chaining.
+     */
+    public Builder setEntidadNombre(
+        java.lang.String value) {
+      if (value == null) { throw new NullPointerException(); }
+      entidadNombre_ = value;
+      bitField0_ |= 0x00000020;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string entidad_nombre = 6;</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearEntidadNombre() {
+      entidadNombre_ = getDefaultInstance().getEntidadNombre();
+      bitField0_ = (bitField0_ & ~0x00000020);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string entidad_nombre = 6;</code>
+     * @param value The bytes for entidadNombre to set.
+     * @return This builder for chaining.
+     */
+    public Builder setEntidadNombreBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) { throw new NullPointerException(); }
+      checkByteStringIsUtf8(value);
+      entidadNombre_ = value;
+      bitField0_ |= 0x00000020;
       onChanged();
       return this;
     }

@@ -35,7 +35,7 @@
       <h2 class="seccion-form__titulo">2. Datos de la Entrega</h2>
       <div class="campo{{#if errores.descripcion}} campo--error{{/if}}">
         <label for="descripcion">Descripción general de la donación</label>
-        <input type="text" id="descripcion" name="descripcion" value="{{#if form.descripcion}}{{form.descripcion}}{{else}}Recepción presencial en centro de acopio{{/if}}" placeholder="ej: Entrega presencial de alimentos y mobiliario">
+        <input type="text" id="descripcion" name="descripcion" value="{{form.descripcion}}">
         {{#if errores.descripcion}}<small class="campo__error">{{errores.descripcion}}</small>{{/if}}
       </div>
     </div>

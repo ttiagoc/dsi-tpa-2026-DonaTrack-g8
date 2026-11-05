@@ -190,6 +190,9 @@ public abstract class ApiClient {
     }
 
     private <T> T convertir(String body, TypeReference<T> tipo) {
+        if (body == null || body.isBlank()) {
+            return null;
+        }
         try {
             return mapper.readValue(body, tipo);
         } catch (JsonProcessingException e) {

@@ -1,7 +1,9 @@
 package ar.edu.utn.frba.ddsi.logistica.services.impl;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -14,10 +16,12 @@ import ar.edu.utn.frba.ddsi.logistica.dto.ruta.ParadaResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaResponse;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Camion;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.GeocodificadorCaba;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.GestorDeRutas;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.MonitorDeRutas;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Parada;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ruta;
+import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ubicacion;
 import ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoRuta;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
@@ -59,6 +63,37 @@ public class RutaServiceImpl implements RutaService {
         return this.toRutaResponse(r);
     }
 
+    @Override
+    public Optional<RutaResponse> obtenerRutaActivaPorCamion(Long camionId) {
+        List<Ruta> rutasDelCamion = rutaRepository.findAll().stream()
+                .filter(r -> r.getCamion() != null && camionId.equals(r.getCamion().getId()))
+                .toList();
+
+        Optional<Ruta> enTraslado = rutasDelCamion.stream()
+                .filter(r -> r.getEstado() == EstadoRuta.EN_TRASLADO)
+                .sorted(Comparator.comparing(Ruta::getFecha, Comparator.nullsLast(Comparator.naturalOrder())))
+                .findFirst();
+        if (enTraslado.isPresent()) {
+            return enTraslado.map(this::toRutaResponse);
+        }
+
+        return rutasDelCamion.stream()
+                .filter(r -> r.getEstado() == EstadoRuta.PLANIFICADA)
+                .sorted(Comparator.comparing(Ruta::getFecha, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(r -> r.getId() != null ? r.getId() : Long.MAX_VALUE))
+                .findFirst()
+                .map(this::toRutaResponse);
+    }
+
+    @Override
+    public List<RutaResponse> obtenerPorCamion(Long camionId) {
+        return rutaRepository.findAll().stream()
+                .filter(r -> r.getCamion() != null && camionId.equals(r.getCamion().getId()))
+                .sorted(Comparator.comparing(Ruta::getFecha, Comparator.nullsLast(Comparator.reverseOrder())))
+                .map(this::toRutaResponse)
+                .toList();
+    }
+
     public boolean eliminar(Long id) {
         return rutaRepository.deleteById(id);
     }
@@ -90,7 +125,15 @@ public class RutaServiceImpl implements RutaService {
     }
 
     private RutaResponse toRutaResponse(Ruta ruta) {
-        String patenteCamion = ruta.getCamion() != null ? ruta.getCamion().getPatente() : null;
+        Camion camion = ruta.getCamion();
+        String patenteCamion = camion != null ? camion.getPatente() : null;
+        Long camionId = camion != null ? camion.getId() : null;
+        Double camionLat = (camion != null && camion.getUbicacion() != null)
+                ? camion.getUbicacion().getLatitud()
+                : GeocodificadorCaba.DEPOSITO_LAT;
+        Double camionLng = (camion != null && camion.getUbicacion() != null)
+                ? camion.getUbicacion().getLongitud()
+                : GeocodificadorCaba.DEPOSITO_LNG;
         String choferNombre = ruta.getChofer() != null ? ruta.getChofer().getNombre() : null;
         String choferApellido = ruta.getChofer() != null ? ruta.getChofer().getApellido() : null;
 
@@ -105,17 +148,23 @@ public class RutaServiceImpl implements RutaService {
                 patenteCamion,
                 paradas,
                 choferNombre,
-                choferApellido);
+                choferApellido,
+                camionId,
+                camionLat,
+                camionLng);
     }
 
     private ParadaResponse toParadaResponse(Parada parada) {
+        double[] coords = GeocodificadorCaba.ubicar(parada.getDestino(), parada.getEntidadId());
         return new ParadaResponse(
                 parada.getId(),
                 parada.getOrden(),
                 parada.getDestino(),
                 parada.getEntidadId(),
                 parada.getDonacionIds(),
-                parada.getEstado());
+                parada.getEstado(),
+                coords[0],
+                coords[1]);
     }
 
     private Ruta toRuta(RutaRequest request) {
@@ -162,6 +211,11 @@ public class RutaServiceImpl implements RutaService {
 
         if ("EN_TRASLADO".equalsIgnoreCase(estado)) {
             ruta.iniciar();
+            if (ruta.getCamion() != null && ruta.getCamion().getUbicacion() == null) {
+                ruta.getCamion().actualizarUbicacion(
+                        new Ubicacion(GeocodificadorCaba.DEPOSITO_LAT, GeocodificadorCaba.DEPOSITO_LNG, 35.0));
+                camionRepository.save(ruta.getCamion());
+            }
             rutaRepository.save(ruta);
             gestorDeRutas.iniciarRuta(ruta);
         } else if ("FINALIZADA".equalsIgnoreCase(estado)) {
@@ -178,6 +232,9 @@ public class RutaServiceImpl implements RutaService {
     public void confirmarEntregaExitosa(Long rutaId, Long paradaId) {
         Ruta ruta = rutaRepository.findById(rutaId)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro una ruta con el id: " + rutaId));
+        if (ruta.getEstado() != EstadoRuta.EN_TRASLADO) {
+            throw new BusinessException("Primero se debe iniciar el recorrido de la ruta antes de confirmar paradas");
+        }
 
         Parada parada = ruta.getParadas().stream()
                 .filter(p -> paradaId.equals(p.getId()))
@@ -186,14 +243,27 @@ public class RutaServiceImpl implements RutaService {
                         "No se encontro una parada con el id: " + paradaId + " en la ruta " + rutaId));
 
         parada.marcarEntregada();
+        moverCamionAParada(ruta, parada);
+        if (ruta.todasLasParadasResueltas()) {
+            ruta.finalizar();
+        }
         rutaRepository.save(ruta);
 
         gestorDeRutas.confirmarEntregaExitosa(parada, ruta);
     }
 
+    @Override
     public void registrarEntregaNoRecibida(Long rutaId, Long paradaId) {
+        registrarEntregaNoRecibida(rutaId, paradaId, null);
+    }
+
+    @Override
+    public void registrarEntregaNoRecibida(Long rutaId, Long paradaId, String motivo) {
         Ruta ruta = rutaRepository.findById(rutaId)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro una ruta con el id: " + rutaId));
+        if (ruta.getEstado() != EstadoRuta.EN_TRASLADO) {
+            throw new BusinessException("Primero se debe iniciar el recorrido de la ruta antes de registrar fallos");
+        }
 
         Parada parada = ruta.getParadas().stream()
                 .filter(p -> paradaId.equals(p.getId()))
@@ -202,7 +272,22 @@ public class RutaServiceImpl implements RutaService {
                         "No se encontro una parada con el id: " + paradaId + " en la ruta " + rutaId));
 
         parada.marcarNoRecibida();
+        moverCamionAParada(ruta, parada);
+        if (ruta.todasLasParadasResueltas()) {
+            ruta.finalizar();
+        }
         rutaRepository.save(ruta);
+
+        gestorDeRutas.registrarEntregaFallida(parada, motivo);
+    }
+
+    private void moverCamionAParada(Ruta ruta, Parada parada) {
+        if (ruta.getCamion() == null) {
+            return;
+        }
+        double[] coords = GeocodificadorCaba.ubicar(parada.getDestino(), parada.getEntidadId());
+        ruta.getCamion().actualizarUbicacion(new Ubicacion(coords[0], coords[1], 0.0));
+        camionRepository.save(ruta.getCamion());
     }
 
     public UbicacionResponse obtenerUbicacionActual(Long id) {

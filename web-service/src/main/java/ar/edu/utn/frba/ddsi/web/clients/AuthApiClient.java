@@ -1,6 +1,12 @@
 package ar.edu.utn.frba.ddsi.web.clients;
 
 import java.net.http.HttpClient;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ar.edu.utn.frba.ddsi.web.dto.auth.LoginRequest;
 import ar.edu.utn.frba.ddsi.web.dto.auth.RefreshRequest;
@@ -14,8 +20,6 @@ import ar.edu.utn.frba.ddsi.web.exceptions.ApiException;
 import ar.edu.utn.frba.ddsi.web.exceptions.SesionVencidaException;
 import ar.edu.utn.frba.ddsi.web.sesion.SesionUsuario;
 import io.javalin.http.Context;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /** /api/auth de donaciones-service (contrato en el Plan A, seccion 2.1). */
 public class AuthApiClient extends ApiClient {
@@ -47,6 +51,21 @@ public class AuthApiClient extends ApiClient {
 
     public UsuarioSesion me(Context ctx) {
         return get(ctx, "/auth/me", UsuarioSesion.class);
+    }
+
+    public UsuarioSesion configurarUsuarioChofer(Context ctx, Long camionId, String username, String password) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("camionId", camionId);
+        body.put("username", username);
+        if (password != null && !password.isBlank()) {
+            body.put("password", password);
+        }
+        return post(ctx, "/auth/chofer", body, UsuarioSesion.class);
+    }
+
+    public List<UsuarioSesion> listarUsuariosChofer(Context ctx) {
+        List<UsuarioSesion> lista = get(ctx, "/auth/choferes", new TypeReference<List<UsuarioSesion>>() {});
+        return lista != null ? lista : List.of();
     }
 
     /** Si el refresh token tambien vencio, se cierra la sesion. */

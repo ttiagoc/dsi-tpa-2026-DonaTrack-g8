@@ -1,5 +1,6 @@
 package ar.edu.utn.frba.ddsi.logistica.models.entities.logistica;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -90,5 +91,38 @@ class PlanificadorDeRutasTest {
         verify(rutaRepository, times(1)).save(any(Ruta.class));
         verify(donacionesGrpcClient, times(1)).actualizarEstado(eq(10L), eq("LISTA_PARA_ENTREGAR"), any());
         verify(donacionesGrpcClient, times(1)).actualizarEstado(eq(20L), eq("LISTA_PARA_ENTREGAR"), any());
+    }
+
+    @Test
+    @DisplayName("GestorPlanificacionRutas agrupa donaciones por entidad y respeta peso y volumen del camión")
+    void calcularPlanificacionAgrupaYRespetaCapacidad() {
+        GestorPlanificacionRutas gestorReal = new GestorPlanificacionRutas(null, "http://localhost/noop");
+
+        Camion c1 = new Camion("AA 111 AA", 10.0, 2.5, 100.0, null);
+        c1.setId(1L);
+        Camion c2 = new Camion("BB 222 BB", 10.0, 2.5, 100.0, null);
+        c2.setId(2L);
+
+        DonacionDTO d1 = new DonacionDTO(101L, 40.0, 2.0, "Av. San Martín 2341, Paternal, CABA", 10L, "Comedor A");
+        DonacionDTO d2 = new DonacionDTO(102L, 35.0, 1.5, "Av. San Martín 2341, Paternal, CABA", 10L, "Comedor A");
+        DonacionDTO d3 = new DonacionDTO(103L, 50.0, 3.0, "Belgrano 450, Balvanera, CABA", 12L, "Hogar B");
+        DonacionDTO d4 = new DonacionDTO(104L, 90.0, 4.0, "Rivadavia 5100, Caballito, CABA", 15L, "Merendero C");
+
+        EjecutarPlanificacionRequest resultado = gestorReal.calcularPlanificacion(
+                List.of(d1, d2, d3, d4), List.of(c1, c2));
+
+        assertEquals(2, resultado.camiones().size());
+        // Camión 1 agrupa d1 y d2 en una única parada hacia la entidad 10 (75 kg <= 100 kg)
+        CamionPlanificacionRequest planC1 = resultado.camiones().get(0);
+        assertEquals(1L, planC1.id());
+        assertEquals(1, planC1.direcciones().size());
+        assertEquals(10L, planC1.direcciones().get(0).entidadId());
+        assertEquals(List.of(101L, 102L), planC1.direcciones().get(0).donacionesIds());
+
+        // d3 (50 kg) pasa al Camión 2; d4 (90 kg) excede lo restante en ambos y queda sin asignar
+        CamionPlanificacionRequest planC2 = resultado.camiones().get(1);
+        assertEquals(2L, planC2.id());
+        assertEquals(List.of(103L), planC2.direcciones().get(0).donacionesIds());
+        assertEquals(List.of(104L), resultado.donacionesSinAsignar());
     }
 }

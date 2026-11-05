@@ -50,6 +50,8 @@ public class DonacionesGrpcServiceImpl extends DonacionesGrpcServiceGrpc.Donacio
                         .setPeso(d.peso() != null ? d.peso() : 0.0)
                         .setVolumen(d.volumen() != null ? d.volumen() : 0.0)
                         .setDireccion(d.direccion() != null ? d.direccion() : "")
+                        .setEntidadId(d.entidadId() != null ? d.entidadId() : 0L)
+                        .setEntidadNombre(d.entidadNombre() != null ? d.entidadNombre() : "")
                         .build());
             }
 

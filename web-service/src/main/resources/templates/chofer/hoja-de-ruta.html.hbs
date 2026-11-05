@@ -1,0 +1,293 @@
+{{#partial "titulo"}}Hoja de ruta · DonaTrack{{/partial}}
+
+{{#partial "head"}}
+  {{#if ruta}}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  {{/if}}
+{{/partial}}
+
+{{#partial "contenido"}}
+<header class="encabezado-pagina">
+  <div>
+    <h1>Hoja de ruta</h1>
+    <p class="texto-suave">Recorrido asignado a tu camión para confirmar cada entrega en destino.</p>
+  </div>
+  {{#if ruta}}
+    <div class="encabezado-pagina__accion">
+      {{#if esPlanificada}}
+        <form method="post" action="/chofer/rutas/{{ruta.id}}/iniciar">
+          <button type="submit" class="boton" data-cargando="Iniciando recorrido…">
+            <svg class="icono" aria-hidden="true"><use href="#i-camion"/></svg> Comenzar recorrido
+          </button>
+        </form>
+      {{else}}
+        <span class="etiqueta etiqueta--info" style="font-size: 0.95rem; padding: 4px 12px;">Ruta #{{ruta.id}} · En traslado</span>
+      {{/if}}
+    </div>
+  {{/if}}
+</header>
+
+{{#if camion}}
+  <section class="tarjeta camion-banner" aria-label="Camión asignado">
+    <div class="camion-banner__datos">
+      <span class="camion-banner__icono" aria-hidden="true">
+        <svg class="icono" aria-hidden="true"><use href="#i-camion"/></svg>
+      </span>
+      <div>
+        <h2 style="font-size: 1.15rem; margin: 0;">Camión {{camion.patente}} · {{camion.choferNombreCompleto}}</h2>
+        <p class="texto-suave" style="font-size: var(--texto-chico); margin: 2px 0 0;">
+          Capacidad: {{cargaCamionFormateada}} kg · {{volumenCamionFormateado}} m³
+          {{#if ruta}} · Fecha de salida: {{ruta.fechaFormateada}} · {{ruta.paradasTexto}}{{/if}}
+        </p>
+      </div>
+    </div>
+    {{#if ruta}}
+      <div style="display: flex; gap: var(--espacio-2); align-items: center;">
+        <span class="etiqueta etiqueta--pendiente">{{pendientesTexto}}</span>
+      </div>
+    {{/if}}
+  </section>
+{{/if}}
+
+{{#if ruta}}
+  {{#if esPlanificada}}
+    <div class="alerta alerta--info" role="status">
+      <span>Esta hoja de ruta está <strong>Planificada</strong>. Pulsá <strong>Comenzar recorrido</strong> al salir del depósito para activar tu GPS y habilitar la confirmación en cada parada.</span>
+    </div>
+  {{/if}}
+
+  <div class="tarjeta" style="padding: 0; overflow: hidden; margin-bottom: var(--espacio-5);">
+    <div id="mapa-hoja-ruta" class="hoja-ruta-mapa" role="region" aria-label="Mapa de recorrido del camión"></div>
+    <div style="padding: var(--espacio-2) var(--espacio-4); border-top: 1px solid var(--color-borde); background: var(--color-superficie); font-size: var(--texto-chico); color: var(--color-texto-suave);">
+      <strong>D</strong> Depósito central (Av. Medrano 951, CABA)
+      {{#if ordenResumen}} · <strong>{{ordenResumen}}</strong> Orden de entrega{{/if}}
+      · <span aria-hidden="true">🚚</span> Posición actual del camión
+    </div>
+  </div>
+
+  <h2 style="margin-bottom: var(--espacio-3);">Paradas del recorrido</h2>
+  <ol class="paradas-lista">
+    {{#each paradas}}
+      <li class="parada-item {{#if esProxima}}parada-item--activa{{/if}}{{#if esEntregada}}parada-item--entregada{{/if}}{{#if esFallida}}parada-item--fallida{{/if}}">
+        <div class="parada-item__izquierda">
+          <span class="parada-item__numero">{{orden}}</span>
+          <div class="parada-item__cuerpo">
+            <p class="parada-item__titulo">
+              {{entidadNombre}}
+              {{#if esProxima}}
+                <span class="etiqueta etiqueta--pendiente">Próxima parada</span>
+              {{else}}
+                {{estado estado}}
+              {{/if}}
+            </p>
+            <p class="parada-item__direccion">{{destino}}</p>
+            {{#if bultos}}
+              <ul class="parada-item__bultos">
+                {{#each bultos}}
+                  <li><span class="etiqueta etiqueta--neutra">{{this}}</span></li>
+                {{/each}}
+              </ul>
+            {{/if}}
+          </div>
+        </div>
+        {{#if ../esEnTraslado}}
+          {{#if esPendiente}}
+            <div class="parada-item__acciones">
+              <a class="boton boton--chico" href="/chofer?confirmarParada={{id}}">Confirmar entrega</a>
+              <a class="boton boton--secundario boton--peligro boton--chico" href="/chofer?fallarParada={{id}}">No recibida</a>
+            </div>
+          {{/if}}
+        {{/if}}
+      </li>
+    {{/each}}
+  </ol>
+
+  {{#if abrirModalConfirmar}}
+  <dialog class="modal" id="modal-confirmar-entrega" open aria-labelledby="modal-entrega-titulo">
+    <form method="post" action="/chofer/rutas/{{ruta.id}}/paradas/{{paradaSeleccionada.id}}/confirmar" accept-charset="UTF-8">
+      <div class="modal__encabezado">
+        <h2 id="modal-entrega-titulo">Confirmar entrega en Parada #{{paradaSeleccionada.orden}}</h2>
+        <a class="modal__cerrar" href="/chofer" data-cierra aria-label="Cerrar">
+          <svg class="icono" aria-hidden="true"><use href="#i-cerrar"/></svg>
+        </a>
+      </div>
+      <div class="modal__cuerpo">
+        <p>Vas a registrar la entrega en <strong>{{paradaSeleccionada.entidadNombre}}</strong> (<span class="texto-suave">{{paradaSeleccionada.destino}}</span>).</p>
+        <dl class="detalle" style="margin-bottom: var(--espacio-3);">
+          <dt>Bultos a descargar</dt>
+          <dd><strong>{{paradaSeleccionada.bultosResumen}}</strong></dd>
+          {{#if camion}}
+            <dt>Camión</dt>
+            <dd>{{camion.patente}} ({{camion.choferNombreCompleto}})</dd>
+          {{/if}}
+        </dl>
+        <p class="texto-suave" style="font-size: var(--texto-chico);">Al confirmar, se actualizará tu posición GPS en esta sede, las donaciones pasarán a <strong>Entregada</strong> y la entidad recibirá el aviso para subir las fotos de recepción.</p>
+      </div>
+      <div class="modal__acciones">
+        {{boton "cancelar" href="/chofer" cierra=true autofocus=true}}
+        <button type="submit" class="boton" data-cargando="Confirmando entrega…">Confirmar entrega</button>
+      </div>
+    </form>
+  </dialog>
+  {{/if}}
+
+  {{#if abrirModalFallo}}
+  <dialog class="modal" id="modal-fallar-entrega" open aria-labelledby="modal-fallo-titulo">
+    <form method="post" action="/chofer/rutas/{{ruta.id}}/paradas/{{paradaSeleccionada.id}}/fallar" accept-charset="UTF-8" novalidate>
+      <div class="modal__encabezado">
+        <h2 id="modal-fallo-titulo">Reportar entrega no recibida · Parada #{{paradaSeleccionada.orden}}</h2>
+        <a class="modal__cerrar" href="/chofer" data-cierra aria-label="Cerrar">
+          <svg class="icono" aria-hidden="true"><use href="#i-cerrar"/></svg>
+        </a>
+      </div>
+      <div class="modal__cuerpo">
+        {{#if errorGeneral}}<div class="alerta alerta--error" role="alert">{{errorGeneral}}</div>{{/if}}
+        <p>Indicá por qué no se pudo entregar en <strong>{{paradaSeleccionada.entidadNombre}}</strong> (<span class="texto-suave">{{paradaSeleccionada.destino}}</span>).</p>
+        <p class="texto-suave" style="font-size: var(--texto-chico);">Las donaciones quedarán marcadas como <strong>Entrega fallida</strong> para que administración reprograme el envío o las devuelva al stock del depósito.</p>
+
+        <div class="campo{{#if errores.motivo}} campo--error{{/if}}">
+          <label for="motivo">Motivo de no recepción <span class="campo__requerido" aria-hidden="true">*</span></label>
+          <textarea id="motivo" name="motivo" rows="3" required autofocus placeholder="Ej: La sede estaba cerrada al llegar el camión y nadie respondió en puerta.">{{form.motivo}}</textarea>
+          {{#if errores.motivo}}<small class="campo__error">{{errores.motivo}}</small>{{/if}}
+        </div>
+      </div>
+      <div class="modal__acciones">
+        {{boton "cancelar" href="/chofer" cierra=true}}
+        {{boton "confirmar_peligro" texto="Registrar no recibida" type="submit" cargando="Registrando…"}}
+      </div>
+    </form>
+  </dialog>
+  {{/if}}
+{{else}}
+  <section class="tarjeta vacio">
+    <strong>No tenés una hoja de ruta activa en este momento.</strong>
+    Cuando administración planifique un nuevo recorrido para tu camión, vas a ver acá el mapa y las paradas ordenadas para salir a repartir.
+    {{#if rutasFinalizadasCount}}
+      <span style="display: block; margin-top: var(--espacio-2); font-size: var(--texto-chico);">Recorridos completados anteriormente con esta unidad: <b>{{rutasFinalizadasCount}}</b>.</span>
+    {{/if}}
+  </section>
+{{/if}}
+
+{{#if abrirModalCompletada}}
+<dialog class="modal" id="modal-ruta-completada" open aria-labelledby="modal-completada-titulo">
+  <div class="modal__encabezado">
+    <h2 id="modal-completada-titulo">¡Ruta #{{rutaCompletada.id}} completada!</h2>
+    <a class="modal__cerrar" href="/chofer" data-cierra aria-label="Cerrar">
+      <svg class="icono" aria-hidden="true"><use href="#i-cerrar"/></svg>
+    </a>
+  </div>
+  <div class="modal__cuerpo">
+    <div class="alerta alerta--exito" role="status" style="margin-bottom: var(--espacio-3);">
+      <span>{{#if rutaCompletada.todasEntregadas}}Completaste todas las paradas del recorrido asignado a tu camión.{{else}}Completaste el recorrido de la hoja de ruta asignada a tu camión.{{/if}}</span>
+    </div>
+    <dl class="detalle" style="margin-bottom: var(--espacio-3);">
+      <dt>Hoja de ruta</dt>
+      <dd><strong>Ruta #{{rutaCompletada.id}}</strong> · Finalizada</dd>
+      {{#if rutaCompletada.camionDetalle}}
+        <dt>Camión</dt>
+        <dd>{{rutaCompletada.camionDetalle}}</dd>
+      {{/if}}
+      <dt>Resultado de paradas</dt>
+      <dd>{{rutaCompletada.resumenParadas}}</dd>
+    </dl>
+    <p class="texto-suave" style="font-size: var(--texto-chico);">{{#if rutaCompletada.todasEntregadas}}Las entidades beneficiarias ya fueron notificadas para confirmar la recepción con fotos. Ya podés regresar al depósito central.{{else}}Se notificó el estado de cada entrega y podés regresar al depósito central.{{/if}}</p>
+  </div>
+  <div class="modal__acciones">
+    <a class="boton" href="/chofer" data-cierra autofocus>Entendido</a>
+  </div>
+</dialog>
+{{/if}}
+{{/partial}}
+
+{{#partial "scripts"}}
+{{#if ruta}}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var contenedor = document.getElementById("mapa-hoja-ruta");
+    if (!contenedor || typeof L === "undefined") return;
+
+    var deposito = [{{depositoLat}}, {{depositoLng}}];
+    var camionPos = [{{camionLat}}, {{camionLng}}];
+    var paradas = [
+      {{#each paradas}}
+      {
+        orden: {{orden}},
+        nombre: "{{entidadNombre}}",
+        direccion: "{{destino}}",
+        estado: "{{estado}}",
+        esEntregada: {{esEntregada}},
+        esFallida: {{esFallida}},
+        lat: {{latitud}},
+        lng: {{longitud}}
+      },
+      {{/each}}
+    ];
+
+    var map = L.map("mapa-hoja-ruta").setView(deposito, 13);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(map);
+
+    var puntosLinea = [deposito];
+    var bounds = [deposito, camionPos];
+
+    var iconoDeposito = L.divIcon({
+      className: "marcador-parada-wrap",
+      html: '<div class="marcador-parada marcador-parada--deposito">D</div>',
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
+      popupAnchor: [0, -14]
+    });
+    L.marker(deposito, { icon: iconoDeposito })
+      .addTo(map)
+      .bindPopup("<b>Depósito DonaTrack</b><br>Av. Medrano 951, Almagro, CABA");
+
+    paradas.forEach(function (p) {
+      var coord = [p.lat, p.lng];
+      puntosLinea.push(coord);
+      bounds.push(coord);
+
+      var mod = p.esEntregada ? " marcador-parada--entregada" : (p.esFallida ? " marcador-parada--fallida" : "");
+      var iconoParada = L.divIcon({
+        className: "marcador-parada-wrap",
+        html: '<div class="marcador-parada' + mod + '">' + p.orden + '</div>',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+        popupAnchor: [0, -14]
+      });
+      L.marker(coord, { icon: iconoParada })
+        .addTo(map)
+        .bindPopup("<b>Parada #" + p.orden + " · " + p.nombre + "</b><br>" + p.direccion);
+    });
+
+    if (puntosLinea.length > 1) {
+      L.polyline(puntosLinea, {
+        color: "#1f7a5a",
+        weight: 4,
+        opacity: 0.85,
+        dashArray: "9, 6"
+      }).addTo(map);
+    }
+
+    var iconoCamion = L.divIcon({
+      className: "marcador-parada-wrap",
+      html: '<div style="font-size: 30px; line-height: 1; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.4)); transform: scaleX(-1);">🚚</div>',
+      iconSize: [34, 34],
+      iconAnchor: [17, 17],
+      popupAnchor: [0, -16]
+    });
+    L.marker(camionPos, { icon: iconoCamion })
+      .addTo(map)
+      .bindPopup("<b>Tu camión ({{#if camion}}{{camion.patente}}{{else}}En ruta{{/if}})</b>");
+
+    if (bounds.length > 1) {
+      map.fitBounds(bounds, { padding: [45, 45], maxZoom: 14 });
+    }
+  });
+</script>
+{{/if}}
+{{/partial}}
+
+{{> layouts/base}}
+
