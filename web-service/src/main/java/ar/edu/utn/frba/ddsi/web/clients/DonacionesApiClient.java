@@ -9,7 +9,11 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ar.edu.utn.frba.ddsi.web.dto.catalogo.CategoriaConSubcategorias;
+import ar.edu.utn.frba.ddsi.web.dto.catalogo.CategoriaRequest;
 import ar.edu.utn.frba.ddsi.web.dto.catalogo.CategoriaResponse;
+import ar.edu.utn.frba.ddsi.web.dto.catalogo.SubcategoriaRequest;
+import ar.edu.utn.frba.ddsi.web.dto.catalogo.UsosCatalogoResponse;
 import ar.edu.utn.frba.ddsi.web.dto.catalogo.Rubro;
 import ar.edu.utn.frba.ddsi.web.dto.catalogo.SubcategoriaResponse;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.DonacionAltaRequest;
@@ -50,6 +54,51 @@ public class DonacionesApiClient extends ApiClient {
                                 SubcategoriaResponse[].class)).map(SubcategoriaResponse::nombre).toList()))
                 .filter(rubro -> !rubro.subcategorias().isEmpty())
                 .toList();
+    }
+
+    // ---- ABM de categorias y subcategorias (admin) ----
+
+    /** Todas las categorias, cada una con sus subcategorias (tambien las que todavia no tienen ninguna). */
+    public List<CategoriaConSubcategorias> catalogoCompleto(Context ctx) {
+        List<SubcategoriaResponse> subcategorias = obtenerSubcategorias(ctx, null);
+        return get(ctx, "/categorias", new TypeReference<List<CategoriaResponse>>() {}).stream()
+                .map(categoria -> new CategoriaConSubcategorias(categoria, subcategorias.stream()
+                        .filter(sub -> categoria.id().equals(sub.categoriaId()))
+                        .toList()))
+                .toList();
+    }
+
+    public CategoriaResponse crearCategoria(Context ctx, CategoriaRequest request) {
+        return post(ctx, "/categorias", request, CategoriaResponse.class);
+    }
+
+    public CategoriaResponse actualizarCategoria(Context ctx, Long id, CategoriaRequest request) {
+        return put(ctx, "/categorias/" + id, request, CategoriaResponse.class);
+    }
+
+    public SubcategoriaResponse crearSubcategoria(Context ctx, Long categoriaId, SubcategoriaRequest request) {
+        return post(ctx, "/categorias/" + categoriaId + "/subcategorias", request, SubcategoriaResponse.class);
+    }
+
+    public SubcategoriaResponse actualizarSubcategoria(Context ctx, Long id, SubcategoriaRequest request) {
+        return put(ctx, "/subcategorias/" + id, request, SubcategoriaResponse.class);
+    }
+
+    public UsosCatalogoResponse usosCategoria(Context ctx, Long id) {
+        return get(ctx, "/categorias/" + id + "/usos", UsosCatalogoResponse.class);
+    }
+
+    public UsosCatalogoResponse usosSubcategoria(Context ctx, Long id) {
+        return get(ctx, "/subcategorias/" + id + "/usos", UsosCatalogoResponse.class);
+    }
+
+    /** Borra la categoria con todas sus subcategorias; la API lo rechaza si alguna esta en uso. */
+    public void eliminarCategoria(Context ctx, Long id) {
+        delete(ctx, "/categorias/" + id);
+    }
+
+    public void eliminarSubcategoria(Context ctx, Long id) {
+        delete(ctx, "/subcategorias/" + id);
     }
 
     // ---- Mapa de entregas (publico, A, req. 2) ----

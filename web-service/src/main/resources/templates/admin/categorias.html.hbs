@@ -1,0 +1,167 @@
+{{#partial "titulo"}}Categorías · DonaTrack{{/partial}}
+{{#partial "contenido"}}
+{{> partials/encabezado
+    titulo="Categorías"
+    bajada="Catálogo de bienes que se pueden donar. Las subcategorías son las que eligen los donantes y las entidades."
+    accionHref="/admin/categorias?nueva"
+    accionTexto="Nueva categoría"
+    accionModal="modal-categoria"}}
+
+{{#if catalogo}}
+  <div class="resumen">
+    <div class="resumen__item"><strong>{{resumen.categorias}}</strong>Categorías</div>
+    <div class="resumen__item resumen__item--ok"><strong>{{resumen.subcategorias}}</strong>Subcategorías</div>
+    <div class="resumen__item"><strong>{{resumen.perecederas}}</strong>Categorías perecederas</div>
+  </div>
+{{/if}}
+
+{{#> partials/listado
+    coleccion=catalogo
+    vacioTitulo="Todavía no hay categorías en el catálogo."
+    vacioBajada="Con el botón “Nueva categoría” cargás la primera. Después le agregás sus subcategorías desde la fila."}}
+  <table class="tabla">
+    <caption class="sr-only">Categorías y subcategorías del catálogo</caption>
+    <thead>
+      <tr>
+        <th scope="col">Categoría</th>
+        <th scope="col">Subcategorías</th>
+        <th scope="col">¿Registra el estado?</th>
+        <th scope="col">Vencimiento</th>
+        <th scope="col"><span class="sr-only">Acciones</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each catalogo}}
+        <tr>
+          <td class="tabla__corta"><strong>{{categoria.nombre}}</strong></td>
+          <td>
+            {{!-- cada etiqueta abre su edicion; la ultima agrega una subcategoria a esta categoria --}}
+            <ul class="subcategorias">
+              {{#each subcategorias}}
+                <li><a class="etiqueta etiqueta--neutra etiqueta--enlace" href="/admin/categorias?editarSub={{id}}" title="Editar {{nombre}}">{{nombre}} <svg class="icono" aria-hidden="true"><use href="#i-lapiz"/></svg><span class="sr-only"> (editar)</span></a></li>
+              {{/each}}
+              <li><a class="etiqueta etiqueta--enlace etiqueta--agregar" href="/admin/categorias?nuevaSub={{categoria.id}}"><svg class="icono" aria-hidden="true"><use href="#i-mas"/></svg> Agregar<span class="sr-only"> subcategoría en {{categoria.nombre}}</span></a></li>
+            </ul>
+          </td>
+          <td>{{#if categoria.pideEstado}}Sí{{else}}No{{/if}}</td>
+          <td>{{#if categoria.esPerecedero}}<span class="etiqueta etiqueta--pendiente">Perecedera</span>{{else}}<span class="etiqueta etiqueta--neutra">No vence</span>{{/if}}</td>
+          {{#> partials/acciones-fila}}
+            {{boton "editar" href=(concat "/admin/categorias?editar=" categoria.id) sr=(concat "categoría " categoria.nombre)}}
+            {{boton "eliminar" href=(concat "/admin/categorias?eliminar=" categoria.id) sr=(concat "categoría " categoria.nombre)}}
+          {{/partials/acciones-fila}}
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+{{/partials/listado}}
+
+<p class="nota">Solo se pueden eliminar las categorías y subcategorías que ninguna donación ni necesidad usa. Si cambiás si una categoría pide estado o vence, vale para las donaciones que se registren desde ahora.</p>
+
+{{!-- Alta / edición de categoría --}}
+<dialog class="modal" id="modal-categoria" aria-labelledby="titulo-categoria" {{#if abrirCategoria}}open{{/if}}>
+  <form method="post" action="{{#if categoriaId}}/admin/categorias/{{categoriaId}}/editar{{else}}/admin/categorias{{/if}}" accept-charset="UTF-8" novalidate>
+    <div class="modal__encabezado">
+      <h2 id="titulo-categoria">{{#if categoriaId}}Editar categoría{{else}}Nueva categoría{{/if}}</h2>
+      <a class="modal__cerrar" href="/admin/categorias" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></a>
+    </div>
+    <div class="modal__cuerpo">
+      {{#if abrirCategoria}}{{#if errorModal}}<div class="alerta alerta--error" role="alert">{{errorModal}}</div>{{/if}}{{/if}}
+      <div class="campo{{#if errores.nombre}} campo--error{{/if}}">
+        <label for="nombre">Nombre <span class="campo__requerido" aria-hidden="true">*</span></label>
+        <input type="text" id="nombre" name="nombre" value="{{form.nombre}}" required autofocus maxlength="100" placeholder="ej: Alimentos">
+        {{#if errores.nombre}}<small class="campo__error">{{errores.nombre}}</small>{{/if}}
+      </div>
+      <div class="grilla grilla--2">
+        <div class="campo{{#if errores.pideEstado}} campo--error{{/if}}">
+          <label for="pideEstado">¿Se registra el estado del bien? <span class="campo__requerido" aria-hidden="true">*</span></label>
+          <select id="pideEstado" name="pideEstado" required>
+            <option value="">Elegí una opción</option>
+            <option value="si" {{#if (eq form.pideEstado "si")}}selected{{/if}}>Sí</option>
+            <option value="no" {{#if (eq form.pideEstado "no")}}selected{{/if}}>No</option>
+          </select>
+          {{#if errores.pideEstado}}<small class="campo__error">{{errores.pideEstado}}</small>{{/if}}
+        </div>
+        <div class="campo{{#if errores.esPerecedero}} campo--error{{/if}}">
+          <label for="esPerecedero">¿Es perecedera? <span class="campo__requerido" aria-hidden="true">*</span></label>
+          <select id="esPerecedero" name="esPerecedero" required>
+            <option value="">Elegí una opción</option>
+            <option value="si" {{#if (eq form.esPerecedero "si")}}selected{{/if}}>Sí</option>
+            <option value="no" {{#if (eq form.esPerecedero "no")}}selected{{/if}}>No</option>
+          </select>
+          {{#if errores.esPerecedero}}<small class="campo__error">{{errores.esPerecedero}}</small>{{/if}}
+        </div>
+      </div>
+    </div>
+    <div class="modal__acciones">
+      {{boton "cancelar" href="/admin/categorias" cierra=true}}
+      <button type="submit" class="boton">{{#if categoriaId}}Guardar cambios{{else}}Crear categoría{{/if}}</button>
+    </div>
+  </form>
+</dialog>
+
+{{!-- Alta / edición de subcategoría (la categoría queda fija) --}}
+{{#if abrirSubcategoria}}
+<dialog class="modal" id="modal-subcategoria" aria-labelledby="titulo-subcategoria" open>
+  <form method="post" action="{{#if subcategoriaId}}/admin/subcategorias/{{subcategoriaId}}/editar{{else}}/admin/categorias/{{categoriaPadre.id}}/subcategorias{{/if}}" accept-charset="UTF-8" novalidate>
+    <div class="modal__encabezado">
+      <h2 id="titulo-subcategoria">{{#if subcategoriaId}}Editar subcategoría{{else}}Nueva subcategoría{{/if}}</h2>
+      <a class="modal__cerrar" href="/admin/categorias" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></a>
+    </div>
+    <div class="modal__cuerpo">
+      {{#if errorModal}}<div class="alerta alerta--error" role="alert">{{errorModal}}</div>{{/if}}
+      <p class="texto-suave">Categoría: <strong>{{categoriaPadre.nombre}}</strong></p>
+      <div class="campo{{#if errores.subcategoria}} campo--error{{/if}}">
+        <label for="subcategoria">Nombre <span class="campo__requerido" aria-hidden="true">*</span></label>
+        <input type="text" id="subcategoria" name="subcategoria" value="{{form.subcategoria}}" required autofocus maxlength="100" placeholder="ej: Arroz">
+        {{#if errores.subcategoria}}<small class="campo__error">{{errores.subcategoria}}</small>{{/if}}
+      </div>
+    </div>
+    <div class="modal__acciones">
+      {{#if subcategoriaId}}{{boton "eliminar" href=(concat "/admin/categorias?eliminarSub=" subcategoriaId) clase="modal__accion-aparte"}}{{/if}}
+      {{boton "cancelar" href="/admin/categorias" cierra=true}}
+      <button type="submit" class="boton">{{#if subcategoriaId}}Guardar cambios{{else}}Agregar subcategoría{{/if}}</button>
+    </div>
+  </form>
+</dialog>
+{{/if}}
+
+{{!-- Baja: confirmación que nombra lo que se borra o, si está en uso, por qué no se puede (la API también lo rechaza) --}}
+{{#if baja}}
+<dialog class="modal modal--chico" id="modal-eliminar" aria-labelledby="titulo-eliminar" open>
+  {{#if baja.enUso}}
+    <div class="modal__encabezado">
+      <h2 id="titulo-eliminar">No se puede eliminar la {{baja.tipo}}</h2>
+      <a class="modal__cerrar" href="/admin/categorias" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></a>
+    </div>
+    <div class="modal__cuerpo">
+      <p><strong>{{baja.nombre}}</strong>{{#if baja.categoria}} · {{baja.categoria}}{{/if}}</p>
+      <p class="texto-suave">La usan {{#if baja.donaciones}}{{baja.donaciones}}{{#if baja.necesidades}} y {{/if}}{{/if}}{{baja.necesidades}}{{#if baja.subcategorias}} (en alguna de sus subcategorías){{/if}}. Solo se pueden eliminar las que no están en uso; podés cambiarle el nombre.</p>
+    </div>
+    <div class="modal__acciones">
+      <a class="boton" href="/admin/categorias" data-cierra autofocus>Entendido</a>
+    </div>
+  {{else}}
+    <form method="post" action="{{baja.action}}" accept-charset="UTF-8">
+      <div class="modal__encabezado">
+        <h2 id="titulo-eliminar">¿Eliminar la {{baja.tipo}}?</h2>
+        <a class="modal__cerrar" href="/admin/categorias" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></a>
+      </div>
+      <div class="modal__cuerpo">
+        <p><strong>{{baja.nombre}}</strong>{{#if baja.categoria}} · {{baja.categoria}}{{/if}}</p>
+        {{#if baja.subcategorias}}
+          <p>También se eliminan sus subcategorías:</p>
+          <ul class="subcategorias">{{#each baja.subcategorias}}<li><span class="etiqueta etiqueta--neutra">{{this}}</span></li>{{/each}}</ul>
+        {{/if}}
+        <p class="texto-suave">Ninguna donación ni necesidad la usa, así que deja de aparecer en el catálogo. Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal__acciones">
+        {{boton "cancelar" href="/admin/categorias" autofocus=true cierra=true}}
+        {{boton "confirmar_peligro" texto=(concat "Eliminar " baja.tipo) type="submit"}}
+      </div>
+    </form>
+  {{/if}}
+</dialog>
+{{/if}}
+
+{{/partial}}
+{{> layouts/base}}

@@ -67,6 +67,18 @@ class DonacionRepositoryJpaTest extends PersistenciaTest {
     }
 
     @Test
+    @DisplayName("Cuenta las donaciones que usan una subcategoria (para no dejar eliminarla)")
+    void cuentaDonacionesPorSubcategoria() {
+        Subcategoria sillas = subcategorias.findByNombre("Sillas").orElseThrow();
+        Subcategoria mesas = subcategorias.save(new Subcategoria("Mesas", sillas.getCategoria()));
+        nuevoRequest();
+
+        assertEquals(1, subcategorias.contarDonaciones(sillas.getId()));
+        assertEquals(0, subcategorias.contarDonaciones(mesas.getId()));
+        assertEquals(0, subcategorias.contarNecesidades(mesas.getId()));
+    }
+
+    @Test
     @DisplayName("Cada donacion queda asociada a su registro, con donante, fecha, bienes e historial")
     void persisteDonacionesSegmentadas() {
         List<Donacion> leidas = donaciones.findAll();

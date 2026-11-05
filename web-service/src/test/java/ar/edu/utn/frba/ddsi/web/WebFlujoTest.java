@@ -33,6 +33,7 @@ import ar.edu.utn.frba.ddsi.web.clients.DonacionesApiClient;
 import ar.edu.utn.frba.ddsi.web.clients.LogisticaApiClient;
 import ar.edu.utn.frba.ddsi.web.config.WebConfig;
 import ar.edu.utn.frba.ddsi.web.controllers.CamionesAdminController;
+import ar.edu.utn.frba.ddsi.web.controllers.CategoriasAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.DepositoAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.MatchmakingAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.RecepcionAdminController;
@@ -81,6 +82,9 @@ class WebFlujoTest {
     private final List<Map<String, Object>> entregas = new ArrayList<>();
     private final List<Map<String, Object>> propuestasFalsas = new ArrayList<>();
     private final List<Map<String, Object>> donantesFalsos = new ArrayList<>();
+    // ultimo pedido del ABM de categorias a la API falsa
+    private final AtomicReference<JsonNode> ultimaCategoria = new AtomicReference<>();
+    private final AtomicReference<String> ultimaSubcategoria = new AtomicReference<>();
 
     @TempDir
     Path carpetaFotos;
@@ -107,10 +111,11 @@ class WebFlujoTest {
         MatchmakingAdminController matchmakingAdmin = new MatchmakingAdminController(donaciones);
         RecepcionAdminController recepcionAdmin = new RecepcionAdminController(donaciones);
         ImportacionesAdminController importacionesAdmin = new ImportacionesAdminController(donaciones);
+        CategoriasAdminController categoriasAdmin = new CategoriasAdminController(donaciones);
         Router router = new Router(new AutorizacionMiddleware(), new HomeController(), new SesionController(auth),
                 new RegistroController(auth), new PanelController(), new NecesidadesController(donaciones),
                 new DonacionesAsignadasController(donaciones), new RecepcionController(donaciones, fotos),
-                new MapaController(donaciones), null, camionesAdmin, depositoAdmin, matchmakingAdmin, recepcionAdmin, importacionesAdmin);
+                new MapaController(donaciones), null, camionesAdmin, depositoAdmin, matchmakingAdmin, recepcionAdmin, importacionesAdmin, categoriasAdmin);
 
         web = new Server(router, config, fotos).crear();
         // ruta solo para el test: una llamada autenticada a la API, para probar el refresh del token
@@ -692,6 +697,102 @@ class WebFlujoTest {
     }
 
     @Test
+    @DisplayName("Admin categorías: solo el administrador entra")
+    void categoriasSeguridad() throws Exception {
+        assertEquals(302, get("/admin/categorias", null).statusCode());
+        assertEquals(403, get("/admin/categorias", cookie(login("donante", "clave-segura"))).statusCode());
+        assertEquals(403, get("/admin/categorias", cookie(login("entidad", "clave-segura"))).statusCode());
+        assertEquals(200, get("/admin/categorias", cookie(login("admin", "clave-segura"))).statusCode());
+    }
+
+    @Test
+    @DisplayName("Admin categorías: alta y edición de categorías y subcategorías")
+    void categoriasFlujo() throws Exception {
+        String adminCookie = cookie(login("admin", "clave-segura"));
+
+        // listado: cada categoria con sus subcategorias, sin baja
+        HttpResponse<String> listado = get("/admin/categorias", adminCookie);
+        assertEquals(200, listado.statusCode());
+        assertTrue(listado.body().contains("Ropa y abrigo"));
+        assertTrue(listado.body().contains("/admin/categorias?editarSub=3"));
+        assertTrue(listado.body().contains("/admin/categorias?nuevaSub=1"));
+        assertTrue(listado.body().contains("/admin/categorias?eliminar=2"));
+
+        // alta sin datos: vuelve con el modal abierto y los errores
+        HttpResponse<String> sinDatos = post("/admin/categorias", Map.of("nombre", ""), adminCookie);
+        assertEquals(400, sinDatos.statusCode());
+        assertTrue(sinDatos.body().contains("El nombre es obligatorio"));
+        assertTrue(sinDatos.body().contains("Indicá si la categoría es perecedera"));
+
+        // nombre repetido: el mensaje de la API aparece en el modal y se conserva lo escrito
+        HttpResponse<String> repetida = post("/admin/categorias",
+                Map.of("nombre", "Alimentos", "pideEstado", "no", "esPerecedero", "si"), adminCookie);
+        assertEquals(400, repetida.statusCode());
+        assertTrue(repetida.body().contains("Ya existe una categoría con el nombre"));
+        assertTrue(repetida.body().contains("value=\"Alimentos\""));
+
+        // alta correcta
+        HttpResponse<String> alta = post("/admin/categorias",
+                Map.of("nombre", "Higiene", "pideEstado", "si", "esPerecedero", "no"), adminCookie);
+        assertEquals(302, alta.statusCode());
+        assertEquals("/admin/categorias", alta.headers().firstValue("Location").orElse(null));
+        assertTrue(ultimaCategoria.get().get("pideEstado").asBoolean());
+        assertFalse(ultimaCategoria.get().get("esPerecedero").asBoolean());
+
+        // edicion: el modal viene con el action de la categoria
+        HttpResponse<String> editar = get("/admin/categorias?editar=2", adminCookie);
+        assertTrue(editar.body().contains("action=\"/admin/categorias/2/editar\""));
+        assertEquals(302, post("/admin/categorias/2/editar",
+                Map.of("nombre", "Ropa", "pideEstado", "si", "esPerecedero", "no"), adminCookie).statusCode());
+        assertEquals("Ropa", ultimaCategoria.get().get("nombre").asText());
+
+        // subcategorias: alta dentro de una categoria y renombre
+        HttpResponse<String> nuevaSub = get("/admin/categorias?nuevaSub=1", adminCookie);
+        assertTrue(nuevaSub.body().contains("action=\"/admin/categorias/1/subcategorias\""));
+        assertEquals(302, post("/admin/categorias/1/subcategorias", Map.of("subcategoria", "Fideos"), adminCookie).statusCode());
+        assertEquals("POST 1 Fideos", ultimaSubcategoria.get());
+
+        HttpResponse<String> editarSub = get("/admin/categorias?editarSub=2", adminCookie);
+        assertTrue(editarSub.body().contains("value=\"Arroz\""));
+        assertEquals(400, post("/admin/subcategorias/2/editar", Map.of("subcategoria", " "), adminCookie).statusCode());
+        assertEquals(302, post("/admin/subcategorias/2/editar", Map.of("subcategoria", "Arroz largo fino"), adminCookie).statusCode());
+        assertEquals("PUT 2 Arroz largo fino", ultimaSubcategoria.get());
+    }
+
+    @Test
+    @DisplayName("Admin categorías: solo se elimina lo que no está en uso")
+    void categoriasBaja() throws Exception {
+        String adminCookie = cookie(login("admin", "clave-segura"));
+
+        // categoria sin uso: confirma nombrando las subcategorias que tambien se borran
+        HttpResponse<String> confirmar = get("/admin/categorias?eliminar=2", adminCookie);
+        assertTrue(confirmar.body().contains("¿Eliminar la categoría?"));
+        assertTrue(confirmar.body().contains("También se eliminan sus subcategorías"));
+        assertTrue(confirmar.body().contains("action=\"/admin/categorias/2/eliminar\""));
+        HttpResponse<String> baja = post("/admin/categorias/2/eliminar", Map.of(), adminCookie);
+        assertEquals(302, baja.statusCode());
+        assertEquals("DELETE categoria 2", ultimaSubcategoria.get());
+        assertTrue(get("/admin/categorias", adminCookie).body().contains("Se eliminó la categoría con sus subcategorías."));
+
+        // categoria en uso: explica por que no y no ofrece el boton de eliminar
+        HttpResponse<String> enUso = get("/admin/categorias?eliminar=1", adminCookie);
+        assertTrue(enUso.body().contains("No se puede eliminar la categoría"));
+        assertTrue(enUso.body().contains("La usan 3 donaciones y 1 necesidad"));
+        assertFalse(enUso.body().contains("action=\"/admin/categorias/1/eliminar\""));
+
+        // si igual llega el POST, el motivo de la API se muestra como aviso
+        post("/admin/categorias/1/eliminar", Map.of(), adminCookie);
+        assertTrue(get("/admin/categorias", adminCookie).body().contains("la usan 3 donaciones y 1 necesidad"));
+
+        // subcategoria: el modal de edicion lleva a eliminarla
+        assertTrue(get("/admin/categorias?editarSub=3", adminCookie).body().contains("/admin/categorias?eliminarSub=3"));
+        assertTrue(get("/admin/categorias?eliminarSub=3", adminCookie).body().contains("¿Eliminar la subcategoría?"));
+        assertEquals(302, post("/admin/subcategorias/3/eliminar", Map.of(), adminCookie).statusCode());
+        assertEquals("DELETE subcategoria 3", ultimaSubcategoria.get());
+        assertTrue(get("/admin/categorias?eliminarSub=1", adminCookie).body().contains("No se puede eliminar la subcategoría"));
+    }
+
+    @Test
     @DisplayName("Admin depósito: control de acceso por rol")
     void depositoSeguridad() throws Exception {
         assertEquals(302, get("/admin/deposito", null).statusCode());
@@ -963,6 +1064,56 @@ class WebFlujoTest {
         api.get("/api/categorias/1/subcategorias", ctx -> ctx.json(List.of(
                 Map.of("id", 1, "nombre", "Leche larga vida"), Map.of("id", 2, "nombre", "Arroz"))));
         api.get("/api/categorias/2/subcategorias", ctx -> ctx.json(List.of(Map.of("id", 3, "nombre", "Frazadas"))));
+        api.get("/api/subcategorias", ctx -> ctx.json(List.of(
+                Map.of("id", 1, "nombre", "Leche larga vida", "categoriaId", 1, "categoria", "Alimentos"),
+                Map.of("id", 2, "nombre", "Arroz", "categoriaId", 1, "categoria", "Alimentos"),
+                Map.of("id", 3, "nombre", "Frazadas", "categoriaId", 2, "categoria", "Ropa y abrigo"))));
+        // ABM de categorias: guarda lo ultimo que mando el web y rechaza nombres repetidos
+        api.post("/api/categorias", ctx -> {
+            JsonNode body = mapper.readTree(ctx.body());
+            ultimaCategoria.set(body);
+            if ("Alimentos".equals(body.get("nombre").asText())) {
+                ctx.status(400).json(Map.of("error", "bad_request",
+                        "message", "Ya existe una categoría con el nombre 'Alimentos'"));
+                return;
+            }
+            ctx.status(201).json(Map.of("id", 3, "nombre", body.get("nombre").asText(),
+                    "pideEstado", body.get("pideEstado").asBoolean(), "esPerecedero", body.get("esPerecedero").asBoolean()));
+        });
+        api.put("/api/categorias/{id}", ctx -> {
+            JsonNode body = mapper.readTree(ctx.body());
+            ultimaCategoria.set(body);
+            ctx.json(Map.of("id", Long.parseLong(ctx.pathParam("id")), "nombre", body.get("nombre").asText(),
+                    "pideEstado", body.get("pideEstado").asBoolean(), "esPerecedero", body.get("esPerecedero").asBoolean()));
+        });
+        api.post("/api/categorias/{id}/subcategorias", ctx -> {
+            JsonNode body = mapper.readTree(ctx.body());
+            ultimaSubcategoria.set("POST " + ctx.pathParam("id") + " " + body.get("nombre").asText());
+            ctx.status(201).json(Map.of("id", 4, "nombre", body.get("nombre").asText(), "categoriaId", 1, "categoria", "Alimentos"));
+        });
+        // Bajas: "Alimentos" (1) y su "Leche larga vida" (1) estan en uso; "Ropa y abrigo" (2) y "Frazadas" (3), no
+        api.get("/api/categorias/{id}/usos", ctx -> ctx.json("1".equals(ctx.pathParam("id"))
+                ? Map.of("donaciones", 3, "necesidades", 1) : Map.of("donaciones", 0, "necesidades", 0)));
+        api.get("/api/subcategorias/{id}/usos", ctx -> ctx.json("1".equals(ctx.pathParam("id"))
+                ? Map.of("donaciones", 3, "necesidades", 1) : Map.of("donaciones", 0, "necesidades", 0)));
+        api.delete("/api/categorias/{id}", ctx -> {
+            if ("1".equals(ctx.pathParam("id"))) {
+                ctx.status(400).json(Map.of("error", "bad_request",
+                        "message", "No se puede eliminar la categoría 'Alimentos': la usan 3 donaciones y 1 necesidad"));
+                return;
+            }
+            ultimaSubcategoria.set("DELETE categoria " + ctx.pathParam("id"));
+            ctx.status(204);
+        });
+        api.delete("/api/subcategorias/{id}", ctx -> {
+            ultimaSubcategoria.set("DELETE subcategoria " + ctx.pathParam("id"));
+            ctx.status(204);
+        });
+        api.put("/api/subcategorias/{id}", ctx -> {
+            JsonNode body = mapper.readTree(ctx.body());
+            ultimaSubcategoria.set("PUT " + ctx.pathParam("id") + " " + body.get("nombre").asText());
+            ctx.json(Map.of("id", 2, "nombre", body.get("nombre").asText(), "categoriaId", 1, "categoria", "Alimentos"));
+        });
 
         api.get("/api/entidad-beneficiaria/10/necesidades", ctx -> ctx.json(necesidades));
         api.post("/api/entidad-beneficiaria/10/necesidades", ctx -> {

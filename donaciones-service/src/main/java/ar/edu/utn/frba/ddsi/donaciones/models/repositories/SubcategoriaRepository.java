@@ -18,4 +18,9 @@ public interface SubcategoriaRepository {
     Optional<Subcategoria> findByNombre(String nombre);
 
     boolean deleteById(Long id);
+
+    /** Donaciones que usan la subcategoria, como subcategoria propia o en alguno de sus bienes. */
+    long contarDonaciones(Long subcategoriaId);
+
+    long contarNecesidades(Long subcategoriaId);
 }

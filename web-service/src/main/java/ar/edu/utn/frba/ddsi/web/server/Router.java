@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 
 import ar.edu.utn.frba.ddsi.web.controllers.CamionesAdminController;
+import ar.edu.utn.frba.ddsi.web.controllers.CategoriasAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.DepositoAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.MatchmakingAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.RecepcionAdminController;
@@ -48,6 +49,7 @@ public class Router {
     private final MatchmakingAdminController matchmakingAdmin;
     private final RecepcionAdminController recepcionAdmin;
     private final ImportacionesAdminController importacionesAdmin;
+    private final CategoriasAdminController categoriasAdmin;
 
     @Autowired
     public Router(AutorizacionMiddleware autorizacion, HomeController home, SesionController sesion,
@@ -58,7 +60,8 @@ public class Router {
             @Autowired(required = false) DepositoAdminController depositoAdmin,
             @Autowired(required = false) MatchmakingAdminController matchmakingAdmin,
             @Autowired(required = false) RecepcionAdminController recepcionAdmin,
-            @Autowired(required = false) ImportacionesAdminController importacionesAdmin) {
+            @Autowired(required = false) ImportacionesAdminController importacionesAdmin,
+            @Autowired(required = false) CategoriasAdminController categoriasAdmin) {
 
         this.autorizacion = autorizacion;
         this.home = home;
@@ -75,13 +78,14 @@ public class Router {
         this.matchmakingAdmin = matchmakingAdmin;
         this.recepcionAdmin = recepcionAdmin;
         this.importacionesAdmin = importacionesAdmin;
+        this.categoriasAdmin = categoriasAdmin;
     }
 
   // Sobrecarga para tests
     public Router(AutorizacionMiddleware autorizacion, HomeController home, SesionController sesion,
                   RegistroController registro, PanelController panel, NecesidadesController necesidades,
                   DonacionesAsignadasController donacionesAsignadas, RecepcionController recepcion, MapaController mapa) {
-      this(autorizacion, home, sesion, registro, panel, necesidades, donacionesAsignadas, recepcion, mapa, null, null, null, null, null, null);
+      this(autorizacion, home, sesion, registro, panel, necesidades, donacionesAsignadas, recepcion, mapa, null, null, null, null, null, null, null);
     }
 
     public void registrar(Javalin app) {
@@ -156,6 +160,15 @@ public class Router {
             app.get("/admin/importaciones", importacionesAdmin::listar, ADMINISTRADOR);
             app.post("/admin/importaciones", importacionesAdmin::importar, ADMINISTRADOR);
             app.get("/admin/importaciones/{id}/estado", importacionesAdmin::consultarEstado, ADMINISTRADOR);
+        }
+        if (categoriasAdmin != null) {
+            app.get("/admin/categorias", categoriasAdmin::listar, ADMINISTRADOR);
+            app.post("/admin/categorias", categoriasAdmin::crear, ADMINISTRADOR);
+            app.post("/admin/categorias/{id}/editar", categoriasAdmin::actualizar, ADMINISTRADOR);
+            app.post("/admin/categorias/{id}/subcategorias", categoriasAdmin::crearSubcategoria, ADMINISTRADOR);
+            app.post("/admin/subcategorias/{id}/editar", categoriasAdmin::actualizarSubcategoria, ADMINISTRADOR);
+            app.post("/admin/categorias/{id}/eliminar", categoriasAdmin::eliminar, ADMINISTRADOR);
+            app.post("/admin/subcategorias/{id}/eliminar", categoriasAdmin::eliminarSubcategoria, ADMINISTRADOR);
         }
     }
 }

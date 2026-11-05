@@ -32,4 +32,19 @@ public class JpaSubcategoria extends RepositorioJpa<Subcategoria> implements Sub
                 .getResultStream()
                 .findFirst();
     }
+
+    @Override
+    public long contarDonaciones(Long subcategoriaId) {
+        return createQuery("select count(distinct d) from Donacion d left join d.bienes b "
+                + "where d.subcategoria.id = :id or b.subcategoria.id = :id", Long.class)
+                .setParameter("id", subcategoriaId)
+                .getSingleResult();
+    }
+
+    @Override
+    public long contarNecesidades(Long subcategoriaId) {
+        return createQuery("select count(n) from Necesidad n where n.subcategoria.id = :id", Long.class)
+                .setParameter("id", subcategoriaId)
+                .getSingleResult();
+    }
 }

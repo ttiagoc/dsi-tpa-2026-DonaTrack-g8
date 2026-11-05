@@ -1,4 +1,4 @@
 package ar.edu.utn.frba.ddsi.web.dto.catalogo;
 
-public record CategoriaResponse(Long id, String nombre) {
+public record CategoriaResponse(Long id, String nombre, Boolean pideEstado, Boolean esPerecedero) {
 }

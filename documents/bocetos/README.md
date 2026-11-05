@@ -45,6 +45,11 @@ En [Figma](https://www.figma.com/design/1tzIHQUO6aSwCbdgtPuXgj) quedó una prime
 |---|---|---|---|
 | 15 | Recepción en depósito: registro de donación presencial | `/admin/recepcion` | [15-recepcion.png](15-recepcion.png) |
 | 15 | Recepción en depósito: modal de alta rápida de donante | `/admin/recepcion` | [15b-recepcion-alta-donante.png](15b-recepcion-alta-donante.png) |
+| 15 | Categorías y subcategorías: catálogo que usa la recepción | `/admin/categorias` | [15c-categorias.png](15c-categorias.png) |
+| 15 | Categorías: modal de alta con errores | `/admin/categorias?nueva` | [15d-categorias-alta.png](15d-categorias-alta.png) |
+| 15 | Categorías: modal de edición de una subcategoría | `/admin/categorias?editarSub={id}` | [15e-categorias-subcategoria.png](15e-categorias-subcategoria.png) |
+| 15 | Categorías: confirmar eliminación (borra también sus subcategorías) | `/admin/categorias?eliminar={id}` | [15f-categorias-eliminar.png](15f-categorias-eliminar.png) |
+| 15 | Categorías: no se puede eliminar (la usan donaciones o necesidades) | `/admin/categorias?eliminar={id}` | [15g-categorias-no-se-puede-eliminar.png](15g-categorias-no-se-puede-eliminar.png) |
 | 16 | Depósito: stock disponible y vencidas | `/admin/deposito` | [16-deposito.png](16-deposito.png) |
 | 16 | Depósito: modal para marcar donación como vencida | `/admin/deposito` | [16b-deposito-vencer.png](16b-deposito-vencer.png) |
 | 17 | Matchmaking: propuestas de asignación pendientes | `/admin/matchmaking` | [17-matchmaking.png](17-matchmaking.png) |

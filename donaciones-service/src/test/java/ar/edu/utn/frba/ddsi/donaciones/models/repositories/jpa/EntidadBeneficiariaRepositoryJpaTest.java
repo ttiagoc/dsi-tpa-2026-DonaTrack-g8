@@ -56,6 +56,9 @@ class EntidadBeneficiariaRepositoryJpaTest extends PersistenciaTest {
         Necesidad extraordinaria = leida.getNecesidades().stream()
                 .filter(n -> n.getDescripcion().equals("Fideos extra")).findFirst().orElseThrow();
         assertInstanceOf(NecesidadExtraordinaria.class, extraordinaria.getTipoNecesidad());
+
+        // las dos necesidades usan "Fideos": la subcategoria no se puede eliminar
+        assertEquals(2, subcategorias.contarNecesidades(fideos.getId()));
     }
 
     @Test
