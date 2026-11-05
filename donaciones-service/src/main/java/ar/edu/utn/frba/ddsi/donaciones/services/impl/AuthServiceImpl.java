@@ -1,15 +1,21 @@
 package ar.edu.utn.frba.ddsi.donaciones.services.impl;
 
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.exceptions.NoAutenticadoException;
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.common.security.JwtUtil;
 import ar.edu.utn.frba.ddsi.common.security.Rol;
+import ar.edu.utn.frba.ddsi.donaciones.config.RestDonacionesConfig;
 import ar.edu.utn.frba.ddsi.donaciones.dto.auth.LoginRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.auth.RefreshRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.auth.RegistroEntidadBeneficiariaRequest;
@@ -18,6 +24,8 @@ import ar.edu.utn.frba.ddsi.donaciones.dto.auth.RegistroPersonaJuridicaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.auth.SesionResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.auth.TokensResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.auth.UsuarioResponse;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donante.MedioContactoRequest;
+import ar.edu.utn.frba.ddsi.donaciones.dto.evento.NotificacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.usuarios.Usuario;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.UsuarioRepository;
@@ -38,16 +46,29 @@ public class AuthServiceImpl implements AuthService {
     private final EntidadBeneficiariaService entidadBeneficiariaService;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final RestDonacionesConfig config;
+    private final RestTemplate restTemplate;
 
+    @Autowired
     public AuthServiceImpl(UsuarioRepository usuarioRepository, DonanteRepository donanteRepository,
             DonanteService donanteService, EntidadBeneficiariaService entidadBeneficiariaService,
-            PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+            PasswordEncoder passwordEncoder, JwtUtil jwtUtil,
+            RestDonacionesConfig config, RestTemplate restTemplate) {
         this.usuarioRepository = usuarioRepository;
         this.donanteRepository = donanteRepository;
         this.donanteService = donanteService;
         this.entidadBeneficiariaService = entidadBeneficiariaService;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.config = config;
+        this.restTemplate = restTemplate;
+    }
+
+    public AuthServiceImpl(UsuarioRepository usuarioRepository, DonanteRepository donanteRepository,
+            DonanteService donanteService, EntidadBeneficiariaService entidadBeneficiariaService,
+            PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+        this(usuarioRepository, donanteRepository, donanteService, entidadBeneficiariaService,
+                passwordEncoder, jwtUtil, null, null);
     }
 
     @Override
@@ -82,8 +103,14 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException("Faltan los datos del donante");
         }
         Long donanteId = donanteService.crearPersonaHumana(request.donante()).id();
-        return registrar(request.username(), request.password(), Rol.DONANTE, donanteId,
+        SesionResponse sesion = registrar(request.username(), request.password(), Rol.DONANTE, donanteId,
                 () -> donanteService.eliminar(donanteId));
+        notificarBienvenidaAsync(
+                resolverContacto(request.donante().contactos(), request.donante().contactoPredeterminado()),
+                request.donante().nombre(),
+                "DONANTE",
+                donanteId);
+        return sesion;
     }
 
     @Override
@@ -93,8 +120,14 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException("Faltan los datos del donante");
         }
         Long donanteId = donanteService.crearPersonaJuridica(request.donante()).id();
-        return registrar(request.username(), request.password(), Rol.DONANTE, donanteId,
+        SesionResponse sesion = registrar(request.username(), request.password(), Rol.DONANTE, donanteId,
                 () -> donanteService.eliminar(donanteId));
+        notificarBienvenidaAsync(
+                resolverContacto(request.donante().contactos(), request.donante().contactoPredeterminado()),
+                request.donante().razonSocial(),
+                "DONANTE",
+                donanteId);
+        return sesion;
     }
 
     @Override
@@ -104,8 +137,18 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException("Faltan los datos de la entidad beneficiaria");
         }
         Long entidadId = entidadBeneficiariaService.crear(request.entidad()).id();
-        return registrar(request.username(), request.password(), Rol.ENTIDAD_BENEFICIARIA, entidadId,
+        SesionResponse sesion = registrar(request.username(), request.password(), Rol.ENTIDAD_BENEFICIARIA, entidadId,
                 () -> entidadBeneficiariaService.eliminar(entidadId));
+        MedioContactoRequest contactoEntidad = null;
+        if (request.entidad().correoRepresentantes() != null && !request.entidad().correoRepresentantes().isEmpty()) {
+            contactoEntidad = request.entidad().correoRepresentantes().get(0);
+        }
+        notificarBienvenidaAsync(
+                contactoEntidad,
+                request.entidad().razonSocial(),
+                "ENTIDAD",
+                entidadId);
+        return sesion;
     }
 
     @Override
@@ -170,5 +213,47 @@ public class AuthServiceImpl implements AuthService {
 
     private UsuarioResponse toUsuarioResponse(Usuario usuario) {
         return new UsuarioResponse(usuario.getId(), usuario.getUsername(), usuario.getRol(), usuario.getPerfilId());
+    }
+
+    private MedioContactoRequest resolverContacto(List<MedioContactoRequest> contactos, MedioContactoRequest predeterminado) {
+        if (predeterminado != null && predeterminado.valor() != null && !predeterminado.valor().isBlank()) {
+            return predeterminado;
+        }
+        if (contactos != null && !contactos.isEmpty()) {
+            return contactos.stream()
+                    .filter(c -> "EMAIL".equalsIgnoreCase(c.tipo()))
+                    .findFirst()
+                    .orElse(contactos.get(0));
+        }
+        return null;
+    }
+
+    private void notificarBienvenidaAsync(MedioContactoRequest contacto, String nombre, String tipoDestinatario, Long destinatarioId) {
+        if (contacto == null || contacto.valor() == null || contacto.valor().isBlank() || config == null || restTemplate == null) {
+            return;
+        }
+        CompletableFuture.runAsync(() -> {
+            try {
+                String url = config.getNotificacionesUrl() + "/notificaciones";
+                TipoContacto tipo = TipoContacto.EMAIL;
+                if (contacto.tipo() != null) {
+                    try {
+                        tipo = TipoContacto.valueOf(contacto.tipo().toUpperCase());
+                    } catch (IllegalArgumentException ignored) {}
+                }
+                String mensaje = "¡Bienvenido/a a DonaTrack, " + (nombre != null ? nombre : "donante") + "! Tu cuenta ha sido registrada con éxito.";
+                NotificacionRequest notifReq = new NotificacionRequest(
+                        contacto.valor(),
+                        tipo,
+                        mensaje,
+                        "ALTA_USUARIO",
+                        tipoDestinatario,
+                        destinatarioId,
+                        null);
+                restTemplate.postForObject(url, notifReq, Void.class);
+            } catch (Exception e) {
+                System.err.println("Aviso: no se pudo enviar notificación de bienvenida en el registro: " + e.getMessage());
+            }
+        });
     }
 }
