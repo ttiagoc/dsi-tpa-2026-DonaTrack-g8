@@ -909,6 +909,13 @@ code {
   flex: 1 1 200px;
 }
 
+.filtros .campo select,
+.filtros .campo input,
+.filtros__acciones .boton {
+  height: 46px;
+  box-sizing: border-box;
+}
+
 .filtros__acciones {
   display: flex;
   align-items: center;

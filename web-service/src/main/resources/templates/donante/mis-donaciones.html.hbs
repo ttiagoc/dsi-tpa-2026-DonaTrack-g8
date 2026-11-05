@@ -1,48 +1,34 @@
 {{#partial "titulo"}}Mis donaciones · DonaTrack{{/partial}}
 
 {{#partial "contenido"}}
-<header class="encabezado-pagina">
-  <div>
-    <h1>Mis donaciones</h1>
-    <p class="texto-suave">Revisá el historial de tus donaciones realizadas y filtralas por estado o categoría.</p>
-  </div>
-</header>
+{{> partials/encabezado titulo="Mis donaciones" bajada="Revisá el historial de tus donaciones realizadas y filtralas por estado o categoría."}}
 
 {{!-- Formulario de Filtros --}}
-<section class="tarjeta" style="margin-bottom: var(--espacio-4);">
-  <form method="get" action="/donante/donaciones">
-    <div class="grilla grilla--3" style="align-items: flex-end;">
-      <div class="campo">
-        <label for="estado">Estado</label>
-        <select name="estado" id="estado">
-          <option value="">Todos los estados</option>
-          <option value="EN_DEPOSITO" {{#if (eq estadoSeleccionado "EN_DEPOSITO")}}selected{{/if}}>En depósito</option>
-          <option value="ASIGNACION_REALIZADA" {{#if (eq estadoSeleccionado "ASIGNACION_REALIZADA")}}selected{{/if}}>Asignación realizada</option>
-          <option value="LISTA_PARA_ENTREGAR" {{#if (eq estadoSeleccionado "LISTA_PARA_ENTREGAR")}}selected{{/if}}>Lista para entregar</option>
-          <option value="EN_TRASLADO" {{#if (eq estadoSeleccionado "EN_TRASLADO")}}selected{{/if}}>En traslado</option>
-          <option value="ENTREGADA" {{#if (eq estadoSeleccionado "ENTREGADA")}}selected{{/if}}>Entregada</option>
-          <option value="ENTREGA_FALLIDA" {{#if (eq estadoSeleccionado "ENTREGA_FALLIDA")}}selected{{/if}}>Entrega fallida</option>
-          <option value="VENCIDA" {{#if (eq estadoSeleccionado "VENCIDA")}}selected{{/if}}>Vencida</option>
-        </select>
-      </div>
+{{#> partials/filtros action="/donante/donaciones" limpiarHref="/donante/donaciones"}}
+  <div class="campo">
+    <label for="estado">Estado</label>
+    <select name="estado" id="estado">
+      <option value="">Todos los estados</option>
+      <option value="EN_DEPOSITO" {{#if (eq estadoSeleccionado "EN_DEPOSITO")}}selected{{/if}}>En depósito</option>
+      <option value="ASIGNACION_REALIZADA" {{#if (eq estadoSeleccionado "ASIGNACION_REALIZADA")}}selected{{/if}}>Asignación realizada</option>
+      <option value="LISTA_PARA_ENTREGAR" {{#if (eq estadoSeleccionado "LISTA_PARA_ENTREGAR")}}selected{{/if}}>Lista para entregar</option>
+      <option value="EN_TRASLADO" {{#if (eq estadoSeleccionado "EN_TRASLADO")}}selected{{/if}}>En traslado</option>
+      <option value="ENTREGADA" {{#if (eq estadoSeleccionado "ENTREGADA")}}selected{{/if}}>Entregada</option>
+      <option value="ENTREGA_FALLIDA" {{#if (eq estadoSeleccionado "ENTREGA_FALLIDA")}}selected{{/if}}>Entrega fallida</option>
+      <option value="VENCIDA" {{#if (eq estadoSeleccionado "VENCIDA")}}selected{{/if}}>Vencida</option>
+    </select>
+  </div>
 
-      <div class="campo">
-        <label for="categoriaId">Categoría</label>
-        <select name="categoriaId" id="categoriaId">
-          <option value="">Todas las categorías</option>
-          {{#each categorias}}
-            <option value="{{this.id}}" {{#if (eq ../categoriaSeleccionada this.id)}}selected{{/if}}>{{this.nombre}}</option>
-          {{/each}}
-        </select>
-      </div>
-
-      <div style="display: flex; gap: var(--espacio-2);">
-        <button type="submit" class="boton">Filtrar</button>
-        <a href="/donante/donaciones" class="boton boton--secundario">Limpiar</a>
-      </div>
-    </div>
-  </form>
-</section>
+  <div class="campo">
+    <label for="categoriaId">Categoría</label>
+    <select name="categoriaId" id="categoriaId">
+      <option value="">Todas las categorías</option>
+      {{#each categorias}}
+        <option value="{{this.id}}" {{#if (eq ../categoriaSeleccionada this.id)}}selected{{/if}}>{{this.nombre}}</option>
+      {{/each}}
+    </select>
+  </div>
+{{/partials/filtros}}
 
 {{!-- Tabla de Donaciones --}}
 {{#if donaciones}}
@@ -64,13 +50,13 @@
               <td class="tabla__corta"><strong>#{{this.id}}</strong></td>
               <td class="tabla__corta">
                 {{#if this.fecha}}
-                  {{this.fecha}}
+                  {{fecha this.fecha}}
                 {{else}}
                   <span class="tabla__secundario">Reciente</span>
                 {{/if}}
               </td>
               <td class="tabla__corta">
-                <span class="etiqueta etiqueta--info">{{this.estadoActual}}</span>
+                {{{estado this.estadoActual}}}
               </td>
               <td>
                 {{#each this.bienes}}

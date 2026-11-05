@@ -152,4 +152,15 @@ public class ComponentesTemplateTest {
         assertTrue(result.contains("Se borrará el camión"));
         assertTrue(result.contains("Eliminar camión"));
     }
+
+    @Test
+    void testPartialFiltros() throws IOException {
+        String template = "{{#> partials/filtros action='/donante/donaciones' limpiarHref='/donante/donaciones'}}<div class=\"campo\"><label for=\"st\">Estado</label><select id=\"st\"></select></div>{{/partials/filtros}}";
+        String result = renderString(template, Map.of());
+        assertTrue(result.contains("<form class=\"filtros\" method=\"get\" action=\"/donante/donaciones\" novalidate>"));
+        assertTrue(result.contains("<button type=\"submit\" class=\"boton\">"));
+        assertTrue(result.contains("Filtrar"));
+        assertTrue(result.contains("<a class=\"boton boton--secundario\" href=\"/donante/donaciones\">"));
+        assertTrue(result.contains("Limpiar"));
+    }
 }
