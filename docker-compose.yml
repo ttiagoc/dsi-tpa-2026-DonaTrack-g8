@@ -91,6 +91,7 @@ services:
       SMTP_HOST: ${SMTP_HOST:-smtp-relay.brevo.com}
       SMTP_USERNAME: ${SMTP_USERNAME:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
     depends_on:
       postgres:
         condition: service_healthy

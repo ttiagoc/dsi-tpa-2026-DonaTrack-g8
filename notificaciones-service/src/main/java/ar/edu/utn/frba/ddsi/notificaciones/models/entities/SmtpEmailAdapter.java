@@ -21,7 +21,7 @@ public class SmtpEmailAdapter implements ProveedorEmail {
 
     public SmtpEmailAdapter(
             JavaMailSender mailSender,
-            @Value("${spring.mail.username:}") String remitente) {
+            @Value("${spring.mail.from:${spring.mail.username:}}") String remitente) {
         this.mailSender = mailSender;
         this.remitente = remitente;
     }
@@ -36,7 +36,7 @@ public class SmtpEmailAdapter implements ProveedorEmail {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
-            helper.setFrom(remitente);
+            helper.setFrom(remitente, "DonaTrack");
             helper.setTo(destino);
             helper.setSubject("DonaTrack - Notificación");
 
