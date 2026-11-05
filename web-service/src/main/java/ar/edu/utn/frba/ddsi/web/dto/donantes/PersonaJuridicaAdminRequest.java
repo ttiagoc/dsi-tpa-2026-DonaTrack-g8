@@ -13,3 +13,4 @@ public record PersonaJuridicaAdminRequest(
 ) {
     public record RepresentanteDto(String nombre, String apellido, String rol) {}
 }
+

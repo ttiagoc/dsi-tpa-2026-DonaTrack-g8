@@ -88,3 +88,4 @@ class NotificacionesAuthTest {
         assertEquals(200, resSistema.statusCode(), "Debe responder 200 OK para rol SISTEMA con clave compartida");
     }
 }
+
