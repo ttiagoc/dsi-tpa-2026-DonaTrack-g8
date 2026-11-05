@@ -1314,17 +1314,44 @@ class WebFlujoTest {
         assertTrue(planificada.body().contains("AF 123 CD"));
         assertTrue(planificada.body().contains("Comenzar recorrido"));
 
+        // El mapa toma los datos de atributos data-* (escapados) y un JS aparte: nada de datos dentro del <script>
+        assertTrue(planificada.body().contains("id=\"mapa-hoja-ruta\""));
+        assertTrue(planificada.body().contains("data-parada data-orden=\"1\""));
+        assertTrue(planificada.body().contains("data-lat=\"-34.601200\""));
+        assertTrue(planificada.body().contains("src=\"/js/hoja-de-ruta.js\""));
+        assertFalse(planificada.body().contains("estado: \""), "el helper estado rompía el JS del mapa");
+
         // Iniciar recorrido pasa a EN_TRASLADO
         HttpResponse<String> respIniciar = post("/chofer/rutas/1/iniciar", Map.of(), choferCookie);
         assertEquals(302, respIniciar.statusCode());
+        assertEquals("/chofer?ruta=1", respIniciar.headers().firstValue("Location").orElse(null));
         assertEquals("EN_TRASLADO", rutasFalsas.get(0).get("estado"));
 
+        // Más de una ruta: el chofer ve todas y elige cuál abrir; por defecto, la que está en traslado
+        rutasFalsas.add(crearRutaFalsa(3L, 1L, "PLANIFICADA"));
+        rutasFalsas.add(crearRutaFalsa(9L, 2L, "PLANIFICADA")); // de otro camión: no aparece
+        String conDos = get("/chofer", choferCookie).body();
+        assertTrue(conDos.contains("href=\"/chofer?ruta=1\" aria-current=\"page\""));
+        assertTrue(conDos.contains("href=\"/chofer?ruta=3\""));
+        assertFalse(conDos.contains("/chofer?ruta=9"));
+        assertTrue(conDos.contains("2 rutas por hacer"));
+        String rutaTres = get("/chofer?ruta=3", choferCookie).body();
+        assertTrue(rutaTres.contains("href=\"/chofer?ruta=3\" aria-current=\"page\""));
+        assertTrue(rutaTres.contains("Estás haciendo la"), "no se empieza otra ruta con una en traslado");
+        assertFalse(rutaTres.contains("action=\"/chofer/rutas/3/iniciar\""));
+        assertEquals(302, post("/chofer/rutas/3/iniciar", Map.of(), choferCookie).statusCode());
+        assertEquals("PLANIFICADA", rutasFalsas.get(1).get("estado"));
+        assertTrue(get("/chofer?ruta=9", choferCookie).body().contains("href=\"/chofer?ruta=1\" aria-current=\"page\""),
+                "una ruta de otro camión no se abre");
+
         // Abrir modal de confirmación de la parada 11 y confirmarla
-        HttpResponse<String> modalConfirmar = get("/chofer?confirmarParada=11", choferCookie);
+        HttpResponse<String> modalConfirmar = get("/chofer?ruta=1&confirmarParada=11", choferCookie);
         assertTrue(modalConfirmar.body().contains("Confirmar entrega en Parada #1"));
+        assertFalse(get("/chofer?ruta=3&confirmarParada=11", choferCookie).body().contains("modal-confirmar-entrega"),
+                "una ruta planificada no confirma paradas");
         HttpResponse<String> respConfirmar = post("/chofer/rutas/1/paradas/11/confirmar", Map.of(), choferCookie);
         assertEquals(302, respConfirmar.statusCode());
-        assertEquals("/chofer", respConfirmar.headers().firstValue("Location").orElse(null));
+        assertEquals("/chofer?ruta=1", respConfirmar.headers().firstValue("Location").orElse(null));
 
         // Reportar fallo sin motivo devuelve 400 con el modal abierto
         HttpResponse<String> falloSinMotivo = post("/chofer/rutas/1/paradas/12/fallar", Map.of("motivo", ""), choferCookie);
@@ -1344,6 +1371,8 @@ class WebFlujoTest {
         assertTrue(modalCompletadaMixta.body().contains("id=\"modal-ruta-completada\""));
         assertTrue(modalCompletadaMixta.body().contains("¡Ruta #1 completada!"));
         assertTrue(modalCompletadaMixta.body().contains("1 entregada · 1 no recibida"));
+        assertTrue(modalCompletadaMixta.body().contains("Te queda 1 ruta por hacer."));
+        assertTrue(modalCompletadaMixta.body().contains("Ir a la próxima ruta"));
 
         // Segunda ruta con todas las paradas entregadas muestra el modal de todas las paradas completadas
         rutasFalsas.add(crearRutaFalsa(2L, 1L, "EN_TRASLADO"));

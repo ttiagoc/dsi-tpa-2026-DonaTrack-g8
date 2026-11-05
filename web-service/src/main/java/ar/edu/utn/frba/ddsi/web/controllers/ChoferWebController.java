@@ -38,23 +38,39 @@ public class ChoferWebController {
         this.donaciones = donaciones;
     }
 
+    /**
+     * Hoja de ruta del chofer. Muestra todas las rutas de su camión (en traslado, planificadas y finalizadas)
+     * y el detalle de la elegida con ?ruta={id}. Sin elegir, abre la que está en traslado o la próxima planificada.
+     */
     public void hojaDeRuta(Context ctx) {
         Map<String, Object> modelo = new Formulario(ctx).enModelo(Modelo.base(ctx), null);
-        Long confirmarId = parseLongOpcional(ctx.queryParam("confirmarParada"));
-        Long fallarId = parseLongOpcional(ctx.queryParam("fallarParada"));
-        Long completadaId = parseLongOpcional(ctx.queryParam("completada"));
-        renderizarHojaDeRuta(ctx, modelo, confirmarId, fallarId, completadaId);
+        renderizarHojaDeRuta(ctx, modelo,
+                parseLongOpcional(ctx.queryParam("ruta")),
+                parseLongOpcional(ctx.queryParam("confirmarParada")),
+                parseLongOpcional(ctx.queryParam("fallarParada")),
+                parseLongOpcional(ctx.queryParam("completada")));
     }
 
     public void iniciarRuta(Context ctx) {
         Long rutaId = Long.parseLong(ctx.pathParam("rutaId"));
+        // un camión hace un recorrido a la vez: la próxima ruta se empieza al terminar la que está en traslado
+        RutaDto enTraslado = listarRutasSeguro(ctx, obtenerCamionId(ctx)).stream()
+                .filter(RutaDto::esEnTraslado)
+                .filter(r -> !rutaId.equals(r.id()))
+                .findFirst()
+                .orElse(null);
+        if (enTraslado != null) {
+            Alertas.error(ctx, "Terminá la Ruta #" + enTraslado.id() + " antes de comenzar otro recorrido.");
+            ctx.redirect(RUTA + "?ruta=" + rutaId);
+            return;
+        }
         try {
             logistica.cambiarEstadoRuta(ctx, rutaId, "EN_TRASLADO");
             Alertas.exito(ctx, "Iniciaste el recorrido de la Ruta #" + rutaId + ". Tu ubicación GPS ya está activa.");
         } catch (ApiException e) {
             Alertas.error(ctx, "No se pudo iniciar el recorrido: " + e.getMessage());
         }
-        ctx.redirect(RUTA);
+        ctx.redirect(RUTA + "?ruta=" + rutaId);
     }
 
     public void confirmarParada(Context ctx) {
@@ -62,9 +78,7 @@ public class ChoferWebController {
         Long paradaId = Long.parseLong(ctx.pathParam("paradaId"));
         try {
             logistica.confirmarParada(ctx, rutaId, paradaId);
-            Long camionId = obtenerCamionId(ctx);
-            RutaDto sigueActiva = obtenerRutaActivaSegura(ctx, camionId);
-            if (sigueActiva == null || !rutaId.equals(sigueActiva.id())) {
+            if (rutaFinalizada(ctx, rutaId)) {
                 ctx.redirect(RUTA + "?completada=" + rutaId);
                 return;
             }
@@ -72,7 +86,7 @@ public class ChoferWebController {
         } catch (ApiException e) {
             Alertas.error(ctx, "No se pudo confirmar la entrega: " + e.getMessage());
         }
-        ctx.redirect(RUTA);
+        ctx.redirect(RUTA + "?ruta=" + rutaId);
     }
 
     public void fallarParada(Context ctx) {
@@ -85,31 +99,49 @@ public class ChoferWebController {
             ctx.status(400);
             Map<String, Object> modelo = form.enModelo(Modelo.base(ctx), null);
             modelo.put("errorGeneral", "Indicá el motivo por el que no se pudo realizar la entrega.");
-            renderizarHojaDeRuta(ctx, modelo, null, paradaId, null);
+            renderizarHojaDeRuta(ctx, modelo, rutaId, null, paradaId, null);
             return;
         }
 
         try {
             logistica.reportarFalloParada(ctx, rutaId, paradaId, motivo);
-            Long camionId = obtenerCamionId(ctx);
-            RutaDto sigueActiva = obtenerRutaActivaSegura(ctx, camionId);
-            if (sigueActiva == null || !rutaId.equals(sigueActiva.id())) {
+            if (rutaFinalizada(ctx, rutaId)) {
                 ctx.redirect(RUTA + "?completada=" + rutaId);
                 return;
             }
             Alertas.info(ctx, "Se registró la entrega fallida y las donaciones quedaron informadas para reprogramación en depósito.");
-            ctx.redirect(RUTA);
+            ctx.redirect(RUTA + "?ruta=" + rutaId);
         } catch (ApiException e) {
             ctx.status(400);
             Map<String, Object> modelo = form.enModelo(Modelo.base(ctx), null);
             modelo.put("errorGeneral", e.getMessage());
-            renderizarHojaDeRuta(ctx, modelo, null, paradaId, null);
+            renderizarHojaDeRuta(ctx, modelo, rutaId, null, paradaId, null);
         }
     }
+
+    private boolean rutaFinalizada(Context ctx, Long rutaId) {
+        return listarRutasSeguro(ctx, obtenerCamionId(ctx)).stream()
+                .filter(r -> rutaId.equals(r.id()))
+                .findFirst()
+                .map(RutaDto::esFinalizada)
+                .orElse(true);
+    }
+
+    /** En traslado primero, después las planificadas de la más próxima a la más lejana y al final las finalizadas. */
+    private static final Comparator<RutaDto> ORDEN_RUTAS = Comparator
+            .comparingInt((RutaDto r) -> r.esEnTraslado() ? 0 : r.esPlanificada() ? 1 : 2)
+            .thenComparing((a, b) -> {
+                if (a.fecha() == null || b.fecha() == null) {
+                    return 0;
+                }
+                return a.esFinalizada() ? b.fecha().compareTo(a.fecha()) : a.fecha().compareTo(b.fecha());
+            })
+            .thenComparing(RutaDto::id, Comparator.nullsLast(Comparator.reverseOrder()));
 
     private void renderizarHojaDeRuta(
             Context ctx,
             Map<String, Object> modelo,
+            Long rutaIdElegida,
             Long confirmarParadaId,
             Long fallarParadaId,
             Long completadaId) {
@@ -122,29 +154,42 @@ public class ChoferWebController {
             modelo.put("volumenCamionFormateado", camion.capacidadVolumen() != null
                     ? String.format(Locale.US, "%.1f", camion.capacidadVolumen()) : "-");
         }
-
-        RutaDto ruta = obtenerRutaActivaSegura(ctx, camionId);
         modelo.put("depositoLat", String.format(Locale.US, "%.6f", DEPOSITO_LAT));
         modelo.put("depositoLng", String.format(Locale.US, "%.6f", DEPOSITO_LNG));
 
-        List<RutaDto> historial = (ruta == null || completadaId != null)
-                ? listarHistorialSeguro(ctx, camionId)
-                : List.of();
+        List<RutaDto> rutas = new ArrayList<>(listarRutasSeguro(ctx, camionId));
+        rutas.sort(ORDEN_RUTAS);
 
         if (completadaId != null) {
-            RutaDto rutaFinalizada = historial.stream()
+            rutas.stream()
                     .filter(r -> completadaId.equals(r.id()) && r.esFinalizada())
                     .findFirst()
-                    .orElse(null);
-            if (rutaFinalizada != null) {
-                modelo.put("abrirModalCompletada", true);
-                modelo.put("rutaCompletada", armarVistaCompletada(rutaFinalizada, camion));
-            }
+                    .ifPresent(r -> {
+                        modelo.put("abrirModalCompletada", true);
+                        modelo.put("rutaCompletada", armarVistaCompletada(r, camion));
+                    });
         }
 
+        // la elegida (si es de este camión) o la primera sin terminar
+        RutaDto ruta = rutas.stream().filter(r -> r.id() != null && r.id().equals(rutaIdElegida)).findFirst()
+                .orElse(rutas.stream().filter(r -> !r.esFinalizada()).findFirst().orElse(null));
+        RutaDto enTraslado = rutas.stream().filter(RutaDto::esEnTraslado).findFirst().orElse(null);
+
+        List<RutaOpcionVista> activas = new ArrayList<>();
+        List<RutaOpcionVista> finalizadas = new ArrayList<>();
+        for (RutaDto r : rutas) {
+            RutaOpcionVista opcion = new RutaOpcionVista(r.id(), r.fechaFormateada(), r.estado(), r.paradasTexto(),
+                    textoPendientes(contarPendientes(r)), ruta != null && r.id() != null && r.id().equals(ruta.id()));
+            (r.esFinalizada() ? finalizadas : activas).add(opcion);
+        }
+        modelo.put("rutasActivas", activas);
+        modelo.put("rutasFinalizadas", finalizadas);
+        modelo.put("rutasActivasCount", activas.size());
+        modelo.put("rutasFinalizadasCount", finalizadas.size());
+        modelo.put("hayVariasRutas", rutas.size() > 1);
+        modelo.put("rutasActivasTexto", activas.size() == 1 ? "1 ruta por hacer" : activas.size() + " rutas por hacer");
+
         if (ruta == null) {
-            long finalizadas = historial.stream().filter(RutaDto::esFinalizada).count();
-            modelo.put("rutasFinalizadasCount", finalizadas);
             ctx.render(VISTA, modelo);
             return;
         }
@@ -152,6 +197,10 @@ public class ChoferWebController {
         modelo.put("ruta", ruta);
         modelo.put("esPlanificada", ruta.esPlanificada());
         modelo.put("esEnTraslado", ruta.esEnTraslado());
+        modelo.put("esFinalizada", ruta.esFinalizada());
+        if (ruta.esPlanificada() && enTraslado != null) {
+            modelo.put("otraEnTraslado", enTraslado);
+        }
 
         double camionLat = ruta.camionLatitud() != null ? ruta.camionLatitud() : DEPOSITO_LAT;
         double camionLng = ruta.camionLongitud() != null ? ruta.camionLongitud() : DEPOSITO_LNG;
@@ -204,9 +253,7 @@ public class ChoferWebController {
                     }
                 }
 
-                double lat = p.latitud() != null ? p.latitud() : -34.6083;
-                double lng = p.longitud() != null ? p.longitud() : -58.4350;
-
+                // sin coordenadas la parada se lista pero no se marca en el mapa (antes caía en un punto inventado)
                 ParadaChoferVista vista = new ParadaChoferVista(
                         p.id(),
                         p.orden() != null ? p.orden() : paradas.size() + 1,
@@ -219,28 +266,43 @@ public class ChoferWebController {
                         esFallida,
                         bultos,
                         bultosDetalle.isEmpty() ? "Sin bultos informados" : String.join(" · ", bultosDetalle),
-                        String.format(Locale.US, "%.6f", lat),
-                        String.format(Locale.US, "%.6f", lng));
+                        p.latitud() != null ? String.format(Locale.US, "%.6f", p.latitud()) : null,
+                        p.longitud() != null ? String.format(Locale.US, "%.6f", p.longitud()) : null);
                 paradas.add(vista);
 
-                if (confirmarParadaId != null && confirmarParadaId.equals(p.id()) && esPendiente) {
-                    modelo.put("abrirModalConfirmar", true);
-                    modelo.put("paradaSeleccionada", vista);
-                }
-                if (fallarParadaId != null && fallarParadaId.equals(p.id()) && esPendiente) {
-                    modelo.put("abrirModalFallo", true);
-                    modelo.put("paradaSeleccionada", vista);
+                if (ruta.esEnTraslado() && esPendiente) {
+                    if (confirmarParadaId != null && confirmarParadaId.equals(p.id())) {
+                        modelo.put("abrirModalConfirmar", true);
+                        modelo.put("paradaSeleccionada", vista);
+                    }
+                    if (fallarParadaId != null && fallarParadaId.equals(p.id())) {
+                        modelo.put("abrirModalFallo", true);
+                        modelo.put("paradaSeleccionada", vista);
+                    }
                 }
             }
         }
 
         modelo.put("paradas", paradas);
-        modelo.put("pendientesTexto", pendientesCount == 1 ? "1 parada pendiente" : pendientesCount + " paradas pendientes");
+        modelo.put("pendientesTexto", textoPendientes(pendientesCount));
         modelo.put("ordenResumen", paradas.stream()
                 .map(p -> String.valueOf(p.orden()))
                 .collect(Collectors.joining(" → ")));
 
         ctx.render(VISTA, modelo);
+    }
+
+    private static int contarPendientes(RutaDto ruta) {
+        if (ruta.paradas() == null) {
+            return 0;
+        }
+        return (int) ruta.paradas().stream()
+                .filter(p -> p.estado() == null || "PENDIENTE".equalsIgnoreCase(p.estado()))
+                .count();
+    }
+
+    private static String textoPendientes(int pendientes) {
+        return pendientes == 1 ? "1 parada pendiente" : pendientes + " paradas pendientes";
     }
 
     private Long obtenerCamionId(Context ctx) {
@@ -262,17 +324,11 @@ public class ChoferWebController {
         }
     }
 
-    private RutaDto obtenerRutaActivaSegura(Context ctx, Long camionId) {
+    /** Todas las rutas del camión (la API valida que sea el del chofer logueado). */
+    private List<RutaDto> listarRutasSeguro(Context ctx, Long camionId) {
         try {
-            return logistica.obtenerRutaActivaCamion(ctx, camionId);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private List<RutaDto> listarHistorialSeguro(Context ctx, Long camionId) {
-        try {
-            return logistica.listarRutasCamion(ctx, camionId);
+            List<RutaDto> rutas = logistica.listarRutasCamion(ctx, camionId);
+            return rutas != null ? rutas : List.of();
         } catch (Exception e) {
             return List.of();
         }
@@ -353,6 +409,16 @@ public class ChoferWebController {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    /** Una ruta del selector de la hoja de ruta. */
+    public record RutaOpcionVista(
+            Long id,
+            String fecha,
+            String estado,
+            String paradasTexto,
+            String pendientesTexto,
+            boolean elegida) {
     }
 
     public record RutaCompletadaVista(

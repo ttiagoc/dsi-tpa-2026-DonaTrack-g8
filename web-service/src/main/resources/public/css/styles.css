@@ -1518,6 +1518,80 @@ code {
   height: 380px;
   width: 100%;
   background: #e9efe9;
+  z-index: 0; /* los paneles de Leaflet no tapan el menú ni los modales */
+}
+.hoja-ruta-mapa--sin-mapa {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--espacio-4);
+  color: var(--color-texto-suave);
+  text-align: center;
+}
+.hoja-ruta-mapa__tarjeta { padding: 0; overflow: hidden; margin-bottom: var(--espacio-5); }
+.hoja-ruta-mapa__leyenda {
+  padding: var(--espacio-2) var(--espacio-4);
+  border-top: 1px solid var(--color-borde);
+  font-size: var(--texto-chico);
+  color: var(--color-texto-suave);
+}
+.hoja-ruta__titulo { font-size: 1.15rem; margin: 0 0 var(--espacio-3); }
+.camion-banner__titulo { font-size: 1.15rem; margin: 0; }
+.camion-banner__detalle { font-size: var(--texto-chico); margin: 2px 0 0; }
+.marcador-camion {
+  font-size: 30px;
+  line-height: 1;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.4));
+  transform: scaleX(-1);
+}
+.vacio__extra { display: block; margin-top: var(--espacio-2); font-size: var(--texto-chico); }
+
+/* selector de rutas del chofer: una tarjeta por ruta, la abierta marcada */
+.rutas-chofer {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--espacio-3);
+  margin-bottom: var(--espacio-5);
+}
+.rutas-chofer__opcion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-1);
+  padding: var(--espacio-3) var(--espacio-4);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  background: var(--color-superficie);
+  color: inherit;
+  text-decoration: none;
+  font-size: var(--texto-chico);
+}
+.rutas-chofer__opcion:hover,
+.rutas-chofer__opcion:focus-visible { border-color: var(--color-primario); }
+.rutas-chofer__opcion[aria-current="page"] {
+  border: 2px solid var(--color-primario);
+  background: var(--color-primario-suave);
+}
+.rutas-chofer__titulo {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--color-texto);
+}
+.rutas-chofer__historial { grid-column: 1 / -1; }
+.rutas-chofer__historial summary {
+  cursor: pointer;
+  color: var(--color-texto-suave);
+  font-size: var(--texto-chico);
+  padding: var(--espacio-1) 0;
+}
+.rutas-chofer__lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--espacio-3);
+  margin-top: var(--espacio-2);
 }
 
 .paradas-lista {
