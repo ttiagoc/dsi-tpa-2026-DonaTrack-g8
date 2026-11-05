@@ -43,7 +43,7 @@ services:
       # Dentro de la red de compose "localhost" es el propio contenedor: las llamadas
       # entre servicios se resuelven por el nombre del servicio de compose.
       REST_NOTIFICACIONES_URL: http://notificaciones-service:8082/api
-      # Seguridad: mismo JWT_SECRET y SERVICE_API_KEY en donaciones y logistica (ver common-lib/application.yml)
+      # Seguridad: mismo JWT_SECRET y SERVICE_API_KEY en donaciones, logistica y notificaciones (ver common-lib/application.yml)
       JWT_SECRET: ${JWT_SECRET:-donatrack-secreto-solo-para-desarrollo-local-0123456789}
       SERVICE_API_KEY: ${SERVICE_API_KEY:-donatrack-clave-servicios-local}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
@@ -88,7 +88,12 @@ services:
       NOTIFICACIONES_DB_URL: jdbc:postgresql://postgres:5432/notificaciones
       NOTIFICACIONES_DB_USERNAME: postgres
       NOTIFICACIONES_DB_PASSWORD: postgres
+      # Valida los JWT de los usuarios (pantalla de notificaciones): tiene que ser el mismo JWT_SECRET
+      # que en donaciones, si no rechaza los tokens con 401 y la web manda al login
+      JWT_SECRET: ${JWT_SECRET:-donatrack-secreto-solo-para-desarrollo-local-0123456789}
+      SERVICE_API_KEY: ${SERVICE_API_KEY:-donatrack-clave-servicios-local}
       SMTP_HOST: ${SMTP_HOST:-smtp-relay.brevo.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USERNAME: ${SMTP_USERNAME:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_FROM: ${SMTP_FROM:-}
