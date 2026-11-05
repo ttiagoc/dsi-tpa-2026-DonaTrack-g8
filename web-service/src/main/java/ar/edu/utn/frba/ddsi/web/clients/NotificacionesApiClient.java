@@ -43,5 +43,31 @@ public class NotificacionesApiClient extends ApiClient {
         return fechaDeEnvio;
       }
     }
+
+    public String eventoLegible() {
+      if (tipoEvento == null || tipoEvento.isBlank()) return null;
+      return switch (tipoEvento) {
+        case "DONACION_ASIGNADA" -> "Donación asignada";
+        case "ALTA_USUARIO" -> "Cuenta creada";
+        case "ALTA_IMPORTACION" -> "Importación";
+        case "EN_CAMINO", "INICIO_RUTA" -> "En camino";
+        case "ENTREGA_EXITOSA" -> "Entrega exitosa";
+        case "ENTREGA_FALLIDA" -> "Entrega fallida";
+        case "RECEPCION_CONFIRMADA" -> "Recepción confirmada";
+        case "AUSENCIA_PLATAFORMA" -> "Recordatorio";
+        default -> tipoEvento;
+      };
+    }
+
+    public String claseEtiqueta() {
+      if (tipoEvento == null) return "etiqueta--neutra";
+      return switch (tipoEvento) {
+        case "DONACION_ASIGNADA", "ALTA_USUARIO", "RECEPCION_CONFIRMADA", "ENTREGA_EXITOSA" -> "etiqueta--ok";
+        case "EN_CAMINO", "INICIO_RUTA" -> "etiqueta--info";
+        case "ENTREGA_FALLIDA" -> "etiqueta--error";
+        case "AUSENCIA_PLATAFORMA" -> "etiqueta--pendiente";
+        default -> "etiqueta--neutra";
+      };
+    }
   }
 }

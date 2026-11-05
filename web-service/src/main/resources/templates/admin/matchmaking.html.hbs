@@ -68,23 +68,38 @@
       <p class="texto-suave">El motor evaluó compatibilidad por necesidad declarada y nivel de desatención. Seleccioná a qué entidad querés asignar la entrega:</p>
 
       {{#if propuestaSeleccionada.entidadesSugeridas}}
-        <div class="ranking-lista">
+        <div class="ranking-lista" role="radiogroup" aria-label="Entidades sugeridas para asignación">
           {{#each propuestaSeleccionada.entidadesSugeridas}}
-            <label class="ranking-item {{#if esPrioridadUno}}ranking-item--seleccionado{{/if}}">
+            <label class="ranking-item {{#if esPrioridadUno}}ranking-item--recomendado ranking-item--seleccionado{{/if}}">
               <input type="radio" name="entidadId" value="{{id}}" {{#if esPrioridadUno}}checked{{/if}} required>
               <div class="ranking-item__info">
                 <div class="ranking-item__titulo">
                   <span class="ranking-item__entidad">{{razonSocial}}</span>
-                  {{#if esPrioridadUno}}
-                    <span class="etiqueta">Prioridad #{{orden}}</span>
-                  {{else}}
-                    <span class="etiqueta etiqueta--neutra">Prioridad #{{orden}}</span>
-                  {{/if}}
+                  <div class="ranking-item__badges">
+                    {{#if esPrioridadUno}}
+                      <span class="etiqueta etiqueta--recomendada" title="Sugerencia con mayor compatibilidad del motor">
+                        <svg class="icono" aria-hidden="true"><use href="#i-rayo"/></svg> Recomendada
+                      </span>
+                    {{else}}
+                      <span class="etiqueta etiqueta--neutra">Prioridad #{{orden}}</span>
+                    {{/if}}
+                    <span class="ranking-item__badge-asignar" aria-hidden="true">
+                      <svg class="icono" aria-hidden="true"><use href="#i-tilde"/></svg> Seleccionada para asignar
+                    </span>
+                  </div>
                 </div>
-                {{#if direccion}}<span class="texto-suave">{{direccion}}</span>{{/if}}
+                {{#if direccion}}<span class="texto-suave ranking-item__direccion">{{direccion}}</span>{{/if}}
+                {{#if esPrioridadUno}}
+                  <span class="ranking-item__nota-recomendada">Prioridad #1 · Mayor nivel de compatibilidad según el motor</span>
+                {{/if}}
               </div>
             </label>
           {{/each}}
+        </div>
+
+        <div class="ranking-aviso-asignacion">
+          <svg class="icono" aria-hidden="true"><use href="#i-conexiones"/></svg>
+          <span>La donación se asignará a la entidad marcada como <strong>Seleccionada para asignar</strong>.</span>
         </div>
       {{else}}
         <p class="alerta alerta--info">No se encontraron entidades compatibles en esta propuesta.</p>
@@ -95,7 +110,7 @@
     <div class="modal__acciones" style="justify-content: space-between;">
       {{boton "eliminar" formaction=(concat "/admin/matchmaking/propuestas/" propuestaSeleccionada.id "/rechazar") texto="Descartar propuesta" type="submit"}}
       <div style="display: flex; gap: var(--espacio-2);">
-        {{boton "cancelar" href="/admin/matchmaking" cierra=true}}
+        {{boton "cancelar" href="/admin/matchmaking" cierra=true autofocus=true}}
         {{#if propuestaSeleccionada.entidadesSugeridas}}
           {{boton "confirmar" texto="Confirmar asignación" type="submit"}}
         {{/if}}
@@ -105,5 +120,32 @@
 </dialog>
 {{/if}}
 
+{{/partial}}
+
+{{#partial "scripts"}}
+<script>
+  (function () {
+    var modal = document.getElementById('modal-sugerencias');
+    if (!modal) return;
+    var radios = modal.querySelectorAll('input[type="radio"][name="entidadId"]');
+    function sincronizarSeleccion() {
+      radios.forEach(function (radio) {
+        var card = radio.closest('.ranking-item');
+        if (card) {
+          card.classList.toggle('ranking-item--seleccionado', radio.checked);
+        }
+      });
+    }
+    radios.forEach(function (radio) {
+      radio.addEventListener('change', sincronizarSeleccion);
+    });
+    sincronizarSeleccion();
+
+    var accionSegura = modal.querySelector('.modal__acciones [autofocus], .modal__acciones [data-cierra]');
+    if (accionSegura) {
+      try { accionSegura.focus(); } catch (e) {}
+    }
+  })();
+</script>
 {{/partial}}
 {{> layouts/base}}

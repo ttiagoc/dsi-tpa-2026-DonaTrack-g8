@@ -16,24 +16,28 @@
         <thead>
           <tr>
             <th scope="col">Aviso</th>
-            <th scope="col" class="tabla__corta" style="text-align: right;">Fecha</th>
+            <th scope="col" class="notificacion-item__fecha">Fecha</th>
           </tr>
         </thead>
         <tbody>
           {{#each notificaciones}}
             <tr>
               <td>
-                <div style="display: flex; gap: var(--espacio-3); align-items: flex-start;">
-                  <span style="font-size: 1.25rem; line-height: 1;" aria-hidden="true">🔔</span>
-                  <div>
-                    <div><strong>{{this.mensaje}}</strong></div>
+                <div class="notificacion-item">
+                  <div class="notificacion-item__icono" aria-hidden="true">
+                    <svg class="icono"><use href="#i-campana"/></svg>
+                  </div>
+                  <div class="notificacion-item__cuerpo">
+                    <div class="notificacion-item__mensaje">{{this.mensaje}}</div>
                     {{#if this.tipoEvento}}
-                      <span class="tabla__secundario">{{this.tipoEvento}}</span>
+                      <div>
+                        <span class="etiqueta {{this.claseEtiqueta}}">{{this.eventoLegible}}</span>
+                      </div>
                     {{/if}}
                   </div>
                 </div>
               </td>
-              <td class="tabla__corta tabla__secundario" style="text-align: right; vertical-align: top;">
+              <td class="notificacion-item__fecha">
                 {{this.fechaFormateada}}
               </td>
             </tr>
