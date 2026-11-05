@@ -823,6 +823,24 @@ class WebFlujoTest {
         assertEquals(302, respAltaDonante.statusCode());
         assertTrue(respAltaDonante.headers().firstValue("Location").orElse("").contains("/admin/recepcion?donanteId="));
 
+        // Alta rápida de persona jurídica válida con todos los datos de empresa que dona
+        Map<String, String> formJuridicaValida = new LinkedHashMap<>();
+        formJuridicaValida.put("tipoPersona", "JURIDICA");
+        formJuridicaValida.put("razonSocial", "Molinos Río de la Plata");
+        formJuridicaValida.put("cuit", "30500012349");
+        formJuridicaValida.put("rubro", "Alimenticio");
+        formJuridicaValida.put("tipo", "EMPRESA");
+        formJuridicaValida.put("representanteNombre", "Juan");
+        formJuridicaValida.put("representanteApellido", "Pérez");
+        formJuridicaValida.put("representanteCorreo", "juan.perez@molinos.com.ar");
+        formJuridicaValida.put("email", "contacto@molinos.com.ar");
+        formJuridicaValida.put("telefono", "1144332211");
+        formJuridicaValida.put("tipoTelefono", "WHATSAPP");
+        formJuridicaValida.put("contactoPredeterminado", "EMAIL");
+        HttpResponse<String> respAltaJuridica = post("/admin/recepcion/donante", formJuridicaValida, adminCookie);
+        assertEquals(302, respAltaJuridica.statusCode());
+        assertTrue(respAltaJuridica.headers().firstValue("Location").orElse("").contains("/admin/recepcion?donanteId="));
+
         // Registro de donación inválido (sin cantidad ni subcategoría)
         Map<String, String> formDonacionInvalido = new LinkedHashMap<>();
         formDonacionInvalido.put("donanteId", "1");
@@ -1054,6 +1072,18 @@ class WebFlujoTest {
                     "tipo", "Persona Humana",
                     "nombre", body.get("nombre").asText() + " " + body.get("apellido").asText(),
                     "documento", body.get("dni").asText()
+            );
+            donantesFalsos.add(donante);
+            ctx.status(201).json(donante);
+        });
+        api.post("/api/donantes/persona-juridica", ctx -> {
+            JsonNode body = mapper.readTree(ctx.body());
+            long id = donantesFalsos.size() + 1L;
+            Map<String, Object> donante = Map.of(
+                    "id", id,
+                    "tipo", "Persona Jurídica",
+                    "nombre", body.get("razonSocial").asText(),
+                    "documento", body.get("cuit").asText()
             );
             donantesFalsos.add(donante);
             ctx.status(201).json(donante);

@@ -243,6 +243,7 @@ public class DonanteServiceImpl implements DonanteService {
                 contacto.setTipoContacto(TipoContacto.EMAIL);
                 break;
             case "telefono":
+            case "sms":
                 contacto.setTipoContacto(TipoContacto.SMS);
                 break;
             case "whatsapp":

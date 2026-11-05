@@ -179,7 +179,7 @@
 </section>
 
 {{!-- Modal de Alta Rápida de Donante Presencial --}}
-<dialog class="modal" id="modal-donante" aria-labelledby="titulo-donante" {{#if abrirModalDonante}}open{{/if}}>
+<dialog class="modal modal--ancho" id="modal-donante" aria-labelledby="titulo-donante" {{#if abrirModalDonante}}open{{/if}}>
   <form method="post" action="/admin/recepcion/donante" accept-charset="UTF-8" novalidate>
     <div class="modal__encabezado">
       <h2 id="titulo-donante">Nuevo donante presencial</h2>
@@ -203,6 +203,7 @@
       </div>
 
       <div id="campos-humana">
+        <h3 style="font-size: var(--tamano-base); margin-top: var(--espacio-2); margin-bottom: var(--espacio-2); color: var(--color-primario);">Datos de la persona</h3>
         <div class="grilla grilla--2">
           <div class="campo{{#if erroresDonante.nombre}} campo--error{{/if}}">
             <label for="nombre">Nombre <span class="campo__requerido" aria-hidden="true">*</span></label>
@@ -216,7 +217,7 @@
           </div>
         </div>
 
-        <div class="grilla grilla--2">
+        <div class="grilla grilla--3">
           <div class="campo{{#if erroresDonante.dni}} campo--error{{/if}}">
             <label for="dni">DNI <span class="campo__requerido" aria-hidden="true">*</span></label>
             <input type="text" id="dni" name="dni" value="{{formDonante.dni}}" required placeholder="34567890">
@@ -227,57 +228,112 @@
             <input type="date" id="fechaNacimiento" name="fechaNacimiento" value="{{formDonante.fechaNacimiento}}">
             {{#if erroresDonante.fechaNacimiento}}<small class="campo__error">{{erroresDonante.fechaNacimiento}}</small>{{/if}}
           </div>
+          <div class="campo{{#if erroresDonante.genero}} campo--error{{/if}}">
+            <label for="genero">Género</label>
+            <select id="genero" name="genero">
+              <option value="">Elegí una opción</option>
+              <option value="Femenino" {{#if (eq formDonante.genero "Femenino")}}selected{{/if}}>Femenino</option>
+              <option value="Masculino" {{#if (eq formDonante.genero "Masculino")}}selected{{/if}}>Masculino</option>
+              <option value="No binario" {{#if (eq formDonante.genero "No binario")}}selected{{/if}}>No binario</option>
+              <option value="Otro" {{#if (eq formDonante.genero "Otro")}}selected{{/if}}>Otro</option>
+              <option value="Prefiero no decirlo" {{#if (eq formDonante.genero "Prefiero no decirlo")}}selected{{/if}}>Prefiero no decirlo</option>
+            </select>
+            {{#if erroresDonante.genero}}<small class="campo__error">{{erroresDonante.genero}}</small>{{/if}}
+          </div>
+        </div>
+
+        <div class="campo{{#if erroresDonante.direccion}} campo--error{{/if}}">
+          <label for="direccion">Dirección</label>
+          <input type="text" id="direccion" name="direccion" value="{{formDonante.direccion}}" placeholder="Calle y número, localidad">
+          {{#if erroresDonante.direccion}}<small class="campo__error">{{erroresDonante.direccion}}</small>{{/if}}
         </div>
       </div>
 
       <div id="campos-juridica" style="display:none;">
-        <div class="grilla grilla--2">
-          <div class="campo{{#if erroresDonante.razonSocial}} campo--error{{/if}}">
-            <label for="razonSocial">Razón Social <span class="campo__requerido" aria-hidden="true">*</span></label>
-            <input type="text" id="razonSocial" name="razonSocial" value="{{formDonante.razonSocial}}" placeholder="Molinos Río de la Plata">
-            {{#if erroresDonante.razonSocial}}<small class="campo__error">{{erroresDonante.razonSocial}}</small>{{/if}}
-          </div>
+        <h3 style="font-size: var(--tamano-base); margin-top: var(--espacio-2); margin-bottom: var(--espacio-2); color: var(--color-primario);">Datos de la organización</h3>
+        <div class="campo{{#if erroresDonante.razonSocial}} campo--error{{/if}}">
+          <label for="razonSocial">Razón social <span class="campo__requerido" aria-hidden="true">*</span></label>
+          <input type="text" id="razonSocial" name="razonSocial" value="{{formDonante.razonSocial}}" placeholder="Molinos Río de la Plata">
+          {{#if erroresDonante.razonSocial}}<small class="campo__error">{{erroresDonante.razonSocial}}</small>{{/if}}
+        </div>
+
+        <div class="grilla grilla--3">
           <div class="campo{{#if erroresDonante.cuit}} campo--error{{/if}}">
             <label for="cuit">CUIT <span class="campo__requerido" aria-hidden="true">*</span></label>
-            <input type="text" id="cuit" name="cuit" value="{{formDonante.cuit}}" placeholder="30-50001234-9">
+            <input type="text" id="cuit" name="cuit" value="{{formDonante.cuit}}" placeholder="30500012349">
             {{#if erroresDonante.cuit}}<small class="campo__error">{{erroresDonante.cuit}}</small>{{/if}}
+            <small class="texto-suave">Sin guiones, 11 dígitos.</small>
+          </div>
+          <div class="campo{{#if erroresDonante.rubro}} campo--error{{/if}}">
+            <label for="rubro">Rubro <span class="campo__requerido" aria-hidden="true">*</span></label>
+            <input type="text" id="rubro" name="rubro" value="{{formDonante.rubro}}" placeholder="Alimenticio">
+            {{#if erroresDonante.rubro}}<small class="campo__error">{{erroresDonante.rubro}}</small>{{/if}}
+          </div>
+          <div class="campo{{#if erroresDonante.tipo}} campo--error{{/if}}">
+            <label for="tipo">Tipo <span class="campo__requerido" aria-hidden="true">*</span></label>
+            <select id="tipo" name="tipo">
+              <option value="">Elegí una opción</option>
+              <option value="EMPRESA" {{#if (eq formDonante.tipo "EMPRESA")}}selected{{/if}}>Empresa</option>
+              <option value="ONG" {{#if (eq formDonante.tipo "ONG")}}selected{{/if}}>ONG</option>
+              <option value="INSTITUCION" {{#if (eq formDonante.tipo "INSTITUCION")}}selected{{/if}}>Institución</option>
+              <option value="GUBERNAMENTAL" {{#if (eq formDonante.tipo "GUBERNAMENTAL")}}selected{{/if}}>Gubernamental</option>
+            </select>
+            {{#if erroresDonante.tipo}}<small class="campo__error">{{erroresDonante.tipo}}</small>{{/if}}
+          </div>
+        </div>
+
+        <h3 style="font-size: var(--tamano-base); margin-top: var(--espacio-4); margin-bottom: var(--espacio-2); color: var(--color-primario);">Representante</h3>
+        <div class="grilla grilla--3">
+          <div class="campo{{#if erroresDonante.representanteNombre}} campo--error{{/if}}">
+            <label for="representanteNombre">Nombre <span class="campo__requerido" aria-hidden="true">*</span></label>
+            <input type="text" id="representanteNombre" name="representanteNombre" value="{{formDonante.representanteNombre}}" placeholder="Juan">
+            {{#if erroresDonante.representanteNombre}}<small class="campo__error">{{erroresDonante.representanteNombre}}</small>{{/if}}
+          </div>
+          <div class="campo{{#if erroresDonante.representanteApellido}} campo--error{{/if}}">
+            <label for="representanteApellido">Apellido <span class="campo__requerido" aria-hidden="true">*</span></label>
+            <input type="text" id="representanteApellido" name="representanteApellido" value="{{formDonante.representanteApellido}}" placeholder="Pérez">
+            {{#if erroresDonante.representanteApellido}}<small class="campo__error">{{erroresDonante.representanteApellido}}</small>{{/if}}
+          </div>
+          <div class="campo{{#if erroresDonante.representanteCorreo}} campo--error{{/if}}">
+            <label for="representanteCorreo">Email <span class="campo__requerido" aria-hidden="true">*</span></label>
+            <input type="email" id="representanteCorreo" name="representanteCorreo" value="{{formDonante.representanteCorreo}}" placeholder="representante@empresa.com">
+            {{#if erroresDonante.representanteCorreo}}<small class="campo__error">{{erroresDonante.representanteCorreo}}</small>{{/if}}
+          </div>
+        </div>
+      </div>
+
+      <div id="campos-contacto">
+        <h3 style="font-size: var(--tamano-base); margin-top: var(--espacio-4); margin-bottom: var(--espacio-2); color: var(--color-primario);">Contacto</h3>
+        <p class="texto-suave" style="margin-bottom: var(--espacio-2); font-size: var(--tamano-sm);">Medio de aviso cuando cambie el estado de las donaciones.</p>
+        <div class="grilla grilla--2">
+          <div class="campo{{#if erroresDonante.email}} campo--error{{/if}}">
+            <label for="email">Email <span class="campo__requerido" aria-hidden="true">*</span></label>
+            <input type="email" id="email" name="email" value="{{formDonante.email}}" required placeholder="contacto@ejemplo.com">
+            {{#if erroresDonante.email}}<small class="campo__error">{{erroresDonante.email}}</small>{{/if}}
+          </div>
+          <div class="campo{{#if erroresDonante.telefono}} campo--error{{/if}}">
+            <label for="telefono">Teléfono (opcional)</label>
+            <input type="tel" id="telefono" name="telefono" value="{{formDonante.telefono}}" placeholder="11 4433-2211">
+            {{#if erroresDonante.telefono}}<small class="campo__error">{{erroresDonante.telefono}}</small>{{/if}}
           </div>
         </div>
 
         <div class="grilla grilla--2">
           <div class="campo">
-            <label for="rubro">Rubro</label>
-            <input type="text" id="rubro" name="rubro" value="{{formDonante.rubro}}" placeholder="Alimenticio">
+            <label for="tipoTelefono">El teléfono es de</label>
+            <select id="tipoTelefono" name="tipoTelefono">
+              <option value="WHATSAPP" {{#if (eq formDonante.tipoTelefono "WHATSAPP")}}selected{{/if}}>WhatsApp</option>
+              <option value="SMS" {{#if (eq formDonante.tipoTelefono "SMS")}}selected{{/if}}>SMS</option>
+            </select>
           </div>
           <div class="campo">
-            <label for="tipoOrg">Tipo de organización</label>
-            <select id="tipoOrg" name="tipoOrg">
-              <option value="Empresa">Empresa</option>
-              <option value="ONG">ONG</option>
-              <option value="Fundación">Fundación</option>
-              <option value="Cooperativa">Cooperativa</option>
-              <option value="Institución">Institución</option>
+            <label for="contactoPredeterminado">Preferimos avisar por</label>
+            <select id="contactoPredeterminado" name="contactoPredeterminado">
+              <option value="EMAIL" {{#if (eq formDonante.contactoPredeterminado "EMAIL")}}selected{{/if}}>Email</option>
+              <option value="TELEFONO" {{#if (eq formDonante.contactoPredeterminado "TELEFONO")}}selected{{/if}}>Teléfono</option>
             </select>
           </div>
         </div>
-      </div>
-
-      <div class="grilla grilla--2">
-        <div class="campo{{#if erroresDonante.email}} campo--error{{/if}}">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" value="{{formDonante.email}}" placeholder="contacto@ejemplo.com">
-          {{#if erroresDonante.email}}<small class="campo__error">{{erroresDonante.email}}</small>{{/if}}
-        </div>
-        <div class="campo{{#if erroresDonante.telefono}} campo--error{{/if}}">
-          <label for="telefono">Teléfono</label>
-          <input type="tel" id="telefono" name="telefono" value="{{formDonante.telefono}}" placeholder="11 4433-2211">
-          {{#if erroresDonante.telefono}}<small class="campo__error">{{erroresDonante.telefono}}</small>{{/if}}
-        </div>
-      </div>
-
-      <div class="campo">
-        <label for="direccion">Dirección</label>
-        <input type="text" id="direccion" name="direccion" value="{{formDonante.direccion}}" placeholder="Calle y número, localidad">
       </div>
     </div>
     <div class="modal__acciones">
@@ -399,36 +455,33 @@
   var radioJuridica = document.getElementById('radio-juridica');
   var camposHumana = document.getElementById('campos-humana');
   var camposJuridica = document.getElementById('campos-juridica');
-  var inputNombre = document.getElementById('nombre');
-  var inputApellido = document.getElementById('apellido');
-  var inputDni = document.getElementById('dni');
-  var inputRazon = document.getElementById('razonSocial');
-  var inputCuit = document.getElementById('cuit');
 
   function toggleTipoPersona() {
     if (!radioHumana || !radioJuridica) return;
-    if (radioJuridica.checked) {
-      if (camposHumana) camposHumana.style.display = 'none';
-      if (camposJuridica) camposJuridica.style.display = '';
-      if (inputNombre) inputNombre.removeAttribute('required');
-      if (inputApellido) inputApellido.removeAttribute('required');
-      if (inputDni) inputDni.removeAttribute('required');
-      if (inputRazon) inputRazon.setAttribute('required', 'required');
-      if (inputCuit) inputCuit.setAttribute('required', 'required');
-    } else {
-      if (camposHumana) camposHumana.style.display = '';
-      if (camposJuridica) camposJuridica.style.display = 'none';
-      if (inputNombre) inputNombre.setAttribute('required', 'required');
-      if (inputApellido) inputApellido.setAttribute('required', 'required');
-      if (inputDni) inputDni.setAttribute('required', 'required');
-      if (inputRazon) inputRazon.removeAttribute('required');
-      if (inputCuit) inputCuit.removeAttribute('required');
+    var esJuridica = radioJuridica.checked;
+
+    if (camposHumana) {
+      camposHumana.style.display = esJuridica ? 'none' : '';
+      camposHumana.querySelectorAll('input, select').forEach(function (el) {
+        el.disabled = esJuridica;
+      });
+    }
+
+    if (camposJuridica) {
+      camposJuridica.style.display = esJuridica ? '' : 'none';
+      camposJuridica.querySelectorAll('input, select').forEach(function (el) {
+        el.disabled = !esJuridica;
+      });
     }
   }
 
   if (radioHumana && radioJuridica) {
     radioHumana.addEventListener('change', toggleTipoPersona);
     radioJuridica.addEventListener('change', toggleTipoPersona);
+    if ("{{formDonante.tipoPersona}}" === "JURIDICA") {
+      radioJuridica.checked = true;
+    }
+    toggleTipoPersona();
   }
 })();
 </script>

@@ -1036,6 +1036,7 @@ code {
 
 .modal::backdrop { background: rgba(16, 24, 20, 0.45); }
 .modal--chico { width: min(440px, calc(100% - 2 * var(--espacio-4))); }
+.modal--ancho { width: min(640px, calc(100% - 2 * var(--espacio-4))); }
 .modal form { margin: 0; }
 .modal__encabezado {
   display: flex;

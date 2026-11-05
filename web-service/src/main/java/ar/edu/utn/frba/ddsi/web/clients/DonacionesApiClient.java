@@ -17,6 +17,7 @@ import ar.edu.utn.frba.ddsi.web.dto.donaciones.EntidadConEntregas;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.EstadoDonacionRequest;
 import ar.edu.utn.frba.ddsi.web.dto.donantes.DonanteResponse;
 import ar.edu.utn.frba.ddsi.web.dto.donantes.PersonaHumanaRequest;
+import ar.edu.utn.frba.ddsi.web.dto.registro.PersonaJuridicaRequest;
 import ar.edu.utn.frba.ddsi.web.dto.matchmaking.EstadoPropuestaRequest;
 import ar.edu.utn.frba.ddsi.web.dto.matchmaking.PropuestaMatchmakingResponse;
 import ar.edu.utn.frba.ddsi.web.dto.necesidades.NecesidadRequest;
@@ -151,7 +152,7 @@ public class DonacionesApiClient extends ApiClient {
         return post(ctx, "/donantes/persona-humana", request, DonanteResponse.class);
     }
 
-    public DonanteResponse crearDonantePersonaJuridica(Context ctx, ar.edu.utn.frba.ddsi.web.dto.donantes.PersonaJuridicaAdminRequest request) {
+    public DonanteResponse crearDonantePersonaJuridica(Context ctx, PersonaJuridicaRequest request) {
         return post(ctx, "/donantes/persona-juridica", request, DonanteResponse.class);
     }
 
