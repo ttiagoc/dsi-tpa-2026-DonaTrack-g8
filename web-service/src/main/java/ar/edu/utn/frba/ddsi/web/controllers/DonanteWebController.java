@@ -59,17 +59,6 @@ public class DonanteWebController {
     ctx.render("donante/entidades.html.hbs", modelo);
   }
 
-  // para los incentivos
-  public void incentivos(Context ctx) {
-    Long donanteId = obtenerPerfilId(ctx);
-    Map<String, Object> incentivos = donacionesApi.obtenerIncentivos(ctx, donanteId);
-
-    Map<String, Object> modelo = Modelo.base(ctx);
-    modelo.put("incentivos", incentivos);
-
-    ctx.render("donante/incentivos.html.hbs", modelo);
-  }
-
   // para las notificaiones del donante
   public void notificacionesDonante(Context ctx) {
     Long donanteId = obtenerPerfilId(ctx);

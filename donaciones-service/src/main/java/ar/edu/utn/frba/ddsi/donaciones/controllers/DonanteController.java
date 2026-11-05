@@ -25,15 +25,12 @@ public class DonanteController implements JavalinController {
 
     private final DonanteService donanteService;
     private final GestorDeEventos gestorDeEventos;
-    private final ar.edu.utn.frba.ddsi.donaciones.services.GamificacionService gamificacionService;
     private final ImportadorDeDonantes importadorDeDonantes;
 
     public DonanteController(DonanteService donanteService, GestorDeEventos gestorDeEventos,
-                ar.edu.utn.frba.ddsi.donaciones.services.GamificacionService gamificacionService,
                 ImportadorDeDonantes importadorDeDonantes) {
         this.donanteService = donanteService;
         this.gestorDeEventos = gestorDeEventos;
-        this.gamificacionService = gamificacionService;
         this.importadorDeDonantes = importadorDeDonantes;
     }
 
@@ -120,11 +117,5 @@ public class DonanteController implements JavalinController {
             gestorDeEventos.verificarInactividadDonantes();
             ctx.status(204);
         }, ADMINISTRADOR);
-
-        app.get("/api/donantes/{id}/incentivos", ctx -> {
-          Long id = Long.parseLong(ctx.pathParam("id"));
-          Autorizacion.exigir(Autorizacion.esPrivilegiado(ctx) || Autorizacion.esPropietario(ctx, DONANTE, id));
-          ctx.json(gamificacionService.obtenerIncentivos(id));
-        }, DONANTE, ADMINISTRADOR, SISTEMA);
     }
 }

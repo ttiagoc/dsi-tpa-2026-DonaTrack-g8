@@ -107,9 +107,6 @@ public class DonacionesApiClient extends ApiClient {
     public List<Map<String, Object>> obtenerEntidades(Context ctx) {
         return get(ctx, "/entidad-beneficiaria", new TypeReference<List<Map<String, Object>>>() {});
     }
-    public Map<String, Object> obtenerIncentivos(Context ctx, Long donanteId) {
-        return get(ctx, "/donantes/" + donanteId + "/incentivos", new TypeReference<Map<String, Object>>() {});
-    }
 
     // ---- Administracion: Deposito y Vencimientos (C, req. 16) ----
 

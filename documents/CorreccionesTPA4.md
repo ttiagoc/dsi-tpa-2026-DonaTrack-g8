@@ -18,7 +18,7 @@ Recordatorio del [AGENTS.md](../AGENTS.md): si un cambio toca una pantalla, prim
 | 4 | Detalle de cada importación (qué se importó) | Baja (extra) | 19 | C |
 | 5 | Filtros de "Mis donaciones" mal alineados y falta la subcategoría | **Alta** | 5 | B |
 | 6 | "Entidades" sin estilos ni nombre (se rehace con los componentes del punto 2) | **Alta** | 6 | B |
-| 7 | Incentivos: **sí** se pide (req. 7); solo hay que ocultarlo a las jurídicas | Baja | 7 | B |
+| 7 | Incentivos / Misiones / Insignias | Descartado (fuera de consignas anteriores) | — | B |
 | 8 | Mapa de entregas ilustrativo vs. mapa real de seguimiento | Media | 2 | A |
 | 9 | Requisitos incompletos (importación sin usuario, alta de jurídica, etc.) | **Alta** | 5, 15, 19 | B, C |
 | — | Otros hallazgos (datos fijos en el código, permisos, bocetos de B) | Media | — | ver abajo |
@@ -326,16 +326,11 @@ Además se puede hacer doble clic y mandar el formulario dos veces (por ejemplo,
 
 ---
 
-## 7. Incentivos
+## 7. Incentivos (Misiones e Insignias) — Descartado
 
-La consigna **sí** lo pide. El **requisito 7** dice que la persona humana donante debe poder acceder a una sección de Incentivos y
-consultar misiones a realizar e insignias obtenidas. Y el req. 8 pide notificar cuando cumple una misión o sube de categoría.
-**No hay que sacarlo.** Lo que sí hay que corregir:
-- Aplica **solo a personas humanas**, pero el menú lo muestra a todos los donantes
-  ([menu-lateral.html.hbs:41](../web-service/src/main/resources/templates/partials/menu-lateral.html.hbs#L41)).
-  Ocultarlo a las jurídicas (la sesión ya sabe el tipo de donante, o se agrega al `UsuarioSesion`) y devolver 404 si entran por URL.
-- Que la pantalla use los componentes del punto 2 (`encabezado` y `listado` para las misiones).
-- Boceto `07-incentivos.png`.
+Se eliminó toda la lógica de insignias y misiones: no estaba contemplado en las consignas anteriores y su presencia en la consigna 4 fue un error.
+- Se eliminaron las entidades, repositorios y servicios de gamificación de `donaciones-service`.
+- Se removió la vista `/donante/incentivos` y el enlace correspondiente del menú lateral.
 
 ---
 

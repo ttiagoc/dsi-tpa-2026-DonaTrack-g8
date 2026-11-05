@@ -38,11 +38,6 @@
     <!-- Usuarios de la plataforma web -->
     <class>ar.edu.utn.frba.ddsi.donaciones.models.entities.usuarios.Usuario</class>
 
-
-    <!-- Gamificacion -->
-    <class>ar.edu.utn.frba.ddsi.donaciones.models.entities.gamificacion.Insignia</class>
-    <class>ar.edu.utn.frba.ddsi.donaciones.models.entities.gamificacion.Mision</class>
-    <class>ar.edu.utn.frba.ddsi.donaciones.models.entities.gamificacion.ProgresoMision</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
 
 

@@ -124,7 +124,6 @@ public class Router {
         if(donanteWeb != null) {
           app.get("/donante/donaciones", donanteWeb::misDonaciones, DONANTE);
           app.get("/donante/entidades", donanteWeb::entidades, DONANTE);
-          app.get("/donante/incentivos", donanteWeb::incentivos, DONANTE);
           app.get("/donante/notificaciones", donanteWeb::notificacionesDonante, DONANTE);
           app.get("/donante/seguimiento", donanteWeb::seguimientoDonante, DONANTE);
         }

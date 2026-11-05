@@ -24,20 +24,8 @@ La Tarea 0 (web-service + login, Persona A) tarda 1–2 días. Mientras tanto, t
 
 ## 3. Backend
 
-### 3.1 Gamificación (req. 7 y parte del 8) — `donaciones-service`
-Hoy **no existe nada** de misiones, insignias ni categorías de donante en el código. Hay que modelarlo antes de hacer la pantalla.
-
-- [ ] **[COMPLETAR]** Releer la consigna de entregas anteriores para ver si definen misiones, insignias y categorías concretas. Si no, proponer un modelo y validarlo con el ayudante.
-- [ ] Modelo sugerido para discutir:
-  - `Mision`: descripción y condición de cumplimiento (por ejemplo, N donaciones o donar en cierta categoría). Conviene una estrategia o interfaz `CondicionMision` para que sea extensible.
-  - `Insignia`: se otorga al cumplir una misión.
-  - `CategoriaDonante` (o "nivel"): sube según puntos o donaciones; se notifica cuando sube.
-  - Progreso del donante por misión (para la barra de progreso de la pantalla).
-- [ ] Solo aplica a **persona humana** (la consigna lo aclara en el req. 7).
-- [ ] ¿Cuándo se evalúa? Recomendado: reaccionar a eventos que ya existen (`GestorDeEventos`, `EventManagerDonaciones`, por ejemplo al registrar o entregar una donación), igual que los listeners actuales.
-- [ ] Al cumplir una misión o subir de categoría → enviar notificación (mismo mecanismo que `DonacionAsignadaListener`).
-- [ ] `GET /api/donantes/{id}/incentivos` → misiones con su progreso, insignias obtenidas y categoría actual.
-- [ ] Entidades en `persistence.xml` + tests de dominio.
+### 3.1 Gamificación / Incentivos (req. 7) — DESCARTADO
+> **Nota:** No estaba contemplado en las consignas previas y su presencia en la consigna 4 fue un error. Se eliminó toda la lógica, modelos, endpoints y vistas de misiones e insignias.
 
 ### 3.2 Notificaciones (req. 8 y 13) — `notificaciones-service`
 - [ ] Hoy solo existe `POST /api/notificaciones`. La entidad `Notificacion` ya tiene `destinatarioId`, `tipoEvento`, `donacionId`, `mensaje` y `fechaDeEnvio`.
@@ -76,7 +64,7 @@ Hoy **no existe nada** de misiones, insignias ni categorías de donante en el c�
 |---|---|---|
 | 5 | `/donante/donaciones` | `templates/donante/mis-donaciones.hbs` (tabla + filtros en formulario GET) |
 | 6 | `/donante/entidades` | `templates/donante/entidades.hbs` (tarjetas con necesidades) |
-| 7 | `/donante/incentivos` | `templates/donante/incentivos.hbs` (misiones con progreso, insignias, categoría). Solo persona humana |
+| 7 | ~~/donante/incentivos~~ | *Descartado (misiones e insignias fuera de alcance)* |
 | 8 / 13 | `/donante/notificaciones`, `/entidad/notificaciones` | `templates/partials/bandeja-notificaciones.hbs` compartido |
 | 9 / 14 | `/donante/seguimiento`, `/entidad/seguimiento` | `templates/partials/mapa-seguimiento.hbs` compartido (Leaflet) |
 

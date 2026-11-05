@@ -20,15 +20,12 @@ public class EntregaExitosaListener implements ListenerDonaciones<EventoEntregaE
     private final EventManagerDonaciones eventManager;
     private final RestTemplate restTemplate;
     private final RestDonacionesConfig config;
-    private final ar.edu.utn.frba.ddsi.donaciones.services.GamificacionService gamificacionService;
 
     public EntregaExitosaListener(EventManagerDonaciones eventManager,
-            RestTemplate restTemplate, RestDonacionesConfig config,
-            ar.edu.utn.frba.ddsi.donaciones.services.GamificacionService gamificacionService) {
+            RestTemplate restTemplate, RestDonacionesConfig config) {
         this.eventManager = eventManager;
         this.restTemplate = restTemplate;
         this.config = config;
-        this.gamificacionService = gamificacionService;
     }
 
     @PostConstruct
@@ -56,11 +53,6 @@ public class EntregaExitosaListener implements ListenerDonaciones<EventoEntregaE
                     + "[Fecha/Hora: " + dateFormatted + " HS] "
                     + "[Camión Responsable - Patente: " + patente + "].";
             enviarNotificacionAsync(donante.getContactoPredeterminado(), mensajeDonante);
-
-            // vemos las misiones del donante
-            if (donante != null && donante.getId() != null){
-              gamificacionService.evaluarProgreso(donante.getId());
-            }
         }
     }
 
