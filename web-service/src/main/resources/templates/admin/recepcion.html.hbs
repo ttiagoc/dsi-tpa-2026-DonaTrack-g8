@@ -190,14 +190,18 @@
 
       <p class="texto-suave">Registrá a la persona u organización que se presentó en depósito para poder asociarle la entrega.</p>
 
-      <div class="campo">
-        <label>Tipo de donante</label>
-        <div class="opciones-en-linea" style="display:flex; gap:var(--espacio-4); margin-top:var(--espacio-1); margin-bottom:var(--espacio-3);">
-          <label style="display:inline-flex; align-items:center; gap:var(--espacio-1); cursor:pointer;">
-            <input type="radio" name="tipoPersona" value="HUMANA" checked id="radio-humana"> Persona Humana
+      <div class="campo" style="margin-bottom: var(--espacio-4);">
+        <label id="etiqueta-tipo-donante">Tipo de donante</label>
+        <div class="selector-toggle" role="radiogroup" aria-labelledby="etiqueta-tipo-donante">
+          <label class="selector-toggle__opcion" id="label-humana">
+            <input type="radio" name="tipoPersona" value="HUMANA" checked id="radio-humana" class="sr-only">
+            <svg class="icono" aria-hidden="true"><use href="#i-usuario"/></svg>
+            <span>Persona Humana</span>
           </label>
-          <label style="display:inline-flex; align-items:center; gap:var(--espacio-1); cursor:pointer;">
-            <input type="radio" name="tipoPersona" value="JURIDICA" id="radio-juridica"> Persona Jurídica / Org.
+          <label class="selector-toggle__opcion" id="label-juridica">
+            <input type="radio" name="tipoPersona" value="JURIDICA" id="radio-juridica" class="sr-only">
+            <svg class="icono" aria-hidden="true"><use href="#i-edificio"/></svg>
+            <span>Persona Jurídica / Org.</span>
           </label>
         </div>
       </div>
@@ -453,12 +457,21 @@
   // Toggle tipo de donante presencial (Humana / Jurídica)
   var radioHumana = document.getElementById('radio-humana');
   var radioJuridica = document.getElementById('radio-juridica');
+  var labelHumana = document.getElementById('label-humana');
+  var labelJuridica = document.getElementById('label-juridica');
   var camposHumana = document.getElementById('campos-humana');
   var camposJuridica = document.getElementById('campos-juridica');
 
   function toggleTipoPersona() {
     if (!radioHumana || !radioJuridica) return;
     var esJuridica = radioJuridica.checked;
+
+    if (labelHumana && labelJuridica) {
+      labelHumana.classList.toggle('selector-toggle__opcion--activa', !esJuridica);
+      labelJuridica.classList.toggle('selector-toggle__opcion--activa', esJuridica);
+      labelHumana.setAttribute('aria-checked', !esJuridica ? 'true' : 'false');
+      labelJuridica.setAttribute('aria-checked', esJuridica ? 'true' : 'false');
+    }
 
     if (camposHumana) {
       camposHumana.style.display = esJuridica ? 'none' : '';

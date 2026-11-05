@@ -1117,6 +1117,62 @@ code {
 
 .campo textarea { min-height: 88px; resize: vertical; }
 
+/* ---- Selector Toggle (conmutador segmentado horizontal) ---- */
+.selector-toggle {
+  display: flex;
+  width: 100%;
+  background: var(--color-fondo);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  padding: 4px;
+  gap: 4px;
+  box-sizing: border-box;
+}
+
+.selector-toggle__opcion {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espacio-2);
+  padding: var(--espacio-3) var(--espacio-4);
+  border-radius: calc(var(--radio) - 3px);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: var(--texto-base);
+  color: var(--color-texto-suave);
+  background: transparent;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.selector-toggle__opcion:hover {
+  color: var(--color-texto);
+  background: rgba(16, 24, 20, 0.05);
+}
+
+/* Estado seleccionado / prendido */
+.selector-toggle__opcion:has(input:checked),
+.selector-toggle__opcion--activa {
+  background: var(--color-primario);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(31, 122, 90, 0.35);
+}
+
+.selector-toggle__opcion:has(input:checked):hover,
+.selector-toggle__opcion--activa:hover {
+  background: var(--color-primario-oscuro);
+  color: #ffffff;
+}
+
+.selector-toggle__opcion:has(input:focus-visible) {
+  outline: 3px solid var(--color-acento);
+  outline-offset: 2px;
+}
+
 /* ---- Selector con buscador (public/js/selector-buscador.js, <select data-buscador>) ---- */
 .buscador { position: relative; }
 
