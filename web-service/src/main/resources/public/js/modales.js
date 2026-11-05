@@ -9,8 +9,11 @@
 (function () {
   'use strict';
 
+  var paginaConModalCargado = false;
+
   function elevarModalesAbiertos() {
     document.querySelectorAll('dialog.modal[open]').forEach(function (dialog) {
+      paginaConModalCargado = true;
       if (typeof dialog.showModal === 'function') {
         dialog.close();
         dialog.showModal();
@@ -47,7 +50,9 @@
       var id = botonAbre.dataset.abre;
       var modal = document.getElementById(id);
       if (modal && typeof modal.showModal === 'function') {
-        if (window.location.search) {
+        // Si la pagina vino con un modal cargado (edicion o errores), el <dialog> sigue teniendo esos datos:
+        // se sigue el link (?nuevo) para que el servidor lo devuelva en blanco.
+        if (window.location.search || paginaConModalCargado) {
           return;
         }
         e.preventDefault();
