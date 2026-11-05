@@ -10,6 +10,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,10 +23,12 @@ import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donante.DonanteDetalleResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.DonanteResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.MedioContactoRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaHumanaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaJuridicaRequest;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.RegistroDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaJuridica;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoOrganizacion;
@@ -104,6 +108,37 @@ class DonanteServiceTest {
 
         assertTrue(ex.getMessage().contains("donaciones registradas"));
         verify(donanteRepository, never()).deleteById(any());
+    }
+
+    @Test
+    @DisplayName("El detalle de una persona jurídica trae sus datos, contactos y resumen de donaciones")
+    void detallePersonaJuridica() {
+        RegistroDonacion vieja = new RegistroDonacion();
+        vieja.setFecha(LocalDateTime.of(2026, 3, 1, 10, 0));
+        vieja.agregarDonacion(mock(Donacion.class));
+        RegistroDonacion reciente = new RegistroDonacion();
+        reciente.setFecha(LocalDateTime.of(2026, 10, 20, 15, 30));
+        reciente.agregarDonacion(mock(Donacion.class));
+        reciente.agregarDonacion(mock(Donacion.class));
+        empresa.agregarDonacion(vieja);
+        empresa.agregarDonacion(reciente);
+
+        DonanteDetalleResponse detalle = donanteService.obtenerDetalle(5L);
+
+        assertEquals("JURIDICA", detalle.tipoPersona());
+        assertEquals("Empresa S.A.", detalle.razonSocial());
+        assertEquals("EMPRESA", detalle.tipoOrganizacion());
+        assertEquals("30-12345678-9", detalle.cuit());
+        assertEquals("EMAIL", detalle.contactoPredeterminado().tipo());
+        assertEquals("contacto@empresa.com", detalle.contactos().get(0).valor());
+        assertEquals(3, detalle.cantidadDonaciones());
+        assertEquals(LocalDate.of(2026, 10, 20), detalle.ultimaDonacion());
+    }
+
+    @Test
+    @DisplayName("El detalle de un donante inexistente informa que no existe")
+    void detalleDonanteInexistente() {
+        assertThrows(ResourceNotFoundException.class, () -> donanteService.obtenerDetalle(99L));
     }
 
     @Test

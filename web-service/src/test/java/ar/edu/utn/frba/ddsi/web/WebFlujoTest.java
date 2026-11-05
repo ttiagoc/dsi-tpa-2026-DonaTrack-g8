@@ -15,6 +15,7 @@ import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,7 @@ import ar.edu.utn.frba.ddsi.web.config.WebConfig;
 import ar.edu.utn.frba.ddsi.web.controllers.CamionesAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.CategoriasAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.DepositoAdminController;
+import ar.edu.utn.frba.ddsi.web.controllers.DonantesAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.MatchmakingAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.RecepcionAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.ImportacionesAdminController;
@@ -82,6 +84,10 @@ class WebFlujoTest {
     private final List<Map<String, Object>> entregas = new ArrayList<>();
     private final List<Map<String, Object>> propuestasFalsas = new ArrayList<>();
     private final List<Map<String, Object>> donantesFalsos = new ArrayList<>();
+    // GET /api/donantes/{id}/detalle y lo que recibe la API falsa al editar o borrar un donante
+    private final Map<Long, Map<String, Object>> detallesDonantes = new HashMap<>();
+    private final AtomicReference<JsonNode> ultimoDonanteEditado = new AtomicReference<>();
+    private final AtomicReference<String> donanteEliminado = new AtomicReference<>();
     // ultimo pedido del ABM de categorias a la API falsa
     private final AtomicReference<JsonNode> ultimaCategoria = new AtomicReference<>();
     private final AtomicReference<String> ultimaSubcategoria = new AtomicReference<>();
@@ -115,7 +121,8 @@ class WebFlujoTest {
         Router router = new Router(new AutorizacionMiddleware(), new HomeController(), new SesionController(auth),
                 new RegistroController(auth), new PanelController(), new NecesidadesController(donaciones),
                 new DonacionesAsignadasController(donaciones), new RecepcionController(donaciones, fotos),
-                new MapaController(donaciones), null, camionesAdmin, depositoAdmin, matchmakingAdmin, recepcionAdmin, importacionesAdmin, categoriasAdmin);
+                new MapaController(donaciones), null, camionesAdmin, depositoAdmin, matchmakingAdmin, recepcionAdmin, importacionesAdmin, categoriasAdmin,
+                new DonantesAdminController(donaciones));
 
         web = new Server(router, config, fotos).crear();
         // ruta solo para el test: una llamada autenticada a la API, para probar el refresh del token
@@ -1055,6 +1062,149 @@ class WebFlujoTest {
     }
 
     @Test
+    @DisplayName("Admin donantes: solo el administrador entra")
+    void adminDonantesSeguridad() throws Exception {
+        assertEquals(302, get("/admin/donantes", null).statusCode());
+        assertEquals(403, get("/admin/donantes", cookie(login("donante", "clave-segura"))).statusCode());
+        assertEquals(403, get("/admin/donantes", cookie(login("entidad", "clave-segura"))).statusCode());
+        assertEquals(200, get("/admin/donantes", cookie(login("admin", "clave-segura"))).statusCode());
+    }
+
+    @Test
+    @DisplayName("Admin donantes: listado vacío con mensaje, en lugar de una tabla vacía")
+    void adminDonantesVacio() throws Exception {
+        String listado = get("/admin/donantes", cookie(login("admin", "clave-segura"))).body();
+        assertTrue(listado.contains("Todavía no hay donantes registrados."));
+        assertFalse(listado.contains("<table"));
+    }
+
+    @Test
+    @DisplayName("Admin donantes: listado con buscador, detalle, edición y baja")
+    void adminDonantesFlujo() throws Exception {
+        donantesFalsos.add(Map.of("id", 1L, "tipo", "Persona Humana", "nombre", "Ana Gómez", "documento", "30111222",
+                "contactoPredeterminado", "ana@mail.com"));
+        donantesFalsos.add(Map.of("id", 2L, "tipo", "Persona Jurídica", "nombre", "Molinos S.A.",
+                "documento", "30500012349", "contactoPredeterminado", "info@molinos.com"));
+        detallesDonantes.put(1L, detalleHumana(1L, 0));
+        Map<String, Object> molinos = new HashMap<>(Map.of("id", 2L, "tipoPersona", "JURIDICA",
+                "razonSocial", "Molinos S.A.", "cuit", "30500012349", "rubro", "Alimenticio",
+                "tipoOrganizacion", "EMPRESA", "cantidadDonaciones", 3, "ultimaDonacion", "2026-10-20"));
+        molinos.put("representantes", List.of(Map.of("nombre", "Juan", "apellido", "Pérez",
+                "correo", "juan@molinos.com")));
+        molinos.put("contactos", List.of(Map.of("tipo", "EMAIL", "valor", "info@molinos.com")));
+        molinos.put("contactoPredeterminado", Map.of("tipo", "EMAIL", "valor", "info@molinos.com"));
+        detallesDonantes.put(2L, molinos);
+        donacionesAsignadas.add(new HashMap<>(Map.of("id", 501L, "estadoActual", "EN_DEPOSITO", "donanteId", 2L,
+                "fecha", "2026-10-20T15:30:00", "bienes", List.of())));
+        String adminCookie = cookie(login("admin", "clave-segura"));
+
+        // listado: información importante y acciones de cada fila; la cuenta de donaciones sale de /donaciones
+        String listado = get("/admin/donantes", adminCookie).body();
+        assertTrue(listado.contains("Ana Gómez"));
+        assertTrue(listado.contains("30500012349"));
+        assertTrue(listado.contains("info@molinos.com"));
+        assertTrue(listado.contains("20/10/2026"), "última donación de Molinos");
+        assertTrue(listado.contains("/admin/donantes?editar=1"));
+        assertTrue(listado.contains("/admin/donantes?eliminar=2"));
+        assertTrue(listado.contains("href=\"/admin/donantes\" title=\"Donantes\" aria-current=\"page\""));
+
+        // buscador: por nombre sin tildes y por documento; los links conservan el filtro
+        String porNombre = get("/admin/donantes?q=gomez", adminCookie).body();
+        assertTrue(porNombre.contains("Ana Gómez"));
+        assertFalse(porNombre.contains("Molinos S.A."));
+        assertTrue(porNombre.contains("/admin/donantes?editar=1&amp;q=gomez"));
+        String porTipo = get("/admin/donantes?tipo=JURIDICA", adminCookie).body();
+        assertTrue(porTipo.contains("Molinos S.A."));
+        assertFalse(porTipo.contains("Ana Gómez"));
+        assertTrue(get("/admin/donantes?q=zzz", adminCookie).body().contains("Ningún donante coincide"));
+
+        // detalle
+        String detalle = get("/admin/donantes?ver=2", adminCookie).body();
+        assertTrue(detalle.contains("id=\"modal-ver\""));
+        assertTrue(detalle.contains("Juan Pérez"));
+        assertTrue(detalle.contains("Alimenticio"));
+
+        // edición: el modal abre con los datos cargados y sin poder cambiar el DNI
+        String edicion = get("/admin/donantes?editar=1", adminCookie).body();
+        assertTrue(edicion.contains("action=\"/admin/donantes/1/editar\""));
+        assertTrue(edicion.contains("value=\"Gómez\""));
+        assertTrue(edicion.contains("value=\"30111222\" readonly"));
+        assertFalse(edicion.contains("id=\"radio-juridica\""), "al editar no se cambia el tipo");
+
+        Map<String, String> invalido = new LinkedHashMap<>();
+        invalido.put("nombre", "Ana");
+        invalido.put("apellido", "Gómez");
+        invalido.put("email", "no-es-email");
+        HttpResponse<String> conError = post("/admin/donantes/1/editar", invalido, adminCookie);
+        assertEquals(400, conError.statusCode());
+        assertTrue(conError.body().contains("Ingresá un email válido"));
+        assertTrue(conError.body().contains("value=\"30111222\" readonly"), "el DNI se sigue mostrando");
+        assertTrue(conError.body().contains("id=\"modal-donante\" aria-labelledby=\"titulo-donante\" open"));
+
+        Map<String, String> valido = new LinkedHashMap<>(invalido);
+        valido.put("email", "ana.gomez@mail.com");
+        valido.put("telefono", "1144332211");
+        valido.put("tipoTelefono", "SMS");
+        valido.put("contactoPredeterminado", "TELEFONO");
+        valido.put("volver", "q=gomez");
+        HttpResponse<String> editado = post("/admin/donantes/1/editar", valido, adminCookie);
+        assertEquals(302, editado.statusCode());
+        assertEquals("/admin/donantes?q=gomez", editado.headers().firstValue("Location").orElse(null));
+        JsonNode enviado = ultimoDonanteEditado.get();
+        assertTrue(enviado.get("dni").isNull(), "el DNI no se manda");
+        assertEquals("SMS", enviado.get("contactoPredeterminado").get("tipo").asText());
+        assertEquals(3, enviado.get("contactos").size(), "conserva el segundo email que no está en el formulario");
+
+        // un "volver" que no es la consulta del listado no se usa para redirigir
+        valido.put("volver", "//otro-sitio.com");
+        assertEquals("/admin/donantes", post("/admin/donantes/1/editar", valido, adminCookie)
+                .headers().firstValue("Location").orElse(null));
+
+        // baja: con donaciones no se puede; sin donaciones pide confirmación
+        String conDonaciones = get("/admin/donantes?eliminar=2", adminCookie).body();
+        assertTrue(conDonaciones.contains("No se puede eliminar el donante"));
+        assertFalse(conDonaciones.contains("action=\"/admin/donantes/2/eliminar\""));
+        String sinDonaciones = get("/admin/donantes?eliminar=1", adminCookie).body();
+        assertTrue(sinDonaciones.contains("action=\"/admin/donantes/1/eliminar\""));
+        assertTrue(sinDonaciones.contains("Ana Gómez"));
+        HttpResponse<String> baja = post("/admin/donantes/1/eliminar", Map.of(), adminCookie);
+        assertEquals(302, baja.statusCode());
+        assertEquals("1", donanteEliminado.get());
+
+        // alta: con errores vuelve con el modal abierto; bien, va al detalle del nuevo
+        HttpResponse<String> altaInvalida = post("/admin/donantes", Map.of("tipoPersona", "HUMANA", "nombre", "Luis"),
+                adminCookie);
+        assertEquals(400, altaInvalida.statusCode());
+        assertTrue(altaInvalida.body().contains("El DNI es obligatorio"));
+        assertTrue(altaInvalida.body().contains("value=\"Luis\""));
+        Map<String, String> alta = new LinkedHashMap<>();
+        alta.put("tipoPersona", "HUMANA");
+        alta.put("nombre", "Luis");
+        alta.put("apellido", "Paz");
+        alta.put("dni", "28999000");
+        alta.put("email", "luis@mail.com");
+        HttpResponse<String> altaOk = post("/admin/donantes", alta, adminCookie);
+        assertEquals(302, altaOk.statusCode());
+        assertEquals("/admin/donantes?ver=3", altaOk.headers().firstValue("Location").orElse(null));
+    }
+
+    private static Map<String, Object> detalleHumana(long id, int donaciones) {
+        Map<String, Object> d = new HashMap<>();
+        d.put("id", id);
+        d.put("tipoPersona", "HUMANA");
+        d.put("nombre", "Ana");
+        d.put("apellido", "Gómez");
+        d.put("dni", "30111222");
+        d.put("fechaNacimiento", "1990-05-04");
+        d.put("contactos", List.of(Map.of("tipo", "EMAIL", "valor", "ana@mail.com"),
+                Map.of("tipo", "EMAIL", "valor", "ana.trabajo@mail.com")));
+        d.put("contactoPredeterminado", Map.of("tipo", "EMAIL", "valor", "ana@mail.com"));
+        d.put("representantes", List.of());
+        d.put("cantidadDonaciones", donaciones);
+        return d;
+    }
+
+    @Test
     @DisplayName("Admin importaciones: seguridad de roles")
     void importacionesSeguridad() throws Exception {
         assertEquals(302, get("/admin/importaciones", null).statusCode());
@@ -1346,6 +1496,25 @@ class WebFlujoTest {
         });
         api.post("/api/donaciones", ctx -> {
             ctx.status(201).json(List.of(Map.of("id", 401L, "estadoActual", "EN_DEPOSITO")));
+        });
+        // ABM de donantes del administrador
+        api.get("/api/donantes/{id}/detalle", ctx -> {
+            Map<String, Object> detalle = detallesDonantes.get(Long.parseLong(ctx.pathParam("id")));
+            if (detalle == null) {
+                ctx.status(404).json(Map.of("error", "not_found", "message", "No se encontro un donante con el id: "
+                        + ctx.pathParam("id")));
+                return;
+            }
+            ctx.json(detalle);
+        });
+        api.put("/api/donantes/persona-humana/{id}", ctx -> {
+            ultimoDonanteEditado.set(mapper.readTree(ctx.body()));
+            ctx.json(Map.of("id", Long.parseLong(ctx.pathParam("id")), "tipo", "Persona Humana",
+                    "nombre", ultimoDonanteEditado.get().get("nombre").asText()));
+        });
+        api.delete("/api/donantes/{id}", ctx -> {
+            donanteEliminado.set(ctx.pathParam("id"));
+            ctx.status(204);
         });
 
         List<Map<String, Object>> importacionesFalsas = new ArrayList<>(List.of(

@@ -1,0 +1,172 @@
+{{!-- Campos del donante (persona humana u organizacion) para un modal de alta o edicion.
+      Lo usan admin/recepcion (alta rapida) y admin/donantes (alta y edicion). Lo lee FormularioDonante.
+      Toma del contexto: formDonante (valores), erroresDonante (errores por campo) y, al editar, editado (DonanteDetalle).
+      En el alta, el selector de tipo muestra los campos de uno u otro (public/js/tipo-donante.js).
+      Al editar no se cambia el tipo ni el DNI/CUIT: se muestran solo los campos de su tipo. --}}
+{{#if editado}}
+  <input type="hidden" name="tipoPersona" value="{{#if editado.esJuridica}}JURIDICA{{else}}HUMANA{{/if}}">
+{{else}}
+  <div class="campo form-donante__tipo">
+    <label id="etiqueta-tipo-donante">Tipo de donante</label>
+    <div class="selector-toggle" role="radiogroup" aria-labelledby="etiqueta-tipo-donante" data-tipo-donante>
+      <label class="selector-toggle__opcion" id="label-humana">
+        <input type="radio" name="tipoPersona" value="HUMANA" id="radio-humana" class="sr-only" {{#unless (eq formDonante.tipoPersona "JURIDICA")}}checked{{/unless}}>
+        <svg class="icono" aria-hidden="true"><use href="#i-usuario"/></svg>
+        <span>Persona Humana</span>
+      </label>
+      <label class="selector-toggle__opcion" id="label-juridica">
+        <input type="radio" name="tipoPersona" value="JURIDICA" id="radio-juridica" class="sr-only" {{#if (eq formDonante.tipoPersona "JURIDICA")}}checked{{/if}}>
+        <svg class="icono" aria-hidden="true"><use href="#i-edificio"/></svg>
+        <span>Persona Jurídica / Org.</span>
+      </label>
+    </div>
+  </div>
+{{/if}}
+
+{{#unless editado.esJuridica}}
+<div id="campos-humana">
+  <h3 class="form-donante__titulo">Datos de la persona</h3>
+  <div class="grilla grilla--2">
+    <div class="campo{{#if erroresDonante.nombre}} campo--error{{/if}}">
+      <label for="nombre">Nombre <span class="campo__requerido" aria-hidden="true">*</span></label>
+      <input type="text" id="nombre" name="nombre" value="{{formDonante.nombre}}" required autofocus placeholder="Mariano">
+      {{#if erroresDonante.nombre}}<small class="campo__error">{{erroresDonante.nombre}}</small>{{/if}}
+    </div>
+    <div class="campo{{#if erroresDonante.apellido}} campo--error{{/if}}">
+      <label for="apellido">Apellido <span class="campo__requerido" aria-hidden="true">*</span></label>
+      <input type="text" id="apellido" name="apellido" value="{{formDonante.apellido}}" required placeholder="López">
+      {{#if erroresDonante.apellido}}<small class="campo__error">{{erroresDonante.apellido}}</small>{{/if}}
+    </div>
+  </div>
+
+  <div class="grilla grilla--3">
+    <div class="campo{{#if erroresDonante.dni}} campo--error{{/if}}">
+      <label for="dni">DNI {{#unless editado}}<span class="campo__requerido" aria-hidden="true">*</span>{{/unless}}</label>
+      {{#if editado}}
+        <input type="text" id="dni" value="{{formDonante.dni}}" readonly aria-describedby="dni-ayuda">
+        <small class="campo__ayuda" id="dni-ayuda">El DNI no se puede cambiar.</small>
+      {{else}}
+        <input type="text" id="dni" name="dni" value="{{formDonante.dni}}" required placeholder="34567890">
+      {{/if}}
+      {{#if erroresDonante.dni}}<small class="campo__error">{{erroresDonante.dni}}</small>{{/if}}
+    </div>
+    <div class="campo{{#if erroresDonante.fechaNacimiento}} campo--error{{/if}}">
+      <label for="fechaNacimiento">Fecha de nacimiento</label>
+      <input type="date" id="fechaNacimiento" name="fechaNacimiento" value="{{formDonante.fechaNacimiento}}">
+      {{#if erroresDonante.fechaNacimiento}}<small class="campo__error">{{erroresDonante.fechaNacimiento}}</small>{{/if}}
+    </div>
+    <div class="campo{{#if erroresDonante.genero}} campo--error{{/if}}">
+      <label for="genero">Género</label>
+      <select id="genero" name="genero">
+        <option value="">Elegí una opción</option>
+        <option value="Femenino" {{#if (eq formDonante.genero "Femenino")}}selected{{/if}}>Femenino</option>
+        <option value="Masculino" {{#if (eq formDonante.genero "Masculino")}}selected{{/if}}>Masculino</option>
+        <option value="No binario" {{#if (eq formDonante.genero "No binario")}}selected{{/if}}>No binario</option>
+        <option value="Otro" {{#if (eq formDonante.genero "Otro")}}selected{{/if}}>Otro</option>
+        <option value="Prefiero no decirlo" {{#if (eq formDonante.genero "Prefiero no decirlo")}}selected{{/if}}>Prefiero no decirlo</option>
+      </select>
+      {{#if erroresDonante.genero}}<small class="campo__error">{{erroresDonante.genero}}</small>{{/if}}
+    </div>
+  </div>
+
+  <div class="campo{{#if erroresDonante.direccion}} campo--error{{/if}}">
+    <label for="direccion">Dirección</label>
+    <input type="text" id="direccion" name="direccion" value="{{formDonante.direccion}}" placeholder="Calle y número, localidad">
+    {{#if erroresDonante.direccion}}<small class="campo__error">{{erroresDonante.direccion}}</small>{{/if}}
+  </div>
+</div>
+{{/unless}}
+
+{{#if (or editado.esJuridica (not editado))}}
+<div id="campos-juridica" {{#unless editado}}hidden{{/unless}}>
+  <h3 class="form-donante__titulo">Datos de la organización</h3>
+  <div class="campo{{#if erroresDonante.razonSocial}} campo--error{{/if}}">
+    <label for="razonSocial">Razón social <span class="campo__requerido" aria-hidden="true">*</span></label>
+    <input type="text" id="razonSocial" name="razonSocial" value="{{formDonante.razonSocial}}" required {{#if editado}}autofocus{{/if}} placeholder="Molinos Río de la Plata">
+    {{#if erroresDonante.razonSocial}}<small class="campo__error">{{erroresDonante.razonSocial}}</small>{{/if}}
+  </div>
+
+  <div class="grilla grilla--3">
+    <div class="campo{{#if erroresDonante.cuit}} campo--error{{/if}}">
+      <label for="cuit">CUIT {{#unless editado}}<span class="campo__requerido" aria-hidden="true">*</span>{{/unless}}</label>
+      {{#if editado}}
+        <input type="text" id="cuit" value="{{formDonante.cuit}}" readonly aria-describedby="cuit-ayuda">
+        <small class="campo__ayuda" id="cuit-ayuda">El CUIT no se puede cambiar.</small>
+      {{else}}
+        <input type="text" id="cuit" name="cuit" value="{{formDonante.cuit}}" required placeholder="30500012349">
+        <small class="campo__ayuda">Sin guiones, 11 dígitos.</small>
+      {{/if}}
+      {{#if erroresDonante.cuit}}<small class="campo__error">{{erroresDonante.cuit}}</small>{{/if}}
+    </div>
+    <div class="campo{{#if erroresDonante.rubro}} campo--error{{/if}}">
+      <label for="rubro">Rubro <span class="campo__requerido" aria-hidden="true">*</span></label>
+      <input type="text" id="rubro" name="rubro" value="{{formDonante.rubro}}" required placeholder="Alimenticio">
+      {{#if erroresDonante.rubro}}<small class="campo__error">{{erroresDonante.rubro}}</small>{{/if}}
+    </div>
+    <div class="campo{{#if erroresDonante.tipo}} campo--error{{/if}}">
+      <label for="tipo">Tipo <span class="campo__requerido" aria-hidden="true">*</span></label>
+      <select id="tipo" name="tipo" required>
+        <option value="">Elegí una opción</option>
+        <option value="EMPRESA" {{#if (eq formDonante.tipo "EMPRESA")}}selected{{/if}}>Empresa</option>
+        <option value="ONG" {{#if (eq formDonante.tipo "ONG")}}selected{{/if}}>ONG</option>
+        <option value="INSTITUCION" {{#if (eq formDonante.tipo "INSTITUCION")}}selected{{/if}}>Institución</option>
+        <option value="GUBERNAMENTAL" {{#if (eq formDonante.tipo "GUBERNAMENTAL")}}selected{{/if}}>Gubernamental</option>
+      </select>
+      {{#if erroresDonante.tipo}}<small class="campo__error">{{erroresDonante.tipo}}</small>{{/if}}
+    </div>
+  </div>
+
+  <h3 class="form-donante__titulo">Representante</h3>
+  <div class="grilla grilla--3">
+    <div class="campo{{#if erroresDonante.representanteNombre}} campo--error{{/if}}">
+      <label for="representanteNombre">Nombre <span class="campo__requerido" aria-hidden="true">*</span></label>
+      <input type="text" id="representanteNombre" name="representanteNombre" value="{{formDonante.representanteNombre}}" required placeholder="Juan">
+      {{#if erroresDonante.representanteNombre}}<small class="campo__error">{{erroresDonante.representanteNombre}}</small>{{/if}}
+    </div>
+    <div class="campo{{#if erroresDonante.representanteApellido}} campo--error{{/if}}">
+      <label for="representanteApellido">Apellido <span class="campo__requerido" aria-hidden="true">*</span></label>
+      <input type="text" id="representanteApellido" name="representanteApellido" value="{{formDonante.representanteApellido}}" required placeholder="Pérez">
+      {{#if erroresDonante.representanteApellido}}<small class="campo__error">{{erroresDonante.representanteApellido}}</small>{{/if}}
+    </div>
+    <div class="campo{{#if erroresDonante.representanteCorreo}} campo--error{{/if}}">
+      <label for="representanteCorreo">Email <span class="campo__requerido" aria-hidden="true">*</span></label>
+      <input type="email" id="representanteCorreo" name="representanteCorreo" value="{{formDonante.representanteCorreo}}" required placeholder="representante@empresa.com">
+      {{#if erroresDonante.representanteCorreo}}<small class="campo__error">{{erroresDonante.representanteCorreo}}</small>{{/if}}
+    </div>
+  </div>
+</div>
+{{/if}}
+
+<div id="campos-contacto">
+  <h3 class="form-donante__titulo">Contacto</h3>
+  <p class="texto-suave">Medio de aviso cuando cambie el estado de las donaciones.</p>
+  <div class="grilla grilla--2">
+    <div class="campo{{#if erroresDonante.email}} campo--error{{/if}}">
+      <label for="email">Email <span class="campo__requerido" aria-hidden="true">*</span></label>
+      <input type="email" id="email" name="email" value="{{formDonante.email}}" required placeholder="contacto@ejemplo.com">
+      {{#if erroresDonante.email}}<small class="campo__error">{{erroresDonante.email}}</small>{{/if}}
+    </div>
+    <div class="campo{{#if erroresDonante.telefono}} campo--error{{/if}}">
+      <label for="telefono">Teléfono (opcional)</label>
+      <input type="tel" id="telefono" name="telefono" value="{{formDonante.telefono}}" placeholder="11 4433-2211">
+      {{#if erroresDonante.telefono}}<small class="campo__error">{{erroresDonante.telefono}}</small>{{/if}}
+    </div>
+  </div>
+
+  <div class="grilla grilla--2">
+    <div class="campo">
+      <label for="tipoTelefono">El teléfono es de</label>
+      <select id="tipoTelefono" name="tipoTelefono">
+        <option value="WHATSAPP" {{#if (eq formDonante.tipoTelefono "WHATSAPP")}}selected{{/if}}>WhatsApp</option>
+        <option value="SMS" {{#if (eq formDonante.tipoTelefono "SMS")}}selected{{/if}}>SMS</option>
+      </select>
+    </div>
+    <div class="campo">
+      <label for="contactoPredeterminado">Preferimos avisar por</label>
+      <select id="contactoPredeterminado" name="contactoPredeterminado">
+        <option value="EMAIL" {{#if (eq formDonante.contactoPredeterminado "EMAIL")}}selected{{/if}}>Email</option>
+        <option value="TELEFONO" {{#if (eq formDonante.contactoPredeterminado "TELEFONO")}}selected{{/if}}>Teléfono</option>
+      </select>
+    </div>
+  </div>
+</div>

@@ -51,6 +51,13 @@ En [Figma](https://www.figma.com/design/1tzIHQUO6aSwCbdgtPuXgj) quedó una prime
 | 15 | Categorías: modal de edición de una subcategoría | `/admin/categorias?editarSub={id}` | [15e-categorias-subcategoria.png](15e-categorias-subcategoria.png) |
 | 15 | Categorías: confirmar eliminación (borra también sus subcategorías) | `/admin/categorias?eliminar={id}` | [15f-categorias-eliminar.png](15f-categorias-eliminar.png) |
 | 15 | Categorías: no se puede eliminar (la usan donaciones o necesidades) | `/admin/categorias?eliminar={id}` | [15g-categorias-no-se-puede-eliminar.png](15g-categorias-no-se-puede-eliminar.png) |
+| 15 | Donantes: listado con buscador, contacto preferido y donaciones | `/admin/donantes` | [15h-donantes.png](15h-donantes.png) |
+| 15 | Donantes: detalle con todos los datos | `/admin/donantes?ver={id}` | [15i-donantes-detalle.png](15i-donantes-detalle.png) |
+| 15 | Donantes: modal de alta con errores | `/admin/donantes?nuevo` | [15j-donantes-alta.png](15j-donantes-alta.png) |
+| 15 | Donantes: modal de edición (el CUIT/DNI no se cambia) | `/admin/donantes?editar={id}` | [15k-donantes-editar.png](15k-donantes-editar.png) |
+| 15 | Donantes: confirmar eliminación | `/admin/donantes?eliminar={id}` | [15l-donantes-eliminar.png](15l-donantes-eliminar.png) |
+| 15 | Donantes: no se puede eliminar (tiene donaciones) | `/admin/donantes?eliminar={id}` | [15m-donantes-no-se-puede-eliminar.png](15m-donantes-no-se-puede-eliminar.png) |
+| 15 | Donantes: búsqueda sin resultados | `/admin/donantes?q=...` | [15n-donantes-sin-resultados.png](15n-donantes-sin-resultados.png) |
 | 16 | Depósito: stock disponible y vencidas | `/admin/deposito` | [16-deposito.png](16-deposito.png) |
 | 16 | Depósito: modal para marcar donación como vencida | `/admin/deposito` | [16b-deposito-vencer.png](16b-deposito-vencer.png) |
 | 17 | Matchmaking: propuestas de asignación pendientes | `/admin/matchmaking` | [17-matchmaking.png](17-matchmaking.png) |

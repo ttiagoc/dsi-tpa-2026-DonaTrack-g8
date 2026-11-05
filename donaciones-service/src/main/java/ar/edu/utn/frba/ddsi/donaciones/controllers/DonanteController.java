@@ -74,6 +74,12 @@ public class DonanteController implements JavalinController {
             ctx.json(donanteService.obtenerPorId(id));
         }, DONANTE, ADMINISTRADOR);
 
+        // datos completos para la pantalla de donantes del administrador (ver y editar)
+        app.get("/api/donantes/{id}/detalle", ctx -> {
+            Long id = Long.parseLong(ctx.pathParam("id"));
+            ctx.json(donanteService.obtenerDetalle(id));
+        }, ADMINISTRADOR);
+
         // el alta con usuario la hace /api/auth/registro/*; esta queda para el administrador (req. 15)
         app.post("/api/donantes/persona-humana", ctx -> {
             PersonaHumanaRequest request = ctx.bodyAsClass(PersonaHumanaRequest.class);

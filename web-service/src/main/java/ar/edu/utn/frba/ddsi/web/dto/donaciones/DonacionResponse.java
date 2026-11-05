@@ -19,7 +19,8 @@ public record DonacionResponse(
         LocalDateTime fechaEstado,
         Necesidad necesidad,
         List<String> fotosRecepcion,
-        String justificacion) {
+        String justificacion,
+        Long donanteId) {
 
     public record Bien(String descripcion, Long cantidad) {
     }

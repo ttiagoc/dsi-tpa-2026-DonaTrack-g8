@@ -12,11 +12,8 @@ import ar.edu.utn.frba.ddsi.web.dto.donaciones.BienAltaRequest;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.DonacionAltaRequest;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.SubcategoriaAltaRequest;
 import ar.edu.utn.frba.ddsi.web.dto.donantes.DonanteResponse;
-import ar.edu.utn.frba.ddsi.web.dto.donantes.MedioContactoDto;
 import ar.edu.utn.frba.ddsi.web.dto.donantes.PersonaHumanaRequest;
-import ar.edu.utn.frba.ddsi.web.dto.registro.MedioContactoRequest;
 import ar.edu.utn.frba.ddsi.web.dto.registro.PersonaJuridicaRequest;
-import ar.edu.utn.frba.ddsi.web.dto.registro.RepresentanteRequest;
 import ar.edu.utn.frba.ddsi.web.exceptions.ApiException;
 import ar.edu.utn.frba.ddsi.web.sesion.Alertas;
 import io.javalin.http.Context;
@@ -179,117 +176,35 @@ public class RecepcionAdminController {
 
     public void crearDonante(Context ctx) {
         Formulario form = new Formulario(ctx);
-        String tipoPersona = ctx.formParam("tipoPersona");
-        boolean esJuridica = "JURIDICA".equalsIgnoreCase(tipoPersona);
+        FormularioDonante datos = FormularioDonante.alta(form);
+        PersonaJuridicaRequest juridica = datos.esJuridica() ? datos.personaJuridica() : null;
+        PersonaHumanaRequest humana = datos.esJuridica() ? null : datos.personaHumana();
 
-        String email = form.email("email", "El email", true);
-        String telefono = form.telefono("telefono", "El teléfono", false);
-        String tipoTelefono = "SMS".equalsIgnoreCase(form.valor("tipoTelefono")) ? "SMS" : "WHATSAPP";
-        String contactoPredeterminado = "TELEFONO".equalsIgnoreCase(form.valor("contactoPredeterminado")) ? "TELEFONO" : "EMAIL";
+        if (form.tieneErrores()) {
+            mostrarErrorDonante(ctx, form, form.errores(), "Revisá los datos del donante.");
+            return;
+        }
 
-        DonanteResponse nuevo;
         try {
-            if (esJuridica) {
-                String razonSocial = form.requerido("razonSocial", "La razón social");
-                String cuit = form.requerido("cuit", "El CUIT");
-                String rubro = form.requerido("rubro", "El rubro");
-                String tipo = form.requerido("tipo", "El tipo de organización");
-                String repNombre = form.requerido("representanteNombre", "El nombre del representante");
-                String repApellido = form.requerido("representanteApellido", "El apellido del representante");
-                String repCorreo = form.email("representanteCorreo", "El correo del representante", true);
-
-                if (form.tieneErrores()) {
-                    ctx.status(400);
-                    Map<String, Object> modelo = Modelo.base(ctx);
-                    cargarListas(ctx, modelo);
-                    modelo.put("abrirModalDonante", true);
-                    modelo.put("erroresDonante", form.errores());
-                    modelo.put("formDonante", form.valores());
-                    modelo.put("errorDonante", "Revisá los datos del donante.");
-                    ctx.render(VISTA, modelo);
-                    return;
-                }
-
-                List<MedioContactoRequest> contactos = new ArrayList<>();
-                MedioContactoRequest emailMedio = new MedioContactoRequest("EMAIL", email);
-                contactos.add(emailMedio);
-                MedioContactoRequest telMedio = null;
-                if (telefono != null && !telefono.isBlank()) {
-                    telMedio = new MedioContactoRequest(tipoTelefono, telefono);
-                    contactos.add(telMedio);
-                }
-                MedioContactoRequest contactoPred = ("TELEFONO".equals(contactoPredeterminado) && telMedio != null)
-                        ? telMedio
-                        : emailMedio;
-
-                RepresentanteRequest rep = new RepresentanteRequest(repNombre, repApellido, repCorreo);
-                PersonaJuridicaRequest reqJuridica = new PersonaJuridicaRequest(
-                        razonSocial,
-                        rubro,
-                        tipo,
-                        cuit,
-                        List.of(rep),
-                        contactos,
-                        contactoPred
-                );
-                nuevo = donaciones.crearDonantePersonaJuridica(ctx, reqJuridica);
-            } else {
-                String nombre = form.requerido("nombre", "El nombre");
-                String apellido = form.requerido("apellido", "El apellido");
-                String dni = form.requerido("dni", "El DNI");
-                LocalDate fechaNacimiento = parseFecha(form.valor("fechaNacimiento"));
-                String genero = form.valor("genero");
-                String direccion = form.valor("direccion");
-
-                if (form.tieneErrores()) {
-                    ctx.status(400);
-                    Map<String, Object> modelo = Modelo.base(ctx);
-                    cargarListas(ctx, modelo);
-                    modelo.put("abrirModalDonante", true);
-                    modelo.put("erroresDonante", form.errores());
-                    modelo.put("formDonante", form.valores());
-                    modelo.put("errorDonante", "Revisá los datos del donante.");
-                    ctx.render(VISTA, modelo);
-                    return;
-                }
-
-                List<MedioContactoDto> contactos = new ArrayList<>();
-                MedioContactoDto emailMedio = new MedioContactoDto("EMAIL", email);
-                contactos.add(emailMedio);
-                MedioContactoDto telMedio = null;
-                if (telefono != null && !telefono.isBlank()) {
-                    telMedio = new MedioContactoDto(tipoTelefono, telefono);
-                    contactos.add(telMedio);
-                }
-                MedioContactoDto contactoPred = ("TELEFONO".equals(contactoPredeterminado) && telMedio != null)
-                        ? telMedio
-                        : emailMedio;
-
-                PersonaHumanaRequest reqHumana = new PersonaHumanaRequest(
-                        nombre,
-                        apellido,
-                        fechaNacimiento != null ? fechaNacimiento : LocalDate.of(1990, 1, 1),
-                        dni,
-                        genero != null && !genero.isBlank() ? genero : "Otro",
-                        direccion != null && !direccion.isBlank() ? direccion : "Sin dirección",
-                        contactos,
-                        contactoPred
-                );
-                nuevo = donaciones.crearDonantePersonaHumana(ctx, reqHumana);
-            }
-
+            DonanteResponse nuevo = juridica != null
+                    ? donaciones.crearDonantePersonaJuridica(ctx, juridica)
+                    : donaciones.crearDonantePersonaHumana(ctx, humana);
             Alertas.exito(ctx, "Donante " + nuevo.nombre() + " registrado con éxito.");
             ctx.redirect(RUTA + "?donanteId=" + nuevo.id());
         } catch (ApiException e) {
-            ctx.status(400);
-            Map<String, Object> modelo = Modelo.base(ctx);
-            cargarListas(ctx, modelo);
-            modelo.put("abrirModalDonante", true);
-            modelo.put("erroresDonante", Map.of("general", e.getMessage()));
-            modelo.put("formDonante", form.valores());
-            modelo.put("errorDonante", e.getMessage());
-            ctx.render(VISTA, modelo);
+            mostrarErrorDonante(ctx, form, Map.of("general", e.getMessage()), e.getMessage());
         }
+    }
+
+    private void mostrarErrorDonante(Context ctx, Formulario form, Map<String, String> errores, String mensaje) {
+        ctx.status(400);
+        Map<String, Object> modelo = Modelo.base(ctx);
+        cargarListas(ctx, modelo);
+        modelo.put("abrirModalDonante", true);
+        modelo.put("erroresDonante", errores);
+        modelo.put("formDonante", form.valores());
+        modelo.put("errorDonante", mensaje);
+        ctx.render(VISTA, modelo);
     }
 
     private void cargarListas(Context ctx, Map<String, Object> modelo) {

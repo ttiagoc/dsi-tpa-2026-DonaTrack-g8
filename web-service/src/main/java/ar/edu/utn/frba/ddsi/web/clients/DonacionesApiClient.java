@@ -23,6 +23,7 @@ import ar.edu.utn.frba.ddsi.web.dto.donaciones.DireccionUbicada;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.DonacionResponse;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.EntidadConEntregas;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.EstadoDonacionRequest;
+import ar.edu.utn.frba.ddsi.web.dto.donantes.DonanteDetalle;
 import ar.edu.utn.frba.ddsi.web.dto.donantes.DonanteResponse;
 import ar.edu.utn.frba.ddsi.web.dto.donantes.PersonaHumanaRequest;
 import ar.edu.utn.frba.ddsi.web.dto.registro.PersonaJuridicaRequest;
@@ -226,6 +227,25 @@ public class DonacionesApiClient extends ApiClient {
 
     public DonanteResponse crearDonantePersonaJuridica(Context ctx, PersonaJuridicaRequest request) {
         return post(ctx, "/donantes/persona-juridica", request, DonanteResponse.class);
+    }
+
+    // ---- Administracion: Donantes (C, req. 15) ----
+
+    public DonanteDetalle obtenerDetalleDonante(Context ctx, Long id) {
+        return get(ctx, "/donantes/" + id + "/detalle", DonanteDetalle.class);
+    }
+
+    public DonanteResponse actualizarDonantePersonaHumana(Context ctx, Long id, PersonaHumanaRequest request) {
+        return put(ctx, "/donantes/persona-humana/" + id, request, DonanteResponse.class);
+    }
+
+    public DonanteResponse actualizarDonantePersonaJuridica(Context ctx, Long id, PersonaJuridicaRequest request) {
+        return put(ctx, "/donantes/persona-juridica/" + id, request, DonanteResponse.class);
+    }
+
+    /** La API responde 400 si el donante tiene donaciones registradas (se conservan por trazabilidad). */
+    public void eliminarDonante(Context ctx, Long id) {
+        delete(ctx, "/donantes/" + id);
     }
 
     public List<DonacionResponse> registrarDonacionPresencial(Context ctx, DonacionAltaRequest request) {

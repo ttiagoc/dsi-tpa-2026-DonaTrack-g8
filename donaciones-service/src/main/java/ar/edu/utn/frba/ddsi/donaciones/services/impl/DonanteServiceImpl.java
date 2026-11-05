@@ -1,6 +1,9 @@
 package ar.edu.utn.frba.ddsi.donaciones.services.impl;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -10,11 +13,13 @@ import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donante.DonanteDetalleResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.DonanteResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.MedioContactoRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaHumanaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaJuridicaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.RepresentanteRequest;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.RegistroDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaJuridica;
@@ -70,6 +75,43 @@ public class DonanteServiceImpl implements DonanteService {
         Donante d = donanteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro un donante con el id: " + id));
         return toDonanteResponse(d);
+    }
+
+    public DonanteDetalleResponse obtenerDetalle(Long id) {
+        Donante d = donanteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro un donante con el id: " + id));
+        List<MedioContactoRequest> contactos = d.getContactos().stream().map(this::toMedioContactoRequest).toList();
+        MedioContactoRequest predeterminado = d.getContactoPredeterminado() != null
+                ? toMedioContactoRequest(d.getContactoPredeterminado())
+                : null;
+        // cada entrega (RegistroDonacion) se segmenta en una o mas donaciones: se cuentan las donaciones
+        int cantidadDonaciones = d.getDonaciones().stream().mapToInt(r -> r.getDonaciones().size()).sum();
+        LocalDate ultimaDonacion = d.getDonaciones().stream()
+                .map(RegistroDonacion::getFecha)
+                .filter(Objects::nonNull)
+                .max(LocalDateTime::compareTo)
+                .map(LocalDateTime::toLocalDate)
+                .orElse(null);
+
+        if (d instanceof PersonaHumana ph) {
+            return new DonanteDetalleResponse(d.getId(), "HUMANA", ph.getNombre(), ph.getApellido(), ph.getDni(),
+                    ph.getFechaNacimiento(), ph.getGenero(), ph.getDireccion(), null, null, null, null, List.of(),
+                    contactos, predeterminado, cantidadDonaciones, ultimaDonacion);
+        }
+        PersonaJuridica pj = (PersonaJuridica) d;
+        List<RepresentanteRequest> representantes = pj.getRepresentantes() == null ? List.of()
+                : pj.getRepresentantes().stream()
+                        .map(r -> new RepresentanteRequest(r.getNombre(), r.getApellido(),
+                                r.getCorreo() != null ? r.getCorreo().getValor() : null))
+                        .toList();
+        return new DonanteDetalleResponse(d.getId(), "JURIDICA", null, null, null, null, null, null,
+                pj.getRazonSocial(), pj.getRubro(), pj.getTipo() != null ? pj.getTipo().name() : null, pj.getCuit(),
+                representantes, contactos, predeterminado, cantidadDonaciones, ultimaDonacion);
+    }
+
+    private MedioContactoRequest toMedioContactoRequest(MedioContacto contacto) {
+        return new MedioContactoRequest(
+                contacto.getTipoContacto() != null ? contacto.getTipoContacto().name() : null, contacto.getValor());
     }
 
     // Nombre, DNI y medios de contacto los valida el constructor de PersonaHumana (valen también para el CSV).

@@ -16,6 +16,7 @@ import ar.edu.utn.frba.ddsi.web.controllers.RecepcionAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.ImportacionesAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.DonacionesAsignadasController;
 import ar.edu.utn.frba.ddsi.web.controllers.DonanteWebController;
+import ar.edu.utn.frba.ddsi.web.controllers.DonantesAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.HomeController;
 import ar.edu.utn.frba.ddsi.web.controllers.MapaController;
 import ar.edu.utn.frba.ddsi.web.controllers.NecesidadesController;
@@ -50,6 +51,7 @@ public class Router {
     private final RecepcionAdminController recepcionAdmin;
     private final ImportacionesAdminController importacionesAdmin;
     private final CategoriasAdminController categoriasAdmin;
+    private final DonantesAdminController donantesAdmin;
 
     @Autowired
     public Router(AutorizacionMiddleware autorizacion, HomeController home, SesionController sesion,
@@ -61,7 +63,8 @@ public class Router {
             @Autowired(required = false) MatchmakingAdminController matchmakingAdmin,
             @Autowired(required = false) RecepcionAdminController recepcionAdmin,
             @Autowired(required = false) ImportacionesAdminController importacionesAdmin,
-            @Autowired(required = false) CategoriasAdminController categoriasAdmin) {
+            @Autowired(required = false) CategoriasAdminController categoriasAdmin,
+            @Autowired(required = false) DonantesAdminController donantesAdmin) {
 
         this.autorizacion = autorizacion;
         this.home = home;
@@ -79,13 +82,14 @@ public class Router {
         this.recepcionAdmin = recepcionAdmin;
         this.importacionesAdmin = importacionesAdmin;
         this.categoriasAdmin = categoriasAdmin;
+        this.donantesAdmin = donantesAdmin;
     }
 
   // Sobrecarga para tests
     public Router(AutorizacionMiddleware autorizacion, HomeController home, SesionController sesion,
                   RegistroController registro, PanelController panel, NecesidadesController necesidades,
                   DonacionesAsignadasController donacionesAsignadas, RecepcionController recepcion, MapaController mapa) {
-      this(autorizacion, home, sesion, registro, panel, necesidades, donacionesAsignadas, recepcion, mapa, null, null, null, null, null, null, null);
+      this(autorizacion, home, sesion, registro, panel, necesidades, donacionesAsignadas, recepcion, mapa, null, null, null, null, null, null, null, null);
     }
 
     public void registrar(Javalin app) {
@@ -161,6 +165,12 @@ public class Router {
             app.get("/admin/importaciones", importacionesAdmin::listar, ADMINISTRADOR);
             app.post("/admin/importaciones", importacionesAdmin::importar, ADMINISTRADOR);
             app.get("/admin/importaciones/{id}/estado", importacionesAdmin::consultarEstado, ADMINISTRADOR);
+        }
+        if (donantesAdmin != null) {
+            app.get("/admin/donantes", donantesAdmin::listar, ADMINISTRADOR);
+            app.post("/admin/donantes", donantesAdmin::crear, ADMINISTRADOR);
+            app.post("/admin/donantes/{id}/editar", donantesAdmin::actualizar, ADMINISTRADOR);
+            app.post("/admin/donantes/{id}/eliminar", donantesAdmin::eliminar, ADMINISTRADOR);
         }
         if (categoriasAdmin != null) {
             app.get("/admin/categorias", categoriasAdmin::listar, ADMINISTRADOR);

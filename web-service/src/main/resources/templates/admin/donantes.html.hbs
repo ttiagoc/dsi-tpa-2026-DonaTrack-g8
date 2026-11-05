@@ -1,0 +1,183 @@
+{{#partial "titulo"}}Donantes · DonaTrack{{/partial}}
+{{#partial "contenido"}}
+{{> partials/encabezado
+    titulo="Donantes"
+    bajada="Personas y organizaciones que donan. Mirá sus datos de contacto y cuántas donaciones hicieron."
+    accionHref=(concat "/admin/donantes?nuevo" sufijo)
+    accionTexto="Nuevo donante"}}
+
+{{#if hayDonantes}}
+  <div class="resumen">
+    <div class="resumen__item"><strong>{{resumen.total}}</strong>Donantes registrados</div>
+    <div class="resumen__item resumen__item--info"><strong>{{resumen.humanas}}</strong>Personas humanas</div>
+    <div class="resumen__item resumen__item--info"><strong>{{resumen.juridicas}}</strong>Personas jurídicas</div>
+    <div class="resumen__item resumen__item--ok"><strong>{{resumen.conDonaciones}}</strong>Con donaciones</div>
+  </div>
+
+  {{#> partials/filtros action="/admin/donantes" limpiarHref="/admin/donantes"}}
+    <div class="campo filtros__buscar">
+      <label for="q">Buscar</label>
+      <input type="search" id="q" name="q" value="{{filtros.q}}" placeholder="Nombre, DNI, CUIT o email">
+    </div>
+    <div class="campo">
+      <label for="tipo-filtro">Tipo</label>
+      <select id="tipo-filtro" name="tipo">
+        <option value="">Todos</option>
+        <option value="HUMANA" {{#if (eq filtros.tipo "HUMANA")}}selected{{/if}}>Persona humana</option>
+        <option value="JURIDICA" {{#if (eq filtros.tipo "JURIDICA")}}selected{{/if}}>Persona jurídica</option>
+      </select>
+    </div>
+  {{/partials/filtros}}
+{{/if}}
+
+{{#> partials/listado coleccion=donantes vacioTitulo=vacio.titulo vacioBajada=vacio.bajada}}
+  <table class="tabla">
+    <caption class="sr-only">Donantes registrados</caption>
+    <thead>
+      <tr>
+        <th scope="col">Donante</th>
+        <th scope="col">Contacto preferido</th>
+        <th scope="col" class="tabla__corta">Donaciones</th>
+        <th scope="col"><span class="sr-only">Acciones</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each donantes}}
+        <tr>
+          <td>
+            <a class="tabla__enlace" href="/admin/donantes?ver={{id}}{{../sufijo}}"><strong>{{nombre}}</strong></a>
+            <small class="tabla__secundario">{{tipo}} · {{#if esJuridica}}CUIT{{else}}DNI{{/if}} {{documento}}</small>
+          </td>
+          <td class="tabla__corta">{{#if contacto}}{{contacto}}{{else}}<span class="texto-suave">Sin contacto</span>{{/if}}</td>
+          <td class="tabla__corta">
+            {{#if donaciones}}
+              <span class="etiqueta etiqueta--ok">{{donaciones}}</span>
+              <small class="tabla__secundario">Última: {{fecha ultimaDonacion}}</small>
+            {{else}}
+              <span class="etiqueta etiqueta--neutra">Todavía no donó</span>
+            {{/if}}
+          </td>
+          {{#> partials/acciones-fila}}
+            {{boton "editar" href=(concat "/admin/donantes?editar=" id ../sufijo) sr=nombre}}
+            {{boton "eliminar" href=(concat "/admin/donantes?eliminar=" id ../sufijo) sr=nombre}}
+          {{/partials/acciones-fila}}
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+  {{#if paginacion.hayVarias}}
+    <nav class="paginacion" aria-label="Páginas del listado">
+      <span>Mostrando {{paginacion.desde}}–{{paginacion.hasta}} de {{paginacion.total}}</span>
+      <div class="paginacion__controles">
+        {{#if paginacion.anterior}}<a class="boton boton--secundario boton--chico" href="{{paginacion.anterior}}" rel="prev">← Anterior</a>{{/if}}
+        <span>Página {{paginacion.pagina}} de {{paginacion.totalPaginas}}</span>
+        {{#if paginacion.siguiente}}<a class="boton boton--secundario boton--chico" href="{{paginacion.siguiente}}" rel="next">Siguiente →</a>{{/if}}
+      </div>
+    </nav>
+  {{/if}}
+{{/partials/listado}}
+
+{{!-- Detalle: todos los datos del donante --}}
+{{#if abrirVer}}
+<dialog class="modal modal--ancho" id="modal-ver" aria-labelledby="titulo-ver" open>
+  <div class="modal__encabezado">
+    <h2 id="titulo-ver">{{detalle.nombreCompleto}}</h2>
+    <a class="modal__cerrar" href="{{volverHref}}" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></a>
+  </div>
+  <div class="modal__cuerpo">
+    <p><span class="etiqueta etiqueta--info">{{detalle.tipoEtiqueta}}</span></p>
+    <dl class="detalle">
+      {{#if detalle.esJuridica}}
+        <dt>CUIT</dt><dd>{{detalle.cuit}}</dd>
+        <dt>Tipo de organización</dt><dd>{{detalle.tipoOrganizacionEtiqueta}}</dd>
+        <dt>Rubro</dt><dd>{{detalle.rubro}}</dd>
+        <dt>Representantes</dt>
+        <dd>
+          {{#each detalle.representantes}}
+            <div>{{nombre}} {{apellido}}{{#if correo}} · {{correo}}{{/if}}</div>
+          {{else}}
+            <span class="texto-suave">Sin representantes cargados</span>
+          {{/each}}
+        </dd>
+      {{else}}
+        <dt>DNI</dt><dd>{{detalle.dni}}</dd>
+        <dt>Fecha de nacimiento</dt><dd>{{#if detalle.fechaNacimiento}}{{fecha detalle.fechaNacimiento}}{{else}}<span class="texto-suave">Sin dato</span>{{/if}}</dd>
+        <dt>Género</dt><dd>{{#if detalle.genero}}{{detalle.genero}}{{else}}<span class="texto-suave">Sin dato</span>{{/if}}</dd>
+        <dt>Dirección</dt><dd>{{#if detalle.direccion}}{{detalle.direccion}}{{else}}<span class="texto-suave">Sin dato</span>{{/if}}</dd>
+      {{/if}}
+      <dt>Medios de contacto</dt>
+      <dd>
+        {{#each detalle.contactos}}
+          <div>{{valor}} <small class="texto-suave">({{tipoEtiqueta}})</small></div>
+        {{/each}}
+      </dd>
+      <dt>Avisos por</dt><dd>{{detalle.contactoPredeterminadoEtiqueta}}</dd>
+      <dt>Donaciones</dt><dd>{{detalle.cantidadDonaciones}}</dd>
+      <dt>Última donación</dt><dd>{{#if detalle.ultimaDonacion}}{{fecha detalle.ultimaDonacion}}{{else}}<span class="texto-suave">Todavía no donó</span>{{/if}}</dd>
+    </dl>
+  </div>
+  <div class="modal__acciones">
+    <a class="boton boton--secundario" href="{{volverHref}}" data-cierra autofocus>Cerrar</a>
+    <a class="boton" href="/admin/donantes?editar={{detalle.id}}{{sufijo}}">Editar datos</a>
+  </div>
+</dialog>
+{{/if}}
+
+{{!-- Alta y edición --}}
+<dialog class="modal modal--ancho" id="modal-donante" aria-labelledby="titulo-donante" {{#if abrirModal}}open{{/if}}>
+  <form method="post" action="{{#if editado}}/admin/donantes/{{editado.id}}/editar{{else}}/admin/donantes{{/if}}" accept-charset="UTF-8" novalidate>
+    <input type="hidden" name="volver" value="{{filtrosQuery}}">
+    <div class="modal__encabezado">
+      <h2 id="titulo-donante">{{#if editado}}Editar {{editado.nombreCompleto}}{{else}}Nuevo donante{{/if}}</h2>
+      <a class="modal__cerrar" href="{{volverHref}}" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></a>
+    </div>
+    <div class="modal__cuerpo">
+      {{#if errorDonante}}<div class="alerta alerta--error" role="alert">{{errorDonante}}</div>{{/if}}
+      {{> partials/form-donante}}
+    </div>
+    <div class="modal__acciones">
+      {{boton "cancelar" href=volverHref cierra=true}}
+      <button type="submit" class="boton">{{#if editado}}Guardar cambios{{else}}Guardar donante{{/if}}</button>
+    </div>
+  </form>
+</dialog>
+
+{{!-- Baja: confirmación o, si tiene donaciones, por qué no se puede (la API también lo rechaza) --}}
+{{#if abrirEliminar}}
+<dialog class="modal modal--chico" id="modal-eliminar" aria-labelledby="titulo-eliminar" open>
+  <form method="post" action="/admin/donantes/{{aEliminar.id}}/eliminar" accept-charset="UTF-8">
+    <input type="hidden" name="volver" value="{{filtrosQuery}}">
+    <div class="modal__encabezado">
+      <h2 id="titulo-eliminar">¿Eliminar el donante?</h2>
+      <a class="modal__cerrar" href="{{volverHref}}" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></a>
+    </div>
+    <div class="modal__cuerpo">
+      <p><strong>{{aEliminar.nombreCompleto}}</strong> · {{aEliminar.tipoEtiqueta}}</p>
+      <p class="texto-suave">Se borran sus datos y sus medios de contacto. No tiene donaciones registradas, así que no se pierde ningún historial.</p>
+    </div>
+    <div class="modal__acciones">
+      {{boton "cancelar" href=volverHref autofocus=true cierra=true}}
+      {{boton "confirmar_peligro" texto="Eliminar donante" type="submit"}}
+    </div>
+  </form>
+</dialog>
+{{/if}}
+{{#if abrirNoSePuede}}
+<dialog class="modal modal--chico" id="modal-eliminar" aria-labelledby="titulo-eliminar" open>
+  <div class="modal__encabezado">
+    <h2 id="titulo-eliminar">No se puede eliminar el donante</h2>
+    <a class="modal__cerrar" href="{{volverHref}}" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></a>
+  </div>
+  <div class="modal__cuerpo">
+    <p><strong>{{aEliminar.nombreCompleto}}</strong> · {{aEliminar.tipoEtiqueta}}</p>
+    <p class="texto-suave">{{#if (eq aEliminar.cantidadDonaciones 1)}}Tiene 1 donación registrada, que se conserva{{else}}Tiene {{aEliminar.cantidadDonaciones}} donaciones registradas, que se conservan{{/if}} para poder seguir su trazabilidad. Podés editar sus datos.</p>
+  </div>
+  <div class="modal__acciones">
+    <a class="boton boton--secundario" href="/admin/donantes?editar={{aEliminar.id}}{{sufijo}}">Editar datos</a>
+    <a class="boton" href="{{volverHref}}" data-cierra autofocus>Entendido</a>
+  </div>
+</dialog>
+{{/if}}
+{{/partial}}
+{{#partial "scripts"}}<script src="/js/tipo-donante.js"></script>{{/partial}}
+{{> layouts/base}}
