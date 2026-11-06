@@ -32,6 +32,7 @@ class GestorDeRutasTest {
         eventManager = mock(EventManagerLogistica.class);
 
         when(properties.getLogisticaUrl()).thenReturn("http://localhost:8081/api");
+        when(properties.getWebUrl()).thenReturn("http://localhost:7070");
 
         gestorDeRutas = new GestorDeRutas(donacionesGrpcClient, properties, eventManager);
     }

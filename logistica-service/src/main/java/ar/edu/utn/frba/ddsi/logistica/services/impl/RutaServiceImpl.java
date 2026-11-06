@@ -22,6 +22,7 @@ import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.MonitorDeRutas;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Parada;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ruta;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ubicacion;
+import ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoParada;
 import ar.edu.utn.frba.ddsi.logistica.models.enums.EstadoRuta;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.CamionRepository;
 import ar.edu.utn.frba.ddsi.logistica.models.repositories.RutaRepository;
@@ -128,12 +129,31 @@ public class RutaServiceImpl implements RutaService {
         Camion camion = ruta.getCamion();
         String patenteCamion = camion != null ? camion.getPatente() : null;
         Long camionId = camion != null ? camion.getId() : null;
-        Double camionLat = (camion != null && camion.getUbicacion() != null)
-                ? camion.getUbicacion().getLatitud()
-                : GeocodificadorCaba.DEPOSITO_LAT;
-        Double camionLng = (camion != null && camion.getUbicacion() != null)
-                ? camion.getUbicacion().getLongitud()
-                : GeocodificadorCaba.DEPOSITO_LNG;
+
+        Parada ultimaCompletada = null;
+        if (ruta.getParadas() != null) {
+            ultimaCompletada = ruta.getParadas().stream()
+                    .filter(p -> p.getEstado() == EstadoParada.ENTREGADA || p.getEstado() == EstadoParada.NO_RECIBIDA)
+                    .max(Comparator.comparing(Parada::getOrden, Comparator.nullsLast(Comparator.naturalOrder())))
+                    .orElse(null);
+        }
+
+        Double camionLat;
+        Double camionLng;
+        if (ultimaCompletada != null) {
+            double[] coords = GeocodificadorCaba.ubicar(ultimaCompletada.getDestino(), ultimaCompletada.getEntidadId());
+            camionLat = coords[0];
+            camionLng = coords[1];
+        } else if (ruta.getEstado() == EstadoRuta.PLANIFICADA || (ruta.getEstado() == EstadoRuta.EN_TRASLADO && ultimaCompletada == null)) {
+            camionLat = GeocodificadorCaba.DEPOSITO_LAT;
+            camionLng = GeocodificadorCaba.DEPOSITO_LNG;
+        } else if (camion != null && camion.getUbicacion() != null) {
+            camionLat = camion.getUbicacion().getLatitud();
+            camionLng = camion.getUbicacion().getLongitud();
+        } else {
+            camionLat = GeocodificadorCaba.DEPOSITO_LAT;
+            camionLng = GeocodificadorCaba.DEPOSITO_LNG;
+        }
         String choferNombre = ruta.getChofer() != null ? ruta.getChofer().getNombre() : null;
         String choferApellido = ruta.getChofer() != null ? ruta.getChofer().getApellido() : null;
 
@@ -211,9 +231,10 @@ public class RutaServiceImpl implements RutaService {
 
         if ("EN_TRASLADO".equalsIgnoreCase(estado)) {
             ruta.iniciar();
-            if (ruta.getCamion() != null && ruta.getCamion().getUbicacion() == null) {
+            if (ruta.getCamion() != null) {
+                // Al salir a recorrido, la posición inicial del camión es el depósito central
                 ruta.getCamion().actualizarUbicacion(
-                        new Ubicacion(GeocodificadorCaba.DEPOSITO_LAT, GeocodificadorCaba.DEPOSITO_LNG, 35.0));
+                        new Ubicacion(GeocodificadorCaba.DEPOSITO_LAT, GeocodificadorCaba.DEPOSITO_LNG, 0.0));
                 camionRepository.save(ruta.getCamion());
             }
             rutaRepository.save(ruta);
@@ -314,11 +335,29 @@ public class RutaServiceImpl implements RutaService {
       Double velocidad = null;
       java.time.LocalDateTime ultimaActualizacion = null;
 
-      if (camion != null && camion.getUbicacion() != null) {
-        latitud = camion.getUbicacion().getLatitud();
-        longitud = camion.getUbicacion().getLongitud();
-        velocidad = camion.getUbicacion().getVelocidad();
-        ultimaActualizacion = camion.getUbicacion().getTimestamp();
+      Parada ultimaCompletada = null;
+      if (ruta.getParadas() != null) {
+          ultimaCompletada = ruta.getParadas().stream()
+                  .filter(p -> p.getEstado() == EstadoParada.ENTREGADA || p.getEstado() == EstadoParada.NO_RECIBIDA)
+                  .max(Comparator.comparing(Parada::getOrden, Comparator.nullsLast(Comparator.naturalOrder())))
+                  .orElse(null);
+      }
+
+      if (ultimaCompletada != null) {
+          double[] coords = GeocodificadorCaba.ubicar(ultimaCompletada.getDestino(), ultimaCompletada.getEntidadId());
+          latitud = coords[0];
+          longitud = coords[1];
+      } else if (ruta.getEstado() == EstadoRuta.PLANIFICADA || (ruta.getEstado() == EstadoRuta.EN_TRASLADO && ultimaCompletada == null)) {
+          latitud = GeocodificadorCaba.DEPOSITO_LAT;
+          longitud = GeocodificadorCaba.DEPOSITO_LNG;
+      } else if (camion != null && camion.getUbicacion() != null) {
+          latitud = camion.getUbicacion().getLatitud();
+          longitud = camion.getUbicacion().getLongitud();
+          velocidad = camion.getUbicacion().getVelocidad();
+          ultimaActualizacion = camion.getUbicacion().getTimestamp();
+      } else {
+          latitud = GeocodificadorCaba.DEPOSITO_LAT;
+          longitud = GeocodificadorCaba.DEPOSITO_LNG;
       }
 
       List<ParadaResponse> paradas = ruta.getParadas().stream()

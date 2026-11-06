@@ -32,12 +32,14 @@ import ar.edu.utn.frba.ddsi.web.clients.ApiClient;
 import ar.edu.utn.frba.ddsi.web.clients.AuthApiClient;
 import ar.edu.utn.frba.ddsi.web.clients.DonacionesApiClient;
 import ar.edu.utn.frba.ddsi.web.clients.LogisticaApiClient;
+import ar.edu.utn.frba.ddsi.web.clients.NotificacionesApiClient;
 import ar.edu.utn.frba.ddsi.web.config.WebConfig;
 import ar.edu.utn.frba.ddsi.web.controllers.CamionesAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.CategoriasAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.ChoferWebController;
 import ar.edu.utn.frba.ddsi.web.controllers.DepositoAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.DonantesAdminController;
+import ar.edu.utn.frba.ddsi.web.controllers.DonanteWebController;
 import ar.edu.utn.frba.ddsi.web.controllers.MatchmakingAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.RecepcionAdminController;
 import ar.edu.utn.frba.ddsi.web.controllers.RutasAdminController;
@@ -95,6 +97,7 @@ class WebFlujoTest {
     private final AtomicReference<String> ultimaSubcategoria = new AtomicReference<>();
     private final List<Map<String, Object>> choferesFalsos = new ArrayList<>();
     private final List<Map<String, Object>> rutasFalsas = new ArrayList<>();
+    private final List<Map<String, Object>> notificacionesFalsas = new ArrayList<>();
     private final AtomicReference<String> ultimoMotivoFallo = new AtomicReference<>();
 
     @TempDir
@@ -117,6 +120,9 @@ class WebFlujoTest {
                 HttpClient.newHttpClient(), ApiClient.crearObjectMapper(), auth);
         LogisticaApiClient logistica = new LogisticaApiClient("http://localhost:" + PUERTO_API + "/api",
                 HttpClient.newHttpClient(), ApiClient.crearObjectMapper(), auth);
+        NotificacionesApiClient notificaciones = new NotificacionesApiClient("http://localhost:" + PUERTO_API + "/api",
+                HttpClient.newHttpClient(), ApiClient.crearObjectMapper(), auth);
+        DonanteWebController donanteWeb = new DonanteWebController(donaciones, notificaciones, logistica);
         CamionesAdminController camionesAdmin = new CamionesAdminController(logistica, auth);
         DepositoAdminController depositoAdmin = new DepositoAdminController(donaciones);
         MatchmakingAdminController matchmakingAdmin = new MatchmakingAdminController(donaciones);
@@ -128,7 +134,7 @@ class WebFlujoTest {
         Router router = new Router(new AutorizacionMiddleware(), new HomeController(), new SesionController(auth),
                 new RegistroController(auth), new PanelController(), new NecesidadesController(donaciones),
                 new DonacionesAsignadasController(donaciones), new RecepcionController(donaciones, fotos),
-                new MapaController(donaciones), null, camionesAdmin, depositoAdmin, matchmakingAdmin, recepcionAdmin,
+                new MapaController(donaciones), donanteWeb, camionesAdmin, depositoAdmin, matchmakingAdmin, recepcionAdmin,
                 importacionesAdmin, categoriasAdmin, new DonantesAdminController(donaciones), rutasAdmin, choferWeb);
 
         web = new Server(router, config, fotos).crear();
@@ -1421,6 +1427,29 @@ class WebFlujoTest {
         assertEquals("EN_DEPOSITO", fallida.get("estadoActual"));
     }
 
+    @Test
+    @DisplayName("Notificaciones: limpia links internos de logística y muestra botón de seguimiento en mapa")
+    void notificacionesConLinkDeSeguimiento() throws Exception {
+        String entidadCookie = cookie(login("entidad", "clave-segura"));
+
+        notificacionesFalsas.add(Map.of(
+                "id", 101L,
+                "fechaDeEnvio", "2026-11-05T23:35:00",
+                "mensaje", "Tu entrega ya está en camino. Seguí el recorrido del camión con el mapa interactivo: http://logistica-service:8081/api/monitoreo/ubicacion/11",
+                "tipoEvento", "EN_CAMINO",
+                "tipoDestinatario", "ENTIDAD",
+                "destinatarioId", 10L,
+                "completada", true
+        ));
+
+        HttpResponse<String> resp = get("/entidad/notificaciones", entidadCookie);
+        assertEquals(200, resp.statusCode());
+        assertFalse(resp.body().contains("http://logistica-service:8081/api/monitoreo/ubicacion/11"));
+        assertTrue(resp.body().contains("desde la sección Seguimiento"));
+        assertTrue(resp.body().contains("href=\"/entidad/seguimiento\""));
+        assertTrue(resp.body().contains("Ver en el mapa"));
+    }
+
     // ---- API falsa ----
 
     private Javalin crearApiFalsa() {
@@ -1795,6 +1824,15 @@ class WebFlujoTest {
             nueva.put("errores", List.of(Map.of("fila", 142, "valor", "ana.lopez@invalid", "motivo", "Documento vacío")));
             importacionesFalsas.add(0, nueva);
             ctx.status(202).json(nueva);
+        });
+
+        api.get("/api/notificaciones", ctx -> {
+            String destinatarioId = ctx.queryParam("destinatarioId");
+            String tipo = ctx.queryParam("tipoDestinatario");
+            ctx.json(notificacionesFalsas.stream()
+                    .filter(n -> destinatarioId == null || String.valueOf(n.get("destinatarioId")).equals(destinatarioId))
+                    .filter(n -> tipo == null || String.valueOf(n.get("tipoDestinatario")).equalsIgnoreCase(tipo))
+                    .toList());
         });
 
         return api;

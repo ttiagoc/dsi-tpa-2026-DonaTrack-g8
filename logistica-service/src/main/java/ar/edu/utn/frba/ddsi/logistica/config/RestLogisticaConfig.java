@@ -12,4 +12,5 @@ public class RestLogisticaConfig {
     private String donacionesUrl;
     private String notificacionesUrl;
     private String logisticaUrl;
+    private String webUrl = "http://localhost:7070";
 }

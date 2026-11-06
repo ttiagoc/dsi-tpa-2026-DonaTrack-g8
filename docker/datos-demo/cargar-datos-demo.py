@@ -400,7 +400,7 @@ def main():
     ])
     set_estado_ruta(ruta1, 'EN_TRASLADO')
     invoke_api('POST', f"{LOGISTICA_URL}/camiones/ubicacion/{camion1['patente']}", {
-        'latitud': -34.6158, 'longitud': -58.4333, 'velocidad': 32.0
+        'latitud': -34.5986, 'longitud': -58.4202, 'velocidad': 0.0
     }, token=admin_token)
     for e in [comedor, hogar, escuela, merendero]:
         p = parada_de(ruta1, e)
@@ -426,7 +426,7 @@ def main():
     ])
     set_estado_ruta(ruta2, 'EN_TRASLADO')
     invoke_api('POST', f"{LOGISTICA_URL}/camiones/ubicacion/{camion2['patente']}", {
-        'latitud': -34.6280, 'longitud': -58.4560, 'velocidad': 38.5
+        'latitud': -34.5986, 'longitud': -58.4202, 'velocidad': 0.0
     }, token=admin_token)
     ok(f"Ruta #{ruta2['id']} ({camion2['patente']}) EN_TRASLADO hacia Comedor Los Pibes y Merendero Rayito de Sol")
 

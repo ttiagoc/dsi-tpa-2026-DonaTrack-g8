@@ -60,6 +60,7 @@ public class Camion {
         this.altura = altura;
         this.capacidadCarga = capacidadCarga;
         this.chofer = chofer;
+        this.ubicacion = new Ubicacion(GeocodificadorCaba.DEPOSITO_LAT, GeocodificadorCaba.DEPOSITO_LNG, 0.0);
     }
 
     public void actualizarUbicacion(Ubicacion nuevaUbicacion) {

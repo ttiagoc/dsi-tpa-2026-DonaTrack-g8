@@ -295,7 +295,7 @@ $ruta1 = New-Ruta (Fecha -1) $camion1 @(
     (Parada 3 $escuela @($dBruno['Lapices y lapiceras'])),
     (Parada 4 $merendero @($dEstrella2['Conservas'])))
 Set-EstadoRuta $ruta1 'EN_TRASLADO'
-Invoke-Api POST "$LogisticaUrl/camiones/ubicacion/$($camion1.patente)" @{ latitud = -34.6158; longitud = -58.4333; velocidad = 32.0 } $admin | Out-Null
+Invoke-Api POST "$LogisticaUrl/camiones/ubicacion/$($camion1.patente)" @{ latitud = -34.5986; longitud = -58.4202; velocidad = 0.0 } $admin | Out-Null
 foreach ($e in @($comedor, $hogar, $escuela, $merendero)) {
     Invoke-Api POST "$LogisticaUrl/rutas/$($ruta1.id)/paradas/$((ParadaDe $ruta1 $e).id)/confirmaciones" $null $admin | Out-Null
 }
@@ -314,7 +314,7 @@ $ruta2 = New-Ruta (Fecha 0) $camion2 @(
     (Parada 1 $comedor @($dEstrella1['Fideos secos'])),
     (Parada 2 $merendero @($dEstrella1['Arroz'])))
 Set-EstadoRuta $ruta2 'EN_TRASLADO'
-Invoke-Api POST "$LogisticaUrl/camiones/ubicacion/$($camion2.patente)" @{ latitud = -34.6280; longitud = -58.4560; velocidad = 38.5 } $admin | Out-Null
+Invoke-Api POST "$LogisticaUrl/camiones/ubicacion/$($camion2.patente)" @{ latitud = -34.5986; longitud = -58.4202; velocidad = 0.0 } $admin | Out-Null
 Write-Ok "Ruta #$($ruta2.id) ($($camion2.patente)) EN_TRASLADO hacia Comedor Los Pibes y Merendero Rayito de Sol"
 
 Write-Step 'Ruta de manana: planificada'

@@ -29,6 +29,30 @@ public class NotificacionesApiClient extends ApiClient {
       Long donacionId,
       Boolean completada
   ) {
+    public String mensajeLimpio() {
+      if (mensaje == null || mensaje.isBlank()) return "-";
+      String limpio = mensaje;
+      String urlWeb = "DONANTE".equalsIgnoreCase(tipoDestinatario) ? "/donante/seguimiento" : "/entidad/seguimiento";
+      limpio = limpio.replaceAll(":\\s*https?://[^\\s]+/api/monitoreo/ubicacion/\\d+", " en tiempo real desde la sección Seguimiento.");
+      limpio = limpio.replaceAll("https?://[^\\s]+/api/monitoreo/ubicacion/\\d+", urlWeb);
+      limpio = limpio.replaceAll("https?://logistica-service:8081[^\\s]*", urlWeb);
+      return limpio;
+    }
+
+    public String accionUrl() {
+      if ("EN_CAMINO".equalsIgnoreCase(tipoEvento) || "INICIO_RUTA".equalsIgnoreCase(tipoEvento)) {
+        return "DONANTE".equalsIgnoreCase(tipoDestinatario) ? "/donante/seguimiento" : "/entidad/seguimiento";
+      }
+      return null;
+    }
+
+    public String accionTexto() {
+      if ("EN_CAMINO".equalsIgnoreCase(tipoEvento) || "INICIO_RUTA".equalsIgnoreCase(tipoEvento)) {
+        return "Ver en el mapa";
+      }
+      return null;
+    }
+
     public String fechaFormateada() {
       if (fechaDeEnvio == null || fechaDeEnvio.isBlank()) return "-";
       try {

@@ -46,6 +46,13 @@ public class CamionServiceImpl implements CamionService {
 
     public CamionResponse crear(CamionRequest request) {
         Camion camion = toCamion(request);
+        if (camion.getUbicacion() == null) {
+            camion.actualizarUbicacion(
+                    new ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ubicacion(
+                            ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.GeocodificadorCaba.DEPOSITO_LAT,
+                            ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.GeocodificadorCaba.DEPOSITO_LNG,
+                            0.0));
+        }
         camion = camionRepository.save(camion);
         return this.toCamionResponse(camion);
     }

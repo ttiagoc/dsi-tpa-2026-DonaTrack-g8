@@ -39,6 +39,7 @@ class InicioRutaListenerTest {
         config = mock(RestLogisticaConfig.class);
 
         when(config.getNotificacionesUrl()).thenReturn("http://localhost:8082/api");
+        when(config.getWebUrl()).thenReturn("http://localhost:7070");
 
         listener = new InicioRutaListener(eventManager, donacionesGrpcClient, restTemplate, config);
     }

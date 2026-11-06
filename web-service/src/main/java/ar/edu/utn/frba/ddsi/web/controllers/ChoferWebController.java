@@ -202,8 +202,27 @@ public class ChoferWebController {
             modelo.put("otraEnTraslado", enTraslado);
         }
 
-        double camionLat = ruta.camionLatitud() != null ? ruta.camionLatitud() : DEPOSITO_LAT;
-        double camionLng = ruta.camionLongitud() != null ? ruta.camionLongitud() : DEPOSITO_LNG;
+        ParadaDto ultimaResuelta = null;
+        if (ruta.paradas() != null) {
+            ultimaResuelta = ruta.paradas().stream()
+                    .filter(p -> "ENTREGADA".equalsIgnoreCase(p.estado()) || "NO_RECIBIDA".equalsIgnoreCase(p.estado()))
+                    .max(Comparator.comparing(ParadaDto::orden, Comparator.nullsLast(Comparator.naturalOrder())))
+                    .orElse(null);
+        }
+
+        double camionLat;
+        double camionLng;
+        if (ultimaResuelta != null && ultimaResuelta.latitud() != null && ultimaResuelta.longitud() != null) {
+            camionLat = ultimaResuelta.latitud();
+            camionLng = ultimaResuelta.longitud();
+        } else if (ultimaResuelta != null && ruta.camionLatitud() != null && ruta.camionLongitud() != null) {
+            camionLat = ruta.camionLatitud();
+            camionLng = ruta.camionLongitud();
+        } else {
+            // Posición inicial: Depósito central antes de realizar entregas
+            camionLat = DEPOSITO_LAT;
+            camionLng = DEPOSITO_LNG;
+        }
         modelo.put("camionLat", String.format(Locale.US, "%.6f", camionLat));
         modelo.put("camionLng", String.format(Locale.US, "%.6f", camionLng));
 

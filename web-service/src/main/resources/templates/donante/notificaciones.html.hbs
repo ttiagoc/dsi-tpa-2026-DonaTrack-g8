@@ -28,12 +28,17 @@
                     <svg class="icono"><use href="#i-campana"/></svg>
                   </div>
                   <div class="notificacion-item__cuerpo">
-                    <div class="notificacion-item__mensaje">{{this.mensaje}}</div>
-                    {{#if this.tipoEvento}}
-                      <div>
+                    <div class="notificacion-item__mensaje">{{this.mensajeLimpio}}</div>
+                    <div class="notificacion-item__pie">
+                      {{#if this.tipoEvento}}
                         <span class="etiqueta {{this.claseEtiqueta}}">{{this.eventoLegible}}</span>
-                      </div>
-                    {{/if}}
+                      {{/if}}
+                      {{#if this.accionUrl}}
+                        <a class="boton boton--chico boton--secundario" href="{{this.accionUrl}}">
+                          <svg class="icono" aria-hidden="true"><use href="#i-mapa"/></svg> {{this.accionTexto}}
+                        </a>
+                      {{/if}}
+                    </div>
                   </div>
                 </div>
               </td>

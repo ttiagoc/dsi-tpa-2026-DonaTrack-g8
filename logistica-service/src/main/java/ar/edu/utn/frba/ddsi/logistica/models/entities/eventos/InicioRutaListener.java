@@ -43,7 +43,20 @@ public class InicioRutaListener implements ListenerLogistica<EventoInicioRuta> {
     }
 
     private void procesarInicioRuta(EventoInicioRuta evento) {
-        String mapaUrl = evento.getMapaUrl();
+        String baseWebUrl = (config.getWebUrl() != null && !config.getWebUrl().isBlank())
+                ? config.getWebUrl().replaceAll("/+$", "")
+                : "http://localhost:7070";
+
+        String mapaUrlEntidad = baseWebUrl + "/entidad/seguimiento";
+        String mapaUrlDonante = baseWebUrl + "/donante/seguimiento";
+
+        if (evento.getMapaUrl() != null
+                && !evento.getMapaUrl().contains("logistica-service")
+                && !evento.getMapaUrl().contains("/monitoreo/ubicacion")
+                && !evento.getMapaUrl().endsWith("/seguimiento")) {
+            mapaUrlEntidad = evento.getMapaUrl();
+            mapaUrlDonante = evento.getMapaUrl();
+        }
 
         for (Parada parada : evento.getRuta().getParadas()) {
             Long entidadId = parada.getEntidadId();
@@ -51,8 +64,8 @@ public class InicioRutaListener implements ListenerLogistica<EventoInicioRuta> {
                 List<MedioContacto> contactos = donacionesGrpcClient.obtenerContactosEntidad(entidadId);
                 if (contactos != null) {
                     for (MedioContacto contacto : contactos) {
-                        String mensaje = "Tu entrega ya está en camino. Seguí el recorrido del camión con el mapa interactivo: "
-                                + mapaUrl;
+                        String mensaje = "Tu entrega ya está en camino. Seguí el recorrido del camión en tiempo real con el mapa interactivo: "
+                                + mapaUrlEntidad;
                         enviarNotificacionAsync(contacto, mensaje, "EN_CAMINO", "ENTIDAD", entidadId, null);
                     }
                 }
@@ -68,8 +81,8 @@ public class InicioRutaListener implements ListenerLogistica<EventoInicioRuta> {
                         Long donanteId = responseDonacion.donanteId();
                         MedioContacto contactoDonante = donacionesGrpcClient.obtenerContactoDonante(donanteId);
                         if (contactoDonante != null) {
-                            String mensaje = "Tu donación #" + donacionId + " ya está en camino. Seguí el recorrido del camión con el mapa interactivo: "
-                                    + mapaUrl;
+                            String mensaje = "Tu donación #" + donacionId + " ya está en camino. Seguí el recorrido del camión en tiempo real con el mapa interactivo: "
+                                    + mapaUrlDonante;
                             enviarNotificacionAsync(contactoDonante, mensaje, "EN_CAMINO", "DONANTE", donanteId, donacionId);
                         }
                     }

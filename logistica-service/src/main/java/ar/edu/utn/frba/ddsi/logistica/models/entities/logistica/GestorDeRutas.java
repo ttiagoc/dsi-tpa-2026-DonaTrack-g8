@@ -33,8 +33,11 @@ public class GestorDeRutas {
             }
         }
 
+        String baseWebUrl = properties.getWebUrl() != null && !properties.getWebUrl().isBlank()
+                ? properties.getWebUrl().replaceAll("/+$", "")
+                : "http://localhost:7070";
         eventManager.emitir(
-                new EventoInicioRuta(ruta, properties.getLogisticaUrl() + "/monitoreo/ubicacion/" + ruta.getId()));
+                new EventoInicioRuta(ruta, baseWebUrl + "/seguimiento"));
     }
 
     public void confirmarEntregaExitosa(Parada paradaAfectada, Ruta ruta) {

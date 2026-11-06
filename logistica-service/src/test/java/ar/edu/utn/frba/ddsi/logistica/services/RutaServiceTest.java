@@ -74,19 +74,28 @@ class RutaServiceTest {
         when(rutaRepository.findById(7L)).thenReturn(Optional.of(ruta));
         when(rutaRepository.findAll()).thenReturn(List.of(ruta));
 
+        // El camión se inicializa en el depósito central
+        assertNotNull(camion.getUbicacion());
+        assertEquals(GeocodificadorCaba.DEPOSITO_LAT, camion.getUbicacion().getLatitud(), 0.0001);
+
+        // Si el camión tenía una ubicación previa arbitraria (ej. telemetría vieja)
+        camion.actualizarUbicacion(new ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ubicacion(-34.6280, -58.4560, 30.0));
+
         // Antes de iniciar, no se puede confirmar parada
         assertThrows(BusinessException.class, () -> rutaService.confirmarEntregaExitosa(7L, 11L));
 
-        // Obtener ruta activa para el camión devuelve la PLANIFICADA
+        // Obtener ruta activa para el camión devuelve la PLANIFICADA con coordenadas del depósito
         Optional<RutaResponse> activaPlanificada = rutaService.obtenerRutaActivaPorCamion(2L);
         assertTrue(activaPlanificada.isPresent());
         assertEquals(EstadoRuta.PLANIFICADA, activaPlanificada.get().estado());
+        assertEquals(GeocodificadorCaba.DEPOSITO_LAT, activaPlanificada.get().camionLatitud(), 0.0001);
 
         // Iniciar recorrido inicializa GPS en Depósito Central
         rutaService.actualizarEstado(7L, "EN_TRASLADO");
         assertEquals(EstadoRuta.EN_TRASLADO, ruta.getEstado());
         assertNotNull(camion.getUbicacion());
         assertEquals(GeocodificadorCaba.DEPOSITO_LAT, camion.getUbicacion().getLatitud(), 0.0001);
+        assertEquals(GeocodificadorCaba.DEPOSITO_LAT, rutaService.obtenerPorId(7L).camionLatitud(), 0.0001);
         verify(gestorDeRutas).iniciarRuta(ruta);
 
         // Confirmar parada 1 mueve el camión a Paternal y mantiene ruta EN_TRASLADO
@@ -95,12 +104,16 @@ class RutaServiceTest {
         assertEquals(EstadoRuta.EN_TRASLADO, ruta.getEstado());
         double[] coordsP1 = GeocodificadorCaba.ubicar(p1.getDestino(), p1.getEntidadId());
         assertEquals(coordsP1[0], camion.getUbicacion().getLatitud(), 0.0001);
+        assertEquals(coordsP1[0], rutaService.obtenerPorId(7L).camionLatitud(), 0.0001);
         verify(gestorDeRutas).confirmarEntregaExitosa(p1, ruta);
 
         // Reportar fallo en parada 2 mueve el camión a Caballito, propaga motivo y finaliza la ruta automáticamente
         rutaService.registrarEntregaNoRecibida(7L, 12L, "Entidad cerrada por refacciones");
         assertEquals(EstadoParada.NO_RECIBIDA, p2.getEstado());
         assertEquals(EstadoRuta.FINALIZADA, ruta.getEstado());
+        double[] coordsP2 = GeocodificadorCaba.ubicar(p2.getDestino(), p2.getEntidadId());
+        assertEquals(coordsP2[0], camion.getUbicacion().getLatitud(), 0.0001);
+        assertEquals(coordsP2[0], rutaService.obtenerPorId(7L).camionLatitud(), 0.0001);
         verify(gestorDeRutas).registrarEntregaFallida(p2, "Entidad cerrada por refacciones");
         verify(camionRepository, org.mockito.Mockito.atLeast(3)).save(any(Camion.class));
     }
