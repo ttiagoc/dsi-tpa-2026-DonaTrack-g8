@@ -2,6 +2,12 @@ package ar.edu.utn.frba.ddsi.web.clients;
 
 import java.net.http.HttpClient;
 import java.util.List;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,6 +15,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.http.Context;
 
 public class NotificacionesApiClient extends ApiClient {
+
+  private static final ZoneId ZONA_UTC = ZoneId.of("UTC");
+  private static final ZoneId ZONA_ARGENTINA = ZoneId.of("America/Argentina/Buenos_Aires");
+  private static final DateTimeFormatter FORMATO_FECHA_HORA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     public NotificacionesApiClient(String notificacionesUrl, HttpClient http, ObjectMapper mapper, AuthApiClient auth) {
       super(notificacionesUrl, http, mapper, auth);
@@ -56,13 +66,15 @@ public class NotificacionesApiClient extends ApiClient {
     public String fechaFormateada() {
       if (fechaDeEnvio == null || fechaDeEnvio.isBlank()) return "-";
       try {
-        if (fechaDeEnvio.contains("T")) {
-          String[] partes = fechaDeEnvio.split("T");
-          String fecha = partes[0];
-          String hora = partes[1].substring(0, Math.min(5, partes[1].length()));
-          return fecha + " " + hora;
+        String limpia = fechaDeEnvio.trim().replace(" ", "T");
+        if (limpia.endsWith("Z")) {
+          return Instant.parse(limpia).atZone(ZONA_ARGENTINA).format(FORMATO_FECHA_HORA);
         }
-        return fechaDeEnvio;
+        if (limpia.contains("+") || (limpia.lastIndexOf('-') > limpia.indexOf('T'))) {
+          return OffsetDateTime.parse(limpia).atZoneSameInstant(ZONA_ARGENTINA).format(FORMATO_FECHA_HORA);
+        }
+        LocalDateTime utc = LocalDateTime.parse(limpia);
+        return utc.atZone(ZONA_UTC).withZoneSameInstant(ZONA_ARGENTINA).format(FORMATO_FECHA_HORA);
       } catch (Exception e) {
         return fechaDeEnvio;
       }
