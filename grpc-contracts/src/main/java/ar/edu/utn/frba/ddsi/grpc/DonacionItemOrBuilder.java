@@ -55,4 +55,26 @@ public interface DonacionItemOrBuilder extends
    */
   com.google.protobuf.ByteString
       getEntidadNombreBytes();
+
+  /**
+   * <pre>
+   * ubicacion de la sede segun Georef; tiene_ubicacion es false si la entidad todavia no se pudo geocodificar
+   * </pre>
+   *
+   * <code>bool tiene_ubicacion = 7;</code>
+   * @return The tieneUbicacion.
+   */
+  boolean getTieneUbicacion();
+
+  /**
+   * <code>double latitud = 8;</code>
+   * @return The latitud.
+   */
+  double getLatitud();
+
+  /**
+   * <code>double longitud = 9;</code>
+   * @return The longitud.
+   */
+  double getLongitud();
 }

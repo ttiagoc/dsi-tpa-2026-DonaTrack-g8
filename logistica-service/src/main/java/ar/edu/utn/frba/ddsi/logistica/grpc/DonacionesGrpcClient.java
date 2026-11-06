@@ -47,7 +47,9 @@ public class DonacionesGrpcClient {
                         item.getVolumen(),
                         item.getDireccion(),
                         entidadId,
-                        entidadNombre));
+                        entidadNombre,
+                        item.getTieneUbicacion() ? item.getLatitud() : null,
+                        item.getTieneUbicacion() ? item.getLongitud() : null));
             }
             return dtos;
         } catch (Exception e) {

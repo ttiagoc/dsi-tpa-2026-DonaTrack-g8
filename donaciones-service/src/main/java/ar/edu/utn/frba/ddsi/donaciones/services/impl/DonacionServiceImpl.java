@@ -153,7 +153,9 @@ public class DonacionServiceImpl implements DonacionService {
                     donacion.calcularVolumenTotal(),
                     donacion.obtenerDireccion(),
                     entidad != null ? entidad.getId() : null,
-                    entidad != null ? entidad.getRazonSocial() : null));
+                    entidad != null ? entidad.getRazonSocial() : null,
+                    entidad != null ? entidad.getLatitud() : null,
+                    entidad != null ? entidad.getLongitud() : null));
         }
 
         return donacionesAsignadas;

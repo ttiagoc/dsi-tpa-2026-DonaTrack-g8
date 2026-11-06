@@ -120,6 +120,8 @@ public class PlanificadorDeRutas {
                         parada.setOrden(orden++);
                         parada.setDestino(dirReq.direccion());
                         parada.setEntidadId(dirReq.entidadId());
+                        parada.setLatitud(dirReq.latitud());
+                        parada.setLongitud(dirReq.longitud());
                         parada.setDonacionIds(dirReq.donacionesIds() != null
                                 ? new ArrayList<>(dirReq.donacionesIds())
                                 : new ArrayList<>());

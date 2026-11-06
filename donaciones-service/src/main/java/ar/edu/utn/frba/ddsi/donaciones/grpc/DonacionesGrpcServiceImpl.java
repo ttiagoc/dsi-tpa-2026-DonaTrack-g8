@@ -45,6 +45,7 @@ public class DonacionesGrpcServiceImpl extends DonacionesGrpcServiceGrpc.Donacio
 
             ListarDonacionesPorEstadoResponse.Builder builder = ListarDonacionesPorEstadoResponse.newBuilder();
             for (DonacionAsignadaResponse d : donaciones) {
+                boolean tieneUbicacion = d.latitud() != null && d.longitud() != null;
                 builder.addDonaciones(DonacionItem.newBuilder()
                         .setId(d.id() != null ? d.id() : 0L)
                         .setPeso(d.peso() != null ? d.peso() : 0.0)
@@ -52,6 +53,9 @@ public class DonacionesGrpcServiceImpl extends DonacionesGrpcServiceGrpc.Donacio
                         .setDireccion(d.direccion() != null ? d.direccion() : "")
                         .setEntidadId(d.entidadId() != null ? d.entidadId() : 0L)
                         .setEntidadNombre(d.entidadNombre() != null ? d.entidadNombre() : "")
+                        .setTieneUbicacion(tieneUbicacion)
+                        .setLatitud(tieneUbicacion ? d.latitud() : 0.0)
+                        .setLongitud(tieneUbicacion ? d.longitud() : 0.0)
                         .build());
             }
 

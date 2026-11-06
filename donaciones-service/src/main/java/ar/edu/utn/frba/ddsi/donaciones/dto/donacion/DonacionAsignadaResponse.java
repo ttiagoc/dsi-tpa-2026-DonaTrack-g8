@@ -6,9 +6,16 @@ public record DonacionAsignadaResponse(
                 Double volumen,
                 String direccion,
                 Long entidadId,
-                String entidadNombre) {
+                String entidadNombre,
+                Double latitud,
+                Double longitud) {
 
         public DonacionAsignadaResponse(Long id, Double peso, Double volumen, String direccion) {
                 this(id, peso, volumen, direccion, null, null);
+        }
+
+        public DonacionAsignadaResponse(Long id, Double peso, Double volumen, String direccion,
+                        Long entidadId, String entidadNombre) {
+                this(id, peso, volumen, direccion, entidadId, entidadNombre, null, null);
         }
 }

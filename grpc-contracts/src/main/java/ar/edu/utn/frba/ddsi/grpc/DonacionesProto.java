@@ -97,57 +97,59 @@ public final class DonacionesProto {
       "\n\020donaciones.proto\022\031ar.edu.utn.frba.ddsi" +
       ".grpc\"Q\n ListarDonacionesPorEstadoReques" +
       "t\022\016\n\006estado\030\001 \001(\t\022\r\n\005limit\030\002 \001(\005\022\016\n\006offs" +
-      "et\030\003 \001(\005\"x\n\014DonacionItem\022\n\n\002id\030\001 \001(\003\022\014\n\004" +
-      "peso\030\002 \001(\001\022\017\n\007volumen\030\003 \001(\001\022\021\n\tdireccion" +
-      "\030\004 \001(\t\022\022\n\nentidad_id\030\005 \001(\003\022\026\n\016entidad_no" +
-      "mbre\030\006 \001(\t\"`\n!ListarDonacionesPorEstadoR" +
-      "esponse\022;\n\ndonaciones\030\001 \003(\0132\'.ar.edu.utn" +
-      ".frba.ddsi.grpc.DonacionItem\"c\n\037Actualiz" +
-      "arEstadoDonacionRequest\022\023\n\013donacion_id\030\001" +
-      " \001(\003\022\024\n\014nuevo_estado\030\002 \001(\t\022\025\n\rjustificac" +
-      "ion\030\003 \001(\t\"B\n ActualizarEstadoDonacionRes" +
-      "ponse\022\r\n\005exito\030\001 \001(\010\022\017\n\007mensaje\030\002 \001(\t\"y\n" +
-      "!ConfirmarEntregaDonacionesRequest\022\022\n\nen" +
-      "tidad_id\030\001 \001(\003\022\024\n\014donacion_ids\030\002 \003(\003\022\026\n\016" +
-      "patente_camion\030\003 \001(\t\022\022\n\nfecha_hora\030\004 \001(\t" +
-      "\"D\n\"ConfirmarEntregaDonacionesResponse\022\r" +
-      "\n\005exito\030\001 \001(\010\022\017\n\007mensaje\030\002 \001(\t\"4\n\036Obtene" +
-      "rContactosEntidadRequest\022\022\n\nentidad_id\030\001" +
-      " \001(\003\"4\n\014ContactoItem\022\r\n\005valor\030\001 \001(\t\022\025\n\rt" +
-      "ipo_contacto\030\002 \001(\t\"]\n\037ObtenerContactosEn" +
-      "tidadResponse\022:\n\tcontactos\030\001 \003(\0132\'.ar.ed" +
-      "u.utn.frba.ddsi.grpc.ContactoItem\"-\n\026Obt" +
-      "enerDonacionRequest\022\023\n\013donacion_id\030\001 \001(\003" +
-      "\"{\n\027DonacionDetalleResponse\022\n\n\002id\030\001 \001(\003\022" +
-      "\022\n\ndonante_id\030\002 \001(\003\022\033\n\023entidad_asignada_" +
-      "id\030\003 \001(\003\022\016\n\006estado\030\004 \001(\t\022\023\n\013descripcion\030" +
-      "\005 \001(\t\"3\n\035ObtenerContactoDonanteRequest\022\022" +
-      "\n\ndonante_id\030\001 \001(\003\"?\n\027ContactoDonanteRes" +
-      "ponse\022\r\n\005valor\030\001 \001(\t\022\025\n\rtipo_contacto\030\002 " +
-      "\001(\t2\370\006\n\025DonacionesGrpcService\022\226\001\n\031Listar" +
-      "DonacionesPorEstado\022;.ar.edu.utn.frba.dd" +
-      "si.grpc.ListarDonacionesPorEstadoRequest" +
-      "\032<.ar.edu.utn.frba.ddsi.grpc.ListarDonac" +
-      "ionesPorEstadoResponse\022\223\001\n\030ActualizarEst" +
-      "adoDonacion\022:.ar.edu.utn.frba.ddsi.grpc." +
-      "ActualizarEstadoDonacionRequest\032;.ar.edu" +
-      ".utn.frba.ddsi.grpc.ActualizarEstadoDona" +
-      "cionResponse\022\231\001\n\032ConfirmarEntregaDonacio" +
-      "nes\022<.ar.edu.utn.frba.ddsi.grpc.Confirma" +
-      "rEntregaDonacionesRequest\032=.ar.edu.utn.f" +
-      "rba.ddsi.grpc.ConfirmarEntregaDonaciones" +
-      "Response\022\220\001\n\027ObtenerContactosEntidad\0229.a" +
+      "et\030\003 \001(\005\"\264\001\n\014DonacionItem\022\n\n\002id\030\001 \001(\003\022\014\n" +
+      "\004peso\030\002 \001(\001\022\017\n\007volumen\030\003 \001(\001\022\021\n\tdireccio" +
+      "n\030\004 \001(\t\022\022\n\nentidad_id\030\005 \001(\003\022\026\n\016entidad_n" +
+      "ombre\030\006 \001(\t\022\027\n\017tiene_ubicacion\030\007 \001(\010\022\017\n\007" +
+      "latitud\030\010 \001(\001\022\020\n\010longitud\030\t \001(\001\"`\n!Lista" +
+      "rDonacionesPorEstadoResponse\022;\n\ndonacion" +
+      "es\030\001 \003(\0132\'.ar.edu.utn.frba.ddsi.grpc.Don" +
+      "acionItem\"c\n\037ActualizarEstadoDonacionReq" +
+      "uest\022\023\n\013donacion_id\030\001 \001(\003\022\024\n\014nuevo_estad" +
+      "o\030\002 \001(\t\022\025\n\rjustificacion\030\003 \001(\t\"B\n Actual" +
+      "izarEstadoDonacionResponse\022\r\n\005exito\030\001 \001(" +
+      "\010\022\017\n\007mensaje\030\002 \001(\t\"y\n!ConfirmarEntregaDo" +
+      "nacionesRequest\022\022\n\nentidad_id\030\001 \001(\003\022\024\n\014d" +
+      "onacion_ids\030\002 \003(\003\022\026\n\016patente_camion\030\003 \001(" +
+      "\t\022\022\n\nfecha_hora\030\004 \001(\t\"D\n\"ConfirmarEntreg" +
+      "aDonacionesResponse\022\r\n\005exito\030\001 \001(\010\022\017\n\007me" +
+      "nsaje\030\002 \001(\t\"4\n\036ObtenerContactosEntidadRe" +
+      "quest\022\022\n\nentidad_id\030\001 \001(\003\"4\n\014ContactoIte" +
+      "m\022\r\n\005valor\030\001 \001(\t\022\025\n\rtipo_contacto\030\002 \001(\t\"" +
+      "]\n\037ObtenerContactosEntidadResponse\022:\n\tco" +
+      "ntactos\030\001 \003(\0132\'.ar.edu.utn.frba.ddsi.grp" +
+      "c.ContactoItem\"-\n\026ObtenerDonacionRequest" +
+      "\022\023\n\013donacion_id\030\001 \001(\003\"{\n\027DonacionDetalle" +
+      "Response\022\n\n\002id\030\001 \001(\003\022\022\n\ndonante_id\030\002 \001(\003" +
+      "\022\033\n\023entidad_asignada_id\030\003 \001(\003\022\016\n\006estado\030" +
+      "\004 \001(\t\022\023\n\013descripcion\030\005 \001(\t\"3\n\035ObtenerCon" +
+      "tactoDonanteRequest\022\022\n\ndonante_id\030\001 \001(\003\"" +
+      "?\n\027ContactoDonanteResponse\022\r\n\005valor\030\001 \001(" +
+      "\t\022\025\n\rtipo_contacto\030\002 \001(\t2\370\006\n\025DonacionesG" +
+      "rpcService\022\226\001\n\031ListarDonacionesPorEstado" +
+      "\022;.ar.edu.utn.frba.ddsi.grpc.ListarDonac" +
+      "ionesPorEstadoRequest\032<.ar.edu.utn.frba." +
+      "ddsi.grpc.ListarDonacionesPorEstadoRespo" +
+      "nse\022\223\001\n\030ActualizarEstadoDonacion\022:.ar.ed" +
+      "u.utn.frba.ddsi.grpc.ActualizarEstadoDon" +
+      "acionRequest\032;.ar.edu.utn.frba.ddsi.grpc" +
+      ".ActualizarEstadoDonacionResponse\022\231\001\n\032Co" +
+      "nfirmarEntregaDonaciones\022<.ar.edu.utn.fr" +
+      "ba.ddsi.grpc.ConfirmarEntregaDonacionesR" +
+      "equest\032=.ar.edu.utn.frba.ddsi.grpc.Confi" +
+      "rmarEntregaDonacionesResponse\022\220\001\n\027Obtene" +
+      "rContactosEntidad\0229.ar.edu.utn.frba.ddsi" +
+      ".grpc.ObtenerContactosEntidadRequest\032:.a" +
       "r.edu.utn.frba.ddsi.grpc.ObtenerContacto" +
-      "sEntidadRequest\032:.ar.edu.utn.frba.ddsi.g" +
-      "rpc.ObtenerContactosEntidadResponse\022x\n\017O" +
-      "btenerDonacion\0221.ar.edu.utn.frba.ddsi.gr" +
-      "pc.ObtenerDonacionRequest\0322.ar.edu.utn.f" +
-      "rba.ddsi.grpc.DonacionDetalleResponse\022\206\001" +
-      "\n\026ObtenerContactoDonante\0228.ar.edu.utn.fr" +
-      "ba.ddsi.grpc.ObtenerContactoDonanteReque" +
-      "st\0322.ar.edu.utn.frba.ddsi.grpc.ContactoD" +
-      "onanteResponseB.\n\031ar.edu.utn.frba.ddsi.g" +
-      "rpcB\017DonacionesProtoP\001b\006proto3"
+      "sEntidadResponse\022x\n\017ObtenerDonacion\0221.ar" +
+      ".edu.utn.frba.ddsi.grpc.ObtenerDonacionR" +
+      "equest\0322.ar.edu.utn.frba.ddsi.grpc.Donac" +
+      "ionDetalleResponse\022\206\001\n\026ObtenerContactoDo" +
+      "nante\0228.ar.edu.utn.frba.ddsi.grpc.Obtene" +
+      "rContactoDonanteRequest\0322.ar.edu.utn.frb" +
+      "a.ddsi.grpc.ContactoDonanteResponseB.\n\031a" +
+      "r.edu.utn.frba.ddsi.grpcB\017DonacionesProt" +
+      "oP\001b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -164,7 +166,7 @@ public final class DonacionesProto {
     internal_static_ar_edu_utn_frba_ddsi_grpc_DonacionItem_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_ar_edu_utn_frba_ddsi_grpc_DonacionItem_descriptor,
-        new java.lang.String[] { "Id", "Peso", "Volumen", "Direccion", "EntidadId", "EntidadNombre", });
+        new java.lang.String[] { "Id", "Peso", "Volumen", "Direccion", "EntidadId", "EntidadNombre", "TieneUbicacion", "Latitud", "Longitud", });
     internal_static_ar_edu_utn_frba_ddsi_grpc_ListarDonacionesPorEstadoResponse_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_ar_edu_utn_frba_ddsi_grpc_ListarDonacionesPorEstadoResponse_fieldAccessorTable = new

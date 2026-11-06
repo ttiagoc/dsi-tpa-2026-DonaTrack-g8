@@ -106,7 +106,7 @@ public class GestorPlanificacionRutas {
                 volumenRestante[elegido] -= volumen;
                 ParadaAgrupada grupo = paradasPorCamion.get(elegido).computeIfAbsent(
                         claveParada,
-                        k -> new ParadaAgrupada(direccion, d.getEntidadId()));
+                        k -> new ParadaAgrupada(direccion, d.getEntidadId(), d.getLatitud(), d.getLongitud()));
                 grupo.donacionIds.add(d.getId());
             } else if (d.getId() != null) {
                 donacionesSobrantes.add(d.getId());
@@ -118,7 +118,7 @@ public class GestorPlanificacionRutas {
             Map<String, ParadaAgrupada> paradas = paradasPorCamion.get(i);
             if (!paradas.isEmpty()) {
                 List<DireccionRequest> direcciones = paradas.values().stream()
-                        .map(g -> new DireccionRequest(g.direccion, g.donacionIds, g.entidadId))
+                        .map(g -> new DireccionRequest(g.direccion, g.donacionIds, g.entidadId, g.latitud, g.longitud))
                         .toList();
                 camionesProcesados.add(new CamionPlanificacionRequest(camiones.get(i).getId(), direcciones));
             }
@@ -130,11 +130,15 @@ public class GestorPlanificacionRutas {
     private static final class ParadaAgrupada {
         final String direccion;
         final Long entidadId;
+        final Double latitud;
+        final Double longitud;
         final List<Long> donacionIds = new ArrayList<>();
 
-        ParadaAgrupada(String direccion, Long entidadId) {
+        ParadaAgrupada(String direccion, Long entidadId, Double latitud, Double longitud) {
             this.direccion = Objects.requireNonNullElse(direccion, GeocodificadorCaba.DEPOSITO_DIRECCION);
             this.entidadId = entidadId;
+            this.latitud = latitud;
+            this.longitud = longitud;
         }
     }
 }

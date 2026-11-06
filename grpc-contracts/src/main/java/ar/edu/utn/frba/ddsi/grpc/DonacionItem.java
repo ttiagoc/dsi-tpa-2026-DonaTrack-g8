@@ -163,6 +163,43 @@ private static final long serialVersionUID = 0L;
     }
   }
 
+  public static final int TIENE_UBICACION_FIELD_NUMBER = 7;
+  private boolean tieneUbicacion_ = false;
+  /**
+   * <pre>
+   * ubicacion de la sede segun Georef; tiene_ubicacion es false si la entidad todavia no se pudo geocodificar
+   * </pre>
+   *
+   * <code>bool tiene_ubicacion = 7;</code>
+   * @return The tieneUbicacion.
+   */
+  @java.lang.Override
+  public boolean getTieneUbicacion() {
+    return tieneUbicacion_;
+  }
+
+  public static final int LATITUD_FIELD_NUMBER = 8;
+  private double latitud_ = 0D;
+  /**
+   * <code>double latitud = 8;</code>
+   * @return The latitud.
+   */
+  @java.lang.Override
+  public double getLatitud() {
+    return latitud_;
+  }
+
+  public static final int LONGITUD_FIELD_NUMBER = 9;
+  private double longitud_ = 0D;
+  /**
+   * <code>double longitud = 9;</code>
+   * @return The longitud.
+   */
+  @java.lang.Override
+  public double getLongitud() {
+    return longitud_;
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -195,6 +232,15 @@ private static final long serialVersionUID = 0L;
     if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(entidadNombre_)) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 6, entidadNombre_);
     }
+    if (tieneUbicacion_ != false) {
+      output.writeBool(7, tieneUbicacion_);
+    }
+    if (java.lang.Double.doubleToRawLongBits(latitud_) != 0) {
+      output.writeDouble(8, latitud_);
+    }
+    if (java.lang.Double.doubleToRawLongBits(longitud_) != 0) {
+      output.writeDouble(9, longitud_);
+    }
     getUnknownFields().writeTo(output);
   }
 
@@ -226,6 +272,18 @@ private static final long serialVersionUID = 0L;
     if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(entidadNombre_)) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, entidadNombre_);
     }
+    if (tieneUbicacion_ != false) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeBoolSize(7, tieneUbicacion_);
+    }
+    if (java.lang.Double.doubleToRawLongBits(latitud_) != 0) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeDoubleSize(8, latitud_);
+    }
+    if (java.lang.Double.doubleToRawLongBits(longitud_) != 0) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeDoubleSize(9, longitud_);
+    }
     size += getUnknownFields().getSerializedSize();
     memoizedSize = size;
     return size;
@@ -255,6 +313,14 @@ private static final long serialVersionUID = 0L;
         != other.getEntidadId()) return false;
     if (!getEntidadNombre()
         .equals(other.getEntidadNombre())) return false;
+    if (getTieneUbicacion()
+        != other.getTieneUbicacion()) return false;
+    if (java.lang.Double.doubleToLongBits(getLatitud())
+        != java.lang.Double.doubleToLongBits(
+            other.getLatitud())) return false;
+    if (java.lang.Double.doubleToLongBits(getLongitud())
+        != java.lang.Double.doubleToLongBits(
+            other.getLongitud())) return false;
     if (!getUnknownFields().equals(other.getUnknownFields())) return false;
     return true;
   }
@@ -282,6 +348,15 @@ private static final long serialVersionUID = 0L;
         getEntidadId());
     hash = (37 * hash) + ENTIDAD_NOMBRE_FIELD_NUMBER;
     hash = (53 * hash) + getEntidadNombre().hashCode();
+    hash = (37 * hash) + TIENE_UBICACION_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+        getTieneUbicacion());
+    hash = (37 * hash) + LATITUD_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+        java.lang.Double.doubleToLongBits(getLatitud()));
+    hash = (37 * hash) + LONGITUD_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+        java.lang.Double.doubleToLongBits(getLongitud()));
     hash = (29 * hash) + getUnknownFields().hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -419,6 +494,9 @@ private static final long serialVersionUID = 0L;
       direccion_ = "";
       entidadId_ = 0L;
       entidadNombre_ = "";
+      tieneUbicacion_ = false;
+      latitud_ = 0D;
+      longitud_ = 0D;
       return this;
     }
 
@@ -469,6 +547,15 @@ private static final long serialVersionUID = 0L;
       }
       if (((from_bitField0_ & 0x00000020) != 0)) {
         result.entidadNombre_ = entidadNombre_;
+      }
+      if (((from_bitField0_ & 0x00000040) != 0)) {
+        result.tieneUbicacion_ = tieneUbicacion_;
+      }
+      if (((from_bitField0_ & 0x00000080) != 0)) {
+        result.latitud_ = latitud_;
+      }
+      if (((from_bitField0_ & 0x00000100) != 0)) {
+        result.longitud_ = longitud_;
       }
     }
 
@@ -538,6 +625,15 @@ private static final long serialVersionUID = 0L;
         bitField0_ |= 0x00000020;
         onChanged();
       }
+      if (other.getTieneUbicacion() != false) {
+        setTieneUbicacion(other.getTieneUbicacion());
+      }
+      if (other.getLatitud() != 0D) {
+        setLatitud(other.getLatitud());
+      }
+      if (other.getLongitud() != 0D) {
+        setLongitud(other.getLongitud());
+      }
       this.mergeUnknownFields(other.getUnknownFields());
       onChanged();
       return this;
@@ -594,6 +690,21 @@ private static final long serialVersionUID = 0L;
               bitField0_ |= 0x00000020;
               break;
             } // case 50
+            case 56: {
+              tieneUbicacion_ = input.readBool();
+              bitField0_ |= 0x00000040;
+              break;
+            } // case 56
+            case 65: {
+              latitud_ = input.readDouble();
+              bitField0_ |= 0x00000080;
+              break;
+            } // case 65
+            case 73: {
+              longitud_ = input.readDouble();
+              bitField0_ |= 0x00000100;
+              break;
+            } // case 73
             default: {
               if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                 done = true; // was an endgroup tag
@@ -879,6 +990,114 @@ private static final long serialVersionUID = 0L;
       checkByteStringIsUtf8(value);
       entidadNombre_ = value;
       bitField0_ |= 0x00000020;
+      onChanged();
+      return this;
+    }
+
+    private boolean tieneUbicacion_ ;
+    /**
+     * <pre>
+     * ubicacion de la sede segun Georef; tiene_ubicacion es false si la entidad todavia no se pudo geocodificar
+     * </pre>
+     *
+     * <code>bool tiene_ubicacion = 7;</code>
+     * @return The tieneUbicacion.
+     */
+    @java.lang.Override
+    public boolean getTieneUbicacion() {
+      return tieneUbicacion_;
+    }
+    /**
+     * <pre>
+     * ubicacion de la sede segun Georef; tiene_ubicacion es false si la entidad todavia no se pudo geocodificar
+     * </pre>
+     *
+     * <code>bool tiene_ubicacion = 7;</code>
+     * @param value The tieneUbicacion to set.
+     * @return This builder for chaining.
+     */
+    public Builder setTieneUbicacion(boolean value) {
+
+      tieneUbicacion_ = value;
+      bitField0_ |= 0x00000040;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * ubicacion de la sede segun Georef; tiene_ubicacion es false si la entidad todavia no se pudo geocodificar
+     * </pre>
+     *
+     * <code>bool tiene_ubicacion = 7;</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearTieneUbicacion() {
+      bitField0_ = (bitField0_ & ~0x00000040);
+      tieneUbicacion_ = false;
+      onChanged();
+      return this;
+    }
+
+    private double latitud_ ;
+    /**
+     * <code>double latitud = 8;</code>
+     * @return The latitud.
+     */
+    @java.lang.Override
+    public double getLatitud() {
+      return latitud_;
+    }
+    /**
+     * <code>double latitud = 8;</code>
+     * @param value The latitud to set.
+     * @return This builder for chaining.
+     */
+    public Builder setLatitud(double value) {
+
+      latitud_ = value;
+      bitField0_ |= 0x00000080;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>double latitud = 8;</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearLatitud() {
+      bitField0_ = (bitField0_ & ~0x00000080);
+      latitud_ = 0D;
+      onChanged();
+      return this;
+    }
+
+    private double longitud_ ;
+    /**
+     * <code>double longitud = 9;</code>
+     * @return The longitud.
+     */
+    @java.lang.Override
+    public double getLongitud() {
+      return longitud_;
+    }
+    /**
+     * <code>double longitud = 9;</code>
+     * @param value The longitud to set.
+     * @return This builder for chaining.
+     */
+    public Builder setLongitud(double value) {
+
+      longitud_ = value;
+      bitField0_ |= 0x00000100;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>double longitud = 9;</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearLongitud() {
+      bitField0_ = (bitField0_ & ~0x00000100);
+      longitud_ = 0D;
       onChanged();
       return this;
     }

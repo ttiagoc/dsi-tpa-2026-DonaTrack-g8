@@ -28,6 +28,10 @@ message DonacionItem {
   string direccion = 4;
   int64 entidad_id = 5;
   string entidad_nombre = 6;
+  // ubicacion de la sede segun Georef; tiene_ubicacion es false si la entidad todavia no se pudo geocodificar
+  bool tiene_ubicacion = 7;
+  double latitud = 8;
+  double longitud = 9;
 }
 
 message ListarDonacionesPorEstadoResponse {

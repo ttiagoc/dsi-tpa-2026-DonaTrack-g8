@@ -42,6 +42,14 @@ public class Parada {
     @Column(name = "entidad_id")
     private Long entidadId;
 
+    // donde queda la sede de la entidad segun Georef (la manda donaciones al planificar). Nulas en paradas
+    // viejas o si la entidad todavia no se pudo geocodificar: ahi se usa la aproximacion de GeocodificadorCaba
+    @Column(name = "latitud")
+    private Double latitud;
+
+    @Column(name = "longitud")
+    private Double longitud;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", length = 20)
     private EstadoParada estado = EstadoParada.PENDIENTE;
@@ -52,7 +60,16 @@ public class Parada {
     private List<Long> donacionIds = new ArrayList<>();
 
     public Parada(Long id, Integer orden, String destino, Long entidadId, List<Long> donacionIds) {
-        this(id, orden, destino, entidadId, EstadoParada.PENDIENTE, donacionIds != null ? donacionIds : new ArrayList<>());
+        this(id, orden, destino, entidadId, null, null, EstadoParada.PENDIENTE,
+                donacionIds != null ? donacionIds : new ArrayList<>());
+    }
+
+    /** Latitud y longitud de la parada: la real si se conoce; si no, una aproximada a partir de la direccion. */
+    public double[] coordenadas() {
+        if (latitud != null && longitud != null) {
+            return new double[] { latitud, longitud };
+        }
+        return GeocodificadorCaba.ubicar(destino, entidadId);
     }
 
     public void marcarEntregada() {

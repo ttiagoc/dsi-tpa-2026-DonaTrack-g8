@@ -141,7 +141,7 @@ public class RutaServiceImpl implements RutaService {
         Double camionLat;
         Double camionLng;
         if (ultimaCompletada != null) {
-            double[] coords = GeocodificadorCaba.ubicar(ultimaCompletada.getDestino(), ultimaCompletada.getEntidadId());
+            double[] coords = ultimaCompletada.coordenadas();
             camionLat = coords[0];
             camionLng = coords[1];
         } else if (ruta.getEstado() == EstadoRuta.PLANIFICADA || (ruta.getEstado() == EstadoRuta.EN_TRASLADO && ultimaCompletada == null)) {
@@ -175,7 +175,7 @@ public class RutaServiceImpl implements RutaService {
     }
 
     private ParadaResponse toParadaResponse(Parada parada) {
-        double[] coords = GeocodificadorCaba.ubicar(parada.getDestino(), parada.getEntidadId());
+        double[] coords = parada.coordenadas();
         return new ParadaResponse(
                 parada.getId(),
                 parada.getOrden(),
@@ -306,7 +306,7 @@ public class RutaServiceImpl implements RutaService {
         if (ruta.getCamion() == null) {
             return;
         }
-        double[] coords = GeocodificadorCaba.ubicar(parada.getDestino(), parada.getEntidadId());
+        double[] coords = parada.coordenadas();
         ruta.getCamion().actualizarUbicacion(new Ubicacion(coords[0], coords[1], 0.0));
         camionRepository.save(ruta.getCamion());
     }
@@ -349,7 +349,7 @@ public class RutaServiceImpl implements RutaService {
         velocidad = camion.getUbicacion().getVelocidad();
         ultimaActualizacion = camion.getUbicacion().getTimestamp();
       } else if (ultimaCompletada != null) {
-        double[] coords = GeocodificadorCaba.ubicar(ultimaCompletada.getDestino(), ultimaCompletada.getEntidadId());
+        double[] coords = ultimaCompletada.coordenadas();
         latitud = coords[0];
         longitud = coords[1];
       } else {
