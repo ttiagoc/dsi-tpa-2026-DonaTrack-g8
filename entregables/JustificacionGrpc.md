@@ -59,6 +59,6 @@ A diferencia de las APIs REST públicas que se autentican con tokens JWT de usua
    * El cliente en `logistica-service` incluye un `ApiKeyGrpcClientInterceptor` que inyecta en los metadatos gRPC la clave secreta compartida (`SERVICE_API_KEY`).
    * El servidor en `donaciones-service` cuenta con un `ApiKeyGrpcServerInterceptor` que intercepta toda llamada entrante: si la clave no coincide, cierra la conexión inmediatamente con código gRPC `Status.UNAUTHENTICATED` (código HTTP/2 equivalente a 401), sin llegar a ejecutar código de negocio.
 2. **Aislamiento en Red Privada:**
-   * En el despliegue en Azure (una VM con `docker compose`), logística llega a donaciones por la red interna de compose (`donaciones-service:9090`). El Network Security Group de la VM solo abre al público el puerto del sitio web, así que el puerto gRPC no es accesible desde Internet.
+   * En el despliegue en Azure (una VM con `docker compose`), logística llega a donaciones por la red interna de compose (`donaciones-service:9090`). Los servicios no publican puertos en la VM y el Network Security Group solo deja entrar a Caddy (80/443) y al SSH, así que el puerto gRPC no es accesible desde Internet.
    * Como la llamada no pasa por el proxy HTTP/1.1 de una plataforma administrada, HTTP/2 funciona de punta a punta sin configuración extra (ver la sección 6 de [`JustificacionesDeDiseno.md`](JustificacionesDeDiseno.md)).
 

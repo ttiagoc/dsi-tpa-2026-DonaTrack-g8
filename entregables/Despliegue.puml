@@ -1,8 +1,9 @@
 @startuml Despliegue
 
 ' Despliegue en Azure: una maquina virtual con Docker que levanta todo con
-' "docker compose --profile full up -d --build" (ver docker-compose.yml).
-' Los servicios se hablan por la red interna de compose usando el nombre del servicio.
+' "docker compose --profile full up -d --build" (docker-compose.yml + el override de la VM).
+' Los servicios se hablan por la red interna de compose usando el nombre del servicio y no publican
+' puertos en la VM: solo Caddy recibe trafico de Internet (80/443).
 
 left to right direction
 skinparam linetype ortho
@@ -53,13 +54,17 @@ node "Dispositivo del usuario" <<Device>> {
 cloud "Internet" as Net
 
 ' --- 2. AZURE ---
-rectangle "Microsoft Azure (Azure for Students)" {
+rectangle "Microsoft Azure (Azure for Students, Chile Central)" {
 
-    rectangle "Network Security Group\n(entrada publica solo al puerto del web-service)" as NSG
+    rectangle "Network Security Group\n(entrada publica: 80, 443 y 22 para SSH)" as NSG
 
-    node "Azure Virtual Machine\n(Linux + Docker Engine)" <<VM>> as VM {
+    node "Azure Virtual Machine donatrack-vm\n(Ubuntu 24.04 + Docker Engine)\ndonatrack-g8.chilecentral.cloudapp.azure.com" <<VM>> as VM {
 
-        rectangle "Red interna de docker compose (donatrack)" {
+        rectangle "Red interna de docker compose (donatrack_default)" {
+
+            node "Contenedor donatrack-caddy" <<Docker>> as CCaddy {
+                component "Caddy 2\n(proxy inverso con HTTPS\nautomatico, Let's Encrypt)\n:80 / :443" as Caddy
+            }
 
             node "Contenedor donatrack-web" <<Docker>> as CWeb {
                 component "web-service\n(Javalin + Handlebars)\n:7070" as Web
@@ -86,6 +91,7 @@ rectangle "Microsoft Azure (Azure for Students)" {
 
         component "cron de la VM\n/etc/cron.d/donatrack\n(docker/cron/donatrack-cron.sh)\n01:00 matchmaking\n03:00 rutas\n04:00 inactividad" <<cron>> as Cron
 
+        storage "Volumen Docker caddy-data\n(certificados)" as VolCaddy
         storage "Volumen Docker fotos-data\n(/data/fotos)" as VolFotos
         storage "Volumen Docker postgres-data" as VolPG
     }
@@ -100,6 +106,7 @@ node "Servicios externos" <<External System>> #ECEFF1 {
 }
 
 ' --- Alineacion ---
+CCaddy -[hidden]down-> CWeb
 CWeb -[hidden]down-> VolFotos
 CDon -[hidden]down-> CLog
 CLog -[hidden]down-> CNot
@@ -108,9 +115,11 @@ DB2 -[hidden]down-> DB3
 PG -[hidden]down-> VolPG
 
 ' --- Conexiones ---
-Nav --> Net : HTTP (HTML + cookie de sesion)
+Nav --> Net : HTTPS (HTML + cookie de sesion)
 Net --> NSG
-NSG --> Web : :7070
+NSG --> Caddy : :443 (el :80 redirige a HTTPS)
+Caddy --> Web : HTTP :7070
+Caddy --> VolCaddy
 Nav --> OSM : HTTPS (mapas de entregas y hoja de ruta)
 
 Web --> VolFotos : fotos de recepcion
@@ -118,8 +127,8 @@ Web --> Don : REST :8080 + JWT\n(login, catalogo, donaciones, entidades)
 Web --> Log : REST :8081 + JWT\n(camiones, rutas, posiciones)
 Web --> Not : REST :8082 + JWT\n(notificaciones de cada usuario)
 
-Cron --> Don : REST :8080 + X-Api-Key\n(matchmaking, inactividad)
-Cron --> Log : REST :8081 + X-Api-Key\n(planificacion de rutas)
+Cron --> CDon : docker exec + curl\ncon la SERVICE_API_KEY del contenedor
+Don ..> Log : POST /api/rutas/planificaciones\n(el curl del cron, X-Api-Key)
 
 Log --> Don : gRPC sobre HTTP/2 :9090\n[x-api-key en metadata]
 Log --> Planif : HTTPS: donaciones (lotes de hasta 100) + camiones

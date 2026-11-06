@@ -6,23 +6,37 @@
 #   donatrack-cron.sh rutas         -> planificacion de las rutas del dia siguiente
 #   donatrack-cron.sh inactividad   -> aviso a los donantes que cumplen 20 dias sin donar
 #
+# En la VM los servicios no publican puertos (solo Caddy, en 80/443), asi que la llamada se hace desde
+# adentro del contenedor de donaciones con "docker exec", por la red de compose y con la SERVICE_API_KEY
+# que ese contenedor ya tiene en su entorno: es la misma clave que validan los servicios.
+#
 # Configuracion (variables de entorno, todas opcionales):
-#   DONATRACK_DIR    carpeta del repo; de su .env se lee SERVICE_API_KEY (por defecto, la carpeta del repo
-#                    que contiene este script)
-#   SERVICE_API_KEY  clave compartida entre servicios; si no esta, se lee del .env o se usa la de compose
-#   DONACIONES_URL   por defecto http://localhost:8080/api (puerto publicado por docker compose)
-#   LOGISTICA_URL    por defecto http://localhost:8081/api
+#   CRON_CONTENEDOR  contenedor desde el que se llama, por defecto donatrack-donaciones. Vacio: se llama
+#                    con el curl de la maquina, a los puertos publicados (por ejemplo, en una compu local)
+#   DONACIONES_URL   por defecto http://donaciones-service:8080/api (o http://localhost:8080/api sin contenedor)
+#   LOGISTICA_URL    por defecto http://logistica-service:8081/api (o http://localhost:8081/api sin contenedor)
+#   SERVICE_API_KEY  solo sin contenedor; si no esta, se lee del .env del repo o se usa la de compose
+#   DONATRACK_DIR    carpeta del repo, para ese .env (por defecto, la que contiene este script)
 #   CRON_TIMEOUT     segundos maximos de cada llamada, por defecto 900
 set -uo pipefail
 
 TAREA="${1:-}"
 DIR_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DONATRACK_DIR="${DONATRACK_DIR:-$(cd "$DIR_SCRIPT/../.." && pwd)}"
-DONACIONES_URL="${DONACIONES_URL:-http://localhost:8080/api}"
-LOGISTICA_URL="${LOGISTICA_URL:-http://localhost:8081/api}"
+CRON_CONTENEDOR="${CRON_CONTENEDOR-donatrack-donaciones}"
 CRON_TIMEOUT="${CRON_TIMEOUT:-900}"
 INTENTOS=3
 ESPERA_ENTRE_INTENTOS=60
+
+if [ -n "$CRON_CONTENEDOR" ]; then
+    DONACIONES_URL="${DONACIONES_URL:-http://donaciones-service:8080/api}"
+    LOGISTICA_URL="${LOGISTICA_URL:-http://logistica-service:8081/api}"
+    REQUERIDOS="docker flock"
+else
+    DONACIONES_URL="${DONACIONES_URL:-http://localhost:8080/api}"
+    LOGISTICA_URL="${LOGISTICA_URL:-http://localhost:8081/api}"
+    REQUERIDOS="curl flock"
+fi
 
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S %z') [$TAREA] $*"
@@ -38,20 +52,33 @@ case "$TAREA" in
         ;;
 esac
 
-# La misma clave que usan los contenedores: primero el entorno, despues el .env del repo, despues el
-# valor por defecto de docker-compose.yml.
-if [ -z "${SERVICE_API_KEY:-}" ] && [ -f "$DONATRACK_DIR/.env" ]; then
-    SERVICE_API_KEY="$(grep -E '^[[:space:]]*SERVICE_API_KEY=' "$DONATRACK_DIR/.env" | tail -n 1 \
-        | cut -d= -f2- | tr -d '\r' | sed -e 's/^["'\'']//' -e 's/["'\'']$//')"
-fi
-SERVICE_API_KEY="${SERVICE_API_KEY:-donatrack-clave-servicios-local}"
-
-for comando in curl flock; do
+for comando in $REQUERIDOS; do
     if ! command -v "$comando" >/dev/null 2>&1; then
         log "ERROR: falta el comando $comando"
         exit 1
     fi
 done
+
+if [ -z "$CRON_CONTENEDOR" ]; then
+    # Sin contenedor: la clave sale del entorno, despues del .env del repo, despues del valor por
+    # defecto de docker-compose.yml.
+    if [ -z "${SERVICE_API_KEY:-}" ] && [ -f "$DONATRACK_DIR/.env" ]; then
+        SERVICE_API_KEY="$(grep -E '^[[:space:]]*SERVICE_API_KEY=' "$DONATRACK_DIR/.env" | tail -n 1 \
+            | cut -d= -f2- | tr -d '\r' | sed -e 's/^["'\'']//' -e 's/["'\'']$//')"
+    fi
+    export SERVICE_API_KEY="${SERVICE_API_KEY:-donatrack-clave-servicios-local}"
+fi
+
+# Hace el POST e imprime el cuerpo de la respuesta y, en la ultima linea, el codigo HTTP.
+# La clave se expande adentro del sh (del contenedor o local), no en la linea de comando del host.
+llamar() {
+    local comando='curl -sS -w "\n%{http_code}" --max-time "$1" -X POST -H "X-Api-Key: $SERVICE_API_KEY" "$2"'
+    if [ -n "$CRON_CONTENEDOR" ]; then
+        docker exec "$CRON_CONTENEDOR" sh -c "$comando" llamar "$CRON_TIMEOUT" "$URL"
+    else
+        sh -c "$comando" llamar "$CRON_TIMEOUT" "$URL"
+    fi
+}
 
 # Una sola ejecucion por tarea a la vez: si la anterior sigue corriendo, esta no arranca.
 CANDADO="/tmp/donatrack-cron-$TAREA.lock"
@@ -61,31 +88,30 @@ if ! flock -n 9; then
     exit 0
 fi
 
-RESPUESTA="$(mktemp)"
-trap 'rm -f "$RESPUESTA"' EXIT
-
-log "Inicio: POST $URL"
+log "Inicio: POST $URL${CRON_CONTENEDOR:+ (desde $CRON_CONTENEDOR)}"
 for intento in $(seq 1 "$INTENTOS"); do
     INICIO=$(date +%s)
-    CODIGO="$(curl -sS -o "$RESPUESTA" -w '%{http_code}' --max-time "$CRON_TIMEOUT" \
-        -X POST -H "X-Api-Key: $SERVICE_API_KEY" "$URL")"
-    ESTADO_CURL=$?
+    SALIDA="$(llamar 2>&1)"
+    ESTADO=$?
     DURACION=$(( $(date +%s) - INICIO ))
+    CODIGO="${SALIDA##*$'\n'}"
+    CUERPO="${SALIDA%$'\n'*}"
+    [ "$CUERPO" = "$SALIDA" ] && CUERPO=""
 
-    if [ "$ESTADO_CURL" -eq 0 ] && [ "$CODIGO" -ge 200 ] && [ "$CODIGO" -lt 300 ]; then
+    if [ "$ESTADO" -eq 0 ] && [[ "$CODIGO" =~ ^2[0-9][0-9]$ ]]; then
         log "OK (HTTP $CODIGO, ${DURACION}s)"
         exit 0
     fi
 
-    if [ "$ESTADO_CURL" -ne 0 ]; then
-        # sin conexion (servicio reiniciandose) o timeout: se reintenta
-        log "Intento $intento/$INTENTOS sin respuesta (curl $ESTADO_CURL, ${DURACION}s)"
-    else
+    if [ "$ESTADO" -eq 0 ] && [[ "$CODIGO" =~ ^[0-9]{3}$ ]] && [ "$CODIGO" != "000" ]; then
         # la API respondio con error: reintentar no lo arregla (clave incorrecta, error de negocio, ...)
-        log "ERROR HTTP $CODIGO (${DURACION}s): $(head -c 500 "$RESPUESTA")"
+        log "ERROR HTTP $CODIGO (${DURACION}s): $(printf '%s' "$CUERPO" | head -c 500)"
         exit 1
     fi
 
+    # sin conexion (servicio o contenedor reiniciandose) o timeout: se reintenta
+    DETALLE="$(printf '%s' "$SALIDA" | tr '\n' ' ' | sed -e 's/^ *000 *//' -e 's/ *000 *$//' | head -c 300)"
+    log "Intento $intento/$INTENTOS sin respuesta (salida $ESTADO, ${DURACION}s): $DETALLE"
     if [ "$intento" -lt "$INTENTOS" ]; then
         sleep "$ESPERA_ENTRE_INTENTOS"
     fi

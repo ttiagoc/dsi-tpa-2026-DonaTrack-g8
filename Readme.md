@@ -192,9 +192,15 @@ dispara el cron de la VM de Azure, que llama a la API con la clave de servicio
 
 | Hora (Argentina) | Tarea | Endpoint |
 |---|---|---|
-| 01:00 | Algoritmos de asignación (matchmaking) en horario de baja carga | `POST :8080/api/matchmaking/ejecuciones` |
-| 03:00 | Planificación de las rutas del día siguiente, en lotes de 100 | `POST :8081/api/rutas/planificaciones` |
-| 04:00 | Aviso de ausencia a quienes cumplen 20 días sin donar | `POST :8080/api/donantes/inactividad/verificaciones-diarias` |
+| 01:00 | Algoritmos de asignación (matchmaking) en horario de baja carga | `POST donaciones-service:8080/api/matchmaking/ejecuciones` |
+| 03:00 | Planificación de las rutas del día siguiente, en lotes de 100 | `POST logistica-service:8081/api/rutas/planificaciones` |
+| 04:00 | Aviso de ausencia a quienes cumplen 20 días sin donar | `POST donaciones-service:8080/api/donantes/inactividad/verificaciones-diarias` |
+
+En la VM los servicios no publican puertos (solo Caddy, en 80 y 443), así que el script hace la
+llamada desde adentro del contenedor `donatrack-donaciones` con `docker exec`, por la red de
+compose. Usa la `SERVICE_API_KEY` que ese contenedor ya tiene, que es la misma que validan los
+servicios. Para correrlo en otra máquina con los puertos publicados (por ejemplo, en local), se
+llama con `CRON_CONTENEDOR=` vacío y usa `localhost`.
 
 Los archivos están en [`docker/cron/`](docker/cron/):
 - `donatrack-cron.sh`: dispara una tarea, con reintentos si el servicio no responde y sin
@@ -204,8 +210,9 @@ Los archivos están en [`docker/cron/`](docker/cron/):
 
 ### Instalarlas en la VM
 
-Con el repo clonado en la VM, el `.env` completo (de ahí sale `SERVICE_API_KEY`) y los
-contenedores levantados con `docker compose --profile full up -d --build`:
+Con el repo clonado en la VM y los contenedores levantados con
+`docker compose --profile full up -d --build`. El usuario que corre las tareas tiene que estar
+en el grupo `docker`:
 
 ```bash
 sudo bash docker/cron/instalar-cron.sh

@@ -191,9 +191,12 @@ FK.
 
 ## 6. Despliegue en Azure
 
-El sistema corre en **una máquina virtual de Azure** (Azure for Students) con Docker. Se levanta con el mismo
+El sistema corre en **una máquina virtual de Azure** (`donatrack-vm`, Azure for Students, región Chile Central) con
+Docker, y se publica en `https://donatrack-g8.chilecentral.cloudapp.azure.com`. Se levanta con el mismo
 `docker-compose.yml` que se usa en local (perfil `full`): un contenedor por servicio, otro para PostgreSQL con las
-tres bases, y volúmenes de Docker para los datos y las fotos de recepción.
+tres bases, y volúmenes de Docker para los datos y las fotos de recepción. Un override propio de la VM agrega
+**Caddy** como proxy inverso, saca los puertos publicados de los servicios y limita la memoria de cada JVM para que
+entren todos en la VM.
 
 **Por qué una VM con Docker:**
 - **Mismo entorno en local y en la nube:** las imágenes y la configuración son las mismas, así que lo que se prueba en
@@ -201,8 +204,11 @@ tres bases, y volúmenes de Docker para los datos y las fotos de recepción.
 - **Sin servicios pagos:** el crédito de Azure for Students alcanza para una VM. Las bases administradas o los
   contenedores administrados consumen crédito aparte.
 - **Red privada sin configuración extra:** los servicios se hablan por la red interna de compose usando el nombre del
-  servicio (`donaciones-service:9090`). Desde Internet solo se abre el puerto del sitio web en el Network Security
-  Group; las APIs, el puerto gRPC y la base quedan sin acceso público.
+  servicio (`donaciones-service:9090`) y no publican puertos en la VM. Desde Internet solo entra Caddy (80 y 443,
+  más el 22 para administrar por SSH); las APIs, el puerto gRPC y la base quedan sin acceso público.
+- **HTTPS sin tocar el código:** Caddy obtiene y renueva solo el certificado de Let's Encrypt para el nombre DNS de la
+  VM y le pasa el tráfico al sitio web. Así la cookie de sesión puede ir con `Secure` y el web-service no maneja
+  certificados.
 - **gRPC sin intermediarios:** al no pasar por un proxy HTTP/1.1 de una plataforma, el tráfico HTTP/2 entre logística y
   donaciones funciona sin ajustes.
 - **Fotos persistentes:** se guardan en un volumen de Docker, que sobrevive a los reinicios y a las nuevas versiones
@@ -230,6 +236,9 @@ Argentina.
 - **Fallas visibles:** cada ejecución queda en `/var/log/donatrack/cron.log` con su resultado. Si el servicio no
   responde (por ejemplo, porque se está reiniciando) el script reintenta; si la API responde con error, lo registra
   con el mensaje.
+- **Sin abrir puertos:** como los servicios no publican puertos en la VM, el script no llama a `localhost`: hace el
+  `curl` desde adentro del contenedor de donaciones (`docker exec`), por la red de compose, con la `SERVICE_API_KEY`
+  que ese contenedor ya tiene. Así la clave del cron es siempre la misma que validan los servicios.
 - **Hora de Argentina:** la VM se configura en `America/Argentina/Buenos_Aires` para que "la 1 de la mañana" sea la
   de los usuarios y no la de UTC.
 

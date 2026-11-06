@@ -19,8 +19,13 @@ DIR_REPO="$(cd "$DIR_SCRIPT/../.." && pwd)"
 USUARIO="${SUDO_USER:-$(stat -c '%U' "$DIR_REPO")}"
 ZONA="America/Argentina/Buenos_Aires"
 
-command -v curl >/dev/null || { echo "Falta curl: sudo apt-get install -y curl" >&2; exit 1; }
+command -v docker >/dev/null || { echo "Falta docker" >&2; exit 1; }
 command -v flock >/dev/null || { echo "Falta flock: sudo apt-get install -y util-linux" >&2; exit 1; }
+# el script llama a la API con "docker exec": el usuario tiene que poder usar docker sin sudo
+if ! id -nG "$USUARIO" | grep -qw docker; then
+    echo "El usuario $USUARIO no esta en el grupo docker: sudo usermod -aG docker $USUARIO" >&2
+    exit 1
+fi
 
 echo "Zona horaria de la VM: $ZONA"
 timedatectl set-timezone "$ZONA"
