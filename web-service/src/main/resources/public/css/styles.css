@@ -671,6 +671,10 @@ code {
   text-align: left;
 }
 
+/* Mapas de Leaflet: sus paneles (z-index 400+) quedan dentro del mapa y no tapan el menu lateral ni los modales */
+.leaflet-container,
+.mapa { isolation: isolate; }
+
 .tabla th {
   font-size: var(--texto-chico);
   color: var(--color-texto-suave);
@@ -1251,6 +1255,16 @@ code {
 .modal__cerrar:hover { background: var(--color-fondo); color: var(--color-texto); }
 .modal__cuerpo { padding: var(--espacio-4) var(--espacio-5); }
 .modal__cuerpo p:last-child { margin-bottom: 0; }
+
+/* Tabla apilada: en celular cada fila es una tarjeta con "etiqueta: valor" (data-etiqueta en cada <td>), sin scroll horizontal */
+@media (max-width: 600px) {
+  .tabla--apilada thead { display: none; }
+  .tabla--apilada tr { display: block; padding: var(--espacio-3) 0; border-bottom: 1px solid var(--color-borde); }
+  .tabla--apilada td { display: flex; justify-content: space-between; gap: var(--espacio-3); padding: var(--espacio-1) 0; border: 0; text-align: right; }
+  .tabla--apilada td::before { content: attr(data-etiqueta); color: var(--color-texto-suave); font-size: var(--texto-chico); text-align: left; }
+  .tabla--apilada td:first-child { display: block; text-align: left; }
+  .tabla--apilada td:first-child::before { content: none; }
+}
 
 .modal__acciones {
   display: flex;

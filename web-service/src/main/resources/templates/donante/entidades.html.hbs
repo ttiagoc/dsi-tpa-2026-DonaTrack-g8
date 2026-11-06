@@ -94,7 +94,8 @@
         <button type="button" class="modal__cerrar" data-cierra aria-label="Cerrar"><svg class="icono"><use href="#i-cerrar"/></svg></button>
       </div>
       <div class="modal__cuerpo">
-        <table class="tabla">
+        <div class="tabla-contenedor">
+        <table class="tabla tabla--apilada">
           <thead>
             <tr>
               <th scope="col">Descripción</th>
@@ -107,13 +108,14 @@
             {{#each this.necesidades}}
               <tr>
                 <td><strong>{{this.descripcion}}</strong></td>
-                <td>{{this.categoria}}</td>
-                <td>{{this.cantidad}} {{#if this.unidad}}{{this.unidad}}{{else}}un.{{/if}}</td>
-                <td>{{#if this.periodo}}{{this.periodo}}{{else}}Única vez{{/if}}</td>
+                <td data-etiqueta="Categoría">{{this.categoria}}</td>
+                <td data-etiqueta="Cantidad">{{this.cantidad}} {{#if this.unidad}}{{this.unidad}}{{else}}un.{{/if}}</td>
+                <td data-etiqueta="Período">{{#if this.periodo}}{{this.periodo}}{{else}}Única vez{{/if}}</td>
               </tr>
             {{/each}}
           </tbody>
         </table>
+        </div>
       </div>
       <div class="modal__acciones">
         {{boton "cancelar" texto="Cerrar" cierra=true autofocus=true}}
