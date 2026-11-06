@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
+import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.donaciones.config.RestDonacionesConfig;
 import ar.edu.utn.frba.ddsi.donaciones.dto.evento.NotificacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
@@ -48,6 +49,17 @@ public class EntregaFallidaListener implements ListenerDonaciones<EventoEntregaF
         if (entidad != null) {
             for (MedioContacto contacto : entidad.getCorreoRepresentantes()) {
                 enviarNotificacionAsync(contacto, mensaje, "ENTREGA_FALLIDA", "ENTIDAD", entidad.getId(), donacionId);
+            }
+        }
+
+        // las personas administradoras revisan el caso y deciden si se replanifica la entrega
+        String mensajeAdmin = mensaje
+                + (entidad != null ? ". Entidad: " + entidad.getRazonSocial() : "")
+                + ". Revisá el caso en el depósito para volver a planificarla.";
+        for (String email : config.getAdminEmails()) {
+            if (email != null && !email.isBlank()) {
+                enviarNotificacionAsync(new MedioContacto(email.trim(), TipoContacto.EMAIL), mensajeAdmin,
+                        "ENTREGA_FALLIDA", "ADMINISTRADOR", null, donacionId);
             }
         }
     }

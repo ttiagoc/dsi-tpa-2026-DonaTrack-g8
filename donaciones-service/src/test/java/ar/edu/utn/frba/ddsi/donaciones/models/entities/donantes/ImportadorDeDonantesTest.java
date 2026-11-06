@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -80,7 +81,7 @@ class ImportadorDeDonantesTest {
         assertEquals("30-11222333-4", juridica.getCuit());
         assertEquals("juridica@test.com", juridica.getContactos().get(0).getValor());
 
-        verify(restTemplate, times(2)).postForObject(
+        verify(restTemplate, timeout(2000).times(2)).postForObject(
                 eq("http://localhost:8082/api/notificaciones"),
                 any(NotificacionRequest.class),
                 eq(Void.class)

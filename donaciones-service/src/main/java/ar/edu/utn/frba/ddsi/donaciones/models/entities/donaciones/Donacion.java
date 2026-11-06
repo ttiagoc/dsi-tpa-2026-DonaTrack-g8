@@ -190,6 +190,7 @@ public class Donacion {
     return this.historialEstados.stream()
         .filter(cambio -> cambio.getEstado() == TipoEstadoDonacion.ENTREGADA)
         .map(CambioEstado::getPatenteCamion)
+        .filter(java.util.Objects::nonNull) // una entrega cargada sin camion no tiene patente
         .reduce((primero, ultimo) -> ultimo)
         .orElse(null);
   }

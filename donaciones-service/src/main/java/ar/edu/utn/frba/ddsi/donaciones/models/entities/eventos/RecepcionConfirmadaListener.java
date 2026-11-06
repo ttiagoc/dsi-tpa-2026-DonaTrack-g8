@@ -1,5 +1,6 @@
 package ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos;
 
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.CompletableFuture;
 
 import org.springframework.stereotype.Component;
@@ -38,11 +39,12 @@ public class RecepcionConfirmadaListener implements ListenerDonaciones<EventoRec
         Donante donante = ev.getDonante();
         EntidadBeneficiaria entidad = ev.getEntidad();
         Long donacionId = donacion != null ? donacion.getId() : null;
+        String comprobante = comprobanteDe(donacion);
 
         if (donante != null) {
             String nombreEntidad = entidad != null ? entidad.getRazonSocial() : "la entidad beneficiaria";
             String mensajeDonante = "¡Tu donación #" + donacionId + " fue recibida por " + nombreEntidad
-                    + "! Ya podés ver las fotos de la recepción en la plataforma.";
+                    + "! Ya podés ver las fotos de la recepción en la plataforma." + comprobante;
             enviarNotificacionAsync(
                     donante.getContactoPredeterminado(),
                     mensajeDonante,
@@ -53,7 +55,7 @@ public class RecepcionConfirmadaListener implements ListenerDonaciones<EventoRec
         }
 
         if (entidad != null) {
-            String mensajeEntidad = "Confirmaste la recepción de la donación #" + donacionId + " con éxito.";
+            String mensajeEntidad = "Confirmaste la recepción de la donación #" + donacionId + " con éxito." + comprobante;
             for (MedioContacto contacto : entidad.getCorreoRepresentantes()) {
                 enviarNotificacionAsync(
                         contacto,
@@ -64,6 +66,17 @@ public class RecepcionConfirmadaListener implements ListenerDonaciones<EventoRec
                         donacionId);
             }
         }
+    }
+
+    // consigna: la confirmacion lleva el comprobante de entrega (fecha, hora y camion responsable)
+    private static String comprobanteDe(Donacion donacion) {
+        if (donacion == null || donacion.fechaDelEstadoActual() == null) {
+            return "";
+        }
+        String fechaHora = donacion.fechaDelEstadoActual().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        String patente = donacion.patenteCamionDeLaEntrega();
+        return " Comprobante de entrega: [Fecha/Hora: " + fechaHora + " HS]"
+                + (patente != null ? " [Camión Responsable - Patente: " + patente + "]" : "") + ".";
     }
 
     private void enviarNotificacionAsync(MedioContacto contacto, String mensaje, String tipoEvento, String tipoDestinatario, Long destinatarioId, Long donacionId) {

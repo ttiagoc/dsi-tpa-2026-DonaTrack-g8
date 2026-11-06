@@ -14,7 +14,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -22,30 +21,24 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
-import ar.edu.utn.frba.ddsi.common.security.Rol;
 import ar.edu.utn.frba.ddsi.donaciones.config.RestDonacionesConfig;
-import ar.edu.utn.frba.ddsi.donaciones.dto.evento.NotificacionRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.importacion.FilaErrorDto;
-import ar.edu.utn.frba.ddsi.donaciones.models.entities.usuarios.Usuario;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.usuarios.AccesoInicialDonante;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.TipoOrganizacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.repositories.DonanteRepository;
-import ar.edu.utn.frba.ddsi.donaciones.models.repositories.UsuarioRepository;
 
 @Component
 public class ImportadorDeDonantes {
 
     private final DonanteRepository donanteRepository;
-    private final UsuarioRepository usuarioRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final RestTemplate restTemplate;
-    private final RestDonacionesConfig config;
+    // crea el usuario de cada donante nuevo y le manda la bienvenida con sus credenciales
+    private final AccesoInicialDonante accesoInicial;
 
     private final AtomicInteger contador = new AtomicInteger(100);
     private final Map<String, ImportacionTarea> tareasPorId = new ConcurrentHashMap<>();
@@ -53,21 +46,15 @@ public class ImportadorDeDonantes {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Autowired
-    public ImportadorDeDonantes(DonanteRepository donanteRepository,
-            UsuarioRepository usuarioRepository,
-            PasswordEncoder passwordEncoder,
-            RestTemplate restTemplate,
-            RestDonacionesConfig config) {
+    public ImportadorDeDonantes(DonanteRepository donanteRepository, AccesoInicialDonante accesoInicial) {
         this.donanteRepository = donanteRepository;
-        this.usuarioRepository = usuarioRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.restTemplate = restTemplate;
-        this.config = config;
+        this.accesoInicial = accesoInicial;
     }
 
+    // sin repositorio de usuarios: solo manda la bienvenida (tests)
     public ImportadorDeDonantes(DonanteRepository donanteRepository, RestTemplate restTemplate,
             RestDonacionesConfig config) {
-        this(donanteRepository, null, null, restTemplate, config);
+        this(donanteRepository, new AccesoInicialDonante(null, null, restTemplate, config));
     }
 
     private void registrarTarea(ImportacionTarea tarea) {
@@ -223,16 +210,18 @@ public class ImportadorDeDonantes {
             humana.setDni(humanaNueva.getDni());
             actualizarContactos(humana.getContactos(), emailVal, telefonoVal);
             donanteRepository.save(humana);
-            crearUsuarioSiNoExiste(emailVal, humana.getId());
+            accesoInicial.otorgar(humana.getId(), nombreAMostrar(humana), emailVal, false);
             return false;
         } else {
             donanteRepository.save(humanaNueva);
-            crearUsuarioSiNoExiste(emailVal, humanaNueva.getId());
-            String nombreAMostrar = humanaNueva.getNombre()
-                    + (humanaNueva.getApellido().isEmpty() ? "" : " " + humanaNueva.getApellido());
-            notificarAltaAsync(emailVal, nombreAMostrar, humanaNueva.getId());
+            accesoInicial.otorgar(humanaNueva.getId(), nombreAMostrar(humanaNueva), emailVal, true);
             return true;
         }
+    }
+
+    private static String nombreAMostrar(PersonaHumana humana) {
+        String apellido = humana.getApellido();
+        return humana.getNombre() + (apellido == null || apellido.isEmpty() ? "" : " " + apellido);
     }
 
     private boolean guardarJuridicaBatch(PersonaJuridica juridicaNueva, String emailVal, String telefonoVal) {
@@ -245,47 +234,13 @@ public class ImportadorDeDonantes {
             juridica.setCuit(juridicaNueva.getCuit());
             actualizarContactos(juridica.getContactos(), emailVal, telefonoVal);
             donanteRepository.save(juridica);
-            crearUsuarioSiNoExiste(emailVal, juridica.getId());
+            accesoInicial.otorgar(juridica.getId(), juridica.getRazonSocial(), emailVal, false);
             return false;
         } else {
             donanteRepository.save(juridicaNueva);
-            crearUsuarioSiNoExiste(emailVal, juridicaNueva.getId());
-            notificarAltaAsync(emailVal, juridicaNueva.getRazonSocial(), juridicaNueva.getId());
+            accesoInicial.otorgar(juridicaNueva.getId(), juridicaNueva.getRazonSocial(), emailVal, true);
             return true;
         }
-    }
-
-    private void crearUsuarioSiNoExiste(String email, Long donanteId) {
-        if (usuarioRepository == null || passwordEncoder == null || email == null || donanteId == null) {
-            return;
-        }
-        try {
-            if (usuarioRepository.buscarPorUsername(email).isEmpty()) {
-                String passTemp = "DonaTrack" + (int)(Math.random() * 9000 + 1000);
-                String hash = passwordEncoder.encode(passTemp);
-                Usuario usuario = new Usuario(email, hash, Rol.DONANTE, donanteId);
-                usuarioRepository.save(usuario);
-            }
-        } catch (Exception e) {
-            System.err.println("No se pudo crear usuario para el donante importado: " + e.getMessage());
-        }
-    }
-
-    private void notificarAltaAsync(String emailVal, String nombre, Long donanteId) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                String url = config.getNotificacionesUrl() + "/notificaciones";
-                NotificacionRequest request = new NotificacionRequest(
-                        emailVal,
-                        TipoContacto.EMAIL,
-                        "¡Bienvenido a DonaTrack, " + nombre + "! Tu cuenta ha sido registrada con éxito.",
-                        "ALTA_IMPORTACION",
-                        "DONANTE",
-                        donanteId,
-                        null);
-                restTemplate.postForObject(url, request, Void.class);
-            } catch (Exception ignored) {}
-        });
     }
 
     // ---- Métodos sincrónicos originales para compatibilidad hacia atrás ----
@@ -406,26 +361,10 @@ public class ImportadorDeDonantes {
             humana.setDni(humanaNueva.getDni());
             actualizarContactos(humana.getContactos(), emailVal, obtenerTelefonoVal(humanaNueva.getContactos()));
             donanteRepository.save(humana);
-            crearUsuarioSiNoExiste(emailVal, humana.getId());
+            accesoInicial.otorgar(humana.getId(), nombreAMostrar(humana), emailVal, false);
         } else {
             donanteRepository.save(humanaNueva);
-            crearUsuarioSiNoExiste(emailVal, humanaNueva.getId());
-            String nombreAMostrar = humanaNueva.getNombre()
-                    + (humanaNueva.getApellido().isEmpty() ? "" : " " + humanaNueva.getApellido());
-            try {
-                String url = config.getNotificacionesUrl() + "/notificaciones";
-                NotificacionRequest request = new NotificacionRequest(
-                        emailVal,
-                        TipoContacto.EMAIL,
-                        "¡Bienvenido a DonaTrack, " + nombreAMostrar + "! Tu cuenta ha sido registrada con éxito.",
-                        "ALTA_IMPORTACION",
-                        "DONANTE",
-                        humanaNueva.getId(),
-                        null);
-                restTemplate.postForObject(url, request, Void.class);
-            } catch (Exception e) {
-                System.err.println("Error notificando alta de donante humano: " + e.getMessage());
-            }
+            accesoInicial.otorgar(humanaNueva.getId(), nombreAMostrar(humanaNueva), emailVal, true);
         }
     }
 
@@ -443,25 +382,10 @@ public class ImportadorDeDonantes {
             juridica.setCuit(juridicaNueva.getCuit());
             actualizarContactos(juridica.getContactos(), emailVal, obtenerTelefonoVal(juridicaNueva.getContactos()));
             donanteRepository.save(juridica);
-            crearUsuarioSiNoExiste(emailVal, juridica.getId());
+            accesoInicial.otorgar(juridica.getId(), juridica.getRazonSocial(), emailVal, false);
         } else {
             donanteRepository.save(juridicaNueva);
-            crearUsuarioSiNoExiste(emailVal, juridicaNueva.getId());
-            try {
-                String url = config.getNotificacionesUrl() + "/notificaciones";
-                NotificacionRequest request = new NotificacionRequest(
-                        emailVal,
-                        TipoContacto.EMAIL,
-                        "¡Bienvenido a DonaTrack, " + juridicaNueva.getRazonSocial()
-                                + "! Tu cuenta ha sido registrada con éxito.",
-                        "ALTA_IMPORTACION",
-                        "DONANTE",
-                        juridicaNueva.getId(),
-                        null);
-                restTemplate.postForObject(url, request, Void.class);
-            } catch (Exception e) {
-                System.err.println("Error notificando alta de donante jurídico: " + e.getMessage());
-            }
+            accesoInicial.otorgar(juridicaNueva.getId(), juridicaNueva.getRazonSocial(), emailVal, true);
         }
     }
 

@@ -189,7 +189,7 @@ public class RecepcionAdminController {
             DonanteResponse nuevo = juridica != null
                     ? donaciones.crearDonantePersonaJuridica(ctx, juridica)
                     : donaciones.crearDonantePersonaHumana(ctx, humana);
-            Alertas.exito(ctx, "Donante " + nuevo.nombre() + " registrado con éxito.");
+            Alertas.exito(ctx, "Donante " + nuevo.nombre() + " registrado con éxito. Le enviamos un correo con su usuario y contraseña.");
             ctx.redirect(RUTA + "?donanteId=" + nuevo.id());
         } catch (ApiException e) {
             mostrarErrorDonante(ctx, form, Map.of("general", e.getMessage()), e.getMessage());

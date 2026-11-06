@@ -26,6 +26,7 @@ import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Categoria;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.RegistroDonacion;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.Donante;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donantes.PersonaHumana;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.entidades.EntidadBeneficiaria;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoBien;
@@ -76,6 +77,25 @@ class GestorDeEventosTest {
         gestorDeEventos.verificarInactividadDonantes();
 
         verify(eventManager, times(1)).emitir(any(EventoAusenciaPlataforma.class));
+    }
+
+    @Test
+    @DisplayName("El escaneo diario avisa al cumplirse los 20 días sin donar y después cada 20 días, no todos los días")
+    void verificarInactividadDiariaNoRepiteElAviso() {
+        List<Donante> donantes = new ArrayList<>();
+        for (int dias : new int[] {20, 21, 22, 30, 41}) {
+            PersonaHumana donante = crearDonante((long) dias, "d" + dias + "@test.com");
+            RegistroDonacion registro = new RegistroDonacion();
+            registro.setFecha(LocalDateTime.now().minusDays(dias));
+            donante.agregarDonacion(registro);
+            donantes.add(donante);
+        }
+        when(donanteRepository.findAll()).thenReturn(donantes);
+
+        gestorDeEventos.verificarInactividadDiaria();
+
+        // solo los de 21 y 41 dias
+        verify(eventManager, times(2)).emitir(any(EventoAusenciaPlataforma.class));
     }
 
     @Test

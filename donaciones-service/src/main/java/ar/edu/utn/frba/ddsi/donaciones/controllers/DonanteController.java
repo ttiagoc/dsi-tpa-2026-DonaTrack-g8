@@ -9,9 +9,14 @@ import org.springframework.stereotype.Component;
 import ar.edu.utn.frba.ddsi.common.controllers.JavalinController;
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.common.security.Autorizacion;
+import java.util.List;
+
+import ar.edu.utn.frba.ddsi.donaciones.dto.donante.DonanteResponse;
+import ar.edu.utn.frba.ddsi.donaciones.dto.donante.MedioContactoRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaHumanaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaJuridicaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.eventos.GestorDeEventos;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.usuarios.AccesoInicialDonante;
 import java.io.InputStream;
 import io.javalin.http.UploadedFile;
 
@@ -26,12 +31,26 @@ public class DonanteController implements JavalinController {
     private final DonanteService donanteService;
     private final GestorDeEventos gestorDeEventos;
     private final ImportadorDeDonantes importadorDeDonantes;
+    private final AccesoInicialDonante accesoInicial;
 
     public DonanteController(DonanteService donanteService, GestorDeEventos gestorDeEventos,
-                ImportadorDeDonantes importadorDeDonantes) {
+                ImportadorDeDonantes importadorDeDonantes, AccesoInicialDonante accesoInicial) {
         this.donanteService = donanteService;
         this.gestorDeEventos = gestorDeEventos;
         this.importadorDeDonantes = importadorDeDonantes;
+        this.accesoInicial = accesoInicial;
+    }
+
+    // el correo obligatorio del donante es su nombre de usuario y adonde van las credenciales
+    private static String emailDe(List<MedioContactoRequest> contactos) {
+        if (contactos == null) {
+            return null;
+        }
+        return contactos.stream()
+                .filter(c -> c != null && "EMAIL".equalsIgnoreCase(c.tipo()))
+                .map(MedioContactoRequest::valor)
+                .findFirst()
+                .orElse(null);
     }
 
     @Override
@@ -80,15 +99,22 @@ public class DonanteController implements JavalinController {
             ctx.json(donanteService.obtenerDetalle(id));
         }, ADMINISTRADOR);
 
-        // el alta con usuario la hace /api/auth/registro/*; esta queda para el administrador (req. 15)
+        // el alta con usuario la hace /api/auth/registro/*; esta queda para el administrador (req. 15):
+        // el donante que se carga en el deposito recibe su usuario y la bienvenida con las credenciales
         app.post("/api/donantes/persona-humana", ctx -> {
             PersonaHumanaRequest request = ctx.bodyAsClass(PersonaHumanaRequest.class);
-            ctx.status(201).json(donanteService.crearPersonaHumana(request));
+            DonanteResponse creado = donanteService.crearPersonaHumana(request);
+            String nombre = (request.nombre() != null ? request.nombre() : "")
+                    + (request.apellido() != null ? " " + request.apellido() : "");
+            accesoInicial.otorgar(creado.id(), nombre, emailDe(request.contactos()), true);
+            ctx.status(201).json(creado);
         }, ADMINISTRADOR);
 
         app.post("/api/donantes/persona-juridica", ctx -> {
             PersonaJuridicaRequest request = ctx.bodyAsClass(PersonaJuridicaRequest.class);
-            ctx.status(201).json(donanteService.crearPersonaJuridica(request));
+            DonanteResponse creado = donanteService.crearPersonaJuridica(request);
+            accesoInicial.otorgar(creado.id(), request.razonSocial(), emailDe(request.contactos()), true);
+            ctx.status(201).json(creado);
         }, ADMINISTRADOR);
 
         app.put("/api/donantes/persona-humana/{id}", ctx -> {

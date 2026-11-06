@@ -35,7 +35,7 @@ public class AusenciaPlataformaListener implements ListenerDonaciones<EventoAuse
         if (donante == null) return;
         MedioContacto contacto = donante.getContactoPredeterminado();
         String mensaje = "¡Te extrañamos! Hace más de 20 días que no registrás actividad en DonaTrack. Tu ayuda hace la diferencia, sumate con una nueva donación.";
-        enviarNotificacionAsync(contacto, mensaje, "AUSENCIA", "DONANTE", donante.getId(), null);
+        enviarNotificacionAsync(contacto, mensaje, "AUSENCIA_PLATAFORMA", "DONANTE", donante.getId(), null);
     }
 
     private void enviarNotificacionAsync(MedioContacto contacto, String mensaje, String tipoEvento, String tipoDestinatario, Long destinatarioId, Long donacionId) {

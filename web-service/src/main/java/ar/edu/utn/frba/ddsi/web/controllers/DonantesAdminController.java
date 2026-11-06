@@ -80,7 +80,7 @@ public class DonantesAdminController {
             DonanteResponse nuevo = juridica != null
                     ? donaciones.crearDonantePersonaJuridica(ctx, juridica)
                     : donaciones.crearDonantePersonaHumana(ctx, humana);
-            Alertas.exito(ctx, "Se registró el donante " + nuevo.nombre() + ".");
+            Alertas.exito(ctx, "Se registró el donante " + nuevo.nombre() + ". Le enviamos un correo con su usuario y contraseña.");
             ctx.redirect(RUTA + "?ver=" + nuevo.id());
         } catch (ApiException e) {
             if (!e.esErrorDelUsuario()) {
