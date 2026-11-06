@@ -95,6 +95,8 @@ class WebFlujoTest {
     // ultimo pedido del ABM de categorias a la API falsa
     private final AtomicReference<JsonNode> ultimaCategoria = new AtomicReference<>();
     private final AtomicReference<String> ultimaSubcategoria = new AtomicReference<>();
+    // ultima donacion presencial que el web mando a la API falsa (recepcion en deposito)
+    private final AtomicReference<JsonNode> ultimaDonacionPresencial = new AtomicReference<>();
     private final List<Map<String, Object>> choferesFalsos = new ArrayList<>();
     private final List<Map<String, Object>> rutasFalsas = new ArrayList<>();
     private final List<Map<String, Object>> notificacionesFalsas = new ArrayList<>();
@@ -1062,9 +1064,20 @@ class WebFlujoTest {
         formDonacionValido.put("pesoKg", "1.0");
         formDonacionValido.put("volumenM3", "0.02");
         formDonacionValido.put("estadoBien", "NUEVO");
+
+        // Alimentos es perecedera: sin vencimiento no se registra
+        HttpResponse<String> sinVencimiento = post("/admin/recepcion", formDonacionValido, adminCookie);
+        assertEquals(400, sinVencimiento.statusCode());
+        assertTrue(sinVencimiento.body().contains("La fecha de vencimiento es obligatoria para Alimentos"));
+
+        formDonacionValido.put("fechaVencimiento", "2027-03-01");
         HttpResponse<String> respAltaDonacion = post("/admin/recepcion", formDonacionValido, adminCookie);
         assertEquals(302, respAltaDonacion.statusCode());
         assertEquals("/admin/deposito", respAltaDonacion.headers().firstValue("Location").orElse(null));
+        // Alimentos no registra estado: aunque llegue, no se manda a la API
+        JsonNode leche = ultimaDonacionPresencial.get().get("bienes").get(0);
+        assertTrue(leche.path("estado").isNull() || leche.path("estado").isMissingNode());
+        assertEquals("2027-03-01", leche.get("fechaVencimiento").asText());
 
         // Registro con múltiples bienes (para que el backend los segmente automáticamente)
         String multiBody = "donanteId=1&descripcion=Donación mixta"
@@ -1073,6 +1086,14 @@ class WebFlujoTest {
         HttpResponse<String> respMulti = postRaw("/admin/recepcion", multiBody, adminCookie);
         assertEquals(302, respMulti.statusCode());
         assertEquals("/admin/deposito", respMulti.headers().firstValue("Location").orElse(null));
+
+        // Frazadas (Ropa y abrigo) no vence: la fecha que llegue (o el hidden vacío del campo bloqueado) se descarta
+        String ropaBody = "donanteId=1&subcategoria=Frazadas&bienDescripcion=Frazadas de 2 plazas&cantidad=5"
+                + "&fechaVencimiento=2027-01-01&pesoKg=1.5&volumenM3=0.01&estadoBien=USADO";
+        assertEquals(302, postRaw("/admin/recepcion", ropaBody, adminCookie).statusCode());
+        JsonNode frazadas = ultimaDonacionPresencial.get().get("bienes").get(0);
+        assertTrue(frazadas.path("fechaVencimiento").isNull() || frazadas.path("fechaVencimiento").isMissingNode());
+        assertEquals("USADO", frazadas.get("estado").asText());
     }
 
     @Test
@@ -1541,7 +1562,8 @@ class WebFlujoTest {
         });
 
         api.get("/api/categorias", ctx -> ctx.json(List.of(
-                Map.of("id", 1, "nombre", "Alimentos"), Map.of("id", 2, "nombre", "Ropa y abrigo"))));
+                Map.of("id", 1, "nombre", "Alimentos", "pideEstado", false, "esPerecedero", true),
+                Map.of("id", 2, "nombre", "Ropa y abrigo", "pideEstado", true, "esPerecedero", false))));
         api.get("/api/categorias/1/subcategorias", ctx -> ctx.json(List.of(
                 Map.of("id", 1, "nombre", "Leche larga vida"), Map.of("id", 2, "nombre", "Arroz"))));
         api.get("/api/categorias/2/subcategorias", ctx -> ctx.json(List.of(Map.of("id", 3, "nombre", "Frazadas"))));
@@ -1783,6 +1805,7 @@ class WebFlujoTest {
             ctx.status(201).json(donante);
         });
         api.post("/api/donaciones", ctx -> {
+            ultimaDonacionPresencial.set(mapper.readTree(ctx.body()));
             ctx.status(201).json(List.of(Map.of("id", 401L, "estadoActual", "EN_DEPOSITO")));
         });
         // ABM de donantes del administrador

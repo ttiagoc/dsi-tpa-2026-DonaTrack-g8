@@ -621,6 +621,14 @@ code {
   box-shadow: 0 0 0 3px var(--color-primario-suave);
 }
 
+.campo input:disabled,
+.campo select:disabled,
+.campo textarea:disabled {
+  background: var(--color-fondo);
+  color: var(--color-texto-suave);
+  cursor: not-allowed;
+}
+
 .campo__ayuda { color: var(--color-texto-suave); }
 .campo__error { color: var(--color-error); font-weight: 600; }
 .campo--error input,

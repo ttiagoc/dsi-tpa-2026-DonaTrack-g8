@@ -53,7 +53,7 @@ public class DonacionesApiClient extends ApiClient {
     /** Categorias con sus subcategorias, para los selects agrupados. */
     public List<Rubro> catalogo() {
         return Arrays.stream(getPublico("/categorias", CategoriaResponse[].class))
-                .map(categoria -> new Rubro(categoria.nombre(),
+                .map(categoria -> new Rubro(categoria.nombre(), categoria.pideEstado(), categoria.esPerecedero(),
                         Arrays.stream(getPublico("/categorias/" + categoria.id() + "/subcategorias",
                                 SubcategoriaResponse[].class)).map(SubcategoriaResponse::nombre).toList()))
                 .filter(rubro -> !rubro.subcategorias().isEmpty())

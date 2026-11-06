@@ -64,7 +64,7 @@
                   <select name="subcategoria" required data-buscador="Buscá una subcategoría">
                     <option value="">Seleccioná subcategoría...</option>
                     {{#each ../catalogo}}
-                      <optgroup label="{{nombre}}">
+                      <optgroup label="{{categoria}}" data-pide-estado="{{#if pideEstado}}si{{else}}no{{/if}}" data-perecedero="{{#if esPerecedero}}si{{else}}no{{/if}}">
                         {{#each subcategorias}}
                           <option value="{{this}}" {{#if (eq ../../subcategoria this)}}selected{{/if}}>{{this}}</option>
                         {{/each}}
@@ -86,9 +86,12 @@
               </div>
 
               <div class="grilla grilla--4" style="margin-top: var(--espacio-3);">
-                <div class="campo">
-                  <label>Fecha de vencimiento (si aplica)</label>
+                <div class="campo{{#if ../errores.fechaVencimiento}} campo--error{{/if}}" data-campo-vencimiento>
+                  <label>Fecha de vencimiento</label>
                   <input type="date" name="fechaVencimiento" value="{{fechaVencimiento}}">
+                  <input type="hidden" name="fechaVencimiento" value="" disabled data-no-aplica>
+                  <small class="campo__ayuda" data-aviso-no-aplica hidden>No aplica: la categoría no vence</small>
+                  {{#if ../errores.fechaVencimiento}}<small class="campo__error">{{../errores.fechaVencimiento}}</small>{{/if}}
                 </div>
                 <div class="campo">
                   <label>Peso por unidad (kg)</label>
@@ -98,12 +101,14 @@
                   <label>Volumen por unidad (m³)</label>
                   <input type="number" name="volumenM3" value="{{volumenM3}}" min="0.0001" step="any" placeholder="0.001">
                 </div>
-                <div class="campo">
+                <div class="campo" data-campo-estado>
                   <label>Estado de los bienes</label>
                   <select name="estadoBien">
                     <option value="NUEVO" {{#if (eq estadoBien "NUEVO")}}selected{{/if}}>Nuevo / Sellado</option>
                     <option value="USADO" {{#if (eq estadoBien "USADO")}}selected{{/if}}>Usado en buen estado</option>
                   </select>
+                  <input type="hidden" name="estadoBien" value="" disabled data-no-aplica>
+                  <small class="campo__ayuda" data-aviso-no-aplica hidden>No aplica: la categoría no registra estado</small>
                 </div>
               </div>
             </div>
@@ -120,7 +125,7 @@
                 <select name="subcategoria" required data-buscador="Buscá una subcategoría">
                   <option value="">Seleccioná subcategoría...</option>
                   {{#each catalogo}}
-                    <optgroup label="{{nombre}}">
+                    <optgroup label="{{categoria}}" data-pide-estado="{{#if pideEstado}}si{{else}}no{{/if}}" data-perecedero="{{#if esPerecedero}}si{{else}}no{{/if}}">
                       {{#each subcategorias}}
                         <option value="{{this}}" {{#if (eq ../../form.subcategoria this)}}selected{{/if}}>{{this}}</option>
                       {{/each}}
@@ -142,9 +147,12 @@
             </div>
 
             <div class="grilla grilla--4" style="margin-top: var(--espacio-3);">
-              <div class="campo">
-                <label>Fecha de vencimiento (si aplica)</label>
+              <div class="campo{{#if errores.fechaVencimiento}} campo--error{{/if}}" data-campo-vencimiento>
+                <label>Fecha de vencimiento</label>
                 <input type="date" name="fechaVencimiento" value="{{form.fechaVencimiento}}">
+                <input type="hidden" name="fechaVencimiento" value="" disabled data-no-aplica>
+                <small class="campo__ayuda" data-aviso-no-aplica hidden>No aplica: la categoría no vence</small>
+                {{#if errores.fechaVencimiento}}<small class="campo__error">{{errores.fechaVencimiento}}</small>{{/if}}
               </div>
               <div class="campo">
                 <label>Peso por unidad (kg)</label>
@@ -154,12 +162,14 @@
                 <label>Volumen por unidad (m³)</label>
                 <input type="number" name="volumenM3" value="{{form.volumenM3}}" min="0.0001" step="any" placeholder="0.001">
               </div>
-              <div class="campo">
+              <div class="campo" data-campo-estado>
                 <label>Estado de los bienes</label>
                 <select name="estadoBien">
                   <option value="NUEVO" {{#if (eq form.estadoBien "NUEVO")}}selected{{/if}}>Nuevo / Sellado</option>
                   <option value="USADO" {{#if (eq form.estadoBien "USADO")}}selected{{/if}}>Usado en buen estado</option>
                 </select>
+                <input type="hidden" name="estadoBien" value="" disabled data-no-aplica>
+                <small class="campo__ayuda" data-aviso-no-aplica hidden>No aplica: la categoría no registra estado</small>
               </div>
             </div>
           </div>
@@ -212,7 +222,7 @@
         <select name="subcategoria" required data-buscador="Buscá una subcategoría">
           <option value="">Seleccioná subcategoría...</option>
           {{#each catalogo}}
-            <optgroup label="{{nombre}}">
+            <optgroup label="{{categoria}}" data-pide-estado="{{#if pideEstado}}si{{else}}no{{/if}}" data-perecedero="{{#if esPerecedero}}si{{else}}no{{/if}}">
               {{#each subcategorias}}
                 <option value="{{this}}">{{this}}</option>
               {{/each}}
@@ -231,9 +241,11 @@
     </div>
 
     <div class="grilla grilla--4" style="margin-top: var(--espacio-3);">
-      <div class="campo">
-        <label>Fecha de vencimiento (si aplica)</label>
+      <div class="campo" data-campo-vencimiento>
+        <label>Fecha de vencimiento</label>
         <input type="date" name="fechaVencimiento">
+        <input type="hidden" name="fechaVencimiento" value="" disabled data-no-aplica>
+        <small class="campo__ayuda" data-aviso-no-aplica hidden>No aplica: la categoría no vence</small>
       </div>
       <div class="campo">
         <label>Peso por unidad (kg)</label>
@@ -243,12 +255,14 @@
         <label>Volumen por unidad (m³)</label>
         <input type="number" name="volumenM3" min="0.0001" step="any" placeholder="0.001">
       </div>
-      <div class="campo">
+      <div class="campo" data-campo-estado>
         <label>Estado de los bienes</label>
         <select name="estadoBien">
           <option value="NUEVO">Nuevo / Sellado</option>
           <option value="USADO">Usado en buen estado</option>
         </select>
+        <input type="hidden" name="estadoBien" value="" disabled data-no-aplica>
+        <small class="campo__ayuda" data-aviso-no-aplica hidden>No aplica: la categoría no registra estado</small>
       </div>
     </div>
   </div>
@@ -273,6 +287,51 @@
     });
   }
 
+  // Habilita o bloquea un campo del articulo. Bloqueado, manda vacio por el hidden de al lado
+  // para que las listas de campos (subcategoria, cantidad, ...) sigan alineadas por articulo.
+  function aplicar(caja, aplica, obligatorio) {
+    if (!caja) return;
+    var campo = caja.querySelector('input:not([type="hidden"]), select');
+    var reemplazo = caja.querySelector('[data-no-aplica]');
+    var aviso = caja.querySelector('[data-aviso-no-aplica]');
+    campo.disabled = !aplica;
+    reemplazo.disabled = aplica;
+    if (aviso) aviso.hidden = aplica;
+    if (!aplica && campo.type === 'date') campo.value = '';
+    if (obligatorio !== undefined) campo.required = aplica && obligatorio;
+    if (!aplica) {
+      caja.classList.remove('campo--error');
+      var error = caja.querySelector('.campo__error');
+      if (error) error.remove();
+    }
+  }
+
+  // Segun la categoria de la subcategoria elegida: el estado solo si la categoria lo registra
+  // y la fecha de vencimiento solo (y obligatoria) si es perecedera.
+  function aplicarCategoria(item) {
+    var select = item.querySelector('select[name="subcategoria"]');
+    var opcion = select && select.selectedOptions[0];
+    var grupo = opcion && opcion.value ? opcion.closest('optgroup') : null;
+    var pideEstado = !grupo || grupo.dataset.pideEstado === 'si';
+    var perecedero = !grupo || grupo.dataset.perecedero === 'si';
+    aplicar(item.querySelector('[data-campo-estado]'), pideEstado);
+    aplicar(item.querySelector('[data-campo-vencimiento]'), perecedero, !!grupo);
+    var etiqueta = item.querySelector('[data-campo-vencimiento] label');
+    if (etiqueta) {
+      etiqueta.innerHTML = 'Fecha de vencimiento' + (grupo && perecedero
+          ? ' <span class="campo__requerido" aria-hidden="true">*</span>' : '');
+    }
+  }
+
+  if (contenedor) {
+    contenedor.querySelectorAll('.bien-item').forEach(aplicarCategoria);
+    contenedor.addEventListener('change', function (e) {
+      if (e.target.matches('select[name="subcategoria"]')) {
+        aplicarCategoria(e.target.closest('.bien-item'));
+      }
+    });
+  }
+
   if (btnAgregar && template && contenedor) {
     btnAgregar.addEventListener('click', function () {
       var nuevoIndice = contenedor.querySelectorAll('.bien-item').length + 1;
@@ -287,6 +346,7 @@
       if (window.inicializarBuscadores) {
         window.inicializarBuscadores(agregado);
       }
+      aplicarCategoria(agregado);
       actualizarNumeracion();
       var primerCampo = agregado.querySelector('input[name="bienDescripcion"]');
       if (primerCampo) primerCampo.focus();

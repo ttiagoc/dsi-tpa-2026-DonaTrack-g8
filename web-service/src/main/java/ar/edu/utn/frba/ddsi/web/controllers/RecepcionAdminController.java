@@ -2,12 +2,14 @@ package ar.edu.utn.frba.ddsi.web.controllers;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.web.clients.DonacionesApiClient;
+import ar.edu.utn.frba.ddsi.web.dto.catalogo.Rubro;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.BienAltaRequest;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.DonacionAltaRequest;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.SubcategoriaAltaRequest;
@@ -82,6 +84,7 @@ public class RecepcionAdminController {
 
         List<BienAltaRequest> bienes = new ArrayList<>();
         List<Map<String, Object>> bienesParaVista = new ArrayList<>();
+        Map<String, Rubro> rubroPorSubcategoria = rubrosPorSubcategoria();
 
         for (int i = 0; i < totalBienes; i++) {
             String subcat = i < subcategorias.size() ? subcategorias.get(i) : "";
@@ -127,6 +130,23 @@ public class RecepcionAdminController {
             Double peso = parseDouble(pesoStr);
             Double vol = parseDouble(volStr);
             LocalDate venc = parseFecha(vencStr);
+
+            // Solo aplican los campos que pide la categoria: si no registra estado o no vence,
+            // se descarta lo que haya llegado; si es perecedera, el vencimiento es obligatorio.
+            Rubro rubro = rubroPorSubcategoria.get(subcat);
+            if (rubro != null) {
+                if (!rubro.registraEstado()) {
+                    est = null;
+                    itemVista.put("estadoBien", "");
+                }
+                if (!rubro.vence()) {
+                    venc = null;
+                    itemVista.put("fechaVencimiento", "");
+                } else if (venc == null) {
+                    form.error("fechaVencimiento", "La fecha de vencimiento es obligatoria para "
+                            + rubro.categoria() + " (artículo #" + (i + 1) + ")");
+                }
+            }
 
             if (bienDesc != null && !bienDesc.isBlank() && subcat != null && !subcat.isBlank()) {
                 bienes.add(new BienAltaRequest(
@@ -217,6 +237,19 @@ public class RecepcionAdminController {
             modelo.put("resumen", Map.of("ingresosMes", enDeposito));
         } catch (Exception ignored) {
         }
+    }
+
+    /** Cada subcategoria con su categoria, para saber que campos del bien aplican. */
+    private Map<String, Rubro> rubrosPorSubcategoria() {
+        Map<String, Rubro> mapa = new HashMap<>();
+        try {
+            for (Rubro rubro : donaciones.catalogo()) {
+                rubro.subcategorias().forEach(sub -> mapa.put(sub, rubro));
+            }
+        } catch (RuntimeException e) {
+            // Sin catalogo no se filtra aca: la API igual valida el bien contra su categoria.
+        }
+        return mapa;
     }
 
     private Double parseDouble(String valor) {
