@@ -43,9 +43,8 @@ public class InicioRutaListener implements ListenerLogistica<EventoInicioRuta> {
     }
 
     private void procesarInicioRuta(EventoInicioRuta evento) {
-        String baseWebUrl = (config.getWebUrl() != null && !config.getWebUrl().isBlank())
-                ? config.getWebUrl().replaceAll("/+$", "")
-                : "http://localhost:7070";
+        // rest.web-url sale de WEB_APP_URL (application.properties): es la URL publica del sitio
+        String baseWebUrl = config.getWebUrl().replaceAll("/+$", "");
 
         String mapaUrlEntidad = baseWebUrl + "/entidad/seguimiento";
         String mapaUrlDonante = baseWebUrl + "/donante/seguimiento";

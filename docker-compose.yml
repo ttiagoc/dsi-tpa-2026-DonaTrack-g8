@@ -49,7 +49,7 @@ services:
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin1234}
       ADMIN_EMAILS: ${ADMIN_EMAILS:-}
-      WEB_APP_URL: http://localhost:7070
+      WEB_APP_URL: ${WEB_APP_URL:-http://localhost:7070}
     depends_on:
       postgres:
         condition: service_healthy
@@ -72,7 +72,7 @@ services:
       REST_LOGISTICA_URL: http://logistica-service:8081/api
       REST_NOTIFICACIONES_URL: http://notificaciones-service:8082/api
       LOGISTICA_CALLBACK_URL: http://logistica-service:8081/api/rutas/planificaciones/resultados
-      WEB_APP_URL: http://localhost:7070
+      WEB_APP_URL: ${WEB_APP_URL:-http://localhost:7070}
       JWT_SECRET: ${JWT_SECRET:-donatrack-secreto-solo-para-desarrollo-local-0123456789}
       SERVICE_API_KEY: ${SERVICE_API_KEY:-donatrack-clave-servicios-local}
     depends_on:

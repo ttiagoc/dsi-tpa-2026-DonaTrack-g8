@@ -33,9 +33,7 @@ public class GestorDeRutas {
             }
         }
 
-        String baseWebUrl = properties.getWebUrl() != null && !properties.getWebUrl().isBlank()
-                ? properties.getWebUrl().replaceAll("/+$", "")
-                : "http://localhost:7070";
+        String baseWebUrl = properties.getWebUrl().replaceAll("/+$", "");
         eventManager.emitir(
                 new EventoInicioRuta(ruta, baseWebUrl + "/seguimiento"));
     }
