@@ -343,21 +343,18 @@ public class RutaServiceImpl implements RutaService {
                   .orElse(null);
       }
 
-      if (ultimaCompletada != null) {
-          double[] coords = GeocodificadorCaba.ubicar(ultimaCompletada.getDestino(), ultimaCompletada.getEntidadId());
-          latitud = coords[0];
-          longitud = coords[1];
-      } else if (ruta.getEstado() == EstadoRuta.PLANIFICADA || (ruta.getEstado() == EstadoRuta.EN_TRASLADO && ultimaCompletada == null)) {
-          latitud = GeocodificadorCaba.DEPOSITO_LAT;
-          longitud = GeocodificadorCaba.DEPOSITO_LNG;
-      } else if (camion != null && camion.getUbicacion() != null) {
-          latitud = camion.getUbicacion().getLatitud();
-          longitud = camion.getUbicacion().getLongitud();
-          velocidad = camion.getUbicacion().getVelocidad();
-          ultimaActualizacion = camion.getUbicacion().getTimestamp();
+      if (camion != null && camion.getUbicacion() != null) {
+        latitud = camion.getUbicacion().getLatitud();
+        longitud = camion.getUbicacion().getLongitud();
+        velocidad = camion.getUbicacion().getVelocidad();
+        ultimaActualizacion = camion.getUbicacion().getTimestamp();
+      } else if (ultimaCompletada != null) {
+        double[] coords = GeocodificadorCaba.ubicar(ultimaCompletada.getDestino(), ultimaCompletada.getEntidadId());
+        latitud = coords[0];
+        longitud = coords[1];
       } else {
-          latitud = GeocodificadorCaba.DEPOSITO_LAT;
-          longitud = GeocodificadorCaba.DEPOSITO_LNG;
+        latitud = GeocodificadorCaba.DEPOSITO_LAT;
+        longitud = GeocodificadorCaba.DEPOSITO_LNG;
       }
 
       List<ParadaResponse> paradas = ruta.getParadas().stream()
