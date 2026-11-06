@@ -129,9 +129,6 @@ clase base `PersistenciaTest` de cada servicio. No hace falta ninguna base corri
 
 ### Levantar PostgreSQL local
 
-Los pasos detallados, con verificaciones y problemas frecuentes, están en
-[documents/LevantarBaseDeDatos.md](documents/LevantarBaseDeDatos.md). El resumen:
-
 ```bash
 docker compose up -d
 ```

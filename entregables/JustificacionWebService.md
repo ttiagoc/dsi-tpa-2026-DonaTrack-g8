@@ -60,7 +60,40 @@ ejemplo en una base o en Redis). Para el alcance del TP, una instancia es sufici
 
 - Patrón **POST → redirect → GET**: si un formulario sale bien se redirige, para que recargar la página no lo reenvíe. El
   mensaje de éxito viaja en la sesión como alerta "flash" y se muestra una sola vez.
-- Validación en dos capas: el sitio controla lo que no necesita al dominio (obligatorios, que las contraseñas coincidan) y las
-  reglas de negocio las valida la API; su mensaje se muestra arriba del formulario, que vuelve con los datos cargados (nunca la
-  contraseña).
+- Validación en tres lugares, con los mismos mensajes:
+  1. **En el navegador** (`public/js/formularios.js`): marca cada campo apenas sale de él (obligatorios, emails,
+     teléfonos, mínimos) sin esperar al servidor. Es solo comodidad: se puede saltear, por eso no alcanza.
+  2. **En el sitio** (`Formulario`): repite esas reglas y las que dependen de otros datos (por ejemplo, el vencimiento
+     solo es obligatorio si la categoría del bien es perecedera). Si algo falla, el formulario vuelve con los errores
+     marcados en cada campo y los datos cargados (nunca la contraseña).
+  3. **En la API**: las reglas de negocio. Su mensaje se muestra arriba del formulario.
 - Las páginas de error (403, 404, 500 y 503 si una API no responde) usan el mismo layout que el resto del sitio.
+
+## 5. Pantallas: bocetos y convenciones
+
+Cada pantalla se bocetó antes de implementarla (`documents/bocetos/`) y lo implementado sigue el boceto. Para que el sitio
+se use igual en todas las secciones se fijaron convenciones comunes:
+
+- **Con sesión:** menú lateral con las páginas del rol (se puede achicar a solo íconos y en el celular se abre desde la
+  barra) y una barra superior con el perfil y "Salir". Sin sesión, un navbar con las páginas públicas.
+- **ABM:** un listado con el botón de alta arriba a la derecha; el alta y la edición se hacen en un modal. Eliminar
+  siempre pide confirmación nombrando el registro, y se hace con un POST.
+- **Listas vacías:** un mensaje que explica cómo cargar el primer registro, en lugar de una tabla vacía.
+- **Selects con muchas opciones** (donantes, entidades, subcategorías): se convierten en un campo con buscador.
+- **Accesibilidad:** etiquetas asociadas a cada campo, errores anunciados a los lectores de pantalla, foco en la acción
+  segura de cada modal y navegación completa con teclado.
+
+## 6. Mapas y direcciones
+
+- **Mapas con Leaflet y OpenStreetMap:** el mapa público de entregas, el seguimiento del donante y de la entidad y la hoja
+  de ruta del chofer usan Leaflet con las teselas de OpenStreetMap. Son gratuitos, sin clave de API ni límites de uso
+  para el volumen del TP. El servidor solo manda las posiciones; el mapa se dibuja en el navegador.
+- **Direcciones verificadas:** al registrar una entidad, la dirección se valida mientras se escribe con un endpoint de
+  donaciones que consulta la API Georef. El sitio nunca llama a Georef directamente: así la regla queda en el dominio y la
+  misma validación se aplica si la entidad se carga por la API.
+
+## 7. Hoja de ruta del chofer
+
+El chofer tiene una vista pensada para el celular: la ruta del día de su camión, el mapa con las paradas en orden y, en
+cada parada, los botones para confirmar la entrega o informar que no la recibieron (con el motivo). El sitio solo muestra
+las paradas de su camión, y logística vuelve a comprobarlo en cada llamada.

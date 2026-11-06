@@ -13,6 +13,7 @@ package "notificaciones" {
     contacto_tipo_contacto : VARCHAR(20)
     completada : BOOLEAN
     tipo_evento : VARCHAR(50)
+    tipo_destinatario : VARCHAR(20) <<DONANTE / ENTIDAD / ADMINISTRADOR>>
     destinatario_id : BIGINT <<referencia logica>>
     donacion_id : BIGINT <<referencia logica>>
   }
@@ -146,6 +147,8 @@ package "donaciones" {
     --
     razon_social : VARCHAR(255)
     direccion : VARCHAR(255)
+    latitud : DOUBLE <<de Georef al registrar o mudarse>>
+    longitud : DOUBLE
     telefono_valor : VARCHAR(255)
     telefono_tipo_contacto : VARCHAR(20)
   }
@@ -168,6 +171,7 @@ package "donaciones" {
     periodo : VARCHAR(20)
     descripcion : VARCHAR(500)
     cantidad : BIGINT
+    unidad : VARCHAR(20) <<UNIDADES / KILOGRAMOS / LITROS, NULL = UNIDADES>>
   }
 
   entidad_beneficiaria ||--o{ necesidad
@@ -192,6 +196,19 @@ package "donaciones" {
 
   resultado_matchmaking ||--o{ resultado_matchmaking_entidades_sugeridas
   entidad_beneficiaria ||--o{ resultado_matchmaking_entidades_sugeridas
+
+  entity usuario {
+    * id : BIGINT <<PK, IDENTITY>>
+    --
+    username : VARCHAR(100) <<UNIQUE, NOT NULL>>
+    password_hash : VARCHAR(100) <<NOT NULL, BCrypt>>
+    rol : VARCHAR(30) <<NOT NULL>>
+    perfil_id : BIGINT <<referencia logica segun el rol: donante.id, entidad_beneficiaria.id o logistica.camion.id (CHOFER), sin FK>>
+    activo : BOOLEAN
+  }
+
+  usuario }o..o| donante : perfil_id (DONANTE)
+  usuario }o..o| entidad_beneficiaria : perfil_id (ENTIDAD_BENEFICIARIA)
 }
 
 package "logistica" {
@@ -229,7 +246,9 @@ package "logistica" {
     orden : INTEGER
     destino : VARCHAR(255)
     entidad_id : BIGINT <<referencia logica a donaciones.entidad_beneficiaria, sin FK>>
-    estado : VARCHAR(20)
+    latitud : DOUBLE <<copia de la ubicacion de la entidad al planificar>>
+    longitud : DOUBLE
+    estado : VARCHAR(20) <<PENDIENTE / ENTREGADA / NO_RECIBIDA>>
   }
 
   ruta ||--o{ parada

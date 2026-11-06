@@ -20,6 +20,7 @@ package "Common Lib" {
   enum Rol {
     DONANTE
     ENTIDAD_BENEFICIARIA
+    CHOFER
     ADMINISTRADOR
     SISTEMA
   }
@@ -89,6 +90,10 @@ package "Microservicio Notificaciones" {
     mensaje : String
     contacto : MedioContacto
     completada : Boolean
+    tipoEvento : String
+    tipoDestinatario : String
+    destinatarioId : Long
+    donacionId : Long
   }
 }
 
@@ -158,10 +163,12 @@ package "Microservicio Donaciones" {
     cambiarEstado(nuevoEstado : TipoEstadoDonacion, justificacion : String) : void
     asignarA(entidad : EntidadBeneficiaria, necesidad : Necesidad) : void
     volverADeposito(justificacion : String) : void
+    reprogramarEntrega(justificacion : String) : void
     confirmarEntrega(patenteCamion : String, fechaEntrega : LocalDateTime) : void
     confirmarRecepcion(fotos : List<String>) : void
     recepcionConfirmada() : boolean
     fechaDelEstadoActual() : LocalDateTime
+    justificacionDelEstadoActual() : String
     fechaAsignacion() : LocalDateTime
     patenteCamionDeLaEntrega() : String
     cantidadBienesRecibidos(unidad : UnidadDeMedida) : Double
@@ -211,9 +218,15 @@ package "Microservicio Donaciones" {
     id : Long
     razonSocial : String
     direccion : String
+    latitud : Double
+    longitud : Double
     telefono : MedioContacto
     correoRepresentantes : List<MedioContacto>
     necesidades : List<Necesidad>
+    mudarseA(direccion : String) : void
+    ubicarEn(latitud : double, longitud : double) : void
+    estaUbicada() : boolean
+    necesita(subcategoria : Subcategoria) : boolean
     registrarNecesidad(necesidad : Necesidad) : void
     confirmarEntrega(donacion : Donacion, patenteCamion : String, fechaEntrega : LocalDateTime) : void
     eliminarNecesidad(necesidadId : Long) : void
@@ -259,9 +272,11 @@ package "Microservicio Donaciones" {
   class GestorDeEventos {
     notificarAusenciaDonante(donante: Donante): void
     verificarInactividadDonantes(): void
+    verificarInactividadDiaria(): void
     iniciarRuta(request: InicioRutaRequest): void
     emitirEntregaExitosa(entidad: EntidadBeneficiaria, donaciones: List<Donacion>, patente: String, fechaHora: LocalDateTime): void
     notificarEntregaFallida(donacionId: Long, motivo: String): void
+    emitirRecepcionConfirmada(donacion: Donacion): void
   }
 
   interface EventoDonaciones {
@@ -272,6 +287,7 @@ package "Microservicio Donaciones" {
   }
 
   class EventoDonacionAsignada implements EventoDonaciones {
+    donacion : Donacion
     donante : Donante
     entidad : EntidadBeneficiaria
   }
@@ -285,6 +301,12 @@ package "Microservicio Donaciones" {
   class EventoEntregaFallida implements EventoDonaciones {
     donacion : Donacion
     motivo : String
+  }
+
+  class EventoRecepcionConfirmada implements EventoDonaciones {
+    donacion : Donacion
+    donante : Donante
+    entidad : EntidadBeneficiaria
   }
 
   interface ListenerDonaciones {
@@ -309,6 +331,11 @@ package "Microservicio Donaciones" {
   class EntregaFallidaListener implements ListenerDonaciones {
     register() : void
     ejecutar(evento: EventoEntregaFallida) : void
+  }
+
+  class RecepcionConfirmadaListener implements ListenerDonaciones {
+    register() : void
+    ejecutar(evento: EventoRecepcionConfirmada) : void
   }
 
   interface AlgoritmoAsignacion {
@@ -345,8 +372,58 @@ package "Microservicio Donaciones" {
     fechaHora: LocalDateTime
   }
 
+  ' La importacion corre en segundo plano: el administrador ve el avance de cada tarea
   class ImportadorDeDonantes {
+    tareas : List<ImportacionTarea>
+    iniciarImportacion(archivo: InputStream, nombreArchivo: String): ImportacionTarea
+    obtenerImportaciones(): List<ImportacionTarea>
+    obtenerImportacion(id: String): Optional<ImportacionTarea>
     importarDonantes(pathArchivo: String): void
+  }
+
+  class ImportacionTarea {
+    id : String
+    nombreArchivo : String
+    fecha : String
+    estado : String
+    totalFilas : int
+    procesadas : int
+    creados : int
+    actualizados : int
+    descartadas : int
+    errores : List<FilaErrorDto>
+    agregarError(error: FilaErrorDto): void
+  }
+
+  ' Crea el usuario de un donante cargado por el administrador (CSV o recepcion) y le manda su clave
+  class AccesoInicialDonante {
+    otorgar(donanteId: Long, nombre: String, email: String, donanteNuevo: boolean): void
+  }
+
+  interface Geocodificador {
+    ubicar(direccion: String): Coordenadas
+  }
+
+  ' Valida y ubica direcciones con la API Georef (apis.datos.gob.ar)
+  class GeorefGeocodificador implements Geocodificador {
+    url : String
+    ubicar(direccion: String): Coordenadas
+  }
+
+  class Coordenadas <<record>> {
+    latitud : double
+    longitud : double
+    normalizada : String
+  }
+
+  ' Servidor gRPC al que llama logistica-service (TPA 4)
+  class DonacionesGrpcServiceImpl {
+    listarDonacionesPorEstado(...)
+    actualizarEstadoDonacion(...)
+    confirmarEntregaDonaciones(...)
+    obtenerContactosEntidad(...)
+    obtenerDonacion(...)
+    obtenerContactoDonante(...)
   }
 
   enum TipoEstadoDonacion {
@@ -385,6 +462,7 @@ package "Microservicio Donaciones" {
     KILOGRAMOS
     LITROS
     cantidadDe(bien : Bien) : double
+    {static} redondear(cantidad : double) : double
   }
 
   enum EstadoPropuesta {
@@ -393,13 +471,17 @@ package "Microservicio Donaciones" {
     RECHAZADO
   }
 
-  ' Credenciales de la plataforma web. El perfil se referencia por id: Donante o EntidadBeneficiaria segun el rol
+  ' Credenciales de la plataforma web. El perfil se referencia por id segun el rol:
+  ' Donante, EntidadBeneficiaria o, para el CHOFER, el Camion de logistica-service
   class Usuario {
+    id : Long
     username : String
     passwordHash : String
     rol : Rol
     perfilId : Long
     activo : boolean
+    {static} normalizar(username: String): String
+    comoAutenticado(): UsuarioAutenticado
   }
 }
 
@@ -426,9 +508,11 @@ package "Microservicio Logistica" {
     fecha: LocalDate
     estado: EstadoRuta
     camion: Camion
+    chofer: Chofer
     paradas: List<Parada>
     iniciar()
     finalizar()
+    todasLasParadasResueltas(): boolean
   }
 
   class Ubicacion {
@@ -443,16 +527,42 @@ package "Microservicio Logistica" {
     orden: Integer
     destino: String
     entidadId: Long
+    latitud: Double
+    longitud: Double
+    estado: EstadoParada
     donacionIds: List<Long>
+    coordenadas(): double[]
+    marcarEntregada()
+    marcarNoRecibida()
   }
 
+  ' Adaptador hacia el componente externo de planificacion de rutas: le manda las donaciones
+  ' (lotes de hasta 100) y los camiones, y el resultado vuelve por callback REST.
+  ' En la entrega el componente se simula: calcularPlanificacion reparte por peso y volumen.
   class GestorPlanificacionRutas {
     solicitarPlanificacion(donaciones : List<DonacionDTO>, camiones : List<Camion>) : void
+    calcularPlanificacion(donaciones : List<DonacionDTO>, camiones : List<Camion>) : EjecutarPlanificacionRequest
+  }
+
+  ' Ubicacion de respaldo de una parada cuando la entidad no tiene coordenadas
+  class GeocodificadorCaba <<utility>> {
+    {static} ubicar(direccion : String, entidadId : Long) : double[]
+  }
+
+  ' Cliente gRPC hacia donaciones-service (x-api-key en metadata)
+  class DonacionesGrpcClient {
+    listarPorEstado(estado : String, limit : int, offset : int) : List<DonacionDTO>
+    actualizarEstado(donacionId : Long, nuevoEstado : String, justificacion : String) : void
+    confirmarEntrega(entidadId : Long, donacionesIds : List<Long>, patente : String, fechaHora : LocalDateTime) : void
+    obtenerContactosEntidad(entidadId : Long) : List<MedioContacto>
+    obtenerDonacion(donacionId : Long) : DonacionResponse
+    obtenerContactoDonante(donanteId : Long) : MedioContacto
   }
 
   class GestorDeRutas {
     iniciarRuta(ruta : Ruta) : void
     confirmarEntregaExitosa(parada : Parada, ruta : Ruta) : void
+    registrarEntregaFallida(parada : Parada, motivo : String) : void
   }
 
   class PlanificadorDeRutas {
@@ -470,6 +580,12 @@ package "Microservicio Logistica" {
     PLANIFICADA
     EN_TRASLADO
     FINALIZADA
+  }
+
+  enum EstadoParada {
+    PENDIENTE
+    ENTREGADA
+    NO_RECIBIDA
   }
 
   interface EventoLogistica {
@@ -548,6 +664,8 @@ Camion --> Chofer
 Ruta --> EstadoRuta
 Ruta --> Camion
 Ruta --> "*" Parada
+Ruta --> Chofer
+Parada --> EstadoParada
 Camion --> Ubicacion
 
 EntidadBeneficiaria ..> Donacion
@@ -570,6 +688,11 @@ EventoDonacionAsignada --> EntidadBeneficiaria
 EventoEntregaExitosa --> EntidadBeneficiaria
 EventoEntregaExitosa --> "*" Donacion
 EventoEntregaFallida --> Donacion
+EventoDonacionAsignada --> Donacion
+EventoRecepcionConfirmada --> Donacion
+EventoRecepcionConfirmada --> Donante
+EventoRecepcionConfirmada --> EntidadBeneficiaria
+RecepcionConfirmadaListener ..> EventoRecepcionConfirmada
 
 EventManagerLogistica --> "*" ListenerLogistica
 EventManagerLogistica ..> EventoLogistica
@@ -594,6 +717,10 @@ GestorDeRutas ..> Ruta
 GestorDeRutas ..> Parada
 GestorDeRutas ..> EventManagerLogistica
 PlanificadorDeRutas ..> GestorPlanificacionRutas
+PlanificadorDeRutas --> DonacionesGrpcClient
+GestorDeRutas --> DonacionesGrpcClient
+InicioRutaListener --> DonacionesGrpcClient
+GestorPlanificacionRutas ..> GeocodificadorCaba
 PlanificadorDeRutas ..> Camion
 MonitorDeRutas ..> Camion
 MonitorDeRutas ..> Ruta
@@ -610,10 +737,19 @@ SegmentadorDeDonacion ..> RegistroDonacion
 SegmentadorDeDonacion ..> Bien
 
 ImportadorDeDonantes ..> Donante
+ImportadorDeDonantes --> "*" ImportacionTarea
+ImportadorDeDonantes --> AccesoInicialDonante
+AccesoInicialDonante ..> Usuario
+GeorefGeocodificador ..> Coordenadas
+EntidadBeneficiaria ..> Geocodificador : ubicada al registrarse
+DonacionesGrpcServiceImpl ..> Donacion
+DonacionesGrpcServiceImpl ..> EntidadBeneficiaria
+DonacionesGrpcClient ..> DonacionesGrpcServiceImpl : gRPC / HTTP2
 
 Usuario --> Rol
 Usuario ..> Donante : perfilId
 Usuario ..> EntidadBeneficiaria : perfilId
+Usuario ..> Camion : perfilId (CHOFER)
 
 Email --> ProveedorEmail
 SMS --> ProveedorSMS

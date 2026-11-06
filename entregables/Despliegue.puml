@@ -1,12 +1,14 @@
 @startuml Despliegue
 
-' Forzar orientación horizontal y líneas limpias
+' Despliegue en Azure: una maquina virtual con Docker que levanta todo con
+' "docker compose --profile full up -d --build" (ver docker-compose.yml).
+' Los servicios se hablan por la red interna de compose usando el nombre del servicio.
+
 left to right direction
 skinparam linetype ortho
 skinparam nodesep 50
 skinparam ranksep 60
 
-' Estilos y Colores Globales
 skinparam node {
     BackgroundColor #E3F2FD
     BorderColor #1976D2
@@ -43,86 +45,90 @@ skinparam storage {
     FontStyle bold
 }
 
-' --- 1. CAPA CLIENTE ---
-node "Dispositivo Usuario" <<Device>> {
-    component "Navegador Web\n(Desktop / Mobile)" as Nav
+' --- 1. CLIENTE ---
+node "Dispositivo del usuario" <<Device>> {
+    component "Navegador web\n(donante, entidad, administrador\no chofer; desktop o celular)" as Nav
 }
 
-' --- RED INTERMEDIA ---
-cloud "Internet Pública" as Net
+cloud "Internet" as Net
 
-' --- 2. ENTORNO CLOUD (INFRAESTRUCTURA DE DESPLIEGUE) ---
-rectangle "Infraestructura Cloud (Red Privada / VPC)" {
+' --- 2. AZURE ---
+rectangle "Microsoft Azure (Azure for Students)" {
 
-    ' Capa de Presentación (Frontend)
-    node "Nodo Cloud: Web" as NodeWeb {
-        component "web-service\n(Javalin + Handlebars)\nPuerto :7070" as Front
-        component "Sesiones en Memoria\n(JWT por usuario)" as Sesiones
-    }
+    rectangle "Network Security Group\n(entrada publica solo al puerto del web-service)" as NSG
 
-    storage "Volumen Persistente\n(/data/fotos)" as StorageFotos
+    node "Azure Virtual Machine\n(Linux + Docker Engine)" <<VM>> as VM {
 
-    ' Capa de Dominio (Microservicios en Nodos Separados)
-    node "Nodo Cloud: Donaciones (Principal)" as NodeS1 {
-        component "donaciones-service\n(Spring Boot)\nREST :8080\ngRPC Server :9090" as S1
-    }
+        rectangle "Red interna de docker compose (donatrack)" {
 
-    node "Nodo Cloud: Logística (Extraído)" as NodeS2 {
-        component "logistica-service\n(Spring Boot)\nREST :8081\ngRPC Client" as S2
-    }
+            node "Contenedor donatrack-web" <<Docker>> as CWeb {
+                component "web-service\n(Javalin + Handlebars)\n:7070" as Web
+            }
 
-    node "Nodo Cloud: Notificaciones" as NodeS3 {
-        component "notificaciones-service\n(Spring Boot)\nREST :8082" as S3
-    }
+            node "Contenedor donatrack-donaciones" <<Docker>> as CDon {
+                component "donaciones-service\n(Spring Boot)\nREST :8080\ngRPC server :9090" as Don
+            }
 
-    ' Capa de Persistencia Administrada
-    database "PostgreSQL Administrado\n(Managed DB / Neon)" as NodeDB {
-        component "Base donaciones" as DB1
-        component "Base logistica" as DB2
-        component "Base notificaciones" as DB3
+            node "Contenedor donatrack-logistica" <<Docker>> as CLog {
+                component "logistica-service\n(Spring Boot)\nREST :8081\ngRPC client" as Log
+            }
+
+            node "Contenedor donatrack-notificaciones" <<Docker>> as CNot {
+                component "notificaciones-service\n(Spring Boot)\nREST :8082" as Not
+            }
+
+            database "Contenedor donatrack-postgres\nPostgreSQL 16 :5432" as PG {
+                component "Base donaciones" as DB1
+                component "Base logistica" as DB2
+                component "Base notificaciones" as DB3
+            }
+        }
+
+        storage "Volumen Docker fotos-data\n(/data/fotos)" as VolFotos
+        storage "Volumen Docker postgres-data" as VolPG
     }
 }
 
-' --- 3. SISTEMAS EXTERNOS ---
-node "Sistemas Externos" <<External System>> #ECEFF1 {
-    component "APIs de Mensajería\n(Resend / Twilio)" as Ext
-    component "Componente Externo de\nPlanificación de Rutas" as Planif
+' --- 3. SERVICIOS EXTERNOS ---
+node "Servicios externos" <<External System>> #ECEFF1 {
+    component "Componente externo de\nplanificacion de rutas\n(en la entrega lo simula\nGestorPlanificacionRutas)" as Planif
+    component "Georef API\n(apis.datos.gob.ar)\nvalidar y ubicar direcciones" as Georef
+    component "Mensajeria\nSMTP (Brevo) / Resend\nTwilio (SMS y WhatsApp)" as Msg
+    component "OpenStreetMap + Leaflet\n(teselas del mapa y libreria JS)" as OSM
 }
 
-' --- ALINEACIÓN VERTICAL INTERNA ---
-NodeWeb -[hidden]down-> StorageFotos
-NodeS1 -[hidden]down-> NodeS2
-NodeS2 -[hidden]down-> NodeS3
+' --- Alineacion ---
+CWeb -[hidden]down-> VolFotos
+CDon -[hidden]down-> CLog
+CLog -[hidden]down-> CNot
 DB1 -[hidden]down-> DB2
 DB2 -[hidden]down-> DB3
+PG -[hidden]down-> VolPG
 
-' --- FLUJOS Y CONEXIONES ---
+' --- Conexiones ---
+Nav --> Net : HTTP (HTML + cookie de sesion)
+Net --> NSG
+NSG --> Web : :7070
+Nav --> OSM : HTTPS (mapas de entregas y hoja de ruta)
 
-' Cliente -> Internet -> Frontend Web
-Nav --> Net : HTTPS (HTML + cookie donatrack_session)
-Net --> Front : HTTPS (Reverse Proxy / SSL)
-Front -- Sesiones
-Front --> StorageFotos : Almacenamiento fotos recepción (disco persistente)
+Web --> VolFotos : fotos de recepcion
+Web --> Don : REST :8080 + JWT\n(login, catalogo, donaciones, entidades)
+Web --> Log : REST :8081 + JWT\n(camiones, rutas, posiciones)
+Web --> Not : REST :8082 + JWT\n(notificaciones de cada usuario)
 
-' Frontend -> Microservicios (Red Privada, REST + JWT Bearer)
-Front --> S1 : HTTP/1.1 REST (:8080) + JWT
-Front --> S2 : HTTP/1.1 REST (:8081) + JWT
-Front --> S3 : HTTP/1.1 REST (:8082) + JWT
+Log --> Don : gRPC sobre HTTP/2 :9090\n[x-api-key en metadata]
+Log --> Planif : HTTPS: donaciones (lotes de hasta 100) + camiones
+Planif --> Log : callback asincronico HTTPS\nPOST /api/rutas/planificaciones/resultados
 
-' Integración inter-servicios: Logística -> Donaciones vía gRPC HTTP/2
-S2 --> S1 : gRPC sobre HTTP/2 (:9090)\n[x-api-key en metadata]
+Don --> Not : REST :8082\n(eventos de donaciones)
+Log --> Not : REST :8082 + X-Api-Key\n(inicio de ruta)
 
-' Integración inter-servicios: Notificaciones vía REST
-S1 --> S3 : HTTP REST (:8082)\n[notificaciones de eventos]
-S2 --> S3 : HTTP REST (:8082)\n[notificaciones de rutas]
+Don --> DB1 : JDBC
+Log --> DB2 : JDBC
+Not --> DB3 : JDBC
+PG --> VolPG
 
-' Microservicios -> PostgreSQL Administrado (Bases separadas)
-S1 --> DB1 : TCP/IP JDBC (SSL)
-S2 --> DB2 : TCP/IP JDBC (SSL)
-S3 --> DB3 : TCP/IP JDBC (SSL)
-
-' Salida a Sistemas Externos
-S3 --> Ext : HTTPS (Email / WhatsApp / SMS)
-S2 <--> Planif : HTTP REST (Callback asíncrono)
+Don --> Georef : HTTPS
+Not --> Msg : SMTP / HTTPS (email, SMS, WhatsApp)
 
 @enduml

@@ -4,7 +4,6 @@ Instrucciones para quien trabaje en este repo (personas o agentes de IA).
 
 ## Contexto
 - Consigna de la entrega actual: [`documents/ConsignaTPA4.md`](documents/ConsignaTPA4.md).
-- Plan de cada integrante: [`documents/planes-tpa4/`](documents/planes-tpa4/) (A: público y entidad, B: donante, C: admin y despliegue).
 - Cómo agregar una pantalla al sitio web: [`web-service/README.md`](web-service/README.md).
 - Rama de trabajo: `entrega-4`.
 - **Commits:** los firma solo quien los hace. Los agentes de IA no se agregan como colaboradores: nada de `Co-Authored-By` ni de "Generated with ..." en commits ni en PRs.
@@ -22,8 +21,6 @@ Primero el boceto y después el código. La consigna pide realizar los bocetos y
    - `nombre` va en minúsculas, sin tildes y con guiones.
    - Agregar la fila correspondiente en [`documents/bocetos/README.md`](documents/bocetos/README.md) (requisito, pantalla, ruta y archivo).
 4. **Implementarlo en código** siguiendo el boceto (controller, ruta con roles en `Router`, plantilla en `templates/<rol>/` y estilos de `styles.css`, como explica el README del `web-service`). Si al implementar hay que cambiar algo, se actualiza también el boceto y su PNG.
-
-Al terminar, tildar el boceto y la pantalla en el plan que corresponda.
 
 ## Convenciones de pantallas
 - **Navegación con sesión** (ver `documents/bocetos/10-necesidades.png` y `10e-menu-perfil.png`):

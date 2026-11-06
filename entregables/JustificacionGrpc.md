@@ -8,11 +8,15 @@
 
 ## 1. Contexto del Problema
 
-En la arquitectura de microservicios de **DonaTrack**, el servicio extraído (`logistica-service`) necesita interactuar de forma intensiva y sincrónica con el servicio central (`donaciones-service`):
-1. **Planificación de rutas:** Consulta lotes de donaciones en estado `ASIGNACION_REALIZADA` y actualiza masivamente sus estados a `LISTA_PARA_ENTREGAR`.
-2. **Ejecución de rutas:** Notifica el inicio de viaje pasando estados a `EN_TRASLADO`.
-3. **Cierre de entregas:** Registra la confirmación física de entrega con los IDs de paradas y camiones.
-4. **Notificaciones de trayecto:** Consulta en tiempo real los datos y medios de contacto de donantes y entidades beneficiarias.
+En la arquitectura de microservicios de **DonaTrack**, el servicio extraído (`logistica-service`) necesita interactuar de forma intensiva y sincrónica con el servicio central (`donaciones-service`). El contrato (`DonacionesGrpcService`) tiene una operación por cada necesidad:
+
+| Operación gRPC | Quién la usa en logística | Para qué |
+|---|---|---|
+| `ListarDonacionesPorEstado` | `PlanificadorDeRutas` | Traer en lotes de 100 las donaciones `ASIGNACION_REALIZADA`, con peso, volumen y ubicación de la entidad. |
+| `ActualizarEstadoDonacion` | `PlanificadorDeRutas`, `GestorDeRutas` | Pasar a `LISTA_PARA_ENTREGAR`, `EN_TRASLADO` o `ENTREGA_FALLIDA` (con el motivo). |
+| `ConfirmarEntregaDonaciones` | `GestorDeRutas` | Registrar la entrega de una parada con la patente del camión y la hora. |
+| `ObtenerContactosEntidad` | `InicioRutaListener` | Avisar a la entidad que el camión salió. |
+| `ObtenerDonacion` / `ObtenerContactoDonante` | `InicioRutaListener` | Avisar a cada donante que su donación está en camino. |
 
 Originalmente, esta comunicación se realizaba mediante llamadas HTTP/REST (`RestTemplate` con payloads JSON). La consigna de la Entrega 4 exige evaluar e incorporar una tecnología moderna de integración de alto rendimiento entre ambos componentes.
 
@@ -55,5 +59,6 @@ A diferencia de las APIs REST públicas que se autentican con tokens JWT de usua
    * El cliente en `logistica-service` incluye un `ApiKeyGrpcClientInterceptor` que inyecta en los metadatos gRPC la clave secreta compartida (`SERVICE_API_KEY`).
    * El servidor en `donaciones-service` cuenta con un `ApiKeyGrpcServerInterceptor` que intercepta toda llamada entrante: si la clave no coincide, cierra la conexión inmediatamente con código gRPC `Status.UNAUTHENTICATED` (código HTTP/2 equivalente a 401), sin llegar a ejecutar código de negocio.
 2. **Aislamiento en Red Privada:**
-   * En el despliegue cloud (Docker / Render / Railway), el puerto gRPC (`9090`) solo se expone hacia la red privada interna del cluster, permaneciendo inaccesible desde el Internet público.
+   * En el despliegue en Azure (una VM con `docker compose`), logística llega a donaciones por la red interna de compose (`donaciones-service:9090`). El Network Security Group de la VM solo abre al público el puerto del sitio web, así que el puerto gRPC no es accesible desde Internet.
+   * Como la llamada no pasa por el proxy HTTP/1.1 de una plataforma administrada, HTTP/2 funciona de punta a punta sin configuración extra (ver la sección 6 de [`JustificacionesDeDiseno.md`](JustificacionesDeDiseno.md)).
 

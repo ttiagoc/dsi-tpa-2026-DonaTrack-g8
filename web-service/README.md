@@ -3,9 +3,8 @@
 Cliente liviano con MVC del lado del servidor: **Javalin** atiende HTTP, **Handlebars** arma el HTML y los
 datos se piden por HTTP a las APIs (`donaciones-service`, `logistica-service`, `notificaciones-service`).
 No tiene base de datos ni depende de `common-lib`. Sigue el apunte de la cátedra *"Introducción a MVC Web del
-lado del servidor con Javalin"*; las decisiones están en el Plan A (sección 2.2,
-[`documents/planes-tpa4/Plan-A-Plataforma-Publico-Entidad.md`](../documents/planes-tpa4/Plan-A-Plataforma-Publico-Entidad.md))
-y en [`entregables/JustificacionWebService.md`](../entregables/JustificacionWebService.md).
+lado del servidor con Javalin"*; las decisiones están en
+[`entregables/JustificacionWebService.md`](../entregables/JustificacionWebService.md).
 
 ## Levantarlo en local
 

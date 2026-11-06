@@ -13,7 +13,7 @@ Acompaña a [DER.puml](DER.puml). Para cada tabla se explica brevemente por qué
 Entidad con identidad propia, se guarda cada notificación enviada. El `MedioContacto` de destino se embebe (`contacto_valor`, `contacto_tipo_contacto`) porque es un value object sin identidad.
 Además, almacena atributos de contexto de negocio y auditoría:
 - `tipo_evento`: el tipo o motivo de la notificación (por ejemplo `DONACION_RECIBIDA`, `ENTREGA_EXITOSA`, `RECORDATORIO_INACTIVIDAD`).
-- `destinatario_id`: identificador lógico del destinatario (donante o entidad beneficiaria), sin FK externa para mantener el aislamiento entre microservicios.
+- `tipo_destinatario` (`DONANTE`, `ENTIDAD` o `ADMINISTRADOR`) y `destinatario_id`: a quién va dirigida. Hacen falta los dos porque los ids de donantes y entidades salen de tablas distintas y pueden repetirse; con el par, cada usuario ve solo sus avisos. El id es lógico, sin FK, para mantener el aislamiento entre microservicios.
 - `donacion_id`: identificador lógico de la donación asociada si aplica, sin FK externa.
 
 ## Esquema `donaciones`
@@ -28,7 +28,7 @@ Lista de `MedioContacto` del donante. Al ser value objects sin identidad, se gua
 Representantes de una persona jurídica. No tienen id ni se consultan o editan por separado, siempre se manejan junto al donante, así que van en una tabla auxiliar con FK al donante. Su correo (`MedioContacto`) se aplana en columnas.
 
 ### `categoria`
-Catálogo de categorías con `nombre` único, cargado previamente desde su propio endpoint. Es una tabla propia, y no una copia dentro de cada bien, para que todas las referencias compartan los mismos valores de `pide_estado` y `es_perecedero`.
+Catálogo de categorías con `nombre` único, que el administrador mantiene desde su ABM. Es una tabla propia, y no una copia dentro de cada bien, para que todas las referencias compartan los mismos valores de `pide_estado` y `es_perecedero`.
 
 ### `subcategoria`
 Catálogo de subcategorías con FK a su categoría. Es la unidad mínima de asignación del sistema y la referencian `donacion`, `donacion_bienes` y `necesidad`, por lo que debe existir una única vez.
@@ -51,6 +51,8 @@ Entidad central del sistema, con id propio y su propio ABM. Cada registro genera
 ### `donacion_bienes`
 Bienes de cada donación. No tienen id ni se consultan por separado, siempre se leen junto a su donación, así que van en una tabla auxiliar con FK a `donacion`. La subcategoría sí es una FK real al catálogo.
 
+`peso_kg_por_unidad` y `volumen_m3_por_unidad` se guardan **por unidad** y no como total: así el bien se describe igual que en la recepción ("20 paquetes de 0,5 kg") y los totales (`cantidad × valor`) se calculan cuando hacen falta, sin riesgo de que el total quede desactualizado si cambia la cantidad. Los usan la planificación de rutas (cuánto ocupa la donación en el camión) y las necesidades medidas en kilogramos o litros. La API los exige al crear un bien; en la base admiten `NULL` solo por las filas cargadas antes de esa validación, que aportan 0 a los cálculos.
+
 ### `cambio_estado`
 Historial de cambios de estado de la donación, para trazabilidad y auditoría. `CambioEstado` es un value object: no tiene identidad propia, no se consulta por fuera de su donación y no existe sin ella. Por eso va en un `@ElementCollection` de la donación, en vez de ser una entidad con id propio.
 
@@ -66,11 +68,20 @@ URLs de las fotos de recepción. Es una lista de valores simples (`String`) sin 
 ### `entidad_beneficiaria`
 Entidad con id propio y su propio ABM. El teléfono (`MedioContacto`) se embebe en columnas.
 
+`latitud` y `longitud` se obtienen de la API Georef al registrar la entidad o cambiar su dirección, y se guardan junto a la dirección en lugar de calcularse cada vez: los mapas y la planificación de rutas las leen muchas veces y Georef es un servicio externo que puede no responder. Admiten `NULL` para las entidades cargadas antes de este cambio.
+
 ### `entidad_beneficiaria_correo_representantes`
 Lista de correos de los representantes. Mismo criterio que `donante_contactos`: tabla auxiliar con FK a la entidad.
 
 ### `necesidad`
 Entidad propia, a diferencia de `Bien`, porque se consulta y se elimina individualmente por su id. El tipo de necesidad es un Strategy (`NecesidadExtraordinaria` / `NecesidadRecurrente`), no herencia de entidades, por lo que se aplana en dos columnas: `tipo_necesidad`, que indica cuál corresponde, y `periodo`, que solo se usa si es recurrente. Sus donaciones asignadas se vinculan con la FK `donacion.necesidad_id` (ver `donacion`).
+
+`unidad` (`UNIDADES`, `KILOGRAMOS` o `LITROS`) dice en qué se mide `cantidad`. Lo asignado no se guarda: se calcula a partir de los bienes de las donaciones asignadas, así nunca queda desactualizado cuando una donación vuelve al depósito o se reasigna. Las filas anteriores a esta columna quedan en `NULL` y se interpretan como unidades, que era el único criterio antes, así que no hizo falta migrar datos.
+
+### `usuario`
+Credenciales para entrar a la plataforma: `username` único, `password_hash` (BCrypt, nunca la contraseña), `rol` y `activo`. Es una tabla aparte de `donante` y `entidad_beneficiaria` porque los perfiles existen también sin usuario (importación CSV, alta en el depósito) y porque hay usuarios sin perfil en este esquema (administradores, choferes).
+
+`perfil_id` apunta a un registro distinto según el rol: un donante, una entidad o, para el chofer, un camión del esquema `logistica`. Por eso es un id sin FK: una FK solo puede apuntar a una tabla, y el camión está en otro servicio.
 
 ### `resultado_matchmaking`
 Entidad propia: cada propuesta del matchmaking se consulta y se acepta o rechaza por su id. Tiene FK a la donación evaluada.
@@ -93,6 +104,8 @@ Adicionalmente, guarda un snapshot histórico embebido del chofer (`chofer_nombr
 ### `parada`
 Se modela como entidad con id propio: la API confirma o reporta fallas de entrega de una parada puntual por su id, y además cada parada tiene su propia lista de ids de donaciones, algo que JPA no permite de forma portable si la parada fuera un elemento embebido dentro de la colección de la ruta. `entidad_id` referencia a una entidad beneficiaria de otro microservicio, así que es un id simple sin FK.
 Dispone de una columna `estado` (`PENDIENTE`, `ENTREGADA`, `NO_RECIBIDA`) que permite conocer el progreso y resultado de cada parada individualmente a lo largo de la ruta, sin depender únicamente del estado global de la `ruta`.
+
+`latitud` y `longitud` son una copia de la ubicación de la entidad al planificar. Se copian, aunque estén en el esquema `donaciones`, para que la hoja de ruta y los mapas no tengan que consultar a otro servicio por cada parada, y para que una ruta ya planificada no cambie si la entidad se muda después.
 
 ### `parada_donaciones`
 Ids de las donaciones a entregar en cada parada, en una tabla auxiliar con FK a `parada`. `donacion_id` pertenece al esquema `donaciones`, así que no tiene FK real.
