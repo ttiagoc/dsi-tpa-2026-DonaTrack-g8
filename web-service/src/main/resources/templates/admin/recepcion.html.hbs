@@ -93,13 +93,15 @@
                   <small class="campo__ayuda" data-aviso-no-aplica hidden>No aplica: la categoría no vence</small>
                   {{#if ../errores.fechaVencimiento}}<small class="campo__error">{{../errores.fechaVencimiento}}</small>{{/if}}
                 </div>
-                <div class="campo">
-                  <label>Peso por unidad (kg)</label>
-                  <input type="number" name="pesoKg" value="{{pesoKg}}" min="0.01" step="any" placeholder="1.0">
+                <div class="campo{{#if ../errores.pesoKg}} campo--error{{/if}}">
+                  <label>Peso por unidad (kg) <span class="campo__requerido" aria-hidden="true">*</span></label>
+                  <input type="number" name="pesoKg" value="{{pesoKg}}" required min="0.01" step="any" placeholder="0.5">
+                  {{#if ../errores.pesoKg}}<small class="campo__error">{{../errores.pesoKg}}</small>{{/if}}
                 </div>
-                <div class="campo">
-                  <label>Volumen por unidad (m³)</label>
-                  <input type="number" name="volumenM3" value="{{volumenM3}}" min="0.0001" step="any" placeholder="0.001">
+                <div class="campo{{#if ../errores.volumenM3}} campo--error{{/if}}">
+                  <label>Volumen por unidad (m³) <span class="campo__requerido" aria-hidden="true">*</span></label>
+                  <input type="number" name="volumenM3" value="{{volumenM3}}" required min="0.0001" step="any" placeholder="0.001">
+                  {{#if ../errores.volumenM3}}<small class="campo__error">{{../errores.volumenM3}}</small>{{/if}}
                 </div>
                 <div class="campo" data-campo-estado>
                   <label>Estado de los bienes</label>
@@ -154,13 +156,15 @@
                 <small class="campo__ayuda" data-aviso-no-aplica hidden>No aplica: la categoría no vence</small>
                 {{#if errores.fechaVencimiento}}<small class="campo__error">{{errores.fechaVencimiento}}</small>{{/if}}
               </div>
-              <div class="campo">
-                <label>Peso por unidad (kg)</label>
-                <input type="number" name="pesoKg" value="{{form.pesoKg}}" min="0.01" step="any" placeholder="1.0">
+              <div class="campo{{#if errores.pesoKg}} campo--error{{/if}}">
+                <label>Peso por unidad (kg) <span class="campo__requerido" aria-hidden="true">*</span></label>
+                <input type="number" name="pesoKg" value="{{form.pesoKg}}" required min="0.01" step="any" placeholder="0.5">
+                {{#if errores.pesoKg}}<small class="campo__error">{{errores.pesoKg}}</small>{{/if}}
               </div>
-              <div class="campo">
-                <label>Volumen por unidad (m³)</label>
-                <input type="number" name="volumenM3" value="{{form.volumenM3}}" min="0.0001" step="any" placeholder="0.001">
+              <div class="campo{{#if errores.volumenM3}} campo--error{{/if}}">
+                <label>Volumen por unidad (m³) <span class="campo__requerido" aria-hidden="true">*</span></label>
+                <input type="number" name="volumenM3" value="{{form.volumenM3}}" required min="0.0001" step="any" placeholder="0.001">
+                {{#if errores.volumenM3}}<small class="campo__error">{{errores.volumenM3}}</small>{{/if}}
               </div>
               <div class="campo" data-campo-estado>
                 <label>Estado de los bienes</label>
@@ -248,12 +252,12 @@
         <small class="campo__ayuda" data-aviso-no-aplica hidden>No aplica: la categoría no vence</small>
       </div>
       <div class="campo">
-        <label>Peso por unidad (kg)</label>
-        <input type="number" name="pesoKg" min="0.01" step="any" placeholder="1.0">
+        <label>Peso por unidad (kg) <span class="campo__requerido" aria-hidden="true">*</span></label>
+        <input type="number" name="pesoKg" required min="0.01" step="any" placeholder="0.5">
       </div>
       <div class="campo">
-        <label>Volumen por unidad (m³)</label>
-        <input type="number" name="volumenM3" min="0.0001" step="any" placeholder="0.001">
+        <label>Volumen por unidad (m³) <span class="campo__requerido" aria-hidden="true">*</span></label>
+        <input type="number" name="volumenM3" required min="0.0001" step="any" placeholder="0.001">
       </div>
       <div class="campo" data-campo-estado>
         <label>Estado de los bienes</label>

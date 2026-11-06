@@ -25,6 +25,9 @@ public class RecepcionAdminController {
 
     private static final String RUTA = "/admin/recepcion";
     private static final String VISTA = "admin/recepcion.html.hbs";
+    // los mismos minimos que los atributos min de los inputs de recepcion.html.hbs
+    private static final double PESO_MINIMO_KG = 0.01;
+    private static final double VOLUMEN_MINIMO_M3 = 0.0001;
 
     private final DonacionesApiClient donaciones;
 
@@ -127,8 +130,10 @@ public class RecepcionAdminController {
                 }
             }
 
-            Double peso = parseDouble(pesoStr);
-            Double vol = parseDouble(volStr);
+            // peso y volumen son obligatorios: con ellos se cubren las necesidades en kg o litros
+            // y se calcula la carga de los camiones. Mismos minimos que los inputs del formulario.
+            Double peso = numeroPositivo(form, "pesoKg", pesoStr, PESO_MINIMO_KG, "El peso por unidad", i);
+            Double vol = numeroPositivo(form, "volumenM3", volStr, VOLUMEN_MINIMO_M3, "El volumen por unidad", i);
             LocalDate venc = parseFecha(vencStr);
 
             // Solo aplican los campos que pide la categoria: si no registra estado o no vence,
@@ -148,12 +153,13 @@ public class RecepcionAdminController {
                 }
             }
 
-            if (bienDesc != null && !bienDesc.isBlank() && subcat != null && !subcat.isBlank()) {
+            if (bienDesc != null && !bienDesc.isBlank() && subcat != null && !subcat.isBlank()
+                    && cant != null && peso != null && vol != null) {
                 bienes.add(new BienAltaRequest(
                         bienDesc,
-                        cant != null ? cant : 1L,
-                        peso != null ? peso : 1.0,
-                        vol != null ? vol : 0.001,
+                        cant,
+                        peso,
+                        vol,
                         est,
                         venc,
                         new SubcategoriaAltaRequest(subcat)
@@ -250,6 +256,29 @@ public class RecepcionAdminController {
             // Sin catalogo no se filtra aca: la API igual valida el bien contra su categoria.
         }
         return mapa;
+    }
+
+    /** Valida un numero obligatorio y mayor o igual al minimo; si no cumple, deja el error y devuelve null. */
+    private Double numeroPositivo(Formulario form, String campo, String valor, double minimo, String nombre, int i) {
+        String articulo = " (artículo #" + (i + 1) + ")";
+        if (valor == null || valor.isBlank()) {
+            form.error(campo, nombre + " es obligatorio" + articulo);
+            return null;
+        }
+        Double numero = parseDouble(valor);
+        if (numero == null) {
+            form.error(campo, nombre + " tiene que ser un número" + articulo);
+            return null;
+        }
+        if (numero < minimo) {
+            form.error(campo, nombre + " tiene que ser al menos " + formatoMinimo(minimo) + articulo);
+            return null;
+        }
+        return numero;
+    }
+
+    private static String formatoMinimo(double minimo) {
+        return java.math.BigDecimal.valueOf(minimo).stripTrailingZeros().toPlainString();
     }
 
     private Double parseDouble(String valor) {

@@ -126,7 +126,7 @@ class EntidadBeneficiariaServiceTest {
 
         assertEquals("Frazadas", respuesta.subcategoria());
         assertEquals("Ropa y abrigo", respuesta.categoria());
-        assertEquals(0L, respuesta.cantidadAsignada());
+        assertEquals(0.0, respuesta.cantidadAsignada());
         assertFalse(respuesta.satisfecha());
         assertEquals("UNIDADES", respuesta.unidad(), "sin unidad se cuenta en unidades");
     }

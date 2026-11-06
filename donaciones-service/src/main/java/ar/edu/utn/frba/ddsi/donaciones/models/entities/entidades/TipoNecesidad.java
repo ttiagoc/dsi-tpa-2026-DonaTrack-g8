@@ -13,6 +13,6 @@ public interface TipoNecesidad {
   default Boolean estaSatisfecha(List<Donacion> donaciones, Long cantidadRequerida, UnidadDeMedida unidad) {
     if (donaciones == null || donaciones.isEmpty())
       return false;
-    return this.cantidadAsignada(donaciones, unidad) >= cantidadRequerida;
+    return UnidadDeMedida.redondear(this.cantidadAsignada(donaciones, unidad)) >= cantidadRequerida;
   }
 }

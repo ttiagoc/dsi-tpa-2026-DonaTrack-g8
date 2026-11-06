@@ -111,11 +111,12 @@ public class Necesidad {
     }
   }
 
+  // medida en la unidad de la necesidad y redondeada igual que en estaSatisfecha
   public Double cantidadAsignada() {
     if (this.tipoNecesidad == null) {
       return 0.0;
     }
-    return this.tipoNecesidad.cantidadAsignada(this.donacionesAsignadas, this.getUnidad());
+    return UnidadDeMedida.redondear(this.tipoNecesidad.cantidadAsignada(this.donacionesAsignadas, this.getUnidad()));
   }
 
   public Boolean estaSatisfecha() {

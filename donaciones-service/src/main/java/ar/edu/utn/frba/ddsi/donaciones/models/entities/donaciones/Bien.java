@@ -79,11 +79,17 @@ public class Bien {
     return key;
   }
 
+  // los bienes nuevos siempre traen peso y volumen (la API los exige); los cargados antes
+  // de esa validacion pueden no tenerlos: ahi aportan 0 en vez de romper el calculo
   public Double calcularPesoTotal() {
+    if (this.pesoKgPorUnidad == null || this.cantidad == null)
+      return 0.0;
     return this.pesoKgPorUnidad * this.cantidad;
   }
 
   public Double calcularVolumenTotal() {
+    if (this.volumenM3PorUnidad == null || this.cantidad == null)
+      return 0.0;
     return this.volumenM3PorUnidad * this.cantidad;
   }
 }

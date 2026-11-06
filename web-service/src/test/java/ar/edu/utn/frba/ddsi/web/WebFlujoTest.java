@@ -1071,6 +1071,22 @@ class WebFlujoTest {
         assertTrue(sinVencimiento.body().contains("La fecha de vencimiento es obligatoria para Alimentos"));
 
         formDonacionValido.put("fechaVencimiento", "2027-03-01");
+
+        // Peso y volumen son obligatorios: no se completan con valores inventados
+        Map<String, String> sinPesoNiVolumen = new LinkedHashMap<>(formDonacionValido);
+        sinPesoNiVolumen.put("pesoKg", "");
+        sinPesoNiVolumen.put("volumenM3", "");
+        HttpResponse<String> respSinPeso = post("/admin/recepcion", sinPesoNiVolumen, adminCookie);
+        assertEquals(400, respSinPeso.statusCode());
+        assertTrue(respSinPeso.body().contains("El peso por unidad es obligatorio (artículo #1)"));
+        assertTrue(respSinPeso.body().contains("El volumen por unidad es obligatorio (artículo #1)"));
+
+        Map<String, String> pesoCero = new LinkedHashMap<>(formDonacionValido);
+        pesoCero.put("pesoKg", "0");
+        HttpResponse<String> respPesoCero = post("/admin/recepcion", pesoCero, adminCookie);
+        assertEquals(400, respPesoCero.statusCode());
+        assertTrue(respPesoCero.body().contains("El peso por unidad tiene que ser al menos 0.01 (artículo #1)"));
+
         HttpResponse<String> respAltaDonacion = post("/admin/recepcion", formDonacionValido, adminCookie);
         assertEquals(302, respAltaDonacion.statusCode());
         assertEquals("/admin/deposito", respAltaDonacion.headers().firstValue("Location").orElse(null));
@@ -1078,6 +1094,8 @@ class WebFlujoTest {
         JsonNode leche = ultimaDonacionPresencial.get().get("bienes").get(0);
         assertTrue(leche.path("estado").isNull() || leche.path("estado").isMissingNode());
         assertEquals("2027-03-01", leche.get("fechaVencimiento").asText());
+        assertEquals(1.0, leche.get("pesoKgPorUnidad").asDouble());
+        assertEquals(0.02, leche.get("volumenM3PorUnidad").asDouble());
 
         // Registro con múltiples bienes (para que el backend los segmente automáticamente)
         String multiBody = "donanteId=1&descripcion=Donación mixta"

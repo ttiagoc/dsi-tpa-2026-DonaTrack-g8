@@ -132,16 +132,24 @@ public class NecesidadesController {
      * donacionesEnCurso: si hay alguna, "Eliminar" explica que no se puede en lugar de pedir confirmacion.
      */
     public record NecesidadVista(Long id, String subcategoria, String categoria, String descripcion,
-            String frecuencia, Long cantidad, Long cantidadAsignada, int porcentaje, boolean satisfecha,
+            String frecuencia, Long cantidad, String cantidadAsignada, int porcentaje, boolean satisfecha,
             long donacionesEnCurso, String unidad) {
 
         static NecesidadVista de(NecesidadResponse n) {
-            long asignada = n.cantidadAsignada() == null ? 0 : n.cantidadAsignada();
+            double asignada = n.cantidadAsignada() == null ? 0 : n.cantidadAsignada();
+            // hacia abajo: la barra llega al 100% solo si de verdad se cubrio (29,9 de 30 kg es 99%)
             int porcentaje = n.cantidad() == null || n.cantidad() == 0 ? 0
-                    : (int) Math.min(100, asignada * 100 / n.cantidad());
+                    : (int) Math.min(100, Math.floor(asignada * 100 / n.cantidad()));
             return new NecesidadVista(n.id(), n.subcategoria(), n.categoria(), n.descripcion(),
-                    Frecuencia.de(n).etiqueta(), n.cantidad(), asignada, porcentaje, Boolean.TRUE.equals(n.satisfecha()),
+                    Frecuencia.de(n).etiqueta(), n.cantidad(), formatear(asignada), porcentaje,
+                    Boolean.TRUE.equals(n.satisfecha()),
                     n.donacionesEnCurso() == null ? 0 : n.donacionesEnCurso(), Unidad.de(n).abreviatura());
+        }
+
+        /** "25" si es entero y "2,5" o "0,75" si no: la API ya la manda redondeada a 2 decimales. */
+        static String formatear(double cantidad) {
+            return new java.math.BigDecimal(String.valueOf(cantidad)).stripTrailingZeros().toPlainString()
+                    .replace('.', ',');
         }
     }
 }
