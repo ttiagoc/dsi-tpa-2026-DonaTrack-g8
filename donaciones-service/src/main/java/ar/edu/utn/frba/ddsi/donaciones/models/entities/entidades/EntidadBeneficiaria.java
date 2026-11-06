@@ -23,6 +23,7 @@ import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.common.models.enums.TipoContacto;
 import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Donacion;
+import ar.edu.utn.frba.ddsi.donaciones.models.entities.donaciones.Subcategoria;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -90,6 +91,12 @@ public class EntidadBeneficiaria {
 
   public void registrarNecesidad(Necesidad necesidad) {
     this.necesidades.add(necesidad);
+  }
+
+  /** Si tiene alguna necesidad cargada de esa subcategoria (solo esas entidades pueden recibir la donacion). */
+  public boolean necesita(Subcategoria subcategoria) {
+    return subcategoria != null && necesidades != null && necesidades.stream()
+        .anyMatch(n -> subcategoria.equals(n.getSubcategoria()));
   }
 
   public void confirmarEntrega(Donacion donacion, String patenteCamion, LocalDateTime fechaEntrega) {

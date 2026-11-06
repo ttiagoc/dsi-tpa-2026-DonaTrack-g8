@@ -98,8 +98,8 @@ public class RecepcionAdminController {
             itemVista.put("bienDescripcion", bienDesc);
             itemVista.put("cantidad", cantStr);
             itemVista.put("fechaVencimiento", vencStr);
-            itemVista.put("pesoKg", pesoStr != null && !pesoStr.isBlank() ? pesoStr : "1.0");
-            itemVista.put("volumenM3", volStr != null && !volStr.isBlank() ? volStr : "0.001");
+            itemVista.put("pesoKg", pesoStr);
+            itemVista.put("volumenM3", volStr);
             itemVista.put("estadoBien", est);
             bienesParaVista.add(itemVista);
 

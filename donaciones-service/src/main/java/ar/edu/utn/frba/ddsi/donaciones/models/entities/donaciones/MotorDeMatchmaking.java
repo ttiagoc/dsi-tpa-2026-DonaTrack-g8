@@ -149,7 +149,15 @@ public class MotorDeMatchmaking {
             if (conPropuestaPendiente.contains(donacion.getId())) {
                 continue;
             }
-            ResultadoMatchmaking resultado = ejecutarMatchmaking(donacion, todasLasEntidades);
+            // solo compiten las entidades que necesitan esa subcategoria; sin ninguna, no hay propuesta
+            List<EntidadBeneficiaria> candidatas = todasLasEntidades.stream()
+                    .filter(entidad -> entidad.necesita(donacion.getSubcategoria()))
+                    .toList();
+            if (candidatas.isEmpty()) {
+                System.out.println("Sin entidades que necesiten la Donación ID: " + donacion.getId());
+                continue;
+            }
+            ResultadoMatchmaking resultado = ejecutarMatchmaking(donacion, candidatas);
             resultadoRepository.save(resultado);
             System.out.println("Propuesta generada con éxito para la Donación ID: " + donacion.getId());
         }

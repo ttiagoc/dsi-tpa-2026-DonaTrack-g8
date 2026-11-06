@@ -20,6 +20,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
@@ -77,10 +78,11 @@ class MotorDeMatchmakingTest {
 
         EntidadBeneficiaria entidad = new EntidadBeneficiaria("Comedor", "Dir 1", "123", new ArrayList<>());
         entidad.setId(1L);
+        entidad.registrarNecesidad(new Necesidad(sub, mock(TipoNecesidad.class), "Necesitamos fideos", 100L));
         List<EntidadBeneficiaria> entidades = List.of(entidad);
         when(entidadRepository.findAll()).thenReturn(entidades);
 
-        when(alg.generarRanking(donacion, entidades)).thenReturn(entidades);
+        when(alg.generarRanking(any(), any())).thenReturn(entidades);
 
         motorDeMatchmaking.procesarMatchmaking();
 
@@ -198,6 +200,80 @@ class MotorDeMatchmakingTest {
         motorDeMatchmaking.procesarMatchmaking();
 
         verify(resultadoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Con los algoritmos reales, no propone entidades sin necesidades de la subcategoria")
+    void procesarMatchmakingNoProponeEntidadesSinNecesidades() {
+        usarAlgoritmosReales();
+        Donacion donacion = donacionEnDeposito();
+        EntidadBeneficiaria conNecesidad = entidadQueNecesita(1L, donacion.getSubcategoria());
+        EntidadBeneficiaria sinNecesidades = entidad(2L);
+
+        when(donacionRepository.buscarPorEstado(TipoEstadoDonacion.EN_DEPOSITO)).thenReturn(List.of(donacion));
+        when(entidadRepository.findAll()).thenReturn(List.of(sinNecesidades, conNecesidad));
+
+        motorDeMatchmaking.procesarMatchmaking();
+
+        assertEquals(List.of(conNecesidad), propuestaGuardada().getEntidadesSugeridas());
+    }
+
+    @Test
+    @DisplayName("Si ninguna entidad necesita la subcategoria de la donacion, no se genera propuesta")
+    void procesarMatchmakingSinEntidadesCompatibles() {
+        usarAlgoritmosReales();
+        Donacion donacion = donacionEnDeposito();
+        Subcategoria otra = new Subcategoria("Sillas", new Categoria("Mobiliario", true, false));
+
+        when(donacionRepository.buscarPorEstado(TipoEstadoDonacion.EN_DEPOSITO)).thenReturn(List.of(donacion));
+        when(entidadRepository.findAll()).thenReturn(List.of(entidad(1L), entidadQueNecesita(2L, otra)));
+
+        motorDeMatchmaking.procesarMatchmaking();
+
+        verify(resultadoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Con mas de diez entidades sin necesidades, igual propone la que necesita la subcategoria")
+    void procesarMatchmakingConMuchasEntidadesSinNecesidades() {
+        usarAlgoritmosReales();
+        Donacion donacion = donacionEnDeposito();
+        List<EntidadBeneficiaria> entidades = new ArrayList<>();
+        for (long id = 1; id <= 12; id++) {
+            entidades.add(entidad(id));
+        }
+        EntidadBeneficiaria conNecesidad = entidadQueNecesita(13L, donacion.getSubcategoria());
+        entidades.add(conNecesidad);
+
+        when(donacionRepository.buscarPorEstado(TipoEstadoDonacion.EN_DEPOSITO)).thenReturn(List.of(donacion));
+        when(entidadRepository.findAll()).thenReturn(entidades);
+
+        motorDeMatchmaking.procesarMatchmaking();
+
+        assertEquals(List.of(conNecesidad), propuestaGuardada().getEntidadesSugeridas());
+    }
+
+    private void usarAlgoritmosReales() {
+        algoritmos.add(new CompatibilidadSemantica());
+        algoritmos.add(new PrioridadSubAtendidos());
+    }
+
+    private EntidadBeneficiaria entidad(Long id) {
+        EntidadBeneficiaria entidad = new EntidadBeneficiaria("Entidad " + id, "Dir " + id, "123", new ArrayList<>());
+        entidad.setId(id);
+        return entidad;
+    }
+
+    private EntidadBeneficiaria entidadQueNecesita(Long id, Subcategoria subcategoria) {
+        EntidadBeneficiaria entidad = entidad(id);
+        entidad.registrarNecesidad(new Necesidad(subcategoria, mock(TipoNecesidad.class), "Necesidad", 10L));
+        return entidad;
+    }
+
+    private ResultadoMatchmaking propuestaGuardada() {
+        ArgumentCaptor<ResultadoMatchmaking> captor = ArgumentCaptor.forClass(ResultadoMatchmaking.class);
+        verify(resultadoRepository, times(1)).save(captor.capture());
+        return captor.getValue();
     }
 
     private Donacion donacionEnDeposito() {
