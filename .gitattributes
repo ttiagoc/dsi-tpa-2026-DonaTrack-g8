@@ -1,0 +1,4 @@
+# Los scripts y la tabla de cron corren en la VM Linux: siempre con fin de linea LF,
+# aunque se clonen en Windows (con CRLF bash y cron fallan).
+*.sh   text eol=lf
+*.cron text eol=lf

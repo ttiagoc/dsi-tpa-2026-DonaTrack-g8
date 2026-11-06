@@ -164,6 +164,27 @@ class AuthApiTest {
         assertEquals(403, enviar(get("/donantes").header("X-Api-Key", serviceApiKey)).statusCode());
     }
 
+    @Test
+    @DisplayName("El cron de la VM dispara el matchmaking y el escaneo diario de inactividad con la clave de servicio")
+    void tareasProgramadasConClaveDeServicio() throws Exception {
+        assertEquals(204, enviar(postVacio("/matchmaking/ejecuciones")
+                .header("X-Api-Key", serviceApiKey)).statusCode());
+        assertEquals(204, enviar(postVacio("/donantes/inactividad/verificaciones-diarias")
+                .header("X-Api-Key", serviceApiKey)).statusCode());
+
+        // sin credenciales o con otro rol no se pueden disparar
+        assertEquals(401, enviar(postVacio("/donantes/inactividad/verificaciones-diarias")).statusCode());
+        String donante = bearer(registrarDonante("cron" + sufijo));
+        assertEquals(403, enviar(postVacio("/matchmaking/ejecuciones")
+                .header("Authorization", donante)).statusCode());
+        assertEquals(403, enviar(postVacio("/donantes/inactividad/verificaciones-diarias")
+                .header("Authorization", donante)).statusCode());
+    }
+
+    private HttpRequest.Builder postVacio(String path) {
+        return HttpRequest.newBuilder(URI.create(BASE + path)).POST(HttpRequest.BodyPublishers.noBody());
+    }
+
     private JsonNode registrarDonante(String username) throws Exception {
         HttpResponse<String> response = enviar(post("/auth/registro/persona-humana",
                 cuerpoRegistroDonante(username, username)));

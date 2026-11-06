@@ -84,6 +84,8 @@ rectangle "Microsoft Azure (Azure for Students)" {
             }
         }
 
+        component "cron de la VM\n/etc/cron.d/donatrack\n(docker/cron/donatrack-cron.sh)\n01:00 matchmaking\n03:00 rutas\n04:00 inactividad" <<cron>> as Cron
+
         storage "Volumen Docker fotos-data\n(/data/fotos)" as VolFotos
         storage "Volumen Docker postgres-data" as VolPG
     }
@@ -115,6 +117,9 @@ Web --> VolFotos : fotos de recepcion
 Web --> Don : REST :8080 + JWT\n(login, catalogo, donaciones, entidades)
 Web --> Log : REST :8081 + JWT\n(camiones, rutas, posiciones)
 Web --> Not : REST :8082 + JWT\n(notificaciones de cada usuario)
+
+Cron --> Don : REST :8080 + X-Api-Key\n(matchmaking, inactividad)
+Cron --> Log : REST :8081 + X-Api-Key\n(planificacion de rutas)
 
 Log --> Don : gRPC sobre HTTP/2 :9090\n[x-api-key en metadata]
 Log --> Planif : HTTPS: donaciones (lotes de hasta 100) + camiones

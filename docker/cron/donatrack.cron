@@ -1,0 +1,17 @@
+# Tareas programadas de DonaTrack. Plantilla de /etc/cron.d/donatrack: la instala instalar-cron.sh,
+# que reemplaza __USUARIO__ y __DIR__. Los horarios son de la VM, configurada en hora de Argentina
+# (America/Argentina/Buenos_Aires).
+#
+# min hora dia mes dia-semana usuario comando
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# 01:00  Algoritmos de asignacion (matchmaking) de las donaciones en deposito, en horario de baja carga.
+#        Las propuestas quedan listas para que el administrador elija la entidad durante el dia.
+0 1 * * * __USUARIO__ __DIR__/docker/cron/donatrack-cron.sh matchmaking >> /var/log/donatrack/cron.log 2>&1
+
+# 03:00  Planificacion de las rutas del dia siguiente con las donaciones ya asignadas (lotes de 100).
+0 3 * * * __USUARIO__ __DIR__/docker/cron/donatrack-cron.sh rutas >> /var/log/donatrack/cron.log 2>&1
+
+# 04:00  Aviso de ausencia a los donantes que hoy cumplen 20 (40, 60, ...) dias sin donar.
+0 4 * * * __USUARIO__ __DIR__/docker/cron/donatrack-cron.sh inactividad >> /var/log/donatrack/cron.log 2>&1

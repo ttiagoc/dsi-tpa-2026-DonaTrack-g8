@@ -184,6 +184,58 @@ contenedor `localhost` es el contenedor mismo.
 
 ---
 
+## Tareas programadas (cron de la VM)
+
+Los servicios no programan nada por su cuenta. Las tres tareas periódicas de la consigna las
+dispara el cron de la VM de Azure, que llama a la API con la clave de servicio
+(`SERVICE_API_KEY`, rol `SISTEMA`):
+
+| Hora (Argentina) | Tarea | Endpoint |
+|---|---|---|
+| 01:00 | Algoritmos de asignación (matchmaking) en horario de baja carga | `POST :8080/api/matchmaking/ejecuciones` |
+| 03:00 | Planificación de las rutas del día siguiente, en lotes de 100 | `POST :8081/api/rutas/planificaciones` |
+| 04:00 | Aviso de ausencia a quienes cumplen 20 días sin donar | `POST :8080/api/donantes/inactividad/verificaciones-diarias` |
+
+Los archivos están en [`docker/cron/`](docker/cron/):
+- `donatrack-cron.sh`: dispara una tarea, con reintentos si el servicio no responde y sin
+  superponer dos ejecuciones de la misma tarea.
+- `donatrack.cron`: la tabla de horarios.
+- `instalar-cron.sh`: instala todo en la VM.
+
+### Instalarlas en la VM
+
+Con el repo clonado en la VM, el `.env` completo (de ahí sale `SERVICE_API_KEY`) y los
+contenedores levantados con `docker compose --profile full up -d --build`:
+
+```bash
+sudo bash docker/cron/instalar-cron.sh
+```
+
+El instalador pone la VM en hora de Argentina (`America/Argentina/Buenos_Aires`), crea
+`/etc/cron.d/donatrack` con la ruta del repo y el usuario dueño, y deja el log en
+`/var/log/donatrack/cron.log`, que rota cada semana. Se puede volver a correr sin problema.
+
+### Probar y revisar
+
+Cada tarea se puede correr a mano, sin esperar al horario:
+
+```bash
+docker/cron/donatrack-cron.sh matchmaking
+```
+
+```bash
+tail -n 50 /var/log/donatrack/cron.log
+```
+
+Cada línea del log dice la tarea, el resultado (`OK (HTTP 204, 3s)` o el error con el mensaje
+de la API) y la hora. Para ver que cron haya ejecutado las tareas:
+
+```bash
+grep donatrack /var/log/syslog
+```
+
+---
+
 ## Construcción de imágenes Docker
 
 Este proyecto utiliza una arquitectura multi-módulo de Maven. Los microservicios dependen del `pom.xml` padre y de `common-lib`, por lo que **el contexto de construcción de Docker siempre debe ser la raíz del proyecto**. Si se limita el contexto a la carpeta del microservicio, Maven fallará al no encontrar el POM padre ni las dependencias comunes.

@@ -213,3 +213,25 @@ no se pueden separar, pero la VM es un punto único de falla y todos los servici
 servicio ya es un contenedor independiente que se comunica por red, pasar logística a otra VM solo requiere cambiar
 las URLs de las variables de entorno. Tampoco hay copias de seguridad automáticas de la base, como las tendría una
 base administrada.
+
+### Tareas programadas con el cron de la VM
+La consigna pide tres procesos periódicos: los algoritmos de asignación y la planificación de rutas del día siguiente,
+en horarios de baja carga, y el aviso a los donantes que llevan más de 20 días sin interacción. Los servicios no
+programan nada por su cuenta (no hay `@Scheduled`): los dispara el **cron de la VM** llamando a la API con la clave
+de servicio (rol `SISTEMA`), a la 1:00 (matchmaking), a las 3:00 (rutas) y a las 4:00 (inactividad), hora de
+Argentina.
+
+- **Un solo lugar para ver y cambiar los horarios:** `/etc/cron.d/donatrack`, generado desde `docker/cron/` del repo.
+  Cambiar un horario no requiere recompilar ni redesplegar las imágenes.
+- **Una sola ejecución aunque haya varias instancias:** un `@Scheduled` correría una vez por cada contenedor del
+  servicio. El cron llama una sola vez y el script evita que dos ejecuciones de la misma tarea se superpongan.
+- **Lo mismo que hace el administrador:** el cron usa los mismos endpoints que los botones del panel ("Ejecutar
+  matchmaking", "Planificar rutas"), así que no hay dos caminos con lógica distinta.
+- **Fallas visibles:** cada ejecución queda en `/var/log/donatrack/cron.log` con su resultado. Si el servicio no
+  responde (por ejemplo, porque se está reiniciando) el script reintenta; si la API responde con error, lo registra
+  con el mensaje.
+- **Hora de Argentina:** la VM se configura en `America/Argentina/Buenos_Aires` para que "la 1 de la mañana" sea la
+  de los usuarios y no la de UTC.
+
+El contra es que las tareas dependen de que la VM tenga el cron instalado (`sudo bash docker/cron/instalar-cron.sh`): si
+el sistema se levanta en otra máquina, hay que instalarlo ahí también.

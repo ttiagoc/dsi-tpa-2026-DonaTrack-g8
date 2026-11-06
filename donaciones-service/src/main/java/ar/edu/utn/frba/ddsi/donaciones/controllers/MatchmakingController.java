@@ -1,6 +1,7 @@
 package ar.edu.utn.frba.ddsi.donaciones.controllers;
 
 import static ar.edu.utn.frba.ddsi.common.security.Rol.ADMINISTRADOR;
+import static ar.edu.utn.frba.ddsi.common.security.Rol.SISTEMA;
 
 import org.springframework.stereotype.Component;
 
@@ -31,9 +32,10 @@ public class MatchmakingController implements JavalinController {
             ctx.status(204);
         }, ADMINISTRADOR);
 
+        // a demanda (el administrador) o todas las noches desde el cron de la VM con la clave de servicio
         app.post("/api/matchmaking/ejecuciones", ctx -> {
             motorDeMatchmaking.procesarMatchmaking();
             ctx.status(204);
-        }, ADMINISTRADOR);
+        }, ADMINISTRADOR, SISTEMA);
     }
 }

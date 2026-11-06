@@ -145,9 +145,16 @@ public class DonanteController implements JavalinController {
             ctx.json(donanteService.obtenerContactoPredeterminado(id));
         }, DONANTE, ADMINISTRADOR, SISTEMA);
 
+        // a demanda: avisa a todos los donantes que llevan mas de 20 dias sin donar
         app.post("/api/donantes/inactividad/verificaciones", ctx -> {
             gestorDeEventos.verificarInactividadDonantes();
             ctx.status(204);
         }, ADMINISTRADOR);
+
+        // escaneo diario que dispara el cron de la VM: avisa solo a quienes hoy cumplen 20, 40, ... dias sin donar
+        app.post("/api/donantes/inactividad/verificaciones-diarias", ctx -> {
+            gestorDeEventos.verificarInactividadDiaria();
+            ctx.status(204);
+        }, SISTEMA, ADMINISTRADOR);
     }
 }
