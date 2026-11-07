@@ -308,6 +308,16 @@ public class ChoferWebController {
                 .map(p -> String.valueOf(p.orden()))
                 .collect(Collectors.joining(" → ")));
 
+        ParadaChoferVista proximaParada = paradas.stream()
+                .filter(ParadaChoferVista::esProxima)
+                .findFirst()
+                .orElse(null);
+        modelo.put("proximaParada", proximaParada);
+        modelo.put("tieneProximaParada", proximaParada != null);
+        long paradasResueltasCount = paradas.stream().filter(p -> p.esEntregada() || p.esFallida()).count();
+        modelo.put("paradasResueltasCount", paradasResueltasCount);
+        modelo.put("paradasTotalCount", paradas.size());
+
         ctx.render(VISTA, modelo);
     }
 

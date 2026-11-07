@@ -1530,6 +1530,80 @@ code {
   height: 26px;
 }
 
+/* ---- Tarjeta destacada de próxima entrega para el chofer ---- */
+.proxima-entrega-card {
+  border: 2px solid var(--color-primario);
+  background: var(--color-superficie);
+  border-radius: var(--radio);
+  padding: var(--espacio-4);
+  margin-bottom: var(--espacio-5);
+  box-shadow: 0 4px 14px rgba(31, 122, 90, 0.12);
+}
+
+.proxima-entrega-card__encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+  margin-bottom: var(--espacio-3);
+  padding-bottom: var(--espacio-2);
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.proxima-entrega-card__cuerpo {
+  margin-bottom: var(--espacio-4);
+}
+
+.proxima-entrega-card__titulo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 var(--espacio-1);
+  color: var(--color-texto);
+}
+
+.proxima-entrega-card__direccion {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  color: var(--color-texto);
+  font-size: 1.05rem;
+  font-weight: 500;
+  margin: 0 0 var(--espacio-2);
+}
+
+.proxima-entrega-card__bultos {
+  margin: 0;
+  font-size: var(--texto-chico);
+  color: var(--color-texto-suave);
+}
+
+.proxima-entrega-card__acciones {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--espacio-3);
+}
+
+.proxima-entrega-card__acciones .boton {
+  min-height: 42px;
+  font-size: 1rem;
+}
+
+.hoja-ruta-seccion-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+  margin-top: var(--espacio-6);
+  margin-bottom: var(--espacio-3);
+}
+
+.hoja-ruta-seccion-encabezado .hoja-ruta__titulo {
+  margin: 0;
+}
+
 .hoja-ruta-mapa {
   position: relative;
   height: 380px;

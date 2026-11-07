@@ -88,20 +88,49 @@
     {{/if}}
   {{/if}}
 
-  <div class="tarjeta hoja-ruta-mapa__tarjeta">
-    <div id="mapa-hoja-ruta" class="hoja-ruta-mapa" role="region" aria-label="Mapa del recorrido de la Ruta #{{ruta.id}}"
-         data-deposito-lat="{{depositoLat}}" data-deposito-lng="{{depositoLng}}"
-         data-camion-lat="{{camionLat}}" data-camion-lng="{{camionLng}}"
-         data-camion-patente="{{#if camion}}{{camion.patente}}{{/if}}"
-         {{#if esEnTraslado}}data-mostrar-camion{{/if}}></div>
-    <div class="hoja-ruta-mapa__leyenda">
-      <strong>D</strong> Depósito central (Av. Medrano 951, CABA)
-      {{#if ordenResumen}} · <strong>{{ordenResumen}}</strong> Orden de entrega{{/if}}
-      {{#if esEnTraslado}} · <span aria-hidden="true">🚚</span> Posición actual del camión{{/if}}
-    </div>
+  {{!-- Tarjeta destacada de Próxima Entrega (solo cuando el recorrido está en marcha) --}}
+  {{#if esEnTraslado}}
+    {{#if proximaParada}}
+      <section class="tarjeta proxima-entrega-card" aria-label="Próxima entrega a realizar">
+        <div class="proxima-entrega-card__encabezado">
+          <span class="etiqueta etiqueta--pendiente">
+            <svg class="icono" aria-hidden="true"><use href="#i-tilde"/></svg> Próxima parada · #{{proximaParada.orden}}
+          </span>
+          <span class="texto-suave">{{pendientesTexto}} restantes</span>
+        </div>
+        <div class="proxima-entrega-card__cuerpo">
+          <h3 class="proxima-entrega-card__titulo">{{proximaParada.entidadNombre}}</h3>
+          <p class="proxima-entrega-card__direccion">
+            <svg class="icono" aria-hidden="true" style="color: var(--color-primario);"><use href="#i-mapa"/></svg> {{proximaParada.destino}}
+          </p>
+          <p class="proxima-entrega-card__bultos">
+            <strong>Bultos a descargar:</strong> {{proximaParada.bultosResumen}}
+          </p>
+        </div>
+        <div class="proxima-entrega-card__acciones">
+          <a class="boton" href="/chofer?ruta={{ruta.id}}&confirmarParada={{proximaParada.id}}">
+            <svg class="icono" aria-hidden="true"><use href="#i-tilde"/></svg> Confirmar entrega
+          </a>
+          <a class="boton boton--secundario boton--peligro" href="/chofer?ruta={{ruta.id}}&fallarParada={{proximaParada.id}}">
+            No recibida
+          </a>
+        </div>
+      </section>
+    {{else}}
+      <div class="alerta alerta--exito" role="status" style="margin-bottom: var(--espacio-5);">
+        <span><strong>¡Todas las entregas fueron resueltas!</strong> Podés regresar al depósito central para cerrar el recorrido.</span>
+      </div>
+    {{/if}}
+  {{/if}}
+
+  {{!-- Listado completo de paradas (inmediatamente accesible) --}}
+  <div class="hoja-ruta-seccion-encabezado" style="margin-top: 0;">
+    <h2 class="hoja-ruta__titulo">Paradas del recorrido</h2>
+    <span class="texto-suave" style="font-size: var(--texto-chico);">
+      {{paradasResueltasCount}} de {{paradasTotalCount}} resueltas
+    </span>
   </div>
 
-  <h2 class="hoja-ruta__titulo">Paradas del recorrido</h2>
   <ol class="paradas-lista">
     {{#each paradas}}
       <li class="parada-item {{#if esProxima}}parada-item--activa{{/if}}{{#if esEntregada}}parada-item--entregada{{/if}}{{#if esFallida}}parada-item--fallida{{/if}}"
@@ -140,6 +169,29 @@
       </li>
     {{/each}}
   </ol>
+
+  {{!-- Mapa del recorrido: al fondo de la vista como referencia geográfica --}}
+  <section class="hoja-ruta-mapa-seccion">
+    <div class="hoja-ruta-seccion-encabezado">
+      <h2 class="hoja-ruta__titulo">Mapa del recorrido</h2>
+      <span class="texto-suave" style="font-size: var(--texto-chico);">
+        {{#if esEnTraslado}}Posición GPS en tiempo real · {{/if}}Orden: {{ordenResumen}}
+      </span>
+    </div>
+
+    <div class="tarjeta hoja-ruta-mapa__tarjeta">
+      <div id="mapa-hoja-ruta" class="hoja-ruta-mapa" role="region" aria-label="Mapa del recorrido de la Ruta #{{ruta.id}}"
+           data-deposito-lat="{{depositoLat}}" data-deposito-lng="{{depositoLng}}"
+           data-camion-lat="{{camionLat}}" data-camion-lng="{{camionLng}}"
+           data-camion-patente="{{#if camion}}{{camion.patente}}{{/if}}"
+           {{#if esEnTraslado}}data-mostrar-camion{{/if}}></div>
+      <div class="hoja-ruta-mapa__leyenda">
+        <strong>D</strong> Depósito central (Av. Medrano 951, CABA)
+        {{#if ordenResumen}} · <strong>{{ordenResumen}}</strong> Orden de entrega{{/if}}
+        {{#if esEnTraslado}} · <span aria-hidden="true">🚚</span> Posición actual del camión{{/if}}
+      </div>
+    </div>
+  </section>
 
   {{#if abrirModalConfirmar}}
   <dialog class="modal" id="modal-confirmar-entrega" open aria-labelledby="modal-entrega-titulo">

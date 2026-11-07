@@ -66,7 +66,7 @@ En [Figma](https://www.figma.com/design/1tzIHQUO6aSwCbdgtPuXgj) quedó una prime
 | 18 | Camiones: listado de flota | `/admin/camiones` | [18-camiones.png](18-camiones.png) |
 | 18 | Camiones: modal de alta y edición (con cuenta de acceso opcional para el chofer) | `/admin/camiones` | [18b-camiones-alta.png](18b-camiones-alta.png) |
 | 18 | Camiones: modal de confirmación de eliminación | `/admin/camiones` | [18c-camiones-eliminar.png](18c-camiones-eliminar.png) |
-| 18 | Chofer: hoja de ruta con selector de rutas del camión (por hacer y terminadas), mapa del recorrido y paradas | `/chofer?ruta={id}` | [18d-chofer-hoja-de-ruta.png](18d-chofer-hoja-de-ruta.png) |
+| 18 | Chofer: hoja de ruta priorizando paradas y próxima entrega con el mapa al fondo | `/chofer?ruta={id}` | [18d-chofer-hoja-de-ruta.png](18d-chofer-hoja-de-ruta.png) |
 | 18 | Chofer: modal de confirmación de entrega en parada | `/chofer?ruta={id}&confirmarParada={id}` | [18e-chofer-confirmar-entrega.png](18e-chofer-confirmar-entrega.png) |
 | 18 | Chofer: modal de ruta completada al finalizar todas las paradas | `/chofer?completada={id}` | [18f-chofer-ruta-completada.png](18f-chofer-ruta-completada.png) |
 | 19 | Importación masiva: carga de donantes CSV (>10.000 filas) e historial | `/admin/importaciones` | [19-importaciones.png](19-importaciones.png) |
