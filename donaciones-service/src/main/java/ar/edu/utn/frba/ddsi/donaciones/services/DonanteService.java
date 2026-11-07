@@ -2,6 +2,7 @@ package ar.edu.utn.frba.ddsi.donaciones.services;
 
 import java.util.List;
 
+import ar.edu.utn.frba.ddsi.common.dtos.pagina.PaginaResponse;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.DonanteDetalleResponse;
 import ar.edu.utn.frba.ddsi.donaciones.dto.donante.DonanteResponse;
@@ -11,6 +12,8 @@ import ar.edu.utn.frba.ddsi.donaciones.dto.donante.PersonaJuridicaRequest;
 public interface DonanteService {
 
     List<DonanteResponse> obtenerTodos();
+
+    PaginaResponse<DonanteResponse> obtenerTodosPaginado(int page, int size);
 
     DonanteResponse obtenerPorId(Long id);
 

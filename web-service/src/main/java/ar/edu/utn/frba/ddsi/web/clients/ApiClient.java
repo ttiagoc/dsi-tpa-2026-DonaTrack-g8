@@ -9,6 +9,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.function.Supplier;
 
+import ar.edu.utn.frba.ddsi.web.dto.comun.PaginaResponse;
 import ar.edu.utn.frba.ddsi.web.exceptions.AccesoDenegadoException;
 import ar.edu.utn.frba.ddsi.web.exceptions.ApiException;
 import ar.edu.utn.frba.ddsi.web.exceptions.ApiNoDisponibleException;
@@ -75,6 +76,33 @@ public abstract class ApiClient {
         HttpResponse<String> respuesta = enviarAutenticado(ctx, () -> request(ruta).GET());
         verificar(respuesta);
         return convertir(respuesta.body(), tipo);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <T> PaginaResponse<T> getPaginado(Context ctx, String ruta, Class<?> tipoElemento, int paginaSolicitada, int tamanoSolicitado) {
+        HttpResponse<String> respuesta = enviarAutenticado(ctx, () -> request(ruta).GET());
+        verificar(respuesta);
+        String cuerpo = respuesta.body();
+        if (cuerpo == null || cuerpo.isBlank()) {
+            return PaginaResponse.vacia(paginaSolicitada + 1, tamanoSolicitado);
+        }
+        try {
+            JsonNode nodo = mapper.readTree(cuerpo);
+            if (nodo.isArray()) {
+                JavaType listType = mapper.getTypeFactory().constructCollectionType(List.class, tipoElemento);
+                List<T> items = mapper.readValue(cuerpo, listType);
+                int total = items.size();
+                int totalPaginas = Math.max(1, (int) Math.ceil((double) total / tamanoSolicitado));
+                int desde = paginaSolicitada * tamanoSolicitado;
+                List<T> sub = (desde >= total) ? List.of() : items.subList(desde, Math.min(desde + tamanoSolicitado, total));
+                return new PaginaResponse<>(sub, paginaSolicitada + 1, totalPaginas, total, tamanoSolicitado);
+            } else {
+                JavaType pagType = mapper.getTypeFactory().constructParametricType(PaginaResponse.class, tipoElemento);
+                return mapper.readValue(cuerpo, pagType);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("No se pudo deserializar la respuesta paginada: " + e.getMessage(), e);
+        }
     }
 
     protected <T> T post(Context ctx, String ruta, Object body, Class<T> tipo) {

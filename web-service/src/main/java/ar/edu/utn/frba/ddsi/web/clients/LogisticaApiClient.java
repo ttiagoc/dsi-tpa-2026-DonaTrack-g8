@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ar.edu.utn.frba.ddsi.web.dto.camiones.CamionRequest;
 import ar.edu.utn.frba.ddsi.web.dto.camiones.CamionResponse;
+import ar.edu.utn.frba.ddsi.web.dto.comun.PaginaResponse;
 import io.javalin.http.Context;
 
 public class LogisticaApiClient extends ApiClient {
@@ -26,6 +27,10 @@ public class LogisticaApiClient extends ApiClient {
   public List<CamionResponse> listarCamiones(Context ctx) {
     List<CamionResponse> lista = get(ctx, "/camiones", new TypeReference<List<CamionResponse>>() {});
     return lista != null ? lista : List.of();
+  }
+
+  public PaginaResponse<CamionResponse> listarCamionesPaginado(Context ctx, int page, int size) {
+    return getPaginado(ctx, "/camiones?page=" + page + "&size=" + size, CamionResponse.class, page, size);
   }
 
   public CamionResponse obtenerCamion(Context ctx, Long id) {
@@ -47,6 +52,10 @@ public class LogisticaApiClient extends ApiClient {
   public List<RutaDto> listarRutas(Context ctx) {
     List<RutaDto> lista = get(ctx, "/rutas", new TypeReference<List<RutaDto>>() {});
     return lista != null ? lista : List.of();
+  }
+
+  public PaginaResponse<RutaDto> listarRutasPaginado(Context ctx, int page, int size) {
+    return getPaginado(ctx, "/rutas?page=" + page + "&size=" + size, RutaDto.class, page, size);
   }
 
   public RutaDto obtenerRuta(Context ctx, Long id) {

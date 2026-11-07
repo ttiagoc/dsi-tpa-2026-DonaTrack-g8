@@ -1,0 +1,18 @@
+{{!-- Componente reutilizable de paginación accesible.
+      Uso: {{> partials/paginacion}}
+      Requiere en el modelo la variable `paginacion` con { hayVarias, desde, hasta, total, anterior, pagina, totalPaginas, siguiente } --}}
+{{#if paginacion.hayVarias}}
+  <nav class="paginacion" aria-label="Páginas del listado">
+    <span>Mostrando {{paginacion.desde}}–{{paginacion.hasta}} de {{paginacion.total}}</span>
+    <div class="paginacion__controles">
+      {{#if paginacion.anterior}}
+        <a class="boton boton--secundario boton--chico" href="{{paginacion.anterior}}" rel="prev">← Anterior</a>
+      {{/if}}
+      <span>Página {{paginacion.pagina}} de {{paginacion.totalPaginas}}</span>
+      {{#if paginacion.siguiente}}
+        <a class="boton boton--secundario boton--chico" href="{{paginacion.siguiente}}" rel="next">Siguiente →</a>
+      {{/if}}
+    </div>
+  </nav>
+{{/if}}
+

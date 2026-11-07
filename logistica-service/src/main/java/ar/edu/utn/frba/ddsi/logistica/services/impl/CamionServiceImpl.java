@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import ar.edu.utn.frba.ddsi.common.dtos.pagina.PaginaResponse;
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 
@@ -35,6 +36,13 @@ public class CamionServiceImpl implements CamionService {
         return camionRepository.findAll().stream()
                 .map(this::toCamionResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public PaginaResponse<CamionResponse> obtenerTodosPaginado(int page, int size) {
+        PaginaResponse<Camion> pag = camionRepository.findAllPaginado(page, size);
+        List<CamionResponse> elementos = pag.elementos().stream().map(this::toCamionResponse).toList();
+        return new PaginaResponse<>(elementos, pag.pagina(), pag.totalPaginas(), pag.totalElementos(), pag.porPagina());
     }
 
     public CamionResponse obtenerPorId(Long id) {

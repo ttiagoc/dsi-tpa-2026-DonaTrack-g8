@@ -34,7 +34,20 @@ public class MapaController {
     }
 
     public void mostrar(Context ctx) {
-        List<EntidadConEntregas> entidades = Arrays.asList(donaciones.entregasPorEntidad());
+        Integer meses;
+        String mesesParam = ctx.queryParam("meses");
+        if (mesesParam != null && !mesesParam.isBlank()) {
+            try {
+                int parsed = Integer.parseInt(mesesParam.trim());
+                meses = parsed <= 0 ? null : parsed;
+            } catch (NumberFormatException ignored) {
+                meses = 3;
+            }
+        } else {
+            meses = 3; // Por defecto: ultimos 3 meses
+        }
+
+        List<EntidadConEntregas> entidades = Arrays.asList(donaciones.entregasPorEntidad(meses));
         List<PosicionesEnMapa.Punto> puntos = PosicionesEnMapa.ubicar(
                 entidades.stream().map(EntidadConEntregas::entidadId).toList());
         List<EntidadVista> vista = new ArrayList<>();
@@ -46,6 +59,11 @@ public class MapaController {
         modelo.put("totalEntregas", vista.stream().mapToInt(e -> e.entregas().size()).sum());
         modelo.put("totalEntidades", vista.size());
         modelo.put("hayAproximadas", vista.stream().anyMatch(EntidadVista::aproximada));
+        modelo.put("mesesSeleccionados", meses != null ? meses : 0);
+        modelo.put("esMeses3", meses != null && meses == 3);
+        modelo.put("esMeses6", meses != null && meses == 6);
+        modelo.put("esMeses12", meses != null && meses == 12);
+        modelo.put("esMesesTodos", meses == null || meses == 0);
         ctx.render(VISTA, modelo);
     }
 

@@ -15,6 +15,7 @@ import java.util.Objects;
 import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.web.clients.DonacionesApiClient;
+import ar.edu.utn.frba.ddsi.web.dto.comun.PaginaResponse;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.DonacionResponse;
 import ar.edu.utn.frba.ddsi.web.dto.donantes.DonanteDetalle;
 import ar.edu.utn.frba.ddsi.web.dto.donantes.DonanteResponse;
@@ -189,15 +190,11 @@ public class DonantesAdminController {
         filas.sort((a, b) -> String.CASE_INSENSITIVE_ORDER.compare(
                 Objects.toString(a.get("nombre"), ""), Objects.toString(b.get("nombre"), "")));
 
-        int totalPaginas = Math.max(1, (filas.size() + POR_PAGINA - 1) / POR_PAGINA);
-        int pagina = Math.min(Math.max(1, entero(ctx.queryParam("pagina"))), totalPaginas);
-        int desde = (pagina - 1) * POR_PAGINA;
-        List<Map<String, Object>> paginaActual = filas.subList(Math.min(desde, filas.size()),
-                Math.min(desde + POR_PAGINA, filas.size()));
+        PaginaResponse<Map<String, Object>> pagina = Paginador.paginarLista(ctx, filas, POR_PAGINA);
 
         // la consulta del listado (sin el modal) para que los links vuelvan a la misma página
-        String filtros = armarConsulta(q, tipo, pagina > 1 ? pagina : null);
-        modelo.put("donantes", paginaActual);
+        String filtros = armarConsulta(q, tipo, pagina.pagina() > 1 ? pagina.pagina() : null);
+        modelo.put("donantes", pagina.elementos());
         modelo.put("filtros", Map.of("q", q != null ? q : "", "tipo", tipo != null ? tipo : ""));
         modelo.put("vacio", q != null || tipo != null
                 ? Map.of("titulo", "Ningún donante coincide con la búsqueda.",
@@ -215,20 +212,7 @@ public class DonantesAdminController {
                 "juridicas", todos.size() - humanas,
                 "conDonaciones", conDonaciones));
 
-        Map<String, Object> paginacion = new HashMap<>();
-        paginacion.put("pagina", pagina);
-        paginacion.put("totalPaginas", totalPaginas);
-        paginacion.put("desde", filas.isEmpty() ? 0 : desde + 1);
-        paginacion.put("hasta", desde + paginaActual.size());
-        paginacion.put("total", filas.size());
-        paginacion.put("hayVarias", totalPaginas > 1);
-        if (pagina > 1) {
-            paginacion.put("anterior", RUTA + "?" + armarConsulta(q, tipo, pagina - 1));
-        }
-        if (pagina < totalPaginas) {
-            paginacion.put("siguiente", RUTA + "?" + armarConsulta(q, tipo, pagina + 1));
-        }
-        modelo.put("paginacion", paginacion);
+        modelo.put("paginacion", Paginador.armarModelo(ctx, pagina, RUTA));
 
         ctx.render(VISTA, modelo);
     }

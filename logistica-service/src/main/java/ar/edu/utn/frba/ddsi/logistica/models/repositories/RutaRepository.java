@@ -3,6 +3,7 @@ package ar.edu.utn.frba.ddsi.logistica.models.repositories;
 import java.util.List;
 import java.util.Optional;
 
+import ar.edu.utn.frba.ddsi.common.dtos.pagina.PaginaResponse;
 import ar.edu.utn.frba.ddsi.logistica.models.entities.logistica.Ruta;
 
 public interface RutaRepository {
@@ -12,6 +13,8 @@ public interface RutaRepository {
     Optional<Ruta> findById(Long id);
 
     List<Ruta> findAll();
+
+    PaginaResponse<Ruta> findAllPaginado(int page, int size);
 
     List<Ruta> buscarRutasActivas();
 

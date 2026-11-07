@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.web.clients.DonacionesApiClient;
+import ar.edu.utn.frba.ddsi.web.dto.comun.PaginaResponse;
 import ar.edu.utn.frba.ddsi.web.dto.necesidades.Frecuencia;
 import ar.edu.utn.frba.ddsi.web.dto.necesidades.NecesidadRequest;
 import ar.edu.utn.frba.ddsi.web.dto.necesidades.NecesidadResponse;
@@ -113,11 +114,13 @@ public class NecesidadesController {
     }
 
     private void mostrar(Context ctx, Map<String, Object> modelo) {
-        List<NecesidadVista> necesidades = donaciones.listarNecesidades(ctx).stream().map(NecesidadVista::de).toList();
-        long cubiertas = necesidades.stream().filter(NecesidadVista::satisfecha).count();
-        modelo.put("necesidades", necesidades);
-        modelo.put("resumen", Map.of("total", necesidades.size(), "cubiertas", cubiertas,
-                "pendientes", necesidades.size() - cubiertas));
+        List<NecesidadVista> todas = donaciones.listarNecesidades(ctx).stream().map(NecesidadVista::de).toList();
+        long cubiertas = todas.stream().filter(NecesidadVista::satisfecha).count();
+        PaginaResponse<NecesidadVista> pagina = Paginador.paginarLista(ctx, todas, 10);
+        modelo.put("necesidades", pagina.elementos());
+        modelo.put("paginacion", Paginador.armarModelo(ctx, pagina, RUTA));
+        modelo.put("resumen", Map.of("total", todas.size(), "cubiertas", cubiertas,
+                "pendientes", todas.size() - cubiertas));
         modelo.put("rubros", donaciones.catalogo());
         modelo.put("frecuencias", Arrays.stream(Frecuencia.values())
                 .map(f -> Map.of("valor", f.name(), "etiqueta", f.etiqueta())).toList());

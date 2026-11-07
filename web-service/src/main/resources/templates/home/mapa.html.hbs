@@ -10,6 +10,13 @@
   </div>
 </header>
 
+<nav class="pestanas" aria-label="Período de entregas">
+  <a class="pestana{{#if esMeses3}} pestana--activa{{/if}}" href="/mapa?meses=3" {{#if esMeses3}}aria-current="page"{{/if}}>Últimos 3 meses</a>
+  <a class="pestana{{#if esMeses6}} pestana--activa{{/if}}" href="/mapa?meses=6" {{#if esMeses6}}aria-current="page"{{/if}}>Últimos 6 meses</a>
+  <a class="pestana{{#if esMeses12}} pestana--activa{{/if}}" href="/mapa?meses=12" {{#if esMeses12}}aria-current="page"{{/if}}>Último año</a>
+  <a class="pestana{{#if esMesesTodos}} pestana--activa{{/if}}" href="/mapa?meses=0" {{#if esMesesTodos}}aria-current="page"{{/if}}>Todo el historial</a>
+</nav>
+
 {{#if entidades}}
   <div class="resumen">
     <div class="resumen__item resumen__item--ok"><strong>{{totalEntregas}}</strong>Donaciones entregadas</div>

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import ar.edu.utn.frba.ddsi.common.dtos.pagina.PaginaResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.monitoreo.UbicacionResponse;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaRequest;
 import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaResponse;
@@ -11,6 +12,8 @@ import ar.edu.utn.frba.ddsi.logistica.dto.ruta.RutaResponse;
 public interface RutaService {
 
     List<RutaResponse> obtenerTodas(LocalDate fecha);
+
+    PaginaResponse<RutaResponse> obtenerTodasPaginado(LocalDate fecha, int page, int size);
 
     RutaResponse obtenerPorId(Long id);
 

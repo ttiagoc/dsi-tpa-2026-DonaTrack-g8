@@ -12,6 +12,7 @@ import java.time.format.DateTimeFormatter;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ar.edu.utn.frba.ddsi.web.dto.comun.PaginaResponse;
 import io.javalin.http.Context;
 
 public class NotificacionesApiClient extends ApiClient {
@@ -27,6 +28,11 @@ public class NotificacionesApiClient extends ApiClient {
     public List<NotificacionDto> obtenerNotificaciones(Context ctx, Long destinatarioId, String tipoDestinatario) {
       String path = "/notificaciones?destinatarioId=" + destinatarioId + "&tipoDestinatario=" + tipoDestinatario;
       return get(ctx, path, new TypeReference<List<NotificacionDto>>() {});
+    }
+
+    public PaginaResponse<NotificacionDto> obtenerNotificacionesPaginado(Context ctx, Long destinatarioId, String tipoDestinatario, int page, int size) {
+      String path = "/notificaciones?destinatarioId=" + destinatarioId + "&tipoDestinatario=" + tipoDestinatario + "&page=" + page + "&size=" + size;
+      return getPaginado(ctx, path, NotificacionDto.class, page, size);
     }
 
   public record NotificacionDto(

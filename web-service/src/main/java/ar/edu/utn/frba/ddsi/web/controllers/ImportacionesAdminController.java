@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import ar.edu.utn.frba.ddsi.web.clients.DonacionesApiClient;
+import ar.edu.utn.frba.ddsi.web.dto.comun.PaginaResponse;
 import ar.edu.utn.frba.ddsi.web.dto.importacion.ImportacionResponse;
 import ar.edu.utn.frba.ddsi.web.sesion.Alertas;
 import io.javalin.http.Context;
@@ -54,8 +55,10 @@ public class ImportacionesAdminController {
                 "enProceso", totalEnProceso
         );
 
+        PaginaResponse<ImportacionResponse> pagina = Paginador.paginarLista(ctx, importaciones, 10);
         Map<String, Object> modelo = Modelo.base(ctx);
-        modelo.put("importaciones", importaciones);
+        modelo.put("importaciones", pagina.elementos());
+        modelo.put("paginacion", Paginador.armarModelo(ctx, pagina, "/admin/importaciones"));
         modelo.put("tieneImportaciones", !importaciones.isEmpty());
         modelo.put("importacionActiva", importacionActiva != null ? importacionActiva : false);
         modelo.put("resumen", resumen);

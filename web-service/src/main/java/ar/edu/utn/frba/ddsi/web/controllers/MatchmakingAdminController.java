@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.web.clients.DonacionesApiClient;
+import ar.edu.utn.frba.ddsi.web.dto.comun.PaginaResponse;
 import ar.edu.utn.frba.ddsi.web.dto.matchmaking.PropuestaMatchmakingResponse;
 import ar.edu.utn.frba.ddsi.web.exceptions.ApiException;
 import ar.edu.utn.frba.ddsi.web.sesion.Alertas;
@@ -38,7 +39,9 @@ public class MatchmakingAdminController {
                 ? propuestas.stream().mapToInt(PropuestaMatchmakingResponse::cantidadSugerencias).sum()
                 : 0;
 
-        modelo.put("propuestas", propuestas);
+        PaginaResponse<PropuestaMatchmakingResponse> pagina = Paginador.paginarLista(ctx, propuestas != null ? propuestas : List.of(), 10);
+        modelo.put("propuestas", pagina.elementos());
+        modelo.put("paginacion", Paginador.armarModelo(ctx, pagina, RUTA));
         modelo.put("resumen", Map.of(
                 "pendientes", propuestas != null ? propuestas.size() : 0,
                 "candidatas", candidatas,

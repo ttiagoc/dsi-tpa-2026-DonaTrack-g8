@@ -2,6 +2,7 @@ package ar.edu.utn.frba.ddsi.donaciones.services;
 
 import java.util.List;
 
+import ar.edu.utn.frba.ddsi.common.dtos.pagina.PaginaResponse;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaRequest;
 import ar.edu.utn.frba.ddsi.donaciones.dto.entidadbeneficiaria.EntidadBeneficiariaResponse;
@@ -12,6 +13,8 @@ public interface EntidadBeneficiariaService {
 
     List<EntidadBeneficiariaResponse> obtenerTodas();
 
+    PaginaResponse<EntidadBeneficiariaResponse> obtenerTodasPaginado(int page, int size);
+
     EntidadBeneficiariaResponse obtenerPorId(Long id);
 
     EntidadBeneficiariaResponse crear(EntidadBeneficiariaRequest request);
@@ -21,6 +24,8 @@ public interface EntidadBeneficiariaService {
     EntidadBeneficiariaResponse actualizar(Long id, EntidadBeneficiariaRequest request);
 
     List<NecesidadResponse> obtenerNecesidades(Long id);
+
+    PaginaResponse<NecesidadResponse> obtenerNecesidadesPaginado(Long id, int page, int size);
 
     NecesidadResponse registrarNecesidad(Long id, NecesidadRequest request);
 

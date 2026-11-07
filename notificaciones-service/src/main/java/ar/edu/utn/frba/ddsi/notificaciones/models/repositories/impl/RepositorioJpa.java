@@ -3,6 +3,7 @@ package ar.edu.utn.frba.ddsi.notificaciones.models.repositories.impl;
 import java.util.List;
 import java.util.Optional;
 
+import ar.edu.utn.frba.ddsi.common.dtos.pagina.PaginaResponse;
 import io.github.flbulgarelli.jpa.extras.simple.WithSimplePersistenceUnit;
 
 public abstract class RepositorioJpa<T> implements WithSimplePersistenceUnit {
@@ -41,6 +42,23 @@ public abstract class RepositorioJpa<T> implements WithSimplePersistenceUnit {
         "from " + clase.getSimpleName(),
         clase
     ).getResultList();
+  }
+
+  public PaginaResponse<T> findAllPaginado(int page, int size) {
+    int paginaSegura = Math.max(1, page);
+    int tamanoSeguro = Math.max(1, size);
+
+    Long total = createQuery("select count(e) from " + clase.getSimpleName() + " e", Long.class)
+        .getSingleResult();
+    int totalPaginas = Math.max(1, (int) Math.ceil((double) total / tamanoSeguro));
+    int offset = (paginaSegura - 1) * tamanoSeguro;
+
+    List<T> elementos = createQuery("from " + clase.getSimpleName() + " e", clase)
+        .setFirstResult(offset)
+        .setMaxResults(tamanoSeguro)
+        .getResultList();
+
+    return new PaginaResponse<>(elementos, paginaSegura, totalPaginas, total, tamanoSeguro);
   }
 
   public boolean deleteById(Long id) {

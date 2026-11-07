@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import ar.edu.utn.frba.ddsi.common.dtos.pagina.PaginaResponse;
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
@@ -41,6 +42,13 @@ public class DonanteServiceImpl implements DonanteService {
         return donanteRepository.findAll().stream()
                 .map(this::toDonanteResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public PaginaResponse<DonanteResponse> obtenerTodosPaginado(int page, int size) {
+        PaginaResponse<Donante> pag = donanteRepository.findAllPaginado(page, size);
+        List<DonanteResponse> elementos = pag.elementos().stream().map(this::toDonanteResponse).toList();
+        return new PaginaResponse<>(elementos, pag.pagina(), pag.totalPaginas(), pag.totalElementos(), pag.porPagina());
     }
 
     private String getStringTipoDonante(Donante d) {

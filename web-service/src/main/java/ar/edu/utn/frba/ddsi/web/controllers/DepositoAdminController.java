@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.web.clients.DonacionesApiClient;
+import ar.edu.utn.frba.ddsi.web.dto.comun.PaginaResponse;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.DonacionResponse;
 import ar.edu.utn.frba.ddsi.web.exceptions.ApiException;
 import ar.edu.utn.frba.ddsi.web.sesion.Alertas;
@@ -127,7 +128,10 @@ public class DepositoAdminController {
                         d.justificacion(),
                         d.entidadAsignadaId() != null ? nombresEntidades.get(d.entidadAsignadaId()) : null))
                 .toList();
-        modelo.put("donaciones", filas);
+
+        PaginaResponse<DonacionDepositoFila> pagina = Paginador.paginarLista(ctx, filas, 10);
+        modelo.put("donaciones", pagina.elementos());
+        modelo.put("paginacion", Paginador.armarModelo(ctx, pagina, RUTA));
     }
 
     private Map<Long, String> obtenerMapaEntidades(Context ctx) {

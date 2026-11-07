@@ -13,6 +13,7 @@ import ar.edu.utn.frba.ddsi.web.clients.NotificacionesApiClient;
 import ar.edu.utn.frba.ddsi.web.clients.LogisticaApiClient.RutaSeguimientoDto;
 import ar.edu.utn.frba.ddsi.web.clients.NotificacionesApiClient.NotificacionDto;
 import ar.edu.utn.frba.ddsi.web.dto.catalogo.SubcategoriaResponse;
+import ar.edu.utn.frba.ddsi.web.dto.comun.PaginaResponse;
 import ar.edu.utn.frba.ddsi.web.sesion.SesionUsuario;
 import io.javalin.http.Context;
 
@@ -62,8 +63,10 @@ public class DonanteWebController {
       }
     }
 
-    List<Map<String, Object>> donaciones = donacionesApi.buscarDonaciones(ctx, donanteId, estado, categoriaId,
-        subcategoriaIds.isEmpty() ? null : subcategoriaIds);
+    int page = Paginador.paginaBackend(ctx);
+    int size = 10;
+    PaginaResponse<Map<String, Object>> paginaDonaciones = donacionesApi.buscarDonacionesPaginado(ctx, donanteId, estado, categoriaId,
+        subcategoriaIds.isEmpty() ? null : subcategoriaIds, page, size);
     List<Map<String, Object>> categorias = donacionesApi.obtenerCategorias(ctx);
     List<SubcategoriaResponse> subcategorias = donacionesApi.obtenerSubcategorias(ctx, categoriaId);
 
@@ -79,7 +82,8 @@ public class DonanteWebController {
     }
 
     Map<String, Object> modelo = Modelo.base(ctx);
-    modelo.put("donaciones", donaciones);
+    modelo.put("donaciones", paginaDonaciones.elementos());
+    modelo.put("paginacion", Paginador.armarModelo(ctx, paginaDonaciones, "/donante/donaciones"));
     modelo.put("categorias", categorias);
     modelo.put("subcategorias", subcategoriasView);
     modelo.put("estadoSeleccionado", estado);
@@ -161,8 +165,11 @@ public class DonanteWebController {
       entidadesFiltradas.add(entView);
     }
 
+    PaginaResponse<Map<String, Object>> paginaEntidades = Paginador.paginarLista(ctx, entidadesFiltradas, 10);
+
     Map<String, Object> modelo = Modelo.base(ctx);
-    modelo.put("entidades", entidadesFiltradas);
+    modelo.put("entidades", paginaEntidades.elementos());
+    modelo.put("paginacion", Paginador.armarModelo(ctx, paginaEntidades, "/donante/entidades"));
     modelo.put("categorias", categorias);
     modelo.put("busqueda", busqueda != null ? busqueda : "");
     modelo.put("categoriaSeleccionada", categoria != null ? categoria : "");
@@ -183,10 +190,13 @@ public class DonanteWebController {
   // para las notificaiones del donante
   public void notificacionesDonante(Context ctx) {
     Long donanteId = obtenerPerfilId(ctx);
-    List<NotificacionDto> notificaciones = notificacionesApi.obtenerNotificaciones(ctx, donanteId, "DONANTE");
+    int page = Paginador.paginaBackend(ctx);
+    int size = 10;
+    PaginaResponse<NotificacionDto> pagina = notificacionesApi.obtenerNotificacionesPaginado(ctx, donanteId, "DONANTE", page, size);
 
     Map<String, Object> modelo = Modelo.base(ctx);
-    modelo.put("notificaciones", notificaciones);
+    modelo.put("notificaciones", pagina.elementos());
+    modelo.put("paginacion", Paginador.armarModelo(ctx, pagina, "/donante/notificaciones"));
     modelo.put("esDonante", true);
 
     ctx.render("donante/notificaciones.html.hbs", modelo);
@@ -195,10 +205,13 @@ public class DonanteWebController {
   // para las notificaciones de la entidad
   public void notificacionesEntidad(Context ctx) {
     Long entidadId = obtenerPerfilId(ctx);
-    List<NotificacionDto> notificaciones = notificacionesApi.obtenerNotificaciones(ctx, entidadId, "ENTIDAD");
+    int page = Paginador.paginaBackend(ctx);
+    int size = 10;
+    PaginaResponse<NotificacionDto> pagina = notificacionesApi.obtenerNotificacionesPaginado(ctx, entidadId, "ENTIDAD", page, size);
 
     Map<String, Object> modelo = Modelo.base(ctx);
-    modelo.put("notificaciones", notificaciones);
+    modelo.put("notificaciones", pagina.elementos());
+    modelo.put("paginacion", Paginador.armarModelo(ctx, pagina, "/entidad/notificaciones"));
     modelo.put("esEntidad", true);
 
     ctx.render("entidad/notificaciones.html.hbs", modelo);

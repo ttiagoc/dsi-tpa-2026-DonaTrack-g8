@@ -14,6 +14,7 @@ import ar.edu.utn.frba.ddsi.web.dto.auth.UsuarioSesion;
 import ar.edu.utn.frba.ddsi.web.dto.camiones.CamionRequest;
 import ar.edu.utn.frba.ddsi.web.dto.camiones.CamionResponse;
 import ar.edu.utn.frba.ddsi.web.dto.camiones.ChoferDto;
+import ar.edu.utn.frba.ddsi.web.dto.comun.PaginaResponse;
 import ar.edu.utn.frba.ddsi.web.exceptions.ApiException;
 import ar.edu.utn.frba.ddsi.web.sesion.Alertas;
 import io.javalin.http.Context;
@@ -188,7 +189,10 @@ public class CamionesAdminController {
                         c.capacidadVolumen(),
                         c.altura()))
                 .toList();
-        modelo.put("camiones", camiones);
+
+        PaginaResponse<CamionFila> pagina = Paginador.paginarLista(ctx, camiones, 10);
+        modelo.put("camiones", pagina.elementos());
+        modelo.put("paginacion", Paginador.armarModelo(ctx, pagina, RUTA));
 
         long total = camionesRaw.size();
         double cargaTotal = camionesRaw.stream()

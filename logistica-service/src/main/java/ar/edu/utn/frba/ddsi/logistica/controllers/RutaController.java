@@ -35,7 +35,15 @@ public class RutaController implements JavalinController {
         app.get("/api/rutas", ctx -> {
             String fechaStr = ctx.queryParam("fecha");
             LocalDate fecha = (fechaStr != null && !fechaStr.isBlank()) ? LocalDate.parse(fechaStr) : null;
-            ctx.json(rutaService.obtenerTodas(fecha));
+            String pageStr = ctx.queryParam("page");
+            String sizeStr = ctx.queryParam("size");
+            if (pageStr != null || sizeStr != null) {
+                int page = (pageStr != null && !pageStr.isBlank()) ? Integer.parseInt(pageStr) : 1;
+                int size = (sizeStr != null && !sizeStr.isBlank()) ? Integer.parseInt(sizeStr) : 10;
+                ctx.json(rutaService.obtenerTodasPaginado(fecha, page, size));
+            } else {
+                ctx.json(rutaService.obtenerTodas(fecha));
+            }
         });
 
         app.get("/api/rutas/activas", ctx -> {

@@ -17,6 +17,7 @@ import ar.edu.utn.frba.ddsi.web.clients.LogisticaApiClient;
 import ar.edu.utn.frba.ddsi.web.clients.LogisticaApiClient.ParadaDto;
 import ar.edu.utn.frba.ddsi.web.clients.LogisticaApiClient.RutaDto;
 import ar.edu.utn.frba.ddsi.web.dto.auth.UsuarioSesion;
+import ar.edu.utn.frba.ddsi.web.dto.comun.PaginaResponse;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.DonacionResponse;
 import ar.edu.utn.frba.ddsi.web.exceptions.ApiException;
 import ar.edu.utn.frba.ddsi.web.sesion.Alertas;
@@ -113,7 +114,10 @@ public class RutasAdminController {
                         r.resumenEntregas(),
                         r.estado()))
                 .toList();
-        modelo.put("rutas", filas);
+
+        PaginaResponse<RutaFila> pagina = Paginador.paginarLista(ctx, filas, 10);
+        modelo.put("rutas", pagina.elementos());
+        modelo.put("paginacion", Paginador.armarModelo(ctx, pagina, RUTA));
 
         String verParam = ctx.queryParam("ver");
         if (verParam != null && !verParam.isBlank()) {

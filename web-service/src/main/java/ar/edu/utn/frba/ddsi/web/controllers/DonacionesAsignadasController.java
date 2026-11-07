@@ -8,6 +8,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 import ar.edu.utn.frba.ddsi.web.clients.DonacionesApiClient;
+import ar.edu.utn.frba.ddsi.web.dto.comun.PaginaResponse;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.DonacionResponse;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.SituacionDonacion;
 import io.javalin.http.Context;
@@ -29,15 +30,18 @@ public class DonacionesAsignadasController {
     }
 
     public void listar(Context ctx) {
-        List<DonacionVista> asignadas = donaciones.listarDonacionesAsignadas(ctx).stream()
+        List<DonacionVista> todas = donaciones.listarDonacionesAsignadas(ctx).stream()
                 .map(DonacionVista::de).toList();
+        PaginaResponse<DonacionVista> pagina = Paginador.paginarLista(ctx, todas, 10);
+
         Map<String, Object> modelo = Modelo.base(ctx);
-        modelo.put("donaciones", asignadas);
+        modelo.put("donaciones", pagina.elementos());
+        modelo.put("paginacion", Paginador.armarModelo(ctx, pagina, "/entidad/donaciones"));
         modelo.put("resumen", Map.of(
-                "total", asignadas.size(),
-                "porLlegar", contar(asignadas, null),
-                "paraConfirmar", contar(asignadas, SituacionDonacion.PARA_CONFIRMAR),
-                "recibidas", contar(asignadas, SituacionDonacion.RECIBIDA)));
+                "total", todas.size(),
+                "porLlegar", contar(todas, null),
+                "paraConfirmar", contar(todas, SituacionDonacion.PARA_CONFIRMAR),
+                "recibidas", contar(todas, SituacionDonacion.RECIBIDA)));
         ctx.render(VISTA, modelo);
     }
 

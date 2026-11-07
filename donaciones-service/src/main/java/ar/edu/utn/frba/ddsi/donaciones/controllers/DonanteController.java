@@ -84,7 +84,15 @@ public class DonanteController implements JavalinController {
         }, ADMINISTRADOR);
 
         app.get("/api/donantes", ctx -> {
-            ctx.json(donanteService.obtenerTodos());
+            String pageStr = ctx.queryParam("page");
+            String sizeStr = ctx.queryParam("size");
+            if (pageStr != null || sizeStr != null) {
+                int page = (pageStr != null && !pageStr.isBlank()) ? Integer.parseInt(pageStr) : 1;
+                int size = (sizeStr != null && !sizeStr.isBlank()) ? Integer.parseInt(sizeStr) : 10;
+                ctx.json(donanteService.obtenerTodosPaginado(page, size));
+            } else {
+                ctx.json(donanteService.obtenerTodos());
+            }
         }, ADMINISTRADOR);
 
         app.get("/api/donantes/{id}", ctx -> {

@@ -25,7 +25,15 @@ public class CamionController implements JavalinController {
     @Override
     public void registerRoutes(Javalin app) {
         app.get("/api/camiones", ctx -> {
-            ctx.json(camionService.obtenerTodos());
+            String pageStr = ctx.queryParam("page");
+            String sizeStr = ctx.queryParam("size");
+            if (pageStr != null || sizeStr != null) {
+                int page = (pageStr != null && !pageStr.isBlank()) ? Integer.parseInt(pageStr) : 1;
+                int size = (sizeStr != null && !sizeStr.isBlank()) ? Integer.parseInt(sizeStr) : 10;
+                ctx.json(camionService.obtenerTodosPaginado(page, size));
+            } else {
+                ctx.json(camionService.obtenerTodos());
+            }
         }, ADMINISTRADOR, SISTEMA);
 
         app.get("/api/camiones/{id}", ctx -> {

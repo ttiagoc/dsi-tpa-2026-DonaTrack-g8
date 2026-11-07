@@ -28,7 +28,15 @@ public class EntidadBeneficiariaController implements JavalinController {
     @Override
     public void registerRoutes(Javalin app) {
         app.get("/api/entidad-beneficiaria", ctx -> {
-            ctx.json(entidadBeneficiariaService.obtenerTodas());
+            String pageStr = ctx.queryParam("page");
+            String sizeStr = ctx.queryParam("size");
+            if (pageStr != null || sizeStr != null) {
+                int page = (pageStr != null && !pageStr.isBlank()) ? Integer.parseInt(pageStr) : 1;
+                int size = (sizeStr != null && !sizeStr.isBlank()) ? Integer.parseInt(sizeStr) : 10;
+                ctx.json(entidadBeneficiariaService.obtenerTodasPaginado(page, size));
+            } else {
+                ctx.json(entidadBeneficiariaService.obtenerTodas());
+            }
         }, DONANTE, ENTIDAD_BENEFICIARIA, CHOFER, ADMINISTRADOR);
 
         app.get("/api/entidad-beneficiaria/{id}", ctx -> {
@@ -61,7 +69,15 @@ public class EntidadBeneficiariaController implements JavalinController {
         app.get("/api/entidad-beneficiaria/{entidadId}/necesidades", ctx -> {
             Long entidadId = Long.parseLong(ctx.pathParam("entidadId"));
             Autorizacion.exigirPropietario(ctx, ENTIDAD_BENEFICIARIA, entidadId);
-            ctx.json(entidadBeneficiariaService.obtenerNecesidades(entidadId));
+            String pageStr = ctx.queryParam("page");
+            String sizeStr = ctx.queryParam("size");
+            if (pageStr != null || sizeStr != null) {
+                int page = (pageStr != null && !pageStr.isBlank()) ? Integer.parseInt(pageStr) : 1;
+                int size = (sizeStr != null && !sizeStr.isBlank()) ? Integer.parseInt(sizeStr) : 10;
+                ctx.json(entidadBeneficiariaService.obtenerNecesidadesPaginado(entidadId, page, size));
+            } else {
+                ctx.json(entidadBeneficiariaService.obtenerNecesidades(entidadId));
+            }
         }, ENTIDAD_BENEFICIARIA, ADMINISTRADOR);
 
         app.post("/api/entidad-beneficiaria/{entidadId}/necesidades", ctx -> {

@@ -35,21 +35,32 @@ public class NotificacionController implements JavalinController {
         app.get("/api/notificaciones", ctx -> {
             String destinatarioIdStr = ctx.queryParam("destinatarioId");
             String tipoDestinatario = ctx.queryParam("tipoDestinatario");
+            String pageStr = ctx.queryParam("page");
+            String sizeStr = ctx.queryParam("size");
 
-            List<Notificacion> resultado;
             if (destinatarioIdStr != null && tipoDestinatario != null) {
                 Long destinatarioId = Long.parseLong(destinatarioIdStr);
                 Rol rolRequerido = "ENTIDAD".equalsIgnoreCase(tipoDestinatario)
                         ? Rol.ENTIDAD_BENEFICIARIA
                         : Rol.DONANTE;
                 Autorizacion.exigirPropietario(ctx, rolRequerido, destinatarioId);
-                resultado = notificacionRepository.findByDestinatario(destinatarioId, tipoDestinatario);
+                if (pageStr != null || sizeStr != null) {
+                    int page = (pageStr != null && !pageStr.isBlank()) ? Integer.parseInt(pageStr) : 1;
+                    int size = (sizeStr != null && !sizeStr.isBlank()) ? Integer.parseInt(sizeStr) : 10;
+                    ctx.json(notificacionRepository.findByDestinatarioPaginado(destinatarioId, tipoDestinatario, page, size));
+                } else {
+                    ctx.json(notificacionRepository.findByDestinatario(destinatarioId, tipoDestinatario));
+                }
             } else {
                 Autorizacion.exigir(Autorizacion.esPrivilegiado(ctx));
-                resultado = notificacionRepository.findAll();
+                if (pageStr != null || sizeStr != null) {
+                    int page = (pageStr != null && !pageStr.isBlank()) ? Integer.parseInt(pageStr) : 1;
+                    int size = (sizeStr != null && !sizeStr.isBlank()) ? Integer.parseInt(sizeStr) : 10;
+                    ctx.json(notificacionRepository.findAllPaginado(page, size));
+                } else {
+                    ctx.json(notificacionRepository.findAll());
+                }
             }
-
-            ctx.json(resultado);
         }, Rol.DONANTE, Rol.ENTIDAD_BENEFICIARIA, Rol.ADMINISTRADOR, Rol.SISTEMA);
     }
 }

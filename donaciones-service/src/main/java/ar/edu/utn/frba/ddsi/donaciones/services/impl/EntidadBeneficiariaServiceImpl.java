@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import ar.edu.utn.frba.ddsi.common.dtos.pagina.PaginaResponse;
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.common.models.entities.MedioContacto;
@@ -88,6 +89,13 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
         return entidadBeneficiariaRepository.findAll().stream()
                 .map(this::toEntidadBeneficiariaResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public PaginaResponse<EntidadBeneficiariaResponse> obtenerTodasPaginado(int page, int size) {
+        PaginaResponse<EntidadBeneficiaria> pag = entidadBeneficiariaRepository.findAllPaginado(page, size);
+        List<EntidadBeneficiariaResponse> elementos = pag.elementos().stream().map(this::toEntidadBeneficiariaResponse).toList();
+        return new PaginaResponse<>(elementos, pag.pagina(), pag.totalPaginas(), pag.totalElementos(), pag.porPagina());
     }
 
     public EntidadBeneficiariaResponse obtenerPorId(Long id) {
@@ -205,6 +213,20 @@ public class EntidadBeneficiariaServiceImpl implements EntidadBeneficiariaServic
                         .collect(Collectors.toList()))
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontro una entidad beneficiaria con el id: " + id));
+    }
+
+    @Override
+    public PaginaResponse<NecesidadResponse> obtenerNecesidadesPaginado(Long id, int page, int size) {
+        int paginaSegura = Math.max(1, page);
+        int tamanoSeguro = Math.max(1, size);
+
+        List<NecesidadResponse> todas = obtenerNecesidades(id);
+        int total = todas.size();
+        int totalPaginas = Math.max(1, (int) Math.ceil((double) total / tamanoSeguro));
+        int desde = (paginaSegura - 1) * tamanoSeguro;
+        List<NecesidadResponse> elementos = todas.subList(Math.min(desde, total), Math.min(desde + tamanoSeguro, total));
+
+        return new PaginaResponse<>(elementos, paginaSegura, totalPaginas, total, tamanoSeguro);
     }
 
     private Necesidad toNecesidad(NecesidadRequest request) {

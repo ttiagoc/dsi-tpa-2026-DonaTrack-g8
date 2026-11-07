@@ -65,11 +65,23 @@ public class DonacionController implements JavalinController {
                 .toList();
           }
 
-          ctx.json(donacionService.buscar(donanteId, estado, categoriaId, subcategoriaIds, entidadId));
+          String pageStr = ctx.queryParam("page");
+          String sizeStr = ctx.queryParam("size");
+          if (pageStr != null || sizeStr != null) {
+            int page = (pageStr != null && !pageStr.isBlank()) ? Integer.parseInt(pageStr) : 1;
+            int size = (sizeStr != null && !sizeStr.isBlank()) ? Integer.parseInt(sizeStr) : 10;
+            ctx.json(donacionService.buscarPaginado(donanteId, estado, categoriaId, subcategoriaIds, entidadId, page, size));
+          } else {
+            ctx.json(donacionService.buscar(donanteId, estado, categoriaId, subcategoriaIds, entidadId));
+          }
         }, DONANTE, ENTIDAD_BENEFICIARIA, ADMINISTRADOR, SISTEMA);
 
         // publico (req. 2, mapa de entregas): las donaciones entregadas por entidad, sin datos del donante.
-        app.get("/api/donaciones/entregadas", ctx -> ctx.json(donacionService.obtenerEntregasPorEntidad()));
+        app.get("/api/donaciones/entregadas", ctx -> {
+            String mesesParam = ctx.queryParam("meses");
+            Integer meses = (mesesParam != null && !mesesParam.isBlank()) ? Integer.parseInt(mesesParam) : null;
+            ctx.json(donacionService.obtenerEntregasPorEntidad(meses));
+        });
 
         // la ve su donante, la entidad a la que se asigno, el chofer en reparto, el administrador y los servicios
         app.get("/api/donaciones/{id}", ctx -> {

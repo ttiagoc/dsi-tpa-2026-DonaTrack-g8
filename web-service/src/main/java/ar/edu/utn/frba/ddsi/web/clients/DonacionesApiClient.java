@@ -18,6 +18,7 @@ import ar.edu.utn.frba.ddsi.web.dto.catalogo.SubcategoriaRequest;
 import ar.edu.utn.frba.ddsi.web.dto.catalogo.UsosCatalogoResponse;
 import ar.edu.utn.frba.ddsi.web.dto.catalogo.Rubro;
 import ar.edu.utn.frba.ddsi.web.dto.catalogo.SubcategoriaResponse;
+import ar.edu.utn.frba.ddsi.web.dto.comun.PaginaResponse;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.DonacionAltaRequest;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.DireccionUbicada;
 import ar.edu.utn.frba.ddsi.web.dto.donaciones.DonacionResponse;
@@ -108,7 +109,12 @@ public class DonacionesApiClient extends ApiClient {
     // ---- Mapa de entregas (publico, A, req. 2) ----
 
     public EntidadConEntregas[] entregasPorEntidad() {
-        return getPublico("/donaciones/entregadas", EntidadConEntregas[].class);
+        return entregasPorEntidad(null);
+    }
+
+    public EntidadConEntregas[] entregasPorEntidad(Integer meses) {
+        String ruta = (meses != null && meses > 0) ? "/donaciones/entregadas?meses=" + meses : "/donaciones/entregadas";
+        return getPublico(ruta, EntidadConEntregas[].class);
     }
 
     /** Busca la direccion en Georef (a traves de la API). ApiException 400 si no existe, 503 si Georef no responde. */
@@ -122,6 +128,10 @@ public class DonacionesApiClient extends ApiClient {
     public List<NecesidadResponse> listarNecesidades(Context ctx) {
         return get(ctx, rutaNecesidades(ctx), new TypeReference<List<NecesidadResponse>>() {
         });
+    }
+
+    public PaginaResponse<NecesidadResponse> listarNecesidadesPaginado(Context ctx, int page, int size) {
+        return getPaginado(ctx, rutaNecesidades(ctx) + "?page=" + page + "&size=" + size, NecesidadResponse.class, page, size);
     }
 
     public NecesidadResponse registrarNecesidad(Context ctx, NecesidadRequest necesidad) {
@@ -141,6 +151,11 @@ public class DonacionesApiClient extends ApiClient {
     public List<DonacionResponse> listarDonacionesAsignadas(Context ctx) {
         return get(ctx, "/donaciones?entidadId=" + perfilId(ctx), new TypeReference<List<DonacionResponse>>() {
         });
+    }
+
+    public PaginaResponse<DonacionResponse> listarDonacionesAsignadasPaginado(Context ctx, int page, int size) {
+        return getPaginado(ctx, "/donaciones?entidadId=" + perfilId(ctx) + "&page=" + page + "&size=" + size,
+                DonacionResponse.class, page, size);
     }
 
     // ---- Confirmar la recepcion de una donacion (A, req. 12) ----
@@ -171,6 +186,19 @@ public class DonacionesApiClient extends ApiClient {
         return get(ctx, query.toString(), new TypeReference<List<Map<String, Object>>>() {});
     }
 
+    public PaginaResponse<Map<String, Object>> buscarDonacionesPaginado(Context ctx, Long donanteId, String estado, Long categoriaId, List<Long> subcategoriaIds, int page, int size) {
+        StringBuilder query = new StringBuilder("/donaciones?page=").append(page).append("&size=").append(size).append("&");
+        if (donanteId != null) query.append("donanteId=").append(donanteId).append("&");
+        if (estado != null && !estado.isBlank()) query.append("estado=").append(estado).append("&");
+        if (categoriaId != null) query.append("categoriaId=").append(categoriaId).append("&");
+        if (subcategoriaIds != null && !subcategoriaIds.isEmpty()) {
+            query.append("subcategoriaIds=")
+                    .append(subcategoriaIds.stream().map(String::valueOf).collect(Collectors.joining(",")))
+                    .append("&");
+        }
+        return getPaginado(ctx, query.toString(), Map.class, page, size);
+    }
+
     public List<SubcategoriaResponse> obtenerSubcategorias(Context ctx, Long categoriaId) {
         if (categoriaId != null) {
             return get(ctx, "/categorias/" + categoriaId + "/subcategorias", new TypeReference<List<SubcategoriaResponse>>() {});
@@ -184,6 +212,10 @@ public class DonacionesApiClient extends ApiClient {
         return get(ctx, "/entidad-beneficiaria", new TypeReference<List<Map<String, Object>>>() {});
     }
 
+    public PaginaResponse<Map<String, Object>> obtenerEntidadesPaginado(Context ctx, int page, int size) {
+        return getPaginado(ctx, "/entidad-beneficiaria?page=" + page + "&size=" + size, Map.class, page, size);
+    }
+
     // ---- Administracion: Deposito y Vencimientos (C, req. 16) ----
 
     public List<DonacionResponse> listarDonaciones(Context ctx, String estado) {
@@ -191,6 +223,11 @@ public class DonacionesApiClient extends ApiClient {
                 ? "/donaciones?estado=" + estado
                 : "/donaciones";
         return get(ctx, ruta, new TypeReference<List<DonacionResponse>>() {});
+    }
+
+    public PaginaResponse<DonacionResponse> listarDonacionesPaginado(Context ctx, String estado, int page, int size) {
+        String base = (estado != null && !estado.isBlank()) ? "/donaciones?estado=" + estado + "&" : "/donaciones?";
+        return getPaginado(ctx, base + "page=" + page + "&size=" + size, DonacionResponse.class, page, size);
     }
 
     public DonacionResponse cambiarEstado(Context ctx, Long id, String estado, String justificacion) {
@@ -219,6 +256,10 @@ public class DonacionesApiClient extends ApiClient {
 
     public List<DonanteResponse> listarDonantes(Context ctx) {
         return get(ctx, "/donantes", new TypeReference<List<DonanteResponse>>() {});
+    }
+
+    public PaginaResponse<DonanteResponse> listarDonantesPaginado(Context ctx, int page, int size) {
+        return getPaginado(ctx, "/donantes?page=" + page + "&size=" + size, DonanteResponse.class, page, size);
     }
 
     public DonanteResponse crearDonantePersonaHumana(Context ctx, PersonaHumanaRequest request) {

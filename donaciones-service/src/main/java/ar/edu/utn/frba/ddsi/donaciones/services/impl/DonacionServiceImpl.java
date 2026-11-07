@@ -1,5 +1,6 @@
 package ar.edu.utn.frba.ddsi.donaciones.services.impl;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -9,6 +10,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import ar.edu.utn.frba.ddsi.common.dtos.pagina.PaginaResponse;
 import ar.edu.utn.frba.ddsi.common.exceptions.BusinessException;
 import ar.edu.utn.frba.ddsi.common.exceptions.ResourceNotFoundException;
 import ar.edu.utn.frba.ddsi.donaciones.models.enums.EstadoBien;
@@ -163,9 +165,18 @@ public class DonacionServiceImpl implements DonacionService {
 
     // entidades ordenadas por su entrega mas reciente
     public List<EntidadConEntregasResponse> obtenerEntregasPorEntidad() {
+        return obtenerEntregasPorEntidad(null);
+    }
+
+    public List<EntidadConEntregasResponse> obtenerEntregasPorEntidad(Integer mesesAtras) {
+        LocalDateTime limite = (mesesAtras != null && mesesAtras > 0)
+                ? LocalDateTime.now().minusMonths(mesesAtras)
+                : null;
+
         Map<Long, List<Donacion>> porEntidad = donacionRepository
                 .buscarPorEstado(TipoEstadoDonacion.ENTREGADA).stream()
                 .filter(d -> d.getEntidadBeneficiariaAsignada() != null)
+                .filter(d -> limite == null || (d.fechaDelEstadoActual() != null && !d.fechaDelEstadoActual().isBefore(limite)))
                 .sorted(Comparator.comparing(Donacion::fechaDelEstadoActual).reversed())
                 .collect(Collectors.groupingBy(d -> d.getEntidadBeneficiariaAsignada().getId(), LinkedHashMap::new,
                         Collectors.toList()));
@@ -358,4 +369,15 @@ public class DonacionServiceImpl implements DonacionService {
           .collect(Collectors.toList());
     }
 
+    @Override
+    public PaginaResponse<DonacionResponse> buscarPaginado(Long donanteId, String estado, Long categoriaId,
+                                                            List<Long> subcategoriaIds, Long entidadId, int page, int size) {
+      TipoEstadoDonacion estadoEnum = null;
+      if (estado != null && !estado.isBlank()) {
+        estadoEnum = toTipoEstadoDonacion(estado);
+      }
+      PaginaResponse<Donacion> pag = donacionRepository.buscarPaginado(donanteId, estadoEnum, categoriaId, subcategoriaIds, entidadId, page, size);
+      List<DonacionResponse> elementos = pag.elementos().stream().map(this::toDonacionResponse).toList();
+      return new PaginaResponse<>(elementos, pag.pagina(), pag.totalPaginas(), pag.totalElementos(), pag.porPagina());
+    }
 }
