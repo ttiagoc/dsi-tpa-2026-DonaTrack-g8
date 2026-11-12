@@ -6,11 +6,16 @@
 #   donatrack-cron.sh rutas         -> planificacion de las rutas del dia siguiente
 #   donatrack-cron.sh inactividad   -> aviso a los donantes que cumplen 20 dias sin donar
 #
-# En la VM los servicios no publican puertos (solo Caddy, en 80/443), asi que la llamada se hace desde
-# adentro del contenedor de donaciones con "docker exec", por la red de compose y con la SERVICE_API_KEY
-# que ese contenedor ya tiene en su entorno: es la misma clave que validan los servicios.
+# Dos formas de llamar:
+# - VM de cron separada (deploy/README.md): curl por la red privada al balanceador de la VM de servicios
+#   (http://<IP privada>:8080/api y :8081/api). instalar-cron.sh deja las URLs y la clave en
+#   /etc/donatrack/cron.env, que este script lee al arrancar.
+# - Todo en una VM (docker-compose.yml de la raiz): los servicios no publican puertos (solo Caddy, en
+#   80/443), asi que la llamada se hace desde adentro del contenedor de donaciones con "docker exec", por la
+#   red de compose y con la SERVICE_API_KEY que ese contenedor ya tiene en su entorno.
 #
-# Configuracion (variables de entorno, todas opcionales):
+# Configuracion (variables de entorno o /etc/donatrack/cron.env, todas opcionales):
+#   CRON_ENV         archivo de configuracion, por defecto /etc/donatrack/cron.env (si existe)
 #   CRON_CONTENEDOR  contenedor desde el que se llama, por defecto donatrack-donaciones. Vacio: se llama
 #                    con el curl de la maquina, a los puertos publicados (por ejemplo, en una compu local)
 #   DONACIONES_URL   por defecto http://donaciones-service:8080/api (o http://localhost:8080/api sin contenedor)
@@ -23,6 +28,13 @@ set -uo pipefail
 TAREA="${1:-}"
 DIR_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DONATRACK_DIR="${DONATRACK_DIR:-$(cd "$DIR_SCRIPT/../.." && pwd)}"
+CRON_ENV="${CRON_ENV:-/etc/donatrack/cron.env}"
+if [ -r "$CRON_ENV" ]; then
+    set -a
+    # shellcheck disable=SC1090
+    . "$CRON_ENV"
+    set +a
+fi
 CRON_CONTENEDOR="${CRON_CONTENEDOR-donatrack-donaciones}"
 CRON_TIMEOUT="${CRON_TIMEOUT:-900}"
 INTENTOS=3

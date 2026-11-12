@@ -1,0 +1,68 @@
+# Caddy de la VM de servicios: HTTPS para el sitio y balanceador de carga entre las dos instancias de
+# cada servicio. Las direcciones (web-1, donaciones-2, ...) son los nombres de docker-compose.yml.
+
+# Reglas comunes de balanceo:
+# - round_robin: una request a cada instancia, alternando.
+# - Si una instancia no responde (caida o reiniciandose), Caddy la marca como fuera de servicio por 30s
+#   y reintenta la request en la otra durante hasta 10s. Solo reintenta si no pudo conectarse, asi que un
+#   POST nunca se ejecuta dos veces.
+(balanceo) {
+	lb_try_duration 10s
+	lb_try_interval 250ms
+	fail_duration 30s
+	max_fails 1
+	unhealthy_status 502 503 504
+}
+
+# Solo la red privada (VNet de Azure y la red de compose). El NSG ya cierra estos puertos a Internet,
+# esto es una segunda barrera.
+(solo-red-privada) {
+	@externo not remote_ip private_ranges
+	respond @externo 403
+}
+
+# --- Sitio publico ---
+{$DOMINIO} {
+	encode zstd gzip
+
+	reverse_proxy web-1:7070 web-2:7070 {
+		import balanceo
+		# Sesiones pegajosas: la sesion del usuario vive en la memoria de la instancia del web-service
+		# que lo logueo, asi que Caddy le pone una cookie y lo manda siempre a esa misma. Si esa
+		# instancia se cae, pasa a la otra y el usuario tiene que volver a ingresar.
+		lb_policy cookie donatrack_instancia
+		# chequeo activo: una pagina estatica, que no llama a las APIs
+		health_uri /legal
+		health_interval 15s
+		health_timeout 5s
+	}
+}
+
+# --- APIs (red interna) ---
+# Las usan el web-service y los servicios entre si (http://caddy:8080/api, ...) y la VM de cron
+# (http://<IP privada de esta VM>:8080/api). No necesitan sesiones pegajosas: cada request trae su JWT
+# o su X-Api-Key.
+
+http://:8080 {
+	import solo-red-privada
+	reverse_proxy donaciones-1:8080 donaciones-2:8080 {
+		import balanceo
+		lb_policy round_robin
+	}
+}
+
+http://:8081 {
+	import solo-red-privada
+	reverse_proxy logistica-1:8081 logistica-2:8081 {
+		import balanceo
+		lb_policy round_robin
+	}
+}
+
+http://:8082 {
+	import solo-red-privada
+	reverse_proxy notificaciones-1:8082 notificaciones-2:8082 {
+		import balanceo
+		lb_policy round_robin
+	}
+}

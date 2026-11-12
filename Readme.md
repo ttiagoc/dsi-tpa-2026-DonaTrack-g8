@@ -35,6 +35,8 @@ dsi-tpa-2026-DonaTrack-g8/
 ├── pom.xml                    # POM padre: versiones y dependencyManagement
 ├── docker-compose.yml         # PostgreSQL local (+ los servicios, con el perfil "full")
 ├── docker/postgres/           # Script de inicialización de las bases
+├── docker/cron/               # Tareas programadas (cron de la VM)
+├── deploy/                    # Despliegue en Azure: VM de servicios, VM de cron, base y fotos
 ├── common-lib/                # Librería compartida (JAR), importada por los servicios
 ├── grpc-contracts/            # Contratos Protobuf y stubs compilados de gRPC
 ├── donaciones-service/        # Servicio de donaciones — puerto HTTP 8080 y gRPC 9090
@@ -196,11 +198,15 @@ dispara el cron de la VM de Azure, que llama a la API con la clave de servicio
 | 03:00 | Planificación de las rutas del día siguiente, en lotes de 100 | `POST logistica-service:8081/api/rutas/planificaciones` |
 | 04:00 | Aviso de ausencia a quienes cumplen 20 días sin donar | `POST donaciones-service:8080/api/donantes/inactividad/verificaciones-diarias` |
 
-En la VM los servicios no publican puertos (solo Caddy, en 80 y 443), así que el script hace la
-llamada desde adentro del contenedor `donatrack-donaciones` con `docker exec`, por la red de
-compose. Usa la `SERVICE_API_KEY` que ese contenedor ya tiene, que es la misma que validan los
-servicios. Para correrlo en otra máquina con los puertos publicados (por ejemplo, en local), se
-llama con `CRON_CONTENEDOR=` vacío y usa `localhost`.
+En Azure las tareas corren en una **VM de cron** aparte (ver [`deploy/README.md`](deploy/README.md)),
+que llama con `curl` por la red privada al balanceador de la VM de servicios
+(`http://<IP privada>:8080/api` y `:8081/api`). El balanceador le pasa cada llamada a una sola de
+las dos instancias. Las URLs y la clave quedan en `/etc/donatrack/cron.env`, que arma el instalador.
+
+Si todo corre en una sola VM con el `docker-compose.yml` de la raíz, los servicios no publican
+puertos, así que el script hace la llamada desde adentro del contenedor `donatrack-donaciones` con
+`docker exec`, por la red de compose. Para correrlo en una máquina con los puertos publicados (por
+ejemplo, en local), se llama con `CRON_CONTENEDOR=` vacío y usa `localhost`.
 
 Los archivos están en [`docker/cron/`](docker/cron/):
 - `donatrack-cron.sh`: dispara una tarea, con reintentos si el servicio no responde y sin
@@ -210,13 +216,15 @@ Los archivos están en [`docker/cron/`](docker/cron/):
 
 ### Instalarlas en la VM
 
-Con el repo clonado en la VM y los contenedores levantados con
-`docker compose --profile full up -d --build`. El usuario que corre las tareas tiene que estar
-en el grupo `docker`:
+En la VM de cron, con el repo clonado y `curl` instalado (no necesita Docker):
 
 ```bash
-sudo bash docker/cron/instalar-cron.sh
+sudo SERVICIOS_IP=<IP privada de la VM de servicios> bash docker/cron/instalar-cron.sh
 ```
+
+Pide la `SERVICE_API_KEY`, que tiene que ser la misma del `.env` de la VM de servicios. Si todo
+corre en una sola VM, se instala sin `SERVICIOS_IP` (`sudo bash docker/cron/instalar-cron.sh`) y el
+usuario que corre las tareas tiene que estar en el grupo `docker`.
 
 El instalador pone la VM en hora de Argentina (`America/Argentina/Buenos_Aires`), crea
 `/etc/cron.d/donatrack` con la ruta del repo y el usuario dueño, y deja el log en

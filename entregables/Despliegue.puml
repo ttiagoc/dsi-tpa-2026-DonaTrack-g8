@@ -1,13 +1,16 @@
 @startuml Despliegue
 
-' Despliegue en Azure: una maquina virtual con Docker que levanta todo con
-' "docker compose --profile full up -d --build" (docker-compose.yml + el override de la VM).
-' Los servicios se hablan por la red interna de compose usando el nombre del servicio y no publican
-' puertos en la VM: solo Caddy recibe trafico de Internet (80/443).
+' Despliegue en Azure en cuatro piezas dentro de la misma VNet (ver deploy/README.md):
+' - VM de servicios: Caddy (balanceador + HTTPS) y dos instancias de cada servicio y del web-service,
+'   con deploy/servicios/docker-compose.yml.
+' - Azure Database for PostgreSQL con las tres bases.
+' - VM de cron: dispara las tareas programadas por la red privada, contra el balanceador.
+' - Azure Files: las fotos de recepcion, montadas en la VM de servicios.
+' Desde Internet solo entra Caddy (80/443).
 
 left to right direction
 skinparam linetype ortho
-skinparam nodesep 50
+skinparam nodesep 40
 skinparam ranksep 60
 
 skinparam node {
@@ -58,42 +61,44 @@ rectangle "Microsoft Azure (Azure for Students, Chile Central)" {
 
     rectangle "Network Security Group\n(entrada publica: 80, 443 y 22 para SSH)" as NSG
 
-    node "Azure Virtual Machine donatrack-vm\n(Ubuntu 24.04 + Docker Engine)\ndonatrack-g8.chilecentral.cloudapp.azure.com" <<VM>> as VM {
+    rectangle "Red virtual (VNet) donatrack-vnet" {
 
-        rectangle "Red interna de docker compose (donatrack_default)" {
+        node "VM de servicios donatrack-vm (B2as v2)\n(Ubuntu 24.04 + Docker Engine)\ndonatrack-g8.chilecentral.cloudapp.azure.com" <<VM>> as VM {
 
             node "Contenedor donatrack-caddy" <<Docker>> as CCaddy {
-                component "Caddy 2\n(proxy inverso con HTTPS\nautomatico, Let's Encrypt)\n:80 / :443" as Caddy
+                component "Caddy 2\nbalanceador de carga + HTTPS\n(Let's Encrypt)\n:443 sitio (sesiones pegajosas)\n:8080 / :8081 / :8082 APIs" as Caddy
             }
 
-            node "Contenedor donatrack-web" <<Docker>> as CWeb {
+            node "web-1 / web-2" <<Docker x2>> as CWeb {
                 component "web-service\n(Javalin + Handlebars)\n:7070" as Web
             }
 
-            node "Contenedor donatrack-donaciones" <<Docker>> as CDon {
+            node "donaciones-1 / donaciones-2" <<Docker x2>> as CDon {
                 component "donaciones-service\n(Spring Boot)\nREST :8080\ngRPC server :9090" as Don
             }
 
-            node "Contenedor donatrack-logistica" <<Docker>> as CLog {
+            node "logistica-1 / logistica-2" <<Docker x2>> as CLog {
                 component "logistica-service\n(Spring Boot)\nREST :8081\ngRPC client" as Log
             }
 
-            node "Contenedor donatrack-notificaciones" <<Docker>> as CNot {
+            node "notificaciones-1 / notificaciones-2" <<Docker x2>> as CNot {
                 component "notificaciones-service\n(Spring Boot)\nREST :8082" as Not
             }
 
-            database "Contenedor donatrack-postgres\nPostgreSQL 16 :5432" as PG {
-                component "Base donaciones" as DB1
-                component "Base logistica" as DB2
-                component "Base notificaciones" as DB3
-            }
+            storage "/mnt/donatrack-fotos\n(montado desde Azure Files)" as MntFotos
         }
 
-        component "cron de la VM\n/etc/cron.d/donatrack\n(docker/cron/donatrack-cron.sh)\n01:00 matchmaking\n03:00 rutas\n04:00 inactividad" <<cron>> as Cron
+        node "VM de cron donatrack-cron (B1s)\n(sin IP publica)" <<VM>> as VMCron {
+            component "cron\n/etc/cron.d/donatrack\n(docker/cron/donatrack-cron.sh)\n01:00 matchmaking\n03:00 rutas\n04:00 inactividad" <<cron>> as Cron
+        }
 
-        storage "Volumen Docker caddy-data\n(certificados)" as VolCaddy
-        storage "Volumen Docker fotos-data\n(/data/fotos)" as VolFotos
-        storage "Volumen Docker postgres-data" as VolPG
+        database "Azure Database for PostgreSQL\nFlexible Server (B1ms)\n:5432, acceso privado" as PG {
+            component "Base donaciones" as DB1
+            component "Base logistica" as DB2
+            component "Base notificaciones" as DB3
+        }
+
+        storage "Azure Files\nfile share fotos\n(fotos de recepcion)" as Files
     }
 }
 
@@ -107,40 +112,36 @@ node "Servicios externos" <<External System>> #ECEFF1 {
 
 ' --- Alineacion ---
 CCaddy -[hidden]down-> CWeb
-CWeb -[hidden]down-> VolFotos
+CWeb -[hidden]down-> MntFotos
 CDon -[hidden]down-> CLog
 CLog -[hidden]down-> CNot
 DB1 -[hidden]down-> DB2
 DB2 -[hidden]down-> DB3
-PG -[hidden]down-> VolPG
 
 ' --- Conexiones ---
-Nav --> Net : HTTPS (HTML + cookie de sesion)
+Nav --> Net : HTTPS (HTML + cookie de sesion\n+ cookie de instancia)
 Net --> NSG
 NSG --> Caddy : :443 (el :80 redirige a HTTPS)
-Caddy --> Web : HTTP :7070
-Caddy --> VolCaddy
 Nav --> OSM : HTTPS (mapas de entregas y hoja de ruta)
 
-Web --> VolFotos : fotos de recepcion
-Web --> Don : REST :8080 + JWT\n(login, catalogo, donaciones, entidades)
-Web --> Log : REST :8081 + JWT\n(camiones, rutas, posiciones)
-Web --> Not : REST :8082 + JWT\n(notificaciones de cada usuario)
+Caddy --> Web : HTTP :7070, a la misma instancia\nde cada usuario
+Caddy --> Don : :8080 round robin
+Caddy --> Log : :8081 round robin
+Caddy --> Not : :8082 round robin
 
-Cron --> CDon : docker exec + curl\ncon la SERVICE_API_KEY del contenedor
-Don ..> Log : POST /api/rutas/planificaciones\n(el curl del cron, X-Api-Key)
+Web --> Caddy : REST + JWT (http://caddy:8080..8082/api)
+Web --> MntFotos : fotos de recepcion
+MntFotos --> Files : SMB 3
 
-Log --> Don : gRPC sobre HTTP/2 :9090\n[x-api-key en metadata]
+Cron --> Caddy : curl por la red privada\nhttp://<IP privada>:8080 y :8081\n(X-Api-Key)
+
+Log --> Don : gRPC sobre HTTP/2 :9090\nalias donaciones-service\n[x-api-key en metadata]
 Log --> Planif : HTTPS: donaciones (lotes de hasta 100) + camiones
-Planif --> Log : callback asincronico HTTPS\nPOST /api/rutas/planificaciones/resultados
+Planif --> Log : callback asincronico\nPOST /api/rutas/planificaciones/resultados
 
-Don --> Not : REST :8082\n(eventos de donaciones)
-Log --> Not : REST :8082 + X-Api-Key\n(inicio de ruta)
-
-Don --> DB1 : JDBC
-Log --> DB2 : JDBC
-Not --> DB3 : JDBC
-PG --> VolPG
+Don --> DB1 : JDBC (TLS)
+Log --> DB2 : JDBC (TLS)
+Not --> DB3 : JDBC (TLS)
 
 Don --> Georef : HTTPS
 Not --> Msg : SMTP / HTTPS (email, SMS, WhatsApp)

@@ -191,34 +191,47 @@ FK.
 
 ## 6. Despliegue en Azure
 
-El sistema corre en **una máquina virtual de Azure** (`donatrack-vm`, Azure for Students, región Chile Central) con
-Docker, y se publica en `https://donatrack-g8.chilecentral.cloudapp.azure.com`. Se levanta con el mismo
-`docker-compose.yml` que se usa en local (perfil `full`): un contenedor por servicio, otro para PostgreSQL con las
-tres bases, y volúmenes de Docker para los datos y las fotos de recepción. Un override propio de la VM agrega
-**Caddy** como proxy inverso, saca los puertos publicados de los servicios y limita la memoria de cada JVM para que
-entren todos en la VM.
+El sistema se publica en `https://donatrack-g8.chilecentral.cloudapp.azure.com` (Azure for Students, región Chile
+Central) y se reparte en cuatro piezas dentro de la misma red virtual (VNet). Los pasos están en
+[`deploy/README.md`](../deploy/README.md).
 
-**Por qué una VM con Docker:**
-- **Mismo entorno en local y en la nube:** las imágenes y la configuración son las mismas, así que lo que se prueba en
-  la compu es lo que corre en Azure. Todo se configura por variables de entorno (URLs, secretos, `COOKIE_SECURE`).
-- **Sin servicios pagos:** el crédito de Azure for Students alcanza para una VM. Las bases administradas o los
-  contenedores administrados consumen crédito aparte.
-- **Red privada sin configuración extra:** los servicios se hablan por la red interna de compose usando el nombre del
-  servicio (`donaciones-service:9090`) y no publican puertos en la VM. Desde Internet solo entra Caddy (80 y 443,
-  más el 22 para administrar por SSH); las APIs, el puerto gRPC y la base quedan sin acceso público.
-- **HTTPS sin tocar el código:** Caddy obtiene y renueva solo el certificado de Let's Encrypt para el nombre DNS de la
-  VM y le pasa el tráfico al sitio web. Así la cookie de sesión puede ir con `Secure` y el web-service no maneja
-  certificados.
-- **gRPC sin intermediarios:** al no pasar por un proxy HTTP/1.1 de una plataforma, el tráfico HTTP/2 entre logística y
-  donaciones funciona sin ajustes.
-- **Fotos persistentes:** se guardan en un volumen de Docker, que sobrevive a los reinicios y a las nuevas versiones
-  de los contenedores.
+| Pieza | Qué corre |
+|---|---|
+| **Base de datos** (Azure Database for PostgreSQL, o una VM con PostgreSQL) | Las tres bases, una por servicio |
+| **VM de servicios** (`donatrack-vm`, B2as v2) | Caddy como balanceador de carga y HTTPS, y **dos instancias** de cada servicio y del web-service ([`deploy/servicios/docker-compose.yml`](../deploy/servicios/docker-compose.yml)) |
+| **VM de cron** (B1s, sin IP pública) | Las tareas programadas |
+| **Azure Files** | Las fotos de recepción |
 
-**Lo que se resigna:** el servicio principal y el extraído quedan en el **mismo nodo**. La consigna lo acepta cuando
-no se pueden separar, pero la VM es un punto único de falla y todos los servicios comparten CPU y memoria. Como cada
-servicio ya es un contenedor independiente que se comunica por red, pasar logística a otra VM solo requiere cambiar
-las URLs de las variables de entorno. Tampoco hay copias de seguridad automáticas de la base, como las tendría una
-base administrada.
+**Por qué así:**
+- **Cada cosa escala y falla por separado:** los datos y las fotos ya no viven en la VM de servicios, así que esa VM se
+  puede rehacer o duplicar sin perder nada. La base administrada tiene copias de seguridad automáticas.
+- **Dos instancias detrás de un balanceador:** Caddy reparte las requests entre las instancias (`round_robin`). Si una
+  no responde, la saca de la rotación por 30 s y reintenta en la otra, así que se puede reiniciar o actualizar una
+  instancia sin cortar el servicio. Solo reintenta cuando no pudo conectarse, así un `POST` nunca se ejecuta dos veces.
+- **Sesiones pegajosas en el sitio:** la sesión del web-service vive en la memoria de Jetty de la instancia que logueó
+  al usuario. En vez de agregar un almacén de sesiones compartido, Caddy le pone una cookie al navegador y lo manda
+  siempre a la misma instancia. El costo es que, si esa instancia se cae, el usuario tiene que volver a ingresar.
+- **APIs sin estado:** cada request trae su JWT o su `X-Api-Key`, así que cualquier instancia la atiende. El tráfico
+  HTTP entre servicios también pasa por el balanceador (`http://caddy:8080/api`, ...). El gRPC de logística a
+  donaciones va al alias `donaciones-service`, que Docker resuelve a las dos instancias.
+- **Fotos compartidas sin tocar el código:** el web-service las sigue guardando en `FOTOS_DIR`, pero esa carpeta es un
+  file share de Azure Files montado en la VM, así que las dos instancias ven las mismas.
+- **Mismo entorno en local y en la nube:** las imágenes son las mismas que se usan con el `docker-compose.yml` de la
+  raíz. Todo se configura por variables de entorno (URLs, base, secretos, `COOKIE_SECURE`).
+- **Red privada:** desde Internet solo entra Caddy (80 y 443, más el 22 para SSH). La base, el cron y las APIs solo
+  se ven desde la VNet. Los puertos 8080/8081 que usa el cron los cierra el NSG a Internet, y Caddy además rechaza
+  cualquier IP que no sea privada.
+- **HTTPS sin tocar el código:** Caddy obtiene y renueva solo el certificado de Let's Encrypt y le pasa el tráfico al
+  sitio. Así la cookie de sesión puede ir con `Secure` y el web-service no maneja certificados.
+- **Costo:** la base (B1ms), la VM de cron (B1s) y las fotos entran en los servicios gratuitos de 12 meses de Azure.
+  Lo único que consume crédito es la VM de servicios, la misma que ya se usaba. Usar Caddy como balanceador, en vez de
+  un Azure Load Balancer, ahorra ese costo.
+
+**Lo que se resigna:** las dos instancias de cada servicio están en la **misma VM**, así que esa VM sigue siendo un
+punto único de falla para el procesamiento (no para los datos). Caddy también es único. Como las instancias se
+hablan por red y no comparten estado, pasar a dos VMs de servicios detrás de un Azure Load Balancer solo requiere
+cambiar las direcciones del Caddyfile. Las importaciones de donantes en curso se siguen en la memoria de la instancia
+de donaciones que las recibió.
 
 ### Tareas programadas con el cron de la VM
 La consigna pide tres procesos periódicos: los algoritmos de asignación y la planificación de rutas del día siguiente,
@@ -236,11 +249,13 @@ Argentina.
 - **Fallas visibles:** cada ejecución queda en `/var/log/donatrack/cron.log` con su resultado. Si el servicio no
   responde (por ejemplo, porque se está reiniciando) el script reintenta; si la API responde con error, lo registra
   con el mensaje.
-- **Sin abrir puertos:** como los servicios no publican puertos en la VM, el script no llama a `localhost`: hace el
-  `curl` desde adentro del contenedor de donaciones (`docker exec`), por la red de compose, con la `SERVICE_API_KEY`
-  que ese contenedor ya tiene. Así la clave del cron es siempre la misma que validan los servicios.
+- **En una VM aparte, por la red privada:** la VM de cron no tiene IP pública ni Docker. Hace el `curl` al
+  balanceador de la VM de servicios (`http://<IP privada>:8080/api`), que le pasa cada llamada a una sola instancia.
+  La clave queda en `/etc/donatrack/cron.env`, legible solo por el usuario que corre las tareas. Si se reinicia la VM
+  de servicios, el cron no se ve afectado.
 - **Hora de Argentina:** la VM se configura en `America/Argentina/Buenos_Aires` para que "la 1 de la mañana" sea la
   de los usuarios y no la de UTC.
 
-El contra es que las tareas dependen de que la VM tenga el cron instalado (`sudo bash docker/cron/instalar-cron.sh`): si
-el sistema se levanta en otra máquina, hay que instalarlo ahí también.
+El contra es que las tareas dependen de que la VM de cron tenga el cron instalado
+(`sudo SERVICIOS_IP=... bash docker/cron/instalar-cron.sh`) y de que la `SERVICE_API_KEY` sea la misma en las dos VMs.
+Si todo se levanta en una sola máquina, el mismo script sigue funcionando con `docker exec`.

@@ -2,7 +2,12 @@
 # Instala las tareas programadas de DonaTrack en la VM (Ubuntu/Debian). Correr una vez, con sudo, desde
 # el repo clonado en la VM:
 #
-#   sudo bash docker/cron/instalar-cron.sh
+#   sudo SERVICIOS_IP=10.0.0.4 bash docker/cron/instalar-cron.sh   # VM de cron separada (deploy/README.md)
+#   sudo bash docker/cron/instalar-cron.sh                         # todo en una VM, con docker exec
+#
+# Con SERVICIOS_IP (la IP privada de la VM de servicios) las tareas se disparan con curl por la red privada,
+# contra el balanceador de esa VM: deja las URLs y la SERVICE_API_KEY (la pide si no esta en el entorno) en
+# /etc/donatrack/cron.env, que solo puede leer el usuario que corre las tareas. Esta VM no necesita Docker.
 #
 # Deja la VM en hora de Argentina, crea /etc/cron.d/donatrack (a partir de donatrack.cron), la carpeta
 # de logs /var/log/donatrack y su rotacion semanal. Se puede volver a correr sin problema.
@@ -18,13 +23,46 @@ DIR_REPO="$(cd "$DIR_SCRIPT/../.." && pwd)"
 # el usuario que corre las tareas es el duenio del repo (en Azure, normalmente azureuser)
 USUARIO="${SUDO_USER:-$(stat -c '%U' "$DIR_REPO")}"
 ZONA="America/Argentina/Buenos_Aires"
+SERVICIOS_IP="${SERVICIOS_IP:-}"
+CRON_ENV=/etc/donatrack/cron.env
 
-command -v docker >/dev/null || { echo "Falta docker" >&2; exit 1; }
 command -v flock >/dev/null || { echo "Falta flock: sudo apt-get install -y util-linux" >&2; exit 1; }
-# el script llama a la API con "docker exec": el usuario tiene que poder usar docker sin sudo
-if ! id -nG "$USUARIO" | grep -qw docker; then
-    echo "El usuario $USUARIO no esta en el grupo docker: sudo usermod -aG docker $USUARIO" >&2
-    exit 1
+
+if [ -n "$SERVICIOS_IP" ]; then
+    command -v curl >/dev/null || { echo "Falta curl: sudo apt-get install -y curl" >&2; exit 1; }
+    if [ -z "${SERVICE_API_KEY:-}" ]; then
+        read -rsp "SERVICE_API_KEY (la misma del .env de la VM de servicios): " SERVICE_API_KEY
+        echo
+    fi
+    [ -n "$SERVICE_API_KEY" ] || { echo "Falta la SERVICE_API_KEY" >&2; exit 1; }
+
+    mkdir -p "$(dirname "$CRON_ENV")"
+    # printf %q deja la clave lista para que la lea el shell, aunque tenga caracteres especiales
+    {
+        echo "# Generado por instalar-cron.sh: tareas por la red privada, contra el balanceador"
+        echo "CRON_CONTENEDOR="
+        echo "DONACIONES_URL=http://$SERVICIOS_IP:8080/api"
+        echo "LOGISTICA_URL=http://$SERVICIOS_IP:8081/api"
+        printf 'SERVICE_API_KEY=%q\n' "$SERVICE_API_KEY"
+    } > "$CRON_ENV"
+    chown "$USUARIO" "$CRON_ENV"
+    chmod 600 "$CRON_ENV"
+    echo "Configuracion en $CRON_ENV (servicios en $SERVICIOS_IP)"
+
+    echo "Probando la conexion con el balanceador..."
+    if curl -sS -o /dev/null --max-time 10 "http://$SERVICIOS_IP:8080/"; then
+        echo "  OK: responde http://$SERVICIOS_IP:8080"
+    else
+        echo "  AVISO: no responde http://$SERVICIOS_IP:8080 (revisar el NSG y que los contenedores esten arriba)" >&2
+    fi
+else
+    rm -f "$CRON_ENV"
+    command -v docker >/dev/null || { echo "Falta docker" >&2; exit 1; }
+    # el script llama a la API con "docker exec": el usuario tiene que poder usar docker sin sudo
+    if ! id -nG "$USUARIO" | grep -qw docker; then
+        echo "El usuario $USUARIO no esta en el grupo docker: sudo usermod -aG docker $USUARIO" >&2
+        exit 1
+    fi
 fi
 
 echo "Zona horaria de la VM: $ZONA"

@@ -1,0 +1,155 @@
+name: donatrack
+
+# VM de servicios (ver deploy/README.md). Desde la raiz del repo clonado en la VM:
+#
+#   docker compose -f deploy/servicios/docker-compose.yml --env-file deploy/servicios/.env up -d --build
+#
+# - Dos instancias de cada servicio (-1 y -2) detras de Caddy, que es el balanceador de carga.
+# - Sin PostgreSQL: la base esta en otra maquina (Azure Database for PostgreSQL o una VM aparte).
+# - Las fotos se guardan en una carpeta de la VM montada desde Azure Files (deploy/servicios/montar-fotos.sh),
+#   asi las dos instancias del web-service ven las mismas.
+# - Todo el trafico HTTP entre servicios pasa por Caddy (http://caddy:8080, :8081, :8082), que lo reparte entre
+#   las instancias y, si una no responde, reintenta en la otra. El gRPC de logistica a donaciones va directo al
+#   alias "donaciones-service", que Docker resuelve a las dos instancias.
+#
+# Memoria pensada para una B2as v2 (2 vCPU, 8 GB): unos 6 GB entre las ocho JVM y Caddy.
+
+x-jvm: &jvm
+  restart: unless-stopped
+  environment: &jvm-entorno
+    # la JVM toma el limite del contenedor como memoria total
+    JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70
+    JWT_SECRET: ${JWT_SECRET:?falta JWT_SECRET en el .env}
+    SERVICE_API_KEY: ${SERVICE_API_KEY:?falta SERVICE_API_KEY en el .env}
+    WEB_APP_URL: https://${DOMINIO}
+
+x-donaciones: &donaciones
+  <<: *jvm
+  build:
+    context: ../..
+    dockerfile: donaciones-service/Dockerfile
+  image: donatrack/donaciones-service
+  mem_limit: 1g
+  environment:
+    <<: *jvm-entorno
+    DONACIONES_DB_URL: jdbc:postgresql://${DB_HOST:?falta DB_HOST en el .env}:5432/donaciones?sslmode=${DB_SSLMODE:-require}
+    DONACIONES_DB_USERNAME: ${DB_USUARIO:?falta DB_USUARIO en el .env}
+    DONACIONES_DB_PASSWORD: ${DB_PASSWORD:?falta DB_PASSWORD en el .env}
+    GRPC_PORT: 9090
+    REST_NOTIFICACIONES_URL: http://caddy:8082/api
+    ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+    ADMIN_PASSWORD: ${ADMIN_PASSWORD:?falta ADMIN_PASSWORD en el .env}
+    ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+  networks:
+    default:
+      # logistica llega por gRPC a cualquiera de las dos instancias con este nombre
+      aliases: [donaciones-service]
+
+x-logistica: &logistica
+  <<: *jvm
+  build:
+    context: ../..
+    dockerfile: logistica-service/Dockerfile
+  image: donatrack/logistica-service
+  mem_limit: 768m
+  environment:
+    <<: *jvm-entorno
+    LOGISTICA_DB_URL: jdbc:postgresql://${DB_HOST}:5432/logistica?sslmode=${DB_SSLMODE:-require}
+    LOGISTICA_DB_USERNAME: ${DB_USUARIO}
+    LOGISTICA_DB_PASSWORD: ${DB_PASSWORD}
+    DONACIONES_GRPC_HOST: donaciones-service
+    DONACIONES_GRPC_PORT: 9090
+    REST_DONACIONES_URL: http://caddy:8080/api
+    REST_LOGISTICA_URL: http://caddy:8081/api
+    REST_NOTIFICACIONES_URL: http://caddy:8082/api
+    LOGISTICA_CALLBACK_URL: http://caddy:8081/api/rutas/planificaciones/resultados
+
+x-notificaciones: &notificaciones
+  <<: *jvm
+  build:
+    context: ../..
+    dockerfile: notificaciones-service/Dockerfile
+  image: donatrack/notificaciones-service
+  mem_limit: 640m
+  environment:
+    <<: *jvm-entorno
+    NOTIFICACIONES_DB_URL: jdbc:postgresql://${DB_HOST}:5432/notificaciones?sslmode=${DB_SSLMODE:-require}
+    NOTIFICACIONES_DB_USERNAME: ${DB_USUARIO}
+    NOTIFICACIONES_DB_PASSWORD: ${DB_PASSWORD}
+    SMTP_HOST: ${SMTP_HOST:-smtp-relay.brevo.com}
+    SMTP_PORT: ${SMTP_PORT:-587}
+    SMTP_USERNAME: ${SMTP_USERNAME:-}
+    SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+    SMTP_FROM: ${SMTP_FROM:-}
+
+x-web: &web
+  <<: *jvm
+  build:
+    context: ../..
+    dockerfile: web-service/Dockerfile
+  image: donatrack/web-service
+  mem_limit: 512m
+  environment:
+    JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70
+    DONACIONES_API_URL: http://caddy:8080/api
+    LOGISTICA_API_URL: http://caddy:8081/api
+    NOTIFICACIONES_API_URL: http://caddy:8082/api
+    COOKIE_SECURE: "true"
+    FOTOS_DIR: /data/fotos
+  volumes:
+    # carpeta de la VM montada desde Azure Files: la comparten las dos instancias
+    - ${FOTOS_DIR_VM:-/mnt/donatrack-fotos}:/data/fotos
+
+services:
+  # Balanceador de carga y proxy inverso con HTTPS (ver Caddyfile)
+  caddy:
+    image: caddy:2.10-alpine
+    container_name: donatrack-caddy
+    restart: unless-stopped
+    mem_limit: 128m
+    environment:
+      DOMINIO: ${DOMINIO:?falta DOMINIO en el .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+      # Entrada para la VM de cron, solo desde la red privada: la cierra el NSG y Caddy rechaza
+      # cualquier IP que no sea privada
+      - "8080:8080"
+      - "8081:8081"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+  donaciones-1:
+    <<: *donaciones
+    container_name: donatrack-donaciones-1
+  donaciones-2:
+    <<: *donaciones
+    container_name: donatrack-donaciones-2
+
+  logistica-1:
+    <<: *logistica
+    container_name: donatrack-logistica-1
+  logistica-2:
+    <<: *logistica
+    container_name: donatrack-logistica-2
+
+  notificaciones-1:
+    <<: *notificaciones
+    container_name: donatrack-notificaciones-1
+  notificaciones-2:
+    <<: *notificaciones
+    container_name: donatrack-notificaciones-2
+
+  web-1:
+    <<: *web
+    container_name: donatrack-web-1
+  web-2:
+    <<: *web
+    container_name: donatrack-web-2
+
+volumes:
+  caddy-data:
+  caddy-config:
