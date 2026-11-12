@@ -63,7 +63,7 @@ rectangle "Microsoft Azure (Azure for Students, Chile Central)" {
 
     rectangle "Red virtual (VNet) donatrack-vnet" {
 
-        node "VM de servicios donatrack-vm (B2as v2)\n(Ubuntu 24.04 + Docker Engine)\ndonatrack-g8.chilecentral.cloudapp.azure.com" <<VM>> as VM {
+        node "VM de servicios donatrack-vm (B2als v2)\n(Ubuntu 24.04 + Docker Engine)\ndonatrack-g8.chilecentral.cloudapp.azure.com" <<VM>> as VM {
 
             node "Contenedor donatrack-caddy" <<Docker>> as CCaddy {
                 component "Caddy 2\nbalanceador de carga + HTTPS\n(Let's Encrypt)\n:443 sitio (sesiones pegajosas)\n:8080 / :8081 / :8082 APIs" as Caddy
@@ -88,11 +88,12 @@ rectangle "Microsoft Azure (Azure for Students, Chile Central)" {
             storage "/mnt/donatrack-fotos\n(montado desde Azure Files)" as MntFotos
         }
 
-        node "VM de cron donatrack-cron (B1s)\n(sin IP publica)" <<VM>> as VMCron {
+        node "VM de cron donatrack-cron (B2ats v2)\n(sin IP publica)" <<VM>> as VMCron {
             component "cron\n/etc/cron.d/donatrack\n(docker/cron/donatrack-cron.sh)\n01:00 matchmaking\n03:00 rutas\n04:00 inactividad" <<cron>> as Cron
         }
 
-        database "Azure Database for PostgreSQL\nFlexible Server (B1ms)\n:5432, acceso privado" as PG {
+        database "Azure Database for PostgreSQL\nFlexible Server (B1ms)\ndonatrack-g8-db
+:5432, acceso privado" as PG {
             component "Base donaciones" as DB1
             component "Base logistica" as DB2
             component "Base notificaciones" as DB3

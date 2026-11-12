@@ -12,13 +12,13 @@ name: donatrack
 #   las instancias y, si una no responde, reintenta en la otra. El gRPC de logistica a donaciones va directo al
 #   alias "donaciones-service", que Docker resuelve a las dos instancias.
 #
-# Memoria pensada para una B2as v2 (2 vCPU, 8 GB): unos 6 GB entre las ocho JVM y Caddy.
+# Memoria pensada para la B2als v2 (2 vCPU, 4 GB + 4 GB de swap). En uso normal cada JVM ocupa 150-220 MB,
+# asi que las ocho andan por 1,6 GB. -Xmx fija el tope del heap de cada una (con SerialGC, que es el que menos
+# memoria usa) y mem_limit corta un contenedor que se descontrole sin tirar abajo al resto.
 
 x-jvm: &jvm
   restart: unless-stopped
   environment: &jvm-entorno
-    # la JVM toma el limite del contenedor como memoria total
-    JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70
     JWT_SECRET: ${JWT_SECRET:?falta JWT_SECRET en el .env}
     SERVICE_API_KEY: ${SERVICE_API_KEY:?falta SERVICE_API_KEY en el .env}
     WEB_APP_URL: https://${DOMINIO}
@@ -29,9 +29,10 @@ x-donaciones: &donaciones
     context: ../..
     dockerfile: donaciones-service/Dockerfile
   image: donatrack/donaciones-service
-  mem_limit: 1g
+  mem_limit: 576m
   environment:
     <<: *jvm-entorno
+    JAVA_TOOL_OPTIONS: -Xmx320m -XX:+UseSerialGC
     DONACIONES_DB_URL: jdbc:postgresql://${DB_HOST:?falta DB_HOST en el .env}:5432/donaciones?sslmode=${DB_SSLMODE:-require}
     DONACIONES_DB_USERNAME: ${DB_USUARIO:?falta DB_USUARIO en el .env}
     DONACIONES_DB_PASSWORD: ${DB_PASSWORD:?falta DB_PASSWORD en el .env}
@@ -51,9 +52,10 @@ x-logistica: &logistica
     context: ../..
     dockerfile: logistica-service/Dockerfile
   image: donatrack/logistica-service
-  mem_limit: 768m
+  mem_limit: 512m
   environment:
     <<: *jvm-entorno
+    JAVA_TOOL_OPTIONS: -Xmx256m -XX:+UseSerialGC
     LOGISTICA_DB_URL: jdbc:postgresql://${DB_HOST}:5432/logistica?sslmode=${DB_SSLMODE:-require}
     LOGISTICA_DB_USERNAME: ${DB_USUARIO}
     LOGISTICA_DB_PASSWORD: ${DB_PASSWORD}
@@ -70,9 +72,10 @@ x-notificaciones: &notificaciones
     context: ../..
     dockerfile: notificaciones-service/Dockerfile
   image: donatrack/notificaciones-service
-  mem_limit: 640m
+  mem_limit: 480m
   environment:
     <<: *jvm-entorno
+    JAVA_TOOL_OPTIONS: -Xmx224m -XX:+UseSerialGC
     NOTIFICACIONES_DB_URL: jdbc:postgresql://${DB_HOST}:5432/notificaciones?sslmode=${DB_SSLMODE:-require}
     NOTIFICACIONES_DB_USERNAME: ${DB_USUARIO}
     NOTIFICACIONES_DB_PASSWORD: ${DB_PASSWORD}
@@ -88,9 +91,9 @@ x-web: &web
     context: ../..
     dockerfile: web-service/Dockerfile
   image: donatrack/web-service
-  mem_limit: 512m
+  mem_limit: 448m
   environment:
-    JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70
+    JAVA_TOOL_OPTIONS: -Xmx192m -XX:+UseSerialGC
     DONACIONES_API_URL: http://caddy:8080/api
     LOGISTICA_API_URL: http://caddy:8081/api
     NOTIFICACIONES_API_URL: http://caddy:8082/api

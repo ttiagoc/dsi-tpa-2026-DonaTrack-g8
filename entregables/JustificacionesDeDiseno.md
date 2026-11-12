@@ -198,8 +198,8 @@ Central) y se reparte en cuatro piezas dentro de la misma red virtual (VNet). Lo
 | Pieza | Qué corre |
 |---|---|
 | **Base de datos** (Azure Database for PostgreSQL, o una VM con PostgreSQL) | Las tres bases, una por servicio |
-| **VM de servicios** (`donatrack-vm`, B2as v2) | Caddy como balanceador de carga y HTTPS, y **dos instancias** de cada servicio y del web-service ([`deploy/servicios/docker-compose.yml`](../deploy/servicios/docker-compose.yml)) |
-| **VM de cron** (B1s, sin IP pública) | Las tareas programadas |
+| **VM de servicios** (`donatrack-vm`, B2als v2) | Caddy como balanceador de carga y HTTPS, y **dos instancias** de cada servicio y del web-service ([`deploy/servicios/docker-compose.yml`](../deploy/servicios/docker-compose.yml)) |
+| **VM de cron** (B2ats v2, sin IP pública) | Las tareas programadas |
 | **Azure Files** | Las fotos de recepción |
 
 **Por qué así:**
@@ -223,7 +223,7 @@ Central) y se reparte en cuatro piezas dentro de la misma red virtual (VNet). Lo
   cualquier IP que no sea privada.
 - **HTTPS sin tocar el código:** Caddy obtiene y renueva solo el certificado de Let's Encrypt y le pasa el tráfico al
   sitio. Así la cookie de sesión puede ir con `Secure` y el web-service no maneja certificados.
-- **Costo:** la base (B1ms), la VM de cron (B1s) y las fotos entran en los servicios gratuitos de 12 meses de Azure.
+- **Costo:** la base (B1ms), la VM de cron (B2ats v2) y las fotos entran en los servicios gratuitos de 12 meses de Azure.
   Lo único que consume crédito es la VM de servicios, la misma que ya se usaba. Usar Caddy como balanceador, en vez de
   un Azure Load Balancer, ahorra ese costo.
 

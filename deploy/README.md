@@ -5,8 +5,8 @@ El sistema se reparte en cuatro piezas, todas dentro de la misma red virtual (VN
 | Pieza | Qué es | Qué corre |
 |---|---|---|
 | **Base de datos** | Azure Database for PostgreSQL (Flexible Server) o una VM con PostgreSQL | Las bases `donaciones`, `logistica` y `notificaciones` |
-| **VM de servicios** | La VM que ya existía (B2as v2: 2 vCPU, 8 GB) | Caddy (balanceador y HTTPS) y **dos instancias** de cada servicio y del web-service ([`servicios/`](servicios/)) |
-| **VM de cron** | Una VM chica (B1s) sin IP pública | El cron que dispara las tareas programadas ([`../docker/cron/`](../docker/cron/)) |
+| **VM de servicios** | La VM que ya existía (B2als v2: 2 vCPU, 4 GB) | Caddy (balanceador y HTTPS) y **dos instancias** de cada servicio y del web-service ([`servicios/`](servicios/)) |
+| **VM de cron** | Una VM chica (B2ats v2) sin IP pública | El cron que dispara las tareas programadas ([`../docker/cron/`](../docker/cron/)) |
 | **Almacenamiento de fotos** | Un file share de Azure Files | Las fotos de recepción, compartidas por las dos instancias del web-service |
 
 ```
@@ -44,39 +44,86 @@ Para desarrollo local no cambia nada: se sigue usando el `docker-compose.yml` de
   puertos 8080/8081 de Caddy solo se abren a la VNet en el NSG, y Caddy además rechaza cualquier IP que no sea
   privada. La base solo acepta conexiones desde la VNet.
 
-## Red (NSG)
+## Red
+
+Todo está en el grupo de recursos `DONATRACK`, región `chilecentral`, VNet `vnet-chilecentral-1` (`172.16.0.0/16`):
+
+| Subred | Rango | Qué tiene |
+|---|---|---|
+| `snet-chilecentral-1` | `172.16.0.0/24` | VM de servicios `donatrack-vm` (`172.16.0.4`, B2als v2) |
+| `snet-db` | `172.16.1.0/24` | PostgreSQL `donatrack-g8-db` (subred delegada a `Microsoft.DBforPostgreSQL/flexibleServers`) |
+| `snet-cron` | `172.16.2.0/24` | VM de cron `donatrack-cron` (`172.16.2.4`, B2ats v2, sin IP pública) |
 
 | VM | Entrada permitida |
 |---|---|
-| Servicios | 80, 443 desde Internet. 22 para SSH. 8080 y 8081 solo desde la subred de la VM de cron (o `VirtualNetwork`) |
-| Cron | 22 para SSH (o por la VM de servicios como salto, sin IP pública) |
-| Base de datos | 5432 solo desde la VNet (acceso privado del Flexible Server, o el NSG si es una VM) |
+| Servicios | 80, 443 desde Internet. 22 para SSH. 8080 y 8081 solo desde la VNet (la regla por defecto `AllowVnetInBound`; ninguna regla los abre a Internet) |
+| Cron | Solo desde la VNet: se entra por SSH saltando por la VM de servicios |
+| Base de datos | Sin acceso público: solo desde la VNet |
+
+Los comandos de abajo se corren en Azure Cloud Shell (Bash). Si la suscripción nunca usó PostgreSQL o Storage,
+primero hay que registrarlos (una sola vez):
+
+```bash
+az provider register --namespace Microsoft.DBforPostgreSQL --wait
+az provider register --namespace Microsoft.Storage --wait
+```
 
 ## 1. Base de datos
 
-Con **Azure Database for PostgreSQL Flexible Server** (B1ms, entra en el plan gratuito de 12 meses), con acceso
-privado en la VNet. Crear las tres bases:
+**Azure Database for PostgreSQL Flexible Server** B1ms (entra en el plan gratuito de 12 meses), con acceso privado.
+La subred y la zona DNS privada se crean antes: si se le pide a `flexible-server create` que cree la zona, falla con
+`PrivateDnsZoneNameNotValid` sea cual sea el nombre.
 
 ```bash
-psql "host=<servidor>.postgres.database.azure.com user=<usuario> dbname=postgres sslmode=require" \
-  -c "CREATE DATABASE donaciones" -c "CREATE DATABASE logistica" -c "CREATE DATABASE notificaciones"
+az network vnet subnet create -g DONATRACK --vnet-name vnet-chilecentral-1 -n snet-db \
+  --address-prefixes 172.16.1.0/24 --delegations Microsoft.DBforPostgreSQL/flexibleServers
+az network private-dns zone create -g DONATRACK -n donatrack.private.postgres.database.azure.com
+az network private-dns link vnet create -g DONATRACK -z donatrack.private.postgres.database.azure.com \
+  -n donatrack-db-link --virtual-network vnet-chilecentral-1 --registration-enabled false
+
+ZONA_ID=$(az network private-dns zone show -g DONATRACK -n donatrack.private.postgres.database.azure.com --query id -o tsv)
+SUBNET_ID=$(az network vnet subnet show -g DONATRACK --vnet-name vnet-chilecentral-1 -n snet-db --query id -o tsv)
+read -rsp "Contraseña de la base: " DB_PASS; echo
+az postgres flexible-server create -g DONATRACK -n donatrack-g8-db -l chilecentral \
+  --tier Burstable --sku-name Standard_B1ms --storage-size 32 --version 16 \
+  --admin-user donatrack --admin-password "$DB_PASS" \
+  --subnet "$SUBNET_ID" --private-dns-zone "$ZONA_ID" \
+  --zonal-resiliency Disabled --backup-retention 7 --yes
+
+for base in donaciones logistica notificaciones; do
+  az postgres flexible-server db create -g DONATRACK --server-name donatrack-g8-db --name $base
+done
 ```
 
-Las tablas las crea Hibernate solo (`hbm2ddl=update`). Con una **VM con PostgreSQL** es lo mismo: crear las tres
-bases y en el `.env` poner su IP privada en `DB_HOST` y `DB_SSLMODE=disable` si no tiene TLS.
+La contraseña va sin símbolos (`$` y las comillas se interpretan en el `.env` de compose). Las tablas las crea
+Hibernate solo (`hbm2ddl=update`). En el `.env`: `DB_HOST=donatrack-g8-db.postgres.database.azure.com`,
+`DB_USUARIO=donatrack`, `DB_SSLMODE=require`.
 
-Para pasar los datos que ya están en la VM actual (contenedor `donatrack-postgres`):
+Para pasar los datos de la VM de una sola máquina (contenedor `donatrack-postgres`), desde esa VM y con la web
+frenada para que nadie escriba mientras tanto:
 
 ```bash
+docker stop donatrack-web
+read -rsp "Contraseña de la base: " PGPASSWORD; export PGPASSWORD; echo
 for base in donaciones logistica notificaciones; do
-  docker exec donatrack-postgres pg_dump -U postgres --no-owner "$base" > "$base.sql"
-  psql "host=<servidor>.postgres.database.azure.com user=<usuario> dbname=$base sslmode=require" -f "$base.sql"
+  docker exec donatrack-postgres pg_dump -U postgres --no-owner --no-acl "$base" \
+  | docker run --rm -i -e PGPASSWORD -e PGSSLMODE=require postgres:16-alpine \
+      psql -h donatrack-g8-db.postgres.database.azure.com -U donatrack -d "$base" -v ON_ERROR_STOP=1 -q
 done
 ```
 
 ## 2. Fotos (Azure Files)
 
-Crear una cuenta de almacenamiento y un file share `fotos`. En la VM de servicios:
+Cuenta de almacenamiento `donatrackg8fotos` con un file share `fotos`:
+
+```bash
+az storage account create -g DONATRACK -n donatrackg8fotos -l chilecentral --sku Standard_LRS --kind StorageV2 \
+  --min-tls-version TLS1_2 --allow-blob-public-access false
+az storage share-rm create -g DONATRACK --storage-account donatrackg8fotos -n fotos --quota 5
+az storage account keys list -g DONATRACK -n donatrackg8fotos --query '[0].value' -o tsv    # la clave para montarlo
+```
+
+En la VM de servicios:
 
 ```bash
 sudo CUENTA=<cuenta> SHARE=fotos bash deploy/servicios/montar-fotos.sh
@@ -86,7 +133,7 @@ Pide la clave de la cuenta y deja el montaje en `/etc/fstab`, en `/mnt/donatrack
 ya estaban en el volumen de Docker de la VM actual:
 
 ```bash
-docker run --rm -v donatrack_fotos-data:/de -v /mnt/donatrack-fotos:/a alpine cp -a /de/. /a/
+docker run --rm -v donatrack_fotos-data:/de -v /mnt/donatrack-fotos:/a alpine cp -r /de/. /a/
 ```
 
 ## 3. VM de servicios
@@ -111,10 +158,34 @@ docker stop donatrack-web-1        # probar que el sitio sigue andando con una s
 
 ## 4. VM de cron
 
-Una VM con Ubuntu, con `curl` (no necesita Docker) y el repo clonado:
+Sin IP pública y con la misma clave SSH que la VM de servicios. `Standard_B1s` no tenía capacidad en Chile Central,
+así que es una `Standard_B2ats_v2` (también entra en las horas gratis):
 
 ```bash
-sudo SERVICIOS_IP=<IP privada de la VM de servicios> bash docker/cron/instalar-cron.sh
+az network vnet subnet create -g DONATRACK --vnet-name vnet-chilecentral-1 -n snet-cron --address-prefixes 172.16.2.0/24
+CLAVE_SSH=$(az vm show -g DONATRACK -n donatrack-vm --query 'osProfile.linuxConfiguration.ssh.publicKeys[0].keyData' -o tsv)
+az vm create -g DONATRACK -n donatrack-cron -l chilecentral --image Ubuntu2404 --size Standard_B2ats_v2 \
+  --vnet-name vnet-chilecentral-1 --subnet snet-cron --public-ip-address "" --nsg-rule NONE \
+  --admin-username azureuser --ssh-key-values "$CLAVE_SSH" --os-disk-size-gb 64 --storage-sku Premium_LRS
+```
+
+Para entrar, en el `~/.ssh/config` de la compu (con el host `donatrack` de la VM de servicios ya configurado):
+
+```
+Host donatrack-cron
+    HostName 172.16.2.4
+    User azureuser
+    IdentityFile <la misma clave .pem>
+    ProxyJump donatrack
+```
+
+La VM no tiene salida a Internet ni Docker, y no los necesita: la imagen de Ubuntu ya trae `curl` y `flock`. No se
+clona el repo, se copian los scripts y se instala el cron:
+
+```bash
+ssh donatrack-cron "mkdir -p ~/donatrack/docker"
+scp -r docker/cron donatrack-cron:~/donatrack/docker/
+ssh donatrack-cron "sudo SERVICIOS_IP=172.16.0.4 bash ~/donatrack/docker/cron/instalar-cron.sh"
 ```
 
 Pide la `SERVICE_API_KEY` (la misma del `.env` de servicios) y la guarda en `/etc/donatrack/cron.env`. Los
