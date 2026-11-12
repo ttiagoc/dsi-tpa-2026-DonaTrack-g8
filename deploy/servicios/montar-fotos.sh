@@ -42,6 +42,8 @@ LINEA="$ORIGEN $PUNTO cifs $OPCIONES 0 0"
 sed -i "\| $PUNTO cifs |d" /etc/fstab
 echo "$LINEA" >> /etc/fstab
 
+# systemd genera las unidades de montaje desde /etc/fstab: hay que avisarle que cambio
+systemctl daemon-reload
 mountpoint -q "$PUNTO" && umount "$PUNTO"
 mount "$PUNTO"
 
