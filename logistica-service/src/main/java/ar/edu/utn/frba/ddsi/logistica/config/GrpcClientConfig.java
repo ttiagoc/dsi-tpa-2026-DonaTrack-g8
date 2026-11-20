@@ -31,7 +31,12 @@ public class GrpcClientConfig {
     @Bean
     public ManagedChannel donacionesManagedChannel() {
         log.info("Creando canal gRPC hacia donaciones-service en {}:{}", host, port);
-        this.channel = ManagedChannelBuilder.forAddress(host, port)
+        // En el deploy "donaciones-service" es un alias que Docker resuelve a las dos instancias:
+        // round_robin abre una conexion a cada IP y alterna las llamadas entre ellas (con pick_first,
+        // el valor por defecto, todas iban a la primera). Si una instancia se cae, la saca de la ronda.
+        // En local resuelve a una sola IP y se comporta igual que antes.
+        this.channel = ManagedChannelBuilder.forTarget("dns:///" + host + ":" + port)
+                .defaultLoadBalancingPolicy("round_robin")
                 .usePlaintext()
                 .build();
         return this.channel;
