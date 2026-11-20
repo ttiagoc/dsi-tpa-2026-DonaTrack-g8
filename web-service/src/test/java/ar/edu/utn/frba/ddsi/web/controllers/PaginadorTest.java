@@ -76,6 +76,16 @@ class PaginadorTest {
     }
 
     @Test
+    @DisplayName("paginaBackend pasa la página de la URL tal cual: los microservicios cuentan desde 1")
+    void paginaBackendEmpiezaEnUno() {
+        assertEquals(1, Paginador.paginaBackend((String) null));
+        assertEquals(1, Paginador.paginaBackend("1"));
+        assertEquals(2, Paginador.paginaBackend("2"));
+        assertEquals(1, Paginador.paginaBackend("0"));
+        assertEquals(1, Paginador.paginaBackend("abc"));
+    }
+
+    @Test
     @DisplayName("armarModelo genera el mapa con links previo y siguiente")
     void armarModeloGeneraMapaCompleto() {
         PaginaResponse<String> pag = PaginaResponse.de(List.of("x"), 2, 3, 25, 10);

@@ -95,10 +95,15 @@ public final class Paginador {
     }
 
     /**
-     * Obtiene el indice de pagina para el backend (0-indexed) a partir del parametro "pagina" (1-indexed).
+     * Pagina que se le pide al backend a partir del parametro "pagina". Los microservicios
+     * numeran las paginas desde 1, igual que la URL del sitio, asi que se pasa tal cual.
      */
     public static int paginaBackend(Context ctx) {
-        return Math.max(0, entero(ctx.queryParam("pagina"), 1) - 1);
+        return paginaBackend(ctx.queryParam("pagina"));
+    }
+
+    static int paginaBackend(String paginaParam) {
+        return Math.max(1, entero(paginaParam, 1));
     }
 
     public static int entero(String valor, int porDefecto) {

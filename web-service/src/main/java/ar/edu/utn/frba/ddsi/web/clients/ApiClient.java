@@ -78,13 +78,14 @@ public abstract class ApiClient {
         return convertir(respuesta.body(), tipo);
     }
 
+    /** {@code paginaSolicitada} empieza en 1, como en los microservicios y en la URL del sitio. */
     @SuppressWarnings("unchecked")
     protected <T> PaginaResponse<T> getPaginado(Context ctx, String ruta, Class<?> tipoElemento, int paginaSolicitada, int tamanoSolicitado) {
         HttpResponse<String> respuesta = enviarAutenticado(ctx, () -> request(ruta).GET());
         verificar(respuesta);
         String cuerpo = respuesta.body();
         if (cuerpo == null || cuerpo.isBlank()) {
-            return PaginaResponse.vacia(paginaSolicitada + 1, tamanoSolicitado);
+            return PaginaResponse.vacia(paginaSolicitada, tamanoSolicitado);
         }
         try {
             JsonNode nodo = mapper.readTree(cuerpo);
@@ -93,9 +94,10 @@ public abstract class ApiClient {
                 List<T> items = mapper.readValue(cuerpo, listType);
                 int total = items.size();
                 int totalPaginas = Math.max(1, (int) Math.ceil((double) total / tamanoSolicitado));
-                int desde = paginaSolicitada * tamanoSolicitado;
+                int pagina = Math.min(Math.max(1, paginaSolicitada), totalPaginas);
+                int desde = (pagina - 1) * tamanoSolicitado;
                 List<T> sub = (desde >= total) ? List.of() : items.subList(desde, Math.min(desde + tamanoSolicitado, total));
-                return new PaginaResponse<>(sub, paginaSolicitada + 1, totalPaginas, total, tamanoSolicitado);
+                return new PaginaResponse<>(sub, pagina, totalPaginas, total, tamanoSolicitado);
             } else {
                 JavaType pagType = mapper.getTypeFactory().constructParametricType(PaginaResponse.class, tipoElemento);
                 return mapper.readValue(cuerpo, pagType);
