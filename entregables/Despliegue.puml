@@ -61,7 +61,7 @@ rectangle "Microsoft Azure (Azure for Students, Chile Central)" {
 
     rectangle "Network Security Group\n(entrada publica: 80, 443 y 22 para SSH)" as NSG
 
-    rectangle "Red virtual (VNet) donatrack-vnet" {
+    rectangle "Red virtual (VNet) vnet-chilecentral-1" {
 
         node "VM de servicios donatrack-vm (B2als v2)\n(Ubuntu 24.04 + Docker Engine)\ndonatrack-g8.chilecentral.cloudapp.azure.com" <<VM>> as VM {
 
@@ -92,8 +92,7 @@ rectangle "Microsoft Azure (Azure for Students, Chile Central)" {
             component "cron\n/etc/cron.d/donatrack\n(docker/cron/donatrack-cron.sh)\n01:00 matchmaking\n03:00 rutas\n04:00 inactividad" <<cron>> as Cron
         }
 
-        database "Azure Database for PostgreSQL\nFlexible Server (B1ms)\ndonatrack-g8-db
-:5432, acceso privado" as PG {
+        database "Azure Database for PostgreSQL\nFlexible Server (B1ms)\ndonatrack-g8-db\n:5432, acceso privado" as PG {
             component "Base donaciones" as DB1
             component "Base logistica" as DB2
             component "Base notificaciones" as DB3
