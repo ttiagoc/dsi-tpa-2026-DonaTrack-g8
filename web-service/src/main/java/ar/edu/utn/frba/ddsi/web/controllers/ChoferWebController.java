@@ -148,12 +148,6 @@ public class ChoferWebController {
         Long camionId = obtenerCamionId(ctx);
         CamionResponse camion = obtenerCamionSeguro(ctx, camionId);
         modelo.put("camion", camion);
-        if (camion != null) {
-            modelo.put("cargaCamionFormateada", camion.capacidadCarga() != null
-                    ? String.format(Locale.US, "%.0f", camion.capacidadCarga()) : "-");
-            modelo.put("volumenCamionFormateado", camion.capacidadVolumen() != null
-                    ? String.format(Locale.US, "%.1f", camion.capacidadVolumen()) : "-");
-        }
         modelo.put("depositoLat", String.format(Locale.US, "%.6f", DEPOSITO_LAT));
         modelo.put("depositoLng", String.format(Locale.US, "%.6f", DEPOSITO_LNG));
 

@@ -7,75 +7,35 @@
 {{/partial}}
 
 {{#partial "contenido"}}
+{{!-- Lo primero que ve el chofer es la próxima parada y el botón para confirmarla; el resto va debajo. --}}
 <header class="encabezado-pagina">
   <div>
     <h1>Hoja de ruta</h1>
-    <p class="texto-suave">Recorridos asignados a tu camión. Elegí uno para ver el mapa y confirmar cada entrega en destino.</p>
+    {{#if ruta}}
+      <p class="hoja-ruta__resumen">
+        <span>Ruta #{{ruta.id}} · {{ruta.fechaFormateada}}{{#if camion}} · {{camion.patente}}{{/if}}</span>
+        {{estado ruta.estado}}
+      </p>
+    {{/if}}
   </div>
-  {{#if ruta}}
+  {{#if esPlanificada}}
     <div class="encabezado-pagina__accion">
-      {{#if esPlanificada}}
-        {{#if otraEnTraslado}}
-          <button type="button" class="boton" disabled aria-describedby="aviso-otra-en-traslado">
+      {{#if otraEnTraslado}}
+        <button type="button" class="boton" disabled aria-describedby="aviso-otra-en-traslado">
+          <svg class="icono" aria-hidden="true"><use href="#i-camion"/></svg> Comenzar recorrido
+        </button>
+      {{else}}
+        <form method="post" action="/chofer/rutas/{{ruta.id}}/iniciar">
+          <button type="submit" class="boton" data-cargando="Iniciando recorrido…">
             <svg class="icono" aria-hidden="true"><use href="#i-camion"/></svg> Comenzar recorrido
           </button>
-        {{else}}
-          <form method="post" action="/chofer/rutas/{{ruta.id}}/iniciar">
-            <button type="submit" class="boton" data-cargando="Iniciando recorrido…">
-              <svg class="icono" aria-hidden="true"><use href="#i-camion"/></svg> Comenzar recorrido
-            </button>
-          </form>
-        {{/if}}
-      {{else}}
-        {{estado ruta.estado}}
+        </form>
       {{/if}}
     </div>
   {{/if}}
 </header>
 
-{{#if camion}}
-  <section class="tarjeta camion-banner" aria-label="Camión asignado">
-    <div class="camion-banner__datos">
-      <span class="camion-banner__icono" aria-hidden="true">
-        <svg class="icono" aria-hidden="true"><use href="#i-camion"/></svg>
-      </span>
-      <div>
-        <h2 class="camion-banner__titulo">Camión {{camion.patente}} · {{camion.choferNombreCompleto}}</h2>
-        <p class="texto-suave camion-banner__detalle">Capacidad: {{cargaCamionFormateada}} kg · {{volumenCamionFormateado}} m³</p>
-      </div>
-    </div>
-    {{#if rutasActivas}}<span class="etiqueta etiqueta--pendiente">{{rutasActivasTexto}}</span>{{/if}}
-  </section>
-{{/if}}
-
-{{!-- Selector: todas las rutas del camión. Se muestra cuando hay más de una para elegir. --}}
-{{#if hayVariasRutas}}
-  <nav class="rutas-chofer" aria-label="Tus rutas">
-    {{#each rutasActivas}}
-      <a class="rutas-chofer__opcion" href="/chofer?ruta={{id}}" {{#if elegida}}aria-current="page"{{/if}}>
-        <span class="rutas-chofer__titulo">Ruta #{{id}} {{estado estado}}</span>
-        <span class="texto-suave">{{fecha}} · {{paradasTexto}} · {{pendientesTexto}}</span>
-      </a>
-    {{/each}}
-    {{#if rutasFinalizadas}}
-      <details class="rutas-chofer__historial" {{#each rutasFinalizadas}}{{#if elegida}}open{{/if}}{{/each}}>
-        <summary>Recorridos terminados ({{rutasFinalizadasCount}})</summary>
-        <div class="rutas-chofer__lista">
-          {{#each rutasFinalizadas}}
-            <a class="rutas-chofer__opcion" href="/chofer?ruta={{id}}" {{#if elegida}}aria-current="page"{{/if}}>
-              <span class="rutas-chofer__titulo">Ruta #{{id}} {{estado estado}}</span>
-              <span class="texto-suave">{{fecha}} · {{paradasTexto}}</span>
-            </a>
-          {{/each}}
-        </div>
-      </details>
-    {{/if}}
-  </nav>
-{{/if}}
-
 {{#if ruta}}
-  <h2 class="hoja-ruta__titulo">Ruta #{{ruta.id}} · {{ruta.fechaFormateada}} · {{ruta.paradasTexto}}{{#unless esFinalizada}} · {{pendientesTexto}}{{/unless}}</h2>
-
   {{#if esPlanificada}}
     {{#if otraEnTraslado}}
       <div class="alerta alerta--info" role="status" id="aviso-otra-en-traslado">
@@ -88,83 +48,60 @@
     {{/if}}
   {{/if}}
 
-  {{!-- Tarjeta destacada de Próxima Entrega (solo cuando el recorrido está en marcha) --}}
+  {{!-- Próxima parada: lo único que el chofer necesita mientras maneja --}}
   {{#if esEnTraslado}}
     {{#if proximaParada}}
-      <section class="tarjeta proxima-entrega-card" aria-label="Próxima entrega a realizar">
-        <div class="proxima-entrega-card__encabezado">
-          <span class="etiqueta etiqueta--pendiente">
-            <svg class="icono" aria-hidden="true"><use href="#i-tilde"/></svg> Próxima parada · #{{proximaParada.orden}}
-          </span>
-          <span class="texto-suave">{{pendientesTexto}} restantes</span>
-        </div>
-        <div class="proxima-entrega-card__cuerpo">
-          <h3 class="proxima-entrega-card__titulo">{{proximaParada.entidadNombre}}</h3>
-          <p class="proxima-entrega-card__direccion">
-            <svg class="icono" aria-hidden="true" style="color: var(--color-primario);"><use href="#i-mapa"/></svg> {{proximaParada.destino}}
-          </p>
-          <p class="proxima-entrega-card__bultos">
-            <strong>Bultos a descargar:</strong> {{proximaParada.bultosResumen}}
-          </p>
-        </div>
+      <section class="tarjeta proxima-entrega-card" aria-labelledby="proxima-parada-titulo">
+        <p class="proxima-entrega-card__paso">Próxima parada · {{proximaParada.orden}} de {{paradasTotalCount}}</p>
+        <h2 class="proxima-entrega-card__titulo" id="proxima-parada-titulo">{{proximaParada.entidadNombre}}</h2>
+        <p class="proxima-entrega-card__direccion">
+          <svg class="icono" aria-hidden="true"><use href="#i-mapa"/></svg> {{proximaParada.destino}}
+        </p>
+        <p class="proxima-entrega-card__bultos">
+          <strong>A descargar:</strong> {{proximaParada.bultosResumen}}
+        </p>
         <div class="proxima-entrega-card__acciones">
-          <a class="boton" href="/chofer?ruta={{ruta.id}}&confirmarParada={{proximaParada.id}}">
-            <svg class="icono" aria-hidden="true"><use href="#i-tilde"/></svg> Confirmar entrega
+          <a class="boton proxima-entrega-card__confirmar" href="/chofer?ruta={{ruta.id}}&confirmarParada={{proximaParada.id}}">
+            <svg class="icono" aria-hidden="true"><use href="#i-tilde"/></svg> Llegué · Confirmar entrega
           </a>
+          {{#if proximaParada.latitud}}
+            <a class="boton boton--secundario" href="https://www.google.com/maps/dir/?api=1&destination={{proximaParada.latitud}},{{proximaParada.longitud}}" target="_blank" rel="noopener">
+              <svg class="icono" aria-hidden="true"><use href="#i-mapa"/></svg> Cómo llegar
+            </a>
+          {{/if}}
           <a class="boton boton--secundario boton--peligro" href="/chofer?ruta={{ruta.id}}&fallarParada={{proximaParada.id}}">
             No recibida
           </a>
         </div>
       </section>
     {{else}}
-      <div class="alerta alerta--exito" role="status" style="margin-bottom: var(--espacio-5);">
-        <span><strong>¡Todas las entregas fueron resueltas!</strong> Podés regresar al depósito central para cerrar el recorrido.</span>
+      <div class="alerta alerta--exito" role="status">
+        <span><strong>¡Todas las entregas fueron resueltas!</strong> Podés regresar al depósito central.</span>
       </div>
     {{/if}}
   {{/if}}
 
-  {{!-- Listado completo de paradas (inmediatamente accesible) --}}
-  <div class="hoja-ruta-seccion-encabezado" style="margin-top: 0;">
-    <h2 class="hoja-ruta__titulo">Paradas del recorrido</h2>
-    <span class="texto-suave" style="font-size: var(--texto-chico);">
-      {{paradasResueltasCount}} de {{paradasTotalCount}} resueltas
-    </span>
+  {{!-- Recorrido completo: solo para ubicarse; las acciones están en la tarjeta de la próxima parada --}}
+  <div class="hoja-ruta-seccion-encabezado">
+    <h2 class="hoja-ruta__titulo">Paradas</h2>
+    <span class="texto-suave">{{paradasResueltasCount}} de {{paradasTotalCount}} resueltas</span>
   </div>
 
-  <ol class="paradas-lista">
+  <ol class="paradas-lista paradas-lista--chofer">
     {{#each paradas}}
       <li class="parada-item {{#if esProxima}}parada-item--activa{{/if}}{{#if esEntregada}}parada-item--entregada{{/if}}{{#if esFallida}}parada-item--fallida{{/if}}"
           data-parada data-orden="{{orden}}" data-nombre="{{entidadNombre}}" data-direccion="{{destino}}"
           {{#if latitud}}data-lat="{{latitud}}" data-lng="{{longitud}}"{{/if}}
           data-resultado="{{#if esEntregada}}entregada{{else}}{{#if esFallida}}fallida{{/if}}{{/if}}">
-        <div class="parada-item__izquierda">
-          <span class="parada-item__numero">{{orden}}</span>
-          <div class="parada-item__cuerpo">
-            <p class="parada-item__titulo">
-              {{entidadNombre}}
-              {{#if esProxima}}
-                <span class="etiqueta etiqueta--pendiente">Próxima parada</span>
-              {{else}}
-                {{estado estado}}
-              {{/if}}
-            </p>
-            <p class="parada-item__direccion">{{destino}}</p>
-            {{#if bultos}}
-              <ul class="parada-item__bultos">
-                {{#each bultos}}
-                  <li><span class="etiqueta etiqueta--neutra">{{this}}</span></li>
-                {{/each}}
-              </ul>
-            {{/if}}
-          </div>
+        <span class="parada-item__numero">{{orden}}</span>
+        <div class="parada-item__cuerpo">
+          <p class="parada-item__titulo">{{entidadNombre}}</p>
+          <p class="parada-item__direccion">{{destino}}</p>
         </div>
-        {{#if ../esEnTraslado}}
-          {{#if esPendiente}}
-            <div class="parada-item__acciones">
-              <a class="boton boton--chico" href="/chofer?ruta={{../ruta.id}}&confirmarParada={{id}}">Confirmar entrega</a>
-              <a class="boton boton--secundario boton--peligro boton--chico" href="/chofer?ruta={{../ruta.id}}&fallarParada={{id}}">No recibida</a>
-            </div>
-          {{/if}}
+        {{#if esProxima}}
+          {{#if ../esEnTraslado}}<span class="etiqueta etiqueta--pendiente">Próxima</span>{{else}}{{estado estado}}{{/if}}
+        {{else}}
+          {{estado estado}}
         {{/if}}
       </li>
     {{/each}}
@@ -173,10 +110,8 @@
   {{!-- Mapa del recorrido: al fondo de la vista como referencia geográfica --}}
   <section class="hoja-ruta-mapa-seccion">
     <div class="hoja-ruta-seccion-encabezado">
-      <h2 class="hoja-ruta__titulo">Mapa del recorrido</h2>
-      <span class="texto-suave" style="font-size: var(--texto-chico);">
-        {{#if esEnTraslado}}Posición GPS en tiempo real · {{/if}}Orden: {{ordenResumen}}
-      </span>
+      <h2 class="hoja-ruta__titulo">Mapa</h2>
+      {{#if esEnTraslado}}<span class="texto-suave">Posición GPS en tiempo real</span>{{/if}}
     </div>
 
     <div class="tarjeta hoja-ruta-mapa__tarjeta">
@@ -205,14 +140,8 @@
       <div class="modal__cuerpo">
         <p>Vas a registrar la entrega en <strong>{{paradaSeleccionada.entidadNombre}}</strong> (<span class="texto-suave">{{paradaSeleccionada.destino}}</span>).</p>
         <dl class="detalle">
-          <dt>Ruta</dt>
-          <dd>#{{ruta.id}} · {{ruta.fechaFormateada}}</dd>
           <dt>Bultos a descargar</dt>
           <dd><strong>{{paradaSeleccionada.bultosResumen}}</strong></dd>
-          {{#if camion}}
-            <dt>Camión</dt>
-            <dd>{{camion.patente}} ({{camion.choferNombreCompleto}})</dd>
-          {{/if}}
         </dl>
         <p class="texto-suave">Al confirmar, se actualizará tu posición GPS en esta sede, las donaciones pasarán a <strong>Entregada</strong> y la entidad recibirá el aviso para subir las fotos de recepción.</p>
       </div>
@@ -259,6 +188,37 @@
       <span class="vacio__extra">Recorridos completados anteriormente con esta unidad: <b>{{rutasFinalizadasCount}}</b>.</span>
     {{/if}}
   </section>
+{{/if}}
+
+{{!-- Otras rutas del camión: al fondo, porque el chofer hace una a la vez --}}
+{{#if hayVariasRutas}}
+  <nav class="rutas-chofer-seccion" aria-labelledby="tus-rutas-titulo">
+    <div class="hoja-ruta-seccion-encabezado">
+      <h2 class="hoja-ruta__titulo" id="tus-rutas-titulo">Tus rutas</h2>
+      {{#if rutasActivas}}<span class="texto-suave">{{rutasActivasTexto}}</span>{{/if}}
+    </div>
+    <div class="rutas-chofer">
+      {{#each rutasActivas}}
+        <a class="rutas-chofer__opcion" href="/chofer?ruta={{id}}" {{#if elegida}}aria-current="page"{{/if}}>
+          <span class="rutas-chofer__titulo">Ruta #{{id}} {{estado estado}}</span>
+          <span class="texto-suave">{{fecha}} · {{pendientesTexto}}</span>
+        </a>
+      {{/each}}
+      {{#if rutasFinalizadas}}
+        <details class="rutas-chofer__historial" {{#each rutasFinalizadas}}{{#if elegida}}open{{/if}}{{/each}}>
+          <summary>Recorridos terminados ({{rutasFinalizadasCount}})</summary>
+          <div class="rutas-chofer__lista">
+            {{#each rutasFinalizadas}}
+              <a class="rutas-chofer__opcion" href="/chofer?ruta={{id}}" {{#if elegida}}aria-current="page"{{/if}}>
+                <span class="rutas-chofer__titulo">Ruta #{{id}} {{estado estado}}</span>
+                <span class="texto-suave">{{fecha}} · {{paradasTexto}}</span>
+              </a>
+            {{/each}}
+          </div>
+        </details>
+      {{/if}}
+    </div>
+  </nav>
 {{/if}}
 
 {{#if abrirModalCompletada}}
